@@ -1254,6 +1254,17 @@ BODY_END = """
 
   gtag('config', 'UA-108507797-1');
 </script>
+
+<!-- Baidu Analytics -->
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
 """
 
 # The possibility to extract metadata from the filename by using a
