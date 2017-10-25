@@ -10,51 +10,49 @@
 #+END_COMMENT
 
 
-** 代码编译阶段
-在调试 =C/C++= 代码时，在编译阶段使用 =gcc/g++ -g= 命令编译，将调试信息生成在目标文件中。
+* 1 代码编译阶段
+在调试C/C++代码时，在编译阶段使用 =gcc/g++ -g= 命令编译，将调试信息生成在目标文件中。
 
-** 开启gdb模式
-- 直接进入gdb模式 =gdb= 
-- 使用gdb模式开启一个新的进程 =gdb <appname>=
-- 使用指定的程序来调试core文件 =gdb <appname> <corename>=
+* 2 开启gdb模式
+- 直接进入gdb模式: =gdb= 
+- 使用gdb模式开启一个新的进程: =gdb <appname>=
+- 使用指定的程序来调试core文件: =gdb <appname> <corename>=
 
-*** gdb模式中常用命令
-以下指令为
-- =bt= backtrace
+** 2.1 gdb模式中常用命令
+以下指令为常用指令以及它们的缩写。
+- =bt= backtrace 查看调用堆栈
 - =i r= info registers 查看寄存器
-- =i proc m= memory mappings
-- =b= breakpoint
-- =r= run
-- =c= continue
-- =s= step in
-- =info= info指令之后可以接
+- =i proc m= memory mappings 查看内存映射
+- =b= breakpoint 查看断点信息
+- =r= run 运行程序
+- =c= continue 继续运行到下一个断点
+- =s= step in 跟进所在函数
+- =info= info 指令之后可以接很多指令，用于查看当前的运行状态
 
-*** 调试一个正在运行中的进程
+** 2.2 调试一个正在运行中的进程
 如果一个正在运行中的程序与我们的预想不一样，我们可以使用gdb查看程序的运行状态（debug a running process）
 - 方法1：使用 =gdb -p <pid>= 命令来以attach的方式启动调试该进程id的进程
-- 方法2：进入 =gdb= 模式，使用 =attach <pid>= 命令调试某个进程
+- 方法2：进入 =gdb= 模式后，使用 =attach <pid>= 命令调试某个进程
 
-*** 设置源文件的目录
+** 2.3 设置源文件的目录
 - =files= 命令
 - =directory= 命令
 
-** core 文件相关设置
+* 3 core 文件相关设置
 core文件是程序异常崩溃以后产生的，会将程序异常时的执行状态以快照的形式保存下来。
 
-*** 查看core文件的设置
+** 3.1 查看core文件的设置
 + =limit -c=
   用于查看当前系统生成core文件的大小限制，如果设置为0，则表示不生成core文件
 + =cat /proc/sys/kernel/core_pattern=
   用于查看当前系统生成core文件的命名样式
 
-*** 更改core文件的设置
+** 3.2 更改core文件的设置
 + =limit -c unlimited= 不限制生成core文件的大小
 + =echo "core.%e.%p" > /proc/sys/kernel/core_pattern= 修改core文件命名规则
-      core文件会默认生成在用户 =HOME= 路径中
+  core文件会默认生成在用户 =HOME= 路径中
 + 使core相关配置重启后仍然有效
   把下面这句话添加到 =/etc/sysctl.conf= 中，能够使该设置在系统重启后仍然生效
-
-
   #+BEGIN_SRC shell
   # core dump pattern
   kernel.core_pattern=core.%p.%e.%s  
