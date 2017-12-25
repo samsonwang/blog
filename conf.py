@@ -173,7 +173,8 @@ THEME_COLOR = '#5670d4'
 # where "pagename" is the "slug" specified in the metadata file.
 # The page might also be placed in /destination/pagename/index.html
 # if PRETTY_URLS are enabled.
-#
+# PRETTY_URLS = False
+
 # The difference between POSTS and PAGES is that POSTS are added
 # to feeds, indexes, tag lists and archives and are considered part
 # of a blog, while PAGES are just independent HTML pages.
@@ -193,11 +194,19 @@ POSTS = (
     ("posts/*.org", "posts", "post.tmpl"),
 )
 PAGES = (
+	("pages/404.html", "", "story.tmpl"),
+	
     ("pages/*.rst", "pages", "page.tmpl"),
     ("pages/*.md", "pages", "page.tmpl"),
     ("pages/*.txt", "pages", "page.tmpl"),
     ("pages/*.html", "pages", "page.tmpl"),
     ("pages/*.org", "pages", "page.tmpl"),
+	
+	("demos/*.rst", "demos", "page.tmpl"),
+    ("demos/*.md", "demos", "page.tmpl"),
+    ("demos/*.txt", "demos", "page.tmpl"),
+    ("demos/*.html", "demos", "page.tmpl"),
+    ("demos/*.org", "demos", "page.tmpl"),
 )
 
 
@@ -937,19 +946,20 @@ FEED_LINKS_APPEND_QUERY = False
 
 # A HTML fragment describing the license, for the sidebar.
 # (translatable)
-LICENSE = ""
 # I recommend using the Creative Commons' wizard:
 # https://creativecommons.org/choose/
-# LICENSE = """
-# <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
-# <img alt="Creative Commons License BY-NC-SA"
-# style="border-width:0; margin-bottom:12px;"
-# src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png"></a>"""
+LICENSE = """
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /></a>
+"""
+
 
 # A small copyright notice for the page footer (in HTML).
 # (translatable)
-CONTENT_FOOTER = 'Contents &copy; {date}         <a href="mailto:{email}">{author}</a> - Powered by         <a href="https://getnikola.com" rel="nofollow">Nikola</a>         {license}'
-
+CONTENT_FOOTER = """
+Contents &copy; {date} <a href="mailto:{email}">{author}</a> 
+ - Powered by <a href="https://getnikola.com" rel="nofollow">Nikola</a>
+ - {license}
+"""
 # Things that will be passed to CONTENT_FOOTER.format().  This is done
 # for translatability, as dicts are not formattable.  Nikola will
 # intelligently format the setting properly.
@@ -1119,8 +1129,7 @@ MARKDOWN_EXTENSIONS = ['markdown.extensions.fenced_code', 'markdown.extensions.c
 # Social buttons. This is sample code for AddThis (which was the default for a
 # long time). Insert anything you want here, or even make it empty (which is
 # the default right now)
-# (translatable)
-# SOCIAL_BUTTONS_CODE = """
+# (translatable) SOCIAL_BUTTONS_CODE = """
 # <!-- Social buttons -->
 # <div id="addthisbox" class="addthis_toolbox addthis_peekaboo_style addthis_default_style addthis_label_style addthis_32x32_style">
 # <a class="addthis_button_more">Share</a>
@@ -1251,7 +1260,6 @@ BODY_END = """
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'UA-108507797-1');
 </script>
 
