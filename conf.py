@@ -194,7 +194,7 @@ POSTS = (
     ("posts/*.org", "posts", "post.tmpl"),
 )
 PAGES = (
-	("pages/404.html", "", "story.tmpl"),
+	("pages/404.*", "", "story.tmpl"),
 	
     ("pages/*.rst", "pages", "page.tmpl"),
     ("pages/*.md", "pages", "page.tmpl"),
