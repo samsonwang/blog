@@ -15,6 +15,7 @@
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="rss.xml">
 <link rel="canonical" href="http://samsonwang.me/">
+<link rel="next" href="index-1.html" type="text/html">
 <!--[if lt IE 9]><script src="assets/js/html5.js"></script><![endif]-->
 </head>
 <body>  
@@ -80,7 +81,7 @@
             </span></p>
             <p class="dateline"><a href="posts/size_t-and-size_type.html" rel="bookmark"><time class="published dt-published" datetime="2018-01-08T17:27:13+08:00" title="2018-01-08 17:27">2018-01-08 17:27</time></a></p>
         </div>
-    </header><div class="p-summary entry-summary">
+    </header><div class="e-content entry-content">
     <div id="outline-container-sec-1" class="outline-2">
 <h2 id="sec-1">1 引言</h2>
 <div class="outline-text-2" id="text-1">
@@ -151,7 +152,7 @@
             </span></p>
             <p class="dateline"><a href="posts/frequent-improper-syntax-warning-on-compile.html" rel="bookmark"><time class="published dt-published" datetime="2018-01-04T00:45:52+08:00" title="2018-01-04 00:45">2018-01-04 00:45</time></a></p>
         </div>
-    </header><div class="p-summary entry-summary">
+    </header><div class="e-content entry-content">
     <div id="outline-container-sec-1" class="outline-2">
 <h2 id="sec-1">1 引言</h2>
 <div class="outline-text-2" id="text-1">
@@ -159,7 +160,140 @@
 本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。<br>
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
 
-<p class="more"><a href="posts/frequent-improper-syntax-warning-on-compile.html">Read more…</a></p>
+<!-- TEASER_END -->
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">2 代码缺陷总结</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">2.1 格式化字符串与后续参数不匹配</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+函数原型如下<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">printf</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">format</span><span class="p">,</span> <span class="p">...);</span>
+<span class="kt">int</span> <span class="nf">sprintf</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span> <span class="n">str</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">format</span><span class="p">,</span> <span class="p">...);</span>
+</pre></div>
+</div>
+
+<div id="outline-container-sec-2-1-1" class="outline-4">
+<h4 id="sec-2-1-1">2.1.1 <code>size_t</code> 类型</h4>
+<div class="outline-text-4" id="text-2-1-1">
+<p>
+由于 <code>size_t</code> 在不同平台上会有不同的类型定义，合适的做法是使用 <code>z</code> 对 <code>size_t</code> 进行格式化。<br>
+变量宽度标识符 <code>z</code> 需要编译器支持C++11或C99特性。<br>
+示例代码如下:<br></p>
+<div class="highlight"><pre><span></span><span class="kt">size_t</span> <span class="n">n</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="p">);</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"the size of char is %zd</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span> <span class="c1">// decimal</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"the size of char is %zx</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span> <span class="c1">// hex</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-2-1-2" class="outline-4">
+<h4 id="sec-2-1-2">2.1.2 <code>int64_t</code> 及其相关类型</h4>
+<div class="outline-text-4" id="text-2-1-2">
+<p>
+<code>int64_t</code> 是固定宽度为8字节的整形定义，在文件 <code>&lt;cstdint&gt;</code> 中有定义。<br>
+类似的还有 <code>int8_t</code>, <code>int16_t</code>, <code>int32_t</code> 分对应1，2，4字节的整形定义。<br>
+他们的格式化字符串使用  <code>PRId8</code>, <code>PRId16</code>, <code>PRId32</code>, <code>PRId64</code> 表示，他们在文件 <code>&lt;cinttypes&gt;</code> 中有定义。<br>
+阅读源码后底层实现原理是通过识别系统中字宽，通过宏定义将满足不同条件的情况定义出来。<br>
+同样这些特性也是从C++11和C99开始才引入的。<br>
+示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;cstio&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;cinttypes&gt;</span><span class="cp"></span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%zu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">PRId64</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%+"</span> <span class="n">PRId64</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">INT64_MIN</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%+"</span> <span class="n">PRId64</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">INT64_MAX</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%+"</span> <span class="n">PRId64</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
+</pre></div>
+
+<p>
+参考资料：<a href="http://en.cppreference.com/w/cpp/types/integer">http://en.cppreference.com/w/cpp/types/integer</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2-1-3" class="outline-4">
+<h4 id="sec-2-1-3">2.1.3 <code>%x</code> 对应无符号整数</h4>
+<div class="outline-text-4" id="text-2-1-3">
+<p>
+在使用 <code>sscanf</code> 函数对取16进制数据时需要注意传入的需要是无符号类型的地址。<br>
+示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">szNumber</span> <span class="o">=</span> <span class="s">"af"</span>
+<span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">=</span> <span class="n">nNum</span><span class="p">;</span>
+<span class="n">sscanf</span><span class="p">(</span><span class="n">szNumber</span><span class="p">,</span> <span class="s">"%x"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">nNum</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">2.2 多个逻辑表达式之间在 <code>&amp;&amp;</code> 和 <code>||</code> 之间的运算符优先级</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+先看以下示例代码：<br></p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">EXPR1</span> <span class="o">||</span> <span class="n">EXPR2</span> <span class="o">||</span> <span class="n">EXPR3</span> <span class="o">&amp;&amp;</span> <span class="n">EXPR4</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// ....</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+分析：从语法规则上来说逻辑与（ <code>&amp;&amp;</code> ）的运算符优先级要高于逻辑或（ <code>||</code> ）。<br>
+所以在进行运算时，会先计算逻辑与，再计算逻辑或。<br></p>
+
+<p>
+从语法上分析是没有错误的，但是这样的表达式很容易造成读者4的误解。<br>
+改成以下的形式会好很多：<br></p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">EXPR1</span> <span class="o">||</span> <span class="n">EXPR2</span> <span class="o">||</span> <span class="p">(</span><span class="n">EXPR3</span> <span class="o">&amp;&amp;</span> <span class="n">EXPR4</span><span class="p">)</span> <span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// ....</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-2-3" class="outline-3">
+<h3 id="sec-2-3">2.3 有符号整数和无符号整数之间的大小比较</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+有符号整数和无符号整数在进行大小比较时，有符号数会被转化为无符号数。<br>
+这样会引起一些不必要误解，所以应该避免这种用法。<br>
+示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">n1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+<span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">n2</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="kt">bool</span> <span class="n">bRet</span> <span class="o">=</span> <span class="n">n1</span> <span class="o">&lt;</span> <span class="n">n2</span><span class="p">;</span> <span class="c1">// bRet = false</span>
+</pre></div>
+<p>
+注意，这里的运算结果与实际预期不符。<br></p>
+
+<p>
+另外，使用无符号数作为循环的迭代条件时，需要注意进行迭代条件在比较时是否能够正常终止迭代。<br>
+示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span> <span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">100</span><span class="p">;</span> <span class="n">i</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">;</span> <span class="o">--</span><span class="n">i</span> <span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+注意，这里会出现死循环。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2-4" class="outline-3">
+<h3 id="sec-2-4">2.4 函数的重载和覆盖</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+在进行虚函数多态实现时，注意检查函数的一致性。<br>
+出现相同函数名称但是积累为非 <code>const</code> 版本，而派生类为 <code>const</code> 时，这时并不会导致多态，而会导致基类函数被隐藏。<br></p>
+</div>
 </div>
 </div>
     </div>
@@ -170,7 +304,7 @@
             </span></p>
             <p class="dateline"><a href="posts/use-global-in-emacs.html" rel="bookmark"><time class="published dt-published" datetime="2018-01-02T23:47:05+08:00" title="2018-01-02 23:47">2018-01-02 23:47</time></a></p>
         </div>
-    </header><div class="p-summary entry-summary">
+    </header><div class="e-content entry-content">
     <div id="outline-container-sec-1" class="outline-2">
 <h2 id="sec-1">1 引言</h2>
 <div class="outline-text-2" id="text-1">
@@ -180,7 +314,106 @@ global是代码标签化索引工具，能够在许多源码中快速定位函�
 我主要使用global来辅助代码跳转；还有一种用法是用来辅助代码补全，目前正在研究中。<br></p>
 
 
-<p class="more"><a href="posts/use-global-in-emacs.html">Read more…</a></p>
+<!-- TEASER_END -->
+</div>
+</div>
+
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">2 GNU Global相关介绍</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+global是一个源代码标签索引系统，它的特点如下：<br></p>
+<ul class="org-ul">
+<li>编辑器中立<br>
+</li>
+<li>能够区分代码中的“定义”和“引用”<br>
+</li>
+</ul>
+<p>
+global的内置解析器能够完成C, C++, Yacc, Java, PHP4和汇编的语法解析；也可以通过插件拓展完成很多其他语言的解析。<br></p>
+
+<p>
+参考资料：<a href="https://www.gnu.org/software/global/">https://www.gnu.org/software/global/</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">3 GNU Global基本用法</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+直接在源文件的根目录中运行gtags，就会生成索引文件。<br></p>
+<ul class="org-ul">
+<li>GTAGS ： 定义<br>
+</li>
+<li>GRTAGS ： 引用<br>
+</li>
+<li>GPATH ： 路径<br>
+</li>
+</ul>
+<p>
+使用global指令就可以完成代码的索引。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">4 GNU Global高级用法</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+高级用法主要涉及对系统的头文件目录中的文件进行索引。<br>
+系统头文件目录通常来说是只读的，而且我们也不希望产生的临时文件污染系统头文件目录。<br>
+可以通过修改 <code>MAKEOBJDIRPREFIX</code> 和 <code>GTAGSLIBPATH</code> 等环境变量实现。<br>
+但是目前我还没有研究出来正确的使用方法。<br>
+可以通过创建系统头文件目录的软链接到工程目录，这样gtags在生成索引数据库时就能够扫描系统头文件目录了。<br></p>
+
+<p>
+参考资料：<a href="https://www.gnu.org/software/global/globaldoc_toc.html">https://www.gnu.org/software/global/globaldoc_toc.html</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5">5 Windows下的Global使用技巧</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+对于unix系统来说，一般通过自带的包管理器完成global的安装，这时global是能够直接从命令行调用的。<br>
+而对于windows系统来说，我下载的是软件压缩包，在解压后需要将可执行文件的目录加入到系统环境变量PATH中。<br>
+这样就能够通过任意一个命令行工具调用global。<br>
+同理，也后续在emacs中的使用也方便很多；我之前也尝试过使用lisp调用 <code>setenv</code> 接口将global运行目录添加到环境变量中，但是并不奏效。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-6" class="outline-2">
+<h2 id="sec-6">6 在emacs中使用global</h2>
+<div class="outline-text-2" id="text-6">
+<p>
+global作为GNU系列软件，已经为emacs提供了插件。<br>
+但是，我推荐使用helm gtags作为global的交互接口。<br>
+我的emacs配置如下：<br></p>
+<div class="highlight"><pre><span></span>(use-package helm-gtags
+  :after (helm)
+  :init
+  (add-hook 'c-mode-hook 'helm-gtags-mode)
+  (add-hook 'c++-mode-hook 'helm-gtags-mode)
+  (add-hook 'asm-mode-hook 'helm-gtags-mode)
+
+  :config
+  ;; customize
+  (custom-set-variables
+   '(helm-gtags-path-style 'relative)
+   '(helm-gtags-ignore-case t)
+   '(helm-gtags-auto-update t))
+
+  :bind
+  (:map helm-gtags-mode-map
+	("M-t" . helm-gtags-find-tag)
+	("M-r" . helm-gtags-find-rtag)
+	("M-s" . helm-gtags-find-symbol)
+	("M-," . helm-gtags-previous-history)
+	("M-." . helm-gtags-next-history)))
+</pre></div>
+<p>
+在MacOS使用时需要额外注意的是在emacs中不能够正常调用global, 需要借助额外的插件 <code>exec-path-from-shell</code> 修复可执行程序的路径问题。<br></p>
 </div>
 </div>
     </div>
@@ -191,13 +424,211 @@ global是代码标签化索引工具，能够在许多源码中快速定位函�
             </span></p>
             <p class="dateline"><a href="posts/gcc-warn-on-compile.html" rel="bookmark"><time class="published dt-published" datetime="2017-12-31T09:51:01+08:00" title="2017-12-31 09:51">2017-12-31 09:51</time></a></p>
         </div>
-    </header><div class="p-summary entry-summary">
-    <div>
-<p>
+    </header><div class="e-content entry-content">
+    <p>
 编译阶段警告信息有助于排查代码中错误，合理配置编译警告信息能够提高开发效率。<br>
 通过了解编译警告，也能够了解到哪些代码风格是不好的，有哪些代码的书写格式是容易出现问题的，有助于让自己写出更高质量的代码。<br></p>
 
-<p class="more"><a href="posts/gcc-warn-on-compile.html">Read more…</a></p>
+<!-- TEASER_END -->
+
+<div id="outline-container-sec-0-1" class="outline-3">
+<h3 id="sec-0-1"><code>-fsyntax-only</code></h3>
+<div class="outline-text-3" id="text-0-1">
+<p>
+检查代码中的语法错误，但是不做任何处理，通常用作语法检查。<br>
+在使用这个参数以后，编译器仅仅检查代码中的语法错误并予以提示，并不会生成目标文件。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-0-2" class="outline-3">
+<h3 id="sec-0-2"><code>-w</code></h3>
+<div class="outline-text-3" id="text-0-2">
+<p>
+禁止所有的报警信息<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-0-3" class="outline-3">
+<h3 id="sec-0-3"><code>-Werror</code></h3>
+<div class="outline-text-3" id="text-0-3">
+<p>
+将所有的警告视为错误<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-0-4" class="outline-3">
+<h3 id="sec-0-4"><code>-Wfatal-errors</code></h3>
+<div class="outline-text-3" id="text-0-4">
+<p>
+在出现第一条错误信息停止编译<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-0-5" class="outline-3">
+<h3 id="sec-0-5"><code>-Wall</code></h3>
+<div class="outline-text-3" id="text-0-5">
+<p>
+启用以下警告<br></p>
+<div class="highlight"><pre><span></span><span class="err">-Waddress</span>   
+<span class="nv">-Warray-bounds</span><span class="o">=</span><span class="m">1</span> <span class="o">(</span>only with -O2<span class="o">)</span>  
+<span class="err">-Wbool-compare</span>  
+<span class="err">-Wbool-operation</span>  
+<span class="err">-Wc++11-compat</span>  <span class="err">-Wc++14-compat</span>  
+<span class="err">-Wcatch-value</span> <span class="err">(C++</span> <span class="err">and</span> <span class="err">Objective-C++</span> <span class="err">only)</span>  
+<span class="err">-Wchar-subscripts</span>  
+<span class="err">-Wcomment</span>  
+<span class="err">-Wduplicate-decl-specifier</span> <span class="err">(C</span> <span class="err">and</span> <span class="err">Objective-C</span> <span class="err">only)</span> 
+<span class="err">-Wenum-compare</span> <span class="err">(in</span> <span class="err">C/ObjC;</span> <span class="err">this</span> <span class="err">is</span> <span class="err">on</span> <span class="err">by</span> <span class="err">default</span> <span class="err">in</span> <span class="err">C++)</span> 
+<span class="err">-Wformat</span>   
+<span class="err">-Wint-in-bool-context</span>  
+<span class="err">-Wimplicit</span> <span class="err">(C</span> <span class="err">and</span> <span class="err">Objective-C</span> <span class="err">only)</span> 
+<span class="err">-Wimplicit-int</span> <span class="err">(C</span> <span class="err">and</span> <span class="err">Objective-C</span> <span class="err">only)</span> 
+<span class="err">-Wimplicit-function-declaration</span> <span class="err">(C</span> <span class="err">and</span> <span class="err">Objective-C</span> <span class="err">only)</span> 
+<span class="err">-Winit-self</span> <span class="err">(only</span> <span class="err">for</span> <span class="err">C++)</span> 
+<span class="err">-Wlogical-not-parentheses</span> 
+<span class="err">-Wmain</span> <span class="err">(only</span> <span class="err">for</span> <span class="err">C/ObjC</span> <span class="err">and</span> <span class="err">unless</span> <span class="err">-ffreestanding)</span>  
+<span class="err">-Wmaybe-uninitialized</span> 
+<span class="err">-Wmemset-elt-size</span> 
+<span class="err">-Wmemset-transposed-args</span> 
+<span class="err">-Wmisleading-indentation</span> <span class="err">(only</span> <span class="err">for</span> <span class="err">C/C++)</span> 
+<span class="err">-Wmissing-braces</span> <span class="err">(only</span> <span class="err">for</span> <span class="err">C/ObjC)</span> 
+<span class="err">-Wmultistatement-macros</span>  
+<span class="err">-Wnarrowing</span> <span class="err">(only</span> <span class="err">for</span> <span class="err">C++)</span>  
+<span class="err">-Wnonnull</span>  
+<span class="err">-Wnonnull-compare</span>  
+<span class="err">-Wopenmp-simd</span> 
+<span class="err">-Wparentheses</span>  
+<span class="err">-Wpointer-sign</span>  
+<span class="err">-Wreorder</span>   
+<span class="err">-Wrestrict</span>   
+<span class="err">-Wreturn-type</span>  
+<span class="err">-Wsequence-point</span>  
+<span class="err">-Wsign-compare</span> <span class="err">(only</span> <span class="err">in</span> <span class="err">C++)</span>  
+<span class="err">-Wsizeof-pointer-div</span> 
+<span class="err">-Wsizeof-pointer-memaccess</span> 
+<span class="err">-Wstrict-aliasing</span>  
+<span class="nv">-Wstrict-overflow</span><span class="o">=</span><span class="m">1</span>  
+<span class="err">-Wswitch</span>  
+<span class="err">-Wtautological-compare</span>  
+<span class="err">-Wtrigraphs</span>  
+<span class="err">-Wuninitialized</span>  
+<span class="err">-Wunknown-pragmas</span>  
+<span class="err">-Wunused-function</span>  
+<span class="err">-Wunused-label</span>     
+<span class="err">-Wunused-value</span>     
+<span class="err">-Wunused-variable</span>  
+<span class="err">-Wvolatile-register-var</span> 
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-0-6" class="outline-3">
+<h3 id="sec-0-6"><code>-Wextra</code></h3>
+<div class="outline-text-3" id="text-0-6">
+<p>
+启用以下警告<br></p>
+<div class="highlight"><pre><span></span><span class="err">-Wclobbered</span>  
+<span class="err">-Wcast-function-type</span>  
+<span class="err">-Wempty-body</span>  
+<span class="err">-Wignored-qualifiers</span> 
+<span class="nv">-Wimplicit-fallthrough</span><span class="o">=</span><span class="m">3</span> 
+<span class="err">-Wmissing-field-initializers</span>  
+<span class="err">-Wmissing-parameter-type</span> <span class="err">(C</span> <span class="err">only)</span>  
+<span class="err">-Wold-style-declaration</span> <span class="err">(C</span> <span class="err">only)</span>  
+<span class="err">-Woverride-init</span>  
+<span class="err">-Wsign-compare</span> <span class="err">(C</span> <span class="err">only)</span> 
+<span class="err">-Wtype-limits</span>  
+<span class="err">-Wuninitialized</span>  
+<span class="err">-Wshift-negative-value</span> <span class="err">(in</span> <span class="err">C++03</span> <span class="err">and</span> <span class="err">in</span> <span class="err">C99</span> <span class="err">and</span> <span class="err">newer)</span>  
+<span class="err">-Wunused-parameter</span> <span class="err">(only</span> <span class="err">with</span> <span class="err">-Wunused</span> <span class="err">or</span> <span class="err">-Wall)</span> 
+<span class="err">-Wunused-but-set-parameter</span> <span class="err">(only</span> <span class="err">with</span> <span class="err">-Wunused</span> <span class="err">or</span> <span class="err">-Wall)</span>  
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-0-7" class="outline-3">
+<h3 id="sec-0-7"><code>-Wdelete-incomplete</code></h3>
+<div class="outline-text-3" id="text-0-7">
+<p>
+(C++ and Objective-C++ only)<br>
+析构一个指向不完整的类型的指针，可能会造成运行时错误未定义行为。<br>
+这个警告默认是开启的。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-0-8" class="outline-3">
+<h3 id="sec-0-8"><code>-Wuseless-cast</code></h3>
+<div class="outline-text-3" id="text-0-8">
+<p>
+(C++ and Objective-C++ only)<br>
+变量被转换为自身类型。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-0-9" class="outline-3">
+<h3 id="sec-0-9"><code>-Wduplicated-branches</code></h3>
+<div class="outline-text-3" id="text-0-9">
+<p>
+用于检查在 <code>if/else</code> 语句中是否存在返回值相同的结果返回值。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-0-10" class="outline-3">
+<h3 id="sec-0-10"><code>-Wduplicated-cond</code></h3>
+<div class="outline-text-3" id="text-0-10">
+<p>
+用于检查在 <code>if/else</code> 语句中存在相同的条件<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-0-11" class="outline-3">
+<h3 id="sec-0-11"><code>-Wfloat-equal</code></h3>
+<div class="outline-text-3" id="text-0-11">
+<p>
+检查使用等号比较float相等的情况<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-0-12" class="outline-3">
+<h3 id="sec-0-12"><code>-Wformat</code></h3>
+<div class="outline-text-3" id="text-0-12">
+<p>
+检查printf相关函数中的格式字符串是否符合与后续的实际参数对应。<br>
+该项检查在 <code>-Wall</code> 中默认开启，可以通过 <code>-Wformat=0</code> 进行关闭。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">配置范例</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+这里是正在使用的警告相关的参数配置<br></p>
+<div class="highlight"><pre><span></span><span class="c">#编译时的警告信息</span>
+<span class="nv">WARNING_FLAG</span> <span class="o">=</span> -Wall -Wextra -Wfatal-errors -Wpedantic <span class="se">\</span>
+	     -Wswitch-default -Wundef -Wpointer-arith <span class="se">\</span>
+	     -Woverloaded-virtual -Wnon-virtual-dtor <span class="se">\</span>
+	     -Wno-unused-parameter <span class="se">\</span>
+	     -Wuseless-cast -Wformat-security -Wformat-nonliteral <span class="se">\</span>
+	     -Wduplicated-branches -Wduplicated-cond -Wfloat-equal
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">参考资料</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+<a href="https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html">https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html</a><br></p>
+</div>
 </div>
     </div>
     </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="posts/linux-directories.html" class="u-url">linux 系统目录结构</a></h1>
@@ -207,7 +638,7 @@ global是代码标签化索引工具，能够在许多源码中快速定位函�
             </span></p>
             <p class="dateline"><a href="posts/linux-directories.html" rel="bookmark"><time class="published dt-published" datetime="2017-12-15T17:12:25+08:00" title="2017-12-15 17:12">2017-12-15 17:12</time></a></p>
         </div>
-    </header><div class="p-summary entry-summary">
+    </header><div class="e-content entry-content">
     <div id="outline-container-sec-1" class="outline-2">
 <h2 id="sec-1">Linux系统的目录结构以及各个目录的作用</h2>
 <div class="outline-text-2" id="text-1">
@@ -234,103 +665,121 @@ bin是binary的缩写，这个目录存放使用者最经常使用的命令<br><
 <p>
 这个目录用来存放系统管理所需要的配置文件和子目录<br></p>
 
-<p class="more"><a href="posts/linux-directories.html">Read more…</a></p>
-</div>
-</div>
-</div>
-    </div>
-    </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="posts/debug-with-gdb-on-linux.html" class="u-url">linux下使用GDB的调试技巧</a></h1>
-        <div class="metadata">
-            <p class="byline author vcard"><span class="byline-name fn" itemprop="author">
-                <a href="authors/samson-wang.html">Samson Wang</a>
-            </span></p>
-            <p class="dateline"><a href="posts/debug-with-gdb-on-linux.html" rel="bookmark"><time class="published dt-published" datetime="2017-10-24T08:58:25+08:00" title="2017-10-24 08:58">2017-10-24 08:58</time></a></p>
-        </div>
-    </header><div class="p-summary entry-summary">
-    <div>
-<div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">1 代码编译阶段</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-在调试C/C++代码时，在编译阶段使用 <code>gcc/g++ -g</code> 命令编译，将调试信息生成在目标文件中。<br></p>
+<!-- TEASER_END -->
 </div>
 </div>
 
-<div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">2 开启gdb模式</h2>
-<div class="outline-text-2" id="text-2">
-<ul class="org-ul">
-<li>直接进入gdb模式: <code>gdb</code> <br>
-</li>
-<li>使用gdb模式开启一个新的进程: <code>gdb &lt;appname&gt;</code><br>
-</li>
-<li>使用指定的程序来调试core文件: <code>gdb &lt;appname&gt; &lt;corename&gt;</code><br>
-</li>
-</ul>
-<p class="more"><a href="posts/debug-with-gdb-on-linux.html">Read more…</a></p>
-</div>
-</div>
-</div>
-    </div>
-    </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="posts/blog-open-up.html" class="u-url">终于，博客开通了</a></h1>
-        <div class="metadata">
-            <p class="byline author vcard"><span class="byline-name fn" itemprop="author">
-                <a href="authors/samson-wang.html">Samson Wang</a>
-            </span></p>
-            <p class="dateline"><a href="posts/blog-open-up.html" rel="bookmark"><time class="published dt-published" datetime="2017-10-23T21:58:25+08:00" title="2017-10-23 21:58">2017-10-23 21:58</time></a></p>
-        </div>
-    </header><div class="p-summary entry-summary">
-    <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">1 前言</h2>
-<div class="outline-text-2" id="text-1">
+<div id="outline-container-sec-1-4" class="outline-3">
+<h3 id="sec-1-4"><code>/dev</code></h3>
+<div class="outline-text-3" id="text-1-4">
 <p>
-Samson的博客开通了。<br>
-作为码农，一直想要有个博客作为学习与积累的记录。<br>
-在尝试过多种主流博客套路之后，终于选定了使用 emacs + org-mode + nikola + github pages 组合的技术方案。<br></p>
+设备文件，这目录下是所有Linux的外部设备。在Linux中设备和文件是用同种方法访问的<br></p>
+</div>
+</div>
 
-<p class="more"><a href="posts/blog-open-up.html">Read more…</a></p>
+<div id="outline-container-sec-1-5" class="outline-3">
+<h3 id="sec-1-5"><code>/home</code></h3>
+<div class="outline-text-3" id="text-1-5">
+<p>
+普通用户的主目录<br></p>
 </div>
 </div>
-    </div>
-    </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="posts/welcome-to-nikola.html" class="u-url">Welcome to Nikola</a></h1>
-        <div class="metadata">
-            <p class="byline author vcard"><span class="byline-name fn" itemprop="author">
-                <a href="authors/roberto-alsina.html">Roberto Alsina</a>
-            </span></p>
-            <p class="dateline"><a href="posts/welcome-to-nikola.html" rel="bookmark"><time class="published dt-published" datetime="2012-03-30T23:00:00-03:00" title="2012-03-30 23:00">2012-03-30 23:00</time></a></p>
-        </div>
-    </header><div class="p-summary entry-summary">
-    <div>
-<div class="figure">
-<a class="reference external image-reference" href="https://farm1.staticflickr.com/138/352972944_4f9d568680_z.jpg?zz=1"><img alt="Nikola Tesla Corner by nicwest, on Flickr" class="thumbnail" src="https://farm1.staticflickr.com/138/352972944_4f9d568680.jpg"></a>
+
+
+<div id="outline-container-sec-1-6" class="outline-3">
+<h3 id="sec-1-6"><code>/lib</code></h3>
+<div class="outline-text-3" id="text-1-6">
+<p>
+这个目录存放这系统最基本的动态链接共享库<br></p>
 </div>
-<p>If you can see this in a web browser, it means you managed to install Nikola,
-and build a site using it. Congratulations!</p>
-<p>Next steps:</p>
-<ul class="simple">
-<li><a class="reference external" href="demos/handbook.html">Read the manual</a></li>
-<li><a class="reference external" href="https://getnikola.com">Visit the Nikola website to learn more</a></li>
-<li><a class="reference external" href="galleries/demo/">See a demo photo gallery</a></li>
-<li><a class="reference external" href="demos/listings-demo.html">See a demo listing</a></li>
-<li><a class="reference external" href="demos/slides-demo.html">See a demo slideshow</a></li>
-<li><a class="reference external" href="demos/dr-nikolas-vendetta.html">See a demo of a longer text</a></li>
-</ul>
-<p>Send feedback to <a class="reference external" href="mailto:info@getnikola.com">info@getnikola.com</a>!</p>
+</div>
+
+
+<div id="outline-container-sec-1-7" class="outline-3">
+<h3 id="sec-1-7"><code>/lost+found</code></h3>
+<div class="outline-text-3" id="text-1-7">
+<p>
+这个目录平时的空的，当系统不正常关机后，这里就成了一些无家可归文件的避难所。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-8" class="outline-3">
+<h3 id="sec-1-8"><code>/mnt</code></h3>
+<div class="outline-text-3" id="text-1-8">
+<p>
+这个目录是空的，系统提供这个目录是让用户临时挂载别的文件系统。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-1-9" class="outline-3">
+<h3 id="sec-1-9"><code>/proc</code></h3>
+<div class="outline-text-3" id="text-1-9">
+<p>
+这个目录是一个虚拟的目录，它是系统内存的映射，我们可以通过访问这个目录来获取系统信息。也就是说这个目录的内容不再硬盘上而是在内存里。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-10" class="outline-3">
+<h3 id="sec-1-10"><code>/root</code></h3>
+<div class="outline-text-3" id="text-1-10">
+<p>
+系统管理员（也叫超级用户）的主目录<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-11" class="outline-3">
+<h3 id="sec-1-11"><code>/sbin</code></h3>
+<div class="outline-text-3" id="text-1-11">
+<p>
+s代表超级用户（super user）,也就是说这里存放的是系统管理员使用的管理程序。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-12" class="outline-3">
+<h3 id="sec-1-12"><code>/tmp</code></h3>
+<div class="outline-text-3" id="text-1-12">
+<p>
+存放临时文件<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-13" class="outline-3">
+<h3 id="sec-1-13"><code>/var</code></h3>
+<div class="outline-text-3" id="text-1-13">
+<p>
+这个目录中存放这哪些不断在扩充着的东西，为了保持 <code>/usr</code> 的相对稳定性，那些经常被修改的目录可以放在这个目录下。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-14" class="outline-3">
+<h3 id="sec-1-14"><code>/usr</code></h3>
+<div class="outline-text-3" id="text-1-14">
+<p>
+这是最庞大的目录，我们要用到的应用程序和文件几乎都存放在这个目录下<br></p>
+</div>
+</div>
 </div>
     </div>
     </article>
 </div>
 
-
-
-
-
-        </div>
+        <nav class="postindexpager"><ul class="pager">
+<li class="next">
+                <a href="index-1.html" rel="next">Older posts</a>
+            </li>
+        </ul></nav>
+</div>
         <!--End of body content-->
 
         <footer id="footer">
             
-Contents © 2018 <a href="mailto:zl.wang@foxmail.com">Samson Wang</a> 
+Contents © -1 <a href="mailto:zl.wang@foxmail.com">Samson Wang</a> 
  - Powered by <a href="https://getnikola.com" rel="nofollow">Nikola</a>
  - 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
