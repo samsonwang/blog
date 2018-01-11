@@ -1245,6 +1245,9 @@ INDEX_DISPLAY_POST_COUNT = 5
 # can set this to False.
 # USE_CDN_WARNING = True
 
+# use custom.css to change default
+HAS_CUSTOM_CSS = True
+
 # Extra things you want in the pages HEAD tag. This will be added right
 # before </head>
 # (translatable)
