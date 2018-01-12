@@ -12,7 +12,7 @@ rm -f .doit.db.dat
 
 rm -f .doit.db.dir
 
-
+rm -f .doit.db
 
 
 
