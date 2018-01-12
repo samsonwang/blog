@@ -1237,13 +1237,13 @@ INDEX_DISPLAY_POST_COUNT = 5
 # Bootstrap is served from BootstrapCDN (provided by MaxCDN)
 # Set this to False if you want to host your site without requiring access to
 # external resources.
-# USE_CDN = False
+USE_CDN = True
 
 # Check for USE_CDN compatibility.
 # If you are using custom themes, have configured the CSS properly and are
 # receiving warnings about incompatibility but believe they are incorrect, you
 # can set this to False.
-# USE_CDN_WARNING = True
+USE_CDN_WARNING = False
 
 # use custom.css to change default
 HAS_CUSTOM_CSS = True
@@ -1260,15 +1260,6 @@ HAS_CUSTOM_CSS = True
 # Google analytics or whatever else you use. Added to the bottom of <body>
 # in the default template (base.tmpl).
 BODY_END = """
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'UA-108507797-1');
-</script>
-
 <!-- Baidu Analytics -->
 <script>
 var _hmt = _hmt || [];
