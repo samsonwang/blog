@@ -984,7 +984,7 @@ CONTENT_FOOTER_FORMATS = {
             "email": BLOG_EMAIL,
             "author": BLOG_AUTHOR,
             "date": time.gmtime().tm_year,
-            "license": LICENSE
+            "license": LICENSE,
         }
     )
 }
@@ -1247,7 +1247,12 @@ USE_CDN = True
 USE_CDN_WARNING = False
 
 # use custom.css to change default
-HAS_CUSTOM_CSS = True
+# HAS_CUSTOM_CSS = True
+
+# If webassets is installed, bundle JS and CSS into single files to make
+# site loading faster in a HTTP/1.1 environment but is not recommended for
+# HTTP/2.0 when caching is used. Defaults to True.
+USE_BUNDLES = False
 
 # Extra things you want in the pages HEAD tag. This will be added right
 # before </head>
@@ -1337,11 +1342,6 @@ UNSLUGIFY_TITLES = True
 #     # 'creator': '@username',     # Username for the content creator / author.
 # }
 
-# If webassets is installed, bundle JS and CSS into single files to make
-# site loading faster in a HTTP/1.1 environment but is not recommended for
-# HTTP/2.0 when caching is used. Defaults to True.
-USE_BUNDLES = False
-
 # Plugins you don't want to use. Be careful :-)
 # DISABLED_PLUGINS = ["render_galleries"]
 
@@ -1397,7 +1397,11 @@ USE_BUNDLES = False
 
 # Put in global_context things you want available on all your templates.
 # It can be anything, data, functions, modules, etc.
-GLOBAL_CONTEXT = {}
+GLOBAL_CONTEXT = {
+    "about_me": "<p>Zeal for Coding, C++ developer.</p>",
+    "context_demo1": BLOG_AUTHOR,
+    "context_demo2": time.gmtime().tm_year,
+}
 
 # Add functions here and they will be called with template
 # GLOBAL_CONTEXT as parameter when the template is about to be
