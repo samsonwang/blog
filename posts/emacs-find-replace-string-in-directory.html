@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Slides Demo | Hack Note</title>
+<title>使用emacs查找替换指定目录所有文件中字符串 | Hack Note</title>
 <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <link href="/assets/css/code.css" rel="stylesheet" type="text/css">
@@ -12,15 +12,31 @@
 <meta name="theme-color" content="#5670d4">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link rel="canonical" href="http://samsonwang.me/demos/slides-demo.html">
+<link rel="canonical" href="http://samsonwang.me/posts/emacs-find-replace-string-in-directory.html">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
 <!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/iterator-invalidate.html" title="STL容器的迭代器失效问题" type="text/html">
 <meta property="og:site_name" content="Hack Note">
-<meta property="og:title" content="Slides Demo">
-<meta property="og:url" content="http://samsonwang.me/demos/slides-demo.html">
-<meta property="og:description" content="Nikola intends to let you do slideshows easily:">
+<meta property="og:title" content="使用emacs查找替换指定目录所有文件中字符串">
+<meta property="og:url" content="http://samsonwang.me/posts/emacs-find-replace-string-in-directory.html">
+<meta property="og:description" content="本文主要介绍在emacs中对一个目录中的很多文件进行字符串查找和替换操作的方法。参考了XahLee的教程后，在此记录做个备份。
+
+
+
+进入dired模式 ： 我的快捷键配置为 C-x d, 也可以使用 M-x &lt;dired&gt; .
+标记需要查找的文件 ： 在进入dired模式后，对需要操作的文件或目录进行操作。
+
+
+m 对光标所在的文件或目录进行标记
+
+u 对光标所在的文件或目录取消标记
+
+U 取消">
 <meta property="og:type" content="article">
-<meta property="article:published_time" content="2012-12-27T10:16:20-03:00">
+<meta property="article:published_time" content="2018-01-17T10:18:46+08:00">
+<meta property="article:tag" content="dired">
+<meta property="article:tag" content="emacs">
+<meta property="article:tag" content="tips">
 </head>
 <body>  
 <a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
@@ -65,7 +81,7 @@
 </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-    <a href="/demos/slides-demo.rst" id="sourcelink">Source</a>
+    <a href="/posts/emacs-find-replace-string-in-directory.org" id="sourcelink">Source</a>
     </li>
 
         
@@ -82,62 +98,80 @@
       <div class="col-sm-9">
         
         
-<article class="post-text storypage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name"><a href="/demos/slides-demo.html" class="u-url">Slides Demo</a></h1>
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name"><a href="/posts/emacs-find-replace-string-in-directory.html" class="u-url">使用emacs查找替换指定目录所有文件中字符串</a></h1>
 
+      <div class="metadata">
+        <div class="author">
+            <a href="/authors/samson-wang.html">Samson Wang</a>
+        </div>
+        <div class="date">
+          <a href="/posts/emacs-find-replace-string-in-directory.html" rel="bookmark">
+            <time class="published dt-published" datetime="2018-01-17T10:18:46+08:00" itemprop="datePublished" title="2018-01-17 10:18">2018-01-17 10:18
+            </time></a>
+        </div>
         
-
-    </header><div class="e-content entry-content" itemprop="articleBody text">
-    <div>
-<p>Nikola intends to let you do slideshows easily:</p>
-
-<div id="slides_2ecdd102f4064574aa7aa48a55acae37" class="carousel slide">
-    <ol class="carousel-indicators">
-<li data-target="#slides_2ecdd102f4064574aa7aa48a55acae37" data-slide-to="0" class="active">
-            </li>
-<li data-target="#slides_2ecdd102f4064574aa7aa48a55acae37" data-slide-to="1">
-            </li>
-<li data-target="#slides_2ecdd102f4064574aa7aa48a55acae37" data-slide-to="2">
-            </li>
-<li data-target="#slides_2ecdd102f4064574aa7aa48a55acae37" data-slide-to="3">
-            </li>
-<li data-target="#slides_2ecdd102f4064574aa7aa48a55acae37" data-slide-to="4">
-    </li>
-</ol>
-<div class="carousel-inner">
-                <div class="item active"><img src="/galleries/demo/tesla_conducts_lg.jpg" alt="" style="margin: 0 auto 0 auto;"></div>
-                <div class="item"><img src="/galleries/demo/tesla_lightning2_lg.jpg" alt="" style="margin: 0 auto 0 auto;"></div>
-                <div class="item"><img src="/galleries/demo/tesla4_lg.jpg" alt="" style="margin: 0 auto 0 auto;"></div>
-                <div class="item"><img src="/galleries/demo/tesla_lightning1_lg.jpg" alt="" style="margin: 0 auto 0 auto;"></div>
-                <div class="item"><img src="/galleries/demo/tesla_tower1_lg.jpg" alt="" style="margin: 0 auto 0 auto;"></div>
+        
+    <div class="source">
+      <p class="sourceline"><a href="/posts/emacs-find-replace-string-in-directory.org" class="sourcelink">Source</a></p>
     </div>
-    <a class="left carousel-control" href="/demos/slides-demo.html#slides_2ecdd102f4064574aa7aa48a55acae37" data-slide="prev"><span class="icon-prev"></span></a>
-    <a class="right carousel-control" href="/demos/slides-demo.html#slides_2ecdd102f4064574aa7aa48a55acae37" data-slide="next"><span class="icon-next"></span></a>
-</div>
-</div>
-    </div>
-        <section class="comments"><h2>Comments</h2>
-        
-        
-        <div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-me",
-            disqus_url="http://samsonwang.me/demos/slides-demo.html",
-        disqus_title="Slides Demo",
-        disqus_identifier="cache\demos\slides-demo.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
 
+        
+          <div class="link">
+            <a href="http://ergoemacs.org/emacs/find_replace_inter.html">Original site</a>
+          </div>
+          
+      </div>
+      
 
-        </section></article>
+  </header><ul itemprop="keywords" class="tags">
+    Tags : 
+        <li><a class="tag p-category" href="/categories/dired.html" rel="tag">dired</a></li>
+        <li><a class="tag p-category" href="/categories/emacs.html" rel="tag">emacs</a></li>
+        <li><a class="tag p-category" href="/categories/tips.html" rel="tag">tips</a></li>
+    </ul>
+<div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+本文主要介绍在emacs中对一个目录中的很多文件进行字符串查找和替换操作的方法。参考了XahLee的教程后，在此记录做个备份。<br></p>
+
+<p>
+<b>进入dired模式</b> ： 我的快捷键配置为 <code>C-x d</code>, 也可以使用 <code>M-x &lt;dired&gt;</code> .<br><b>标记需要查找的文件</b> ： 在进入dired模式后，对需要操作的文件或目录进行操作。<br></p>
+<ul class="org-ul">
+<li>
+<code>m</code> 对光标所在的文件或目录进行标记<br>
+</li>
+<li>
+<code>u</code> 对光标所在的文件或目录取消标记<br>
+</li>
+<li>
+<code>U</code> 取消所有标记<br>
+</li>
+</ul>
+<p>
+可以通过 <code>dired-mark-files-regexp</code> 使用正则表达式完成批量文件增加标记。<br><b>批量查找</b> ：使用 <code>dired-do-query-replace-regexp</code> 进行查找替换<br><b>查找结果</b> ：在查找结果中使用如下快捷键完成操作<br></p>
+<ul class="org-ul">
+<li>
+<code>y</code> 对当前记录执行替换操作<br>
+</li>
+<li>
+<code>n</code> 跳过当前记录<br>
+</li>
+<li>
+<code>C-g</code> 停止本次查找替换操作<br>
+</li>
+<li>
+<code>!</code> 同意本文件中的查找替换操作<br>
+</li>
+<li>
+<code>N</code> 跳过本文件中的查找替换操作<br>
+</li>
+<li>
+<code>Y</code> 同意本次所有的查找替换操作<br>
+</li>
+</ul>
+</div>
+  
+
+</article>
 </div>
 
       <div class="col-sm-3 sidebar">
@@ -162,19 +196,21 @@
 
     
 
-
-
-    
-  <div class="row">
+        <ul class="pager hidden-print">
+<li class="previous">
+                <a href="/posts/iterator-invalidate.html" rel="prev" title="STL容器的迭代器失效问题">Previous post</a>
+            </li>
+        </ul>
+<div class="row">
   <section class="comments hidden-print"><h2>Comments</h2>
     
         
         <div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-me",
-            disqus_url="http://samsonwang.me/demos/slides-demo.html",
-        disqus_title="Slides Demo",
-        disqus_identifier="cache/demos/slides-demo.html",
+            disqus_url="http://samsonwang.me/posts/emacs-find-replace-string-in-directory.html",
+        disqus_title="\u4f7f\u7528emacs\u67e5\u627e\u66ff\u6362\u6307\u5b9a\u76ee\u5f55\u6240\u6709\u6587\u4ef6\u4e2d\u5b57\u7b26\u4e32",
+        disqus_identifier="cache/posts/emacs-find-replace-string-in-directory.html",
         disqus_config = function () {
             this.language = "en";
         };
