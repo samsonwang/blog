@@ -16,15 +16,17 @@ git:
     submodules: false
 
 before_install:
+# use sed to replace the SSH URL with the public URL, then init and update submodules
+- sed -i 's/git@github.com:/git:\/\/github.com\//' .gitmodules
+- git submodule update --init --recursive
+
+# generate ssh for further deploy use
 - openssl aes-256-cbc -K $encrypted_07115d96ab78_key -iv $encrypted_07115d96ab78_iv
   -in ./travis-ci/id_rsa.enc -out ./travis-ci/id_rsa -d
 - echo -e 'Host github.com\n    StrictHostKeyChecking no' >> ~/.ssh/config
 - eval "$(ssh-agent -s)"
 - chmod 600 ./travis-ci/id_rsa
 - ssh-add ./travis-ci/id_rsa
-# use sed to replace the SSH URL with the public URL, then init and update submodules
-- sed -i 's/git@github.com:/git:\/\/github.com\//' .gitmodules
-- git submodule update --init --recursive
 - git config --global user.name 'Samson Wang'
 - git config --global user.email 'zl.wang@foxmail.com'
 - git config --global push.default 'simple'
@@ -32,17 +34,17 @@ before_install:
 - git remote add origin git@github.com:samsonwang/samsonwang.github.io.git
 - git fetch origin master
 - git branch master FETCH_HEAD
-# nikola org-mode requires emacs
-- curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > emacs-travis.sh
-- source ./emacs-travis.sh
-- evm install emacs-25.3-travis --use --skip
 
 install:
+# nikola org-mode plugin requires emacs
+- source ./travis-ci/emacs-travis.sh
+
+# install nikola
 - pip install --upgrade pip wheel
 - pip install 'Nikola[extras]'
 
 script:
-- nikola build && nikola github_deploy -m 'Nikola auto deploy [ci skip]'
+- nikola build && nikola github_deploy -m 'Nikola auto deploy [by Travis CI]'
 
 notifications:
   email:
