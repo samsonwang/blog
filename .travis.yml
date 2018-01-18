@@ -16,13 +16,12 @@ git:
     submodules: false
 
 before_install:
-- pip install --upgrade pip wheel
 - openssl aes-256-cbc -K $encrypted_07115d96ab78_key -iv $encrypted_07115d96ab78_iv
-  -in id_rsa.enc -out id_rsa -d
+  -in ./travis-ci/id_rsa.enc -out ./travis-ci/id_rsa -d
 - echo -e 'Host github.com\n    StrictHostKeyChecking no' >> ~/.ssh/config
 - eval "$(ssh-agent -s)"
-- chmod 600 id_rsa
-- ssh-add id_rsa
+- chmod 600 ./travis-ci/id_rsa
+- ssh-add ./travis-ci/id_rsa
 # use sed to replace the SSH URL with the public URL, then init and update submodules
 - sed -i 's/git@github.com:/git:\/\/github.com\//' .gitmodules
 - git submodule update --init --recursive
@@ -38,6 +37,7 @@ before_install:
 - source ./emacs-travis.sh
 
 install:
+- pip install --upgrade pip wheel
 - pip install 'Nikola[extras]'
 
 script:
