@@ -1,0 +1,66 @@
+#+BEGIN_COMMENT
+.. title: 跨平台共享内存库
+.. slug: shared-memory-cross-platform-soultion
+.. date: 2018-01-27 11:03:46 UTC+08:00
+.. tags: draft, cpp, linux, windows
+.. category: 
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+
+
+* 跨平台共享内存库
+在不同平台上使用共享内存的方法。
+
+
+** 关于共享内存生成标识的研究
+
+寻找在windows上的的ftok替代方法
+
+#+BEGIN_QUOTE
+找到了WINDOWS这边与之对应的概念，就是BY_HANDLE_FILE_INFORMATION，其实AIX存文件的时候，是使用设备号+文件号来存储的，而WINDOWS是
+
+采用设备号+文件号高位+文件号地位来存储的，应该算的上是一种对应关系。（在WINDOWS这边也有IPC,但是里面的设备号和文件号都是0）
+#+END_QUOTE
+
+#+BEGIN_SRC cpp
+typedef struct _BY_HANDLE_FILE_INFORMATION {
+  DWORD    dwFileAttributes;
+  FILETIME ftCreationTime;
+  FILETIME ftLastAccessTime;
+  FILETIME ftLastWriteTime;
+  DWORD    dwVolumeSerialNumber;
+  DWORD    nFileSizeHigh;
+  DWORD    nFileSizeLow;
+  DWORD    nNumberOfLinks;
+  DWORD    nFileIndexHigh;
+  DWORD    nFileIndexLow;
+} BY_HANDLE_FILE_INFORMATION, *PBY_HANDLE_FILE_INFORMATION, *LPBY_HANDLE_FILE_INFORMATION;
+#+END_SRC
+
+
+
+使用这个就是可以通过3个DWORD（也可以理解是一种int）就可以唯一标识一个文件了。如果文件不存在，就是-1（在内存中是0xffffffff)。
+而后需要解释的就是WINDOWS中的信号名称最好是“xxxx-xxxxxxxx-xxxxxxxxxxxxxxxx”（偏移-设备号-文件号）这种形式。字节数（4-8-16）
+
+
+#+BEGIN_SRC cpp
+// _BY_HANDLE_FILE_INFORMATION 的获取方式：
+// ---- get fi ----
+HANDLE h = INVALID_HANDLE_VALUE;
+BY_HANDLE_FILE_INFORMATION fi;
+h = CreateFile(path, 0, 0, NULL, OPEN_EXISTING, 0, NULL);
+GetFileInformationByHandle(h, &fi);
+// ---- get fi ----
+#+END_SRC
+
+
+参考资料:  [[https://my.oschina.net/ncr/blog/674982][windows file handle]]
+
+
+
+
+
+
+
