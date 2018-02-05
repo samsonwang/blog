@@ -1,11 +1,9 @@
 #!/bin/bash
 
-
 ss_start()
 {
   ssserver -c /root/shadowsocks/shadowsocks.json -d start
 }
-
 
 ss_stop()
 {
