@@ -173,7 +173,6 @@ THEME_COLOR = '#5670d4'
 # where "pagename" is the "slug" specified in the metadata file.
 # The page might also be placed in /destination/pagename/index.html
 # if PRETTY_URLS are enabled.
-# PRETTY_URLS = False
 
 # The difference between POSTS and PAGES is that POSTS are added
 # to feeds, indexes, tag lists and archives and are considered part
@@ -1054,7 +1053,7 @@ STRIP_INDEXES = True
 # This can be disabled on a per-page/post basis by adding
 #    .. pretty_url: False
 # to the metadata.
-PRETTY_URLS = False
+PRETTY_URLS = True
 
 # If True, publish future dated posts right away instead of scheduling them.
 # Defaults to False.
