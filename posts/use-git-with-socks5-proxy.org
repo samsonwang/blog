@@ -1,0 +1,45 @@
+#+BEGIN_COMMENT
+.. title: 为git设置socks5代理
+.. slug: use-git-with-socks5-proxy
+.. date: 2018-02-08 09:26:07 UTC+08:00
+.. tags: git, vpn
+.. category: git
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+
+#+TITLE:为git设置socks5代理
+在某些时候，为了绕过网络封锁，在使用git时需要借助代理完成相关网络操作。
+
+*一个可用的vpn代理是先决条件*
+关于架设vpn的就不在此讨论了。
+
+*将repo的链接由ssh改为为https* （已经是https的repo跳过此步骤）
+只有https（http）的repo是支持代理的，所以如果现有的repo是使用ssh方式clone到本地的，需要修改其为https方式。
+需要修改 ~repo_name/.git/config~ 中的url配置，将其中的 =git格式= 改为 =https格式= 。
+以github为例，需要将 ~git@github.com:user_name/repo_name.git~ 改为 ~https://github.com/user_name/repo_name.git~
+可以使用 ~sed~ 指令完成替换。
+#+BEGIN_SRC shell
+sed -i 's/git@github.com:/git:\/\/github.com\//' ./.git/config
+#+END_SRC
+
+*设置git使用代理*
+将git配置为使用socks5代理。
+#+BEGIN_SRC shell
+git config --global http.proxy 'socks5://127.0.0.1:1080'
+git config --global https.proxy 'socks5://127.0.0.1:1080'
+#+END_SRC
+
+*将登录信息保存下来*
+使用https时，在推送时会要求验证用户名和密码，考虑将验证信息缓存下来。
+#+BEGIN_SRC shell
+git config --global credential.helper cache
+#+END_SRC
+
+
+*参考资料*
+https://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-on-github
+
+
+
