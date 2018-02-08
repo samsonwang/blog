@@ -1,7 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about vpn)</title><link>http://samsonwang.me/</link><description></description><atom:link href="http://samsonwang.me/categories/vpn.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:zl.wang@foxmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Thu, 08 Feb 2018 01:25:52 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>ss服务器的配置指南</title><link>http://samsonwang.me/posts/shadowsock-server-setup-guide/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+</copyright><lastBuildDate>Thu, 08 Feb 2018 02:37:29 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>为git设置socks5代理</title><link>http://samsonwang.me/posts/use-git-with-socks5-proxy/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+在某些时候，为了绕过网络封锁，在使用git时需要借助代理完成相关网络操作。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;一个可用的vpn代理是先决条件&lt;/b&gt;&lt;br&gt;
+关于架设vpn的就不在此讨论了。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;将repo的链接由ssh改为为https&lt;/b&gt; （已经是https的repo跳过此步骤）&lt;br&gt;
+只有https（http）的repo是支持代理的，所以如果现有的repo是使用ssh方式clone到本地的，需要修改其为https方式。&lt;br&gt;
+需要修改 &lt;code&gt;repo_name/.git/config&lt;/code&gt; 中的url配置，将其中的 &lt;code&gt;git格式&lt;/code&gt; 改为 &lt;code&gt;https格式&lt;/code&gt; 。&lt;br&gt;
+以github为例，需要将 &lt;code&gt;git@github.com:user_name/repo_name.git&lt;/code&gt; 改为 &lt;code&gt;https://github.com/user_name/repo_name.git&lt;/code&gt;&lt;br&gt;
+可以使用 &lt;code&gt;sed&lt;/code&gt; 指令完成替换。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;sed -i 's/git@github.com:/git:\/\/github.com\//' ./.git/config
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;设置git使用代理&lt;/b&gt;&lt;br&gt;
+将git配置为使用socks5代理。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;git config --global http.proxy 'socks5://127.0.0.1:1080'
+git config --global https.proxy 'socks5://127.0.0.1:1080'
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;将登录信息保存下来&lt;/b&gt;&lt;br&gt;
+使用https时，在推送时会要求验证用户名和密码，考虑将验证信息缓存下来。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;git config --global credential.helper cache
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;
+&lt;b&gt;参考资料&lt;/b&gt;&lt;br&gt;
+&lt;a href="https://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-on-github"&gt;https://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-on-github&lt;/a&gt;&lt;br&gt;
+&lt;/p&gt;</description><category>git</category><category>vpn</category><guid>http://samsonwang.me/posts/use-git-with-socks5-proxy/</guid><pubDate>Thu, 08 Feb 2018 01:26:07 GMT</pubDate></item><item><title>ss服务器的配置指南</title><link>http://samsonwang.me/posts/shadowsock-server-setup-guide/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
 租一个服务器自己搭建梯子是科学上网方便稳定快捷的好方法。&lt;br&gt;
 本文主要是自己部署vpn服务端的笔记，作为备忘留存下来。&lt;br&gt;
 &lt;/p&gt;
