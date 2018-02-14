@@ -136,7 +136,7 @@ NAVIGATION_LINKS = {
     DEFAULT_LANG: (
         ("/archive/", "Archives"),
         ("/categories/", "Tags"),
-        ("/listings/", "Listing"),
+        ("/listings/", "Listings"),
         ("https://github.com/samsonwang", "Github"),
         ("/rss.xml", "RSS Feed"),
     ),
@@ -1396,8 +1396,16 @@ UNSLUGIFY_TITLES = True
 
 # Put in global_context things you want available on all your templates.
 # It can be anything, data, functions, modules, etc.
+SIDEBAR_ABOUT_ME = """<p>Zeal for Coding, C++ developer. </p>"""
+SIDEBAR_CATEGORY_ITEM = """<ol class="list-unstyled">
+<li><a href="/categories/cat_cpp/">cpp</a>
+<li><a href="/categories/cat_emacs/">emacs</a>
+<li><a href="/categories/cat_linux/">linux</a>
+<li><a href="/categories/cat_windows/">windows</a>
+</ol>"""
 GLOBAL_CONTEXT = {
-    "about_me": "<p>Zeal for Coding, C++ developer.</p>",
+    "sidebar_about_me": SIDEBAR_ABOUT_ME,
+	"sidebar_category_item": SIDEBAR_CATEGORY_ITEM,
     "context_demo1": BLOG_AUTHOR,
     "context_demo2": time.gmtime().tm_year,
 }
