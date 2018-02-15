@@ -1397,7 +1397,7 @@ UNSLUGIFY_TITLES = True
 # Put in global_context things you want available on all your templates.
 # It can be anything, data, functions, modules, etc.
 SIDEBAR_ABOUT_ME = """<p>Zeal for Coding, C++ developer. </p>"""
-SIDEBAR_CATEGORY_ITEM = """<ol class="list-unstyled">
+SIDEBAR_CATEGORY_ITEM = """<ol class="list-unstyled sidebar-category">
 <li><a href="/categories/cat_cpp/">cpp</a>
 <li><a href="/categories/cat_emacs/">emacs</a>
 <li><a href="/categories/cat_linux/">linux</a>
