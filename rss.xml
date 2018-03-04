@@ -1,7 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note</title><link>http://samsonwang.me/</link><description>Constraint &amp; Focus</description><atom:link href="http://samsonwang.me/rss.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:zl.wang@foxmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Thu, 01 Mar 2018 10:15:09 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>为git设置socks5代理</title><link>http://samsonwang.me/posts/use-git-with-socks5-proxy/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+</copyright><lastBuildDate>Sun, 04 Mar 2018 14:14:01 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>关于Qt中使用中文编码的一些问题</title><link>http://samsonwang.me/posts/qt-chinese-encoding/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+Qt库作为一个开源库，并且支持多语言。在开发时需要考虑字符编码问题。&lt;br&gt;
+我现在的使用Qt开发环境为VS2012+Qt5.1.1，所以一下所讨论的也是基于这个版本而言的。目前Qt5已经将 &lt;code&gt;tr()&lt;/code&gt; 删掉了。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;在windows下使用Qt库进行开发&lt;/b&gt;&lt;br&gt;
+有两种主流开发环境:&lt;br&gt;
+&lt;/p&gt;
+&lt;ol class="org-ol"&gt;
+&lt;li&gt;使用Qt Creator作为开发环境&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;使用Visual Studio + Visual Assist + Qt Visual Studio Addon作为开发环境&lt;br&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;
+目前我使用的就是第二种开发环境，鉴于在Windows平台下没有哪个开发环境能与Visual Studio相媲美。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;使用VS开发Qt程序时需要注意源文件的编码格式&lt;/b&gt;&lt;br&gt;
+Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式就是UTF-8，使用QtCreator创建的源文件的编码格式也是UTF-8 without BOM。&lt;br&gt;
+但是VS在中文操作系统上，如果不进行特殊的设置，默认创建的含有中文的源文件编码格式为gb3212。这样的原始字符串就是gb2312格式的，在使用时需要进行特殊转换，这样显示在界面上才不会乱码。&lt;br&gt;
+推荐使用一下两种方法解决gb2312编码问题：&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;&lt;code&gt;QString::fromLocale8Bit()&lt;/code&gt; 会将gb2312编码的字符串转换为UTF-8格式以便存放在QString中。&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;QStringLiteral()&lt;/code&gt; 是一个宏定义，会在编译期将字符串实例化，对静态字符串使用这个字符串也是一个提高效率的方法(因为减少了运行时的内存申请开销)。&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;
+&lt;b&gt;在VS中使用utf-8 with BOM的源文件格式&lt;/b&gt;&lt;br&gt;
+如果使用了utf-8 with BOM的源文件格式，VS会将其中的字符串转换为gb2312编码的中文。&lt;br&gt;
+可以使用编译选项让VS编译器不进行这项转换，这样就可以直接。&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;微软在VS2010中提供了 &lt;code&gt;#pragma execution_character_set("utf-8")&lt;/code&gt; 这样的编译选项，能够防止编译器进行文件编码转换，保证字符串保留utf-8格式。&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;VS2012 并不支持以上编译选项，VS2012将这个特性取消了&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;VS2015 可以使用 &lt;code&gt;/utf-8&lt;/code&gt; 让编译器能够识别 utf-8 without BOM格式的文件，并保留utf-8的字符串编码。&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;
+&lt;b&gt;C++11的编码格式支持&lt;/b&gt;&lt;br&gt;
+对于支持C++11标准的编译器，可以采用如下的写法产生utf-8格式的字符串。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;szMsg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;u8&lt;/span&gt;&lt;span class="s"&gt;"字符串"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;</description><category>qt</category><category>visual studio</category><guid>http://samsonwang.me/posts/qt-chinese-encoding/</guid><pubDate>Wed, 28 Feb 2018 01:34:08 GMT</pubDate></item><item><title>为git设置socks5代理</title><link>http://samsonwang.me/posts/use-git-with-socks5-proxy/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
 在某些时候，为了绕过网络封锁，在使用git时需要借助代理完成相关网络操作。&lt;br&gt;
 &lt;/p&gt;
 
@@ -528,14 +579,4 @@ alias gpl='git pull'
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。&lt;br&gt;
 &lt;/p&gt;
 
-&lt;p&gt;&lt;a href="http://samsonwang.me/posts/frequent-improper-syntax-warning-on-compile/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</description><category>cpp</category><category>gcc</category><guid>http://samsonwang.me/posts/frequent-improper-syntax-warning-on-compile/</guid><pubDate>Wed, 03 Jan 2018 16:45:52 GMT</pubDate></item><item><title>在emacs中使用GNU Global的配置指南</title><link>http://samsonwang.me/posts/use-global-in-emacs/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
-&lt;h2 id="sec-1"&gt;1 引言&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-1"&gt;
-&lt;p&gt;
-本文主要针对emacs中的global的配置和使用方法做了简要介绍。&lt;br&gt;
-global是代码标签化索引工具，能够在许多源码中快速定位函数的实现位置。&lt;br&gt;
-我主要使用global来辅助代码跳转；还有一种用法是用来辅助代码补全，目前正在研究中。&lt;br&gt;
-&lt;/p&gt;
-
-
-&lt;p&gt;&lt;a href="http://samsonwang.me/posts/use-global-in-emacs/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</description><category>emacs</category><category>global</category><category>gtags</category><guid>http://samsonwang.me/posts/use-global-in-emacs/</guid><pubDate>Tue, 02 Jan 2018 15:47:05 GMT</pubDate></item></channel></rss>
+&lt;p&gt;&lt;a href="http://samsonwang.me/posts/frequent-improper-syntax-warning-on-compile/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</description><category>cpp</category><category>gcc</category><guid>http://samsonwang.me/posts/frequent-improper-syntax-warning-on-compile/</guid><pubDate>Wed, 03 Jan 2018 16:45:52 GMT</pubDate></item></channel></rss>
