@@ -15,8 +15,8 @@
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
 <link rel="canonical" href="http://samsonwang.me/">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="next" href="/index-2.html" type="text/html">
-<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><link rel="prefetch" href="/posts/qt-chinese-encoding/" type="text/html">
+<link rel="next" href="/index-3.html" type="text/html">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><link rel="prefetch" href="/posts/differences-among-overload-override-hide/" type="text/html">
 </head>
 <body>
 <a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
@@ -81,7 +81,115 @@
   
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/qt-chinese-encoding/" class="u-url">关于Qt中使用中文编码的一些问题</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/differences-among-overload-override-hide/" class="u-url">重载、覆盖和隐藏的区别</a></h1>
+      <div class="metadata">
+        
+        
+        <div class="date">
+          <a href="/posts/differences-among-overload-override-hide/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-03-19T21:51:03+08:00" title="2018-03-19 21:51">2018-03-19 21:51
+            </time></a>
+        </div>
+        
+          <div class="comment">
+            
+        
+    <a href="/posts/differences-among-overload-override-hide/#disqus_thread" data-disqus-identifier="cache/posts/differences-among-overload-override-hide.html">Comments</a>
+
+
+          </div>
+
+      </div>
+    </header><div class="e-content entry-content">
+      <p>
+<b>重载（overload）</b> ：就是函数或者方法有相同的名称，但是参数列表不相同的情形，这样的同名不同参数的函数或者方法之间，互相称之为重载函数或者方法。<br>
+多个重载函数在调用的时候根据函数的参数来区别不同的函数。<br>
+关键点：函数名相同，参数表不同<br></p>
+
+<p>
+<b>覆盖（override）</b> ：是指在派生类中重新对基类中的虚函数重新实现，即函数名和参数都一样，只是函数的实现体不一样。<br>
+关键词：派生类中，虚函数，函数名和参数表完全相同<br></p>
+
+<p>
+<b>隐藏（hide）</b> ：派生类中的函数把基类中相同名字的函数屏蔽掉了。<br>
+隐藏一词可以这么理解:在调用一个类的成员函数的时候,编译器会沿着类的继承链逐级的向上查找函数的定义,如果找到了那么就停止查找了,所以如果一个派生类和一个基类都有同一个同名(暂且不论参数是否相同)的函数,而编译器最终选择了在派生类中的函数,那么我们就说这个派生类的成员函数"隐藏"了基类的成员函数,也就是说它阻止了编译器继续向上查找函数的定义.<br></p>
+
+
+<p>
+关于这三种情况的示例代码如下<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;iostream.h&gt;</span><span class="cp"></span>
+<span class="k">class</span> <span class="nc">Base</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::f(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::g(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="n">h</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::h(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::f(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::g(int) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="n">h</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::h(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+从以上代码能够看出：<br>
+（1）函数Derived::f(float)覆盖了Base::f(float)。<br>
+（2）函数Derived::g(int)隐藏了Base::g(float)，而不是重载。<br>
+（3）函数Derived::h(float)隐藏了Base::h(float)，而不是覆盖。<br></p>
+
+<p>
+考虑代码在运行时的结果：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>  
+  <span class="n">Derived</span>  <span class="n">d</span><span class="p">;</span>
+  <span class="n">Base</span> <span class="o">*</span><span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
+  <span class="n">Derived</span> <span class="o">*</span><span class="n">pd</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
+
+  <span class="c1">// Good : behavior depends solely on type of the object</span>
+  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14  </span>
+  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14</span>
+
+  <span class="c1">// Bad : behavior depends on type of the pointer</span>
+  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::g(float) 3.14</span>
+  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::g(int) 3        (surprise!)  </span>
+
+
+  <span class="c1">// Bad : behavior depends on type of the pointer</span>
+  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">h</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::h(float) 3.14      (surprise!)</span>
+  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">h</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::h(float) 3.14</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+在第一种调用中，函数的行为取决于指针所指向的对象。在第二第三种调用中，函数的行为取决于指针的类型。所以说，隐藏破坏了面向对象编程中多态这一特性，会使得OOP人员产生混乱。<br></p>
+    </div>
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/qt-chinese-encoding/" class="u-url">关于Qt中使用中文编码的一些问题</a></h1>
       <div class="metadata">
         
         
@@ -292,104 +400,6 @@ ATL是Active Template Library的缩写，是针对COM组件的开发实现的一
 需要将程序的路径添加到系统环境变量path中，并且为了覆盖windows系统自带的find命令，需要将该路径放在系统find路径之前。<br>
 tips： 对于安装了 <code>git bash</code> 的同学，直接将其中的 <code>mingw64\bin</code> 的绝对路径加入系统path中即可。<br></p>
     </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/shadowsock-server-setup-guide/" class="u-url">ss服务器的配置指南</a></h1>
-      <div class="metadata">
-        
-        
-        <div class="date">
-          <a href="/posts/shadowsock-server-setup-guide/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-02-05T22:57:35+08:00" title="2018-02-05 22:57">2018-02-05 22:57
-            </time></a>
-        </div>
-        
-          <div class="comment">
-            
-        
-    <a href="/posts/shadowsock-server-setup-guide/#disqus_thread" data-disqus-identifier="cache/posts/shadowsock-server-setup-guide.html">Comments</a>
-
-
-          </div>
-
-      </div>
-    </header><div class="e-content entry-content">
-      <p>
-租一个服务器自己搭建梯子是科学上网方便稳定快捷的好方法。<br>
-本文主要是自己部署vpn服务端的笔记，作为备忘留存下来。<br></p>
-
-<div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">安装ss服务程序</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-安装环境为CentOS7, 需要使用python的包管理工具pip完成对ss-server的安装。<br></p>
-<div class="highlight"><pre><span></span>sudo yum install m2crypto python-setuptools
-sudo easy_install pip
-sudo pip install shadowsocks
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">配置ss服务器</h2>
-<div class="outline-text-2" id="text-2">
-<p>
-<b>配置文件示例</b> : <i>shadowsocks.json</i><br>
-这份配置中使用了多个端口作供ss-server使用<br></p>
-<div class="highlight"><pre><span></span>{
-    "server":"your-server-ip",
-    "local_address":"127.0.0.1",
-    "local_port":1080,
-    "port_password":
-    {
-	"32366":"shadowsocks",
-	"32367":"shadowsocks",
-	"32368":"shadowsocks",
-	"32369":"shadowsocks",
-	"52369":"shadowsocks"
-    },
-    "timeout":300,
-    "method":"aes-256-cfb",
-    "fast_open": false
-}
-</pre></div>
-
-
-<p>
-<b>启动脚本示例</b> : <i>ss.sh</i><br>
-直接在命令行直接输入指令也能够完成ss服务的启动和停止，使用脚本只是为了方便一些。<br></p>
-<div class="highlight"><pre><span></span>#!/bin/bash
-
-ss_start()
-{
-  ssserver -c /root/shadowsocks/shadowsocks.json -d start
-}
-
-ss_stop()
-{
-  ssserver -c /root/shadowsocks/shadowsocks.json -d stop
-}
-
-# shell script main
-if [ "$#" -eq "0" ]; then
-  ss_start
-else
-  case "$1" in
-  start)
-    ss_start
-    exit;;
-  stop)
-    ss_stop
-    exit;;
-  esac
-fi
-</pre></div>
-
-<p>
-<b>增加系统启动项</b><br>
-可以将启动脚本加入系统启动项，这样就能够保证在每次reboot后，服务都能自动开启。<br></p>
-</div>
-</div>
-    </div>
   </article>
 </div>
 
@@ -434,7 +444,7 @@ fi
 
         <nav class="postindexpager"><ul class="pager">
 <li class="next">
-                <a href="/index-2.html" rel="next">Older posts</a>
+                <a href="/index-3.html" rel="next">Older posts</a>
             </li>
         </ul></nav><!--End of body content--><footer id="footer"><div class="text-center">
 <p>Contents © 2017-2018 <a href="mailto:zl.wang@foxmail.com">Samson Wang</a>
