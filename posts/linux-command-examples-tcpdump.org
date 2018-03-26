@@ -1,9 +1,9 @@
 #+BEGIN_COMMENT
-.. title: 
+.. title: Linux常用命令行指令 - tcpdump
 .. slug: linux-command-examples-tcpdump
 .. date: 2018-03-25 23:34:53 UTC+08:00
 .. tags: linux
-.. category: 
+.. category: linux
 .. link: 
 .. description: 
 .. type: text
@@ -11,14 +11,66 @@
 
 #+TITLE:Linux常用命令行指令 - tcpdump
 
+tcpdump常用于网络抓包，能够将抓取的包保存下来，这样就能进一步深入分析。抓包保存的文件可以使用tcpdump进行查看，也可以借助第三方软件（如wireshark）进行辅助分析。
 
-
-
-
+** 抓取指定网络设备上的包
+抓取网卡eth0上的包
+#+BEGIN_SRC shell
+tcpdump -i eth0
+#+END_SRC
+** 限制抓包的数量
+只抓取5个包
+#+BEGIN_SRC shell
+tcpdump -c 5 -i eth0
+#+END_SRC
+** 将抓取的包以ASCII的方式打印出来
+#+BEGIN_SRC shell
+tcpdump -A -i eth0
+#+END_SRC
+** 将抓取的包以十六进制的方式打印出来
+#+BEGIN_SRC shell
+tcpdump -XX -i eth0
+#+END_SRC
+** 对抓到的数据打上更合适的时间戳
+#+BEGIN_SRC shell
+tcpdump -tttt -i eth0
+#+END_SRC
+** 将抓取的包写入到文件中
+#+BEGIN_SRC shell
+tcpdump -w netdump.pcap -i eth0
+#+END_SRC
+** 读取抓到的包
+#+BEGIN_SRC shell
+tcpdump -r netdump.pcap
+#+END_SRC
+** 在抓到的包中增加ip地址
+#+BEGIN_SRC shell
+tcpdump -n -i eth0
+#+END_SRC
+** 对抓到的包进行协议类型过滤
+支持的协议类型有：fddi, tr, wlan, ip, ip6, arp, rarp, decnet, tcp, udp
+以下命令只会抓取网卡eth0上的arp包
+#+BEGIN_SRC shell
+tcpdump -i eth0 arp
+#+END_SRC
+** 在抓包时对包进行大小过滤
+下面的命令会分别抓取大于1024字节和小于1024字节的包
+#+BEGIN_SRC shell
+tcpdump -i eth0 greater 1024
+tcpdump -i eth0 less 1024
+#+END_SRC
+** 抓取指定端口上的包
+#+BEGIN_SRC shell
+tcpdump -i eth0 port 22
+#+END_SRC
+** 抓取发往指定目的和端口上包
+可以使用 =and= 和 =or= 对过滤条件进行组合以实现精确的抓包。
+#+BEGIN_SRC shell
+tcpdump -w net_dump.pcap -i eth0 dst 10.181.140.216 and port 22
+#+END_SRC
 
 
 ** 参考资料
 https://danielmiessler.com/study/tcpdump/
 https://www.thegeekstuff.com/2010/08/tcpdump-command-examples/
-
 
