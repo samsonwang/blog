@@ -82,7 +82,63 @@
   
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/cpp-development-framework-on-windows/" class="u-url">windows平台下的C++开发框架</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/use-git-with-socks5-proxy/" class="u-url">为git设置socks5代理</a></h1>
+      <div class="metadata">
+        
+        
+        <div class="date">
+          <a href="/posts/use-git-with-socks5-proxy/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-02-08T09:26:07+08:00" title="2018-02-08 09:26">2018-02-08 09:26
+            </time></a>
+        </div>
+        
+          <div class="comment">
+            
+        
+    <a href="/posts/use-git-with-socks5-proxy/#disqus_thread" data-disqus-identifier="cache/posts/use-git-with-socks5-proxy.html">Comments</a>
+
+
+          </div>
+
+      </div>
+    </header><div class="e-content entry-content">
+      <p>
+在某些时候，为了绕过网络封锁，在使用git时需要借助代理完成相关网络操作。<br></p>
+
+<p>
+<b>一个可用的vpn代理是先决条件</b><br>
+关于架设vpn的就不在此讨论了。<br></p>
+
+<p>
+<b>将repo的链接由ssh改为为https</b> （已经是https的repo跳过此步骤）<br>
+只有https（http）的repo是支持代理的，所以如果现有的repo是使用ssh方式clone到本地的，需要修改其为https方式。<br>
+需要修改 <code>repo_name/.git/config</code> 中的url配置，将其中的 <code>git格式</code> 改为 <code>https格式</code> 。<br>
+以github为例，需要将 <code>git@github.com:user_name/repo_name.git</code> 改为 <code>https://github.com/user_name/repo_name.git</code><br>
+可以使用 <code>sed</code> 指令完成替换。<br></p>
+<div class="highlight"><pre><span></span>sed -i 's/git@github.com:/git:\/\/github.com\//' ./.git/config
+</pre></div>
+
+<p>
+<b>设置git使用代理</b><br>
+将git配置为使用socks5代理。<br></p>
+<div class="highlight"><pre><span></span>git config --global http.proxy 'socks5://127.0.0.1:1080'
+git config --global https.proxy 'socks5://127.0.0.1:1080'
+</pre></div>
+
+<p>
+<b>将登录信息保存下来</b><br>
+使用https时，在推送时会要求验证用户名和密码，考虑将验证信息缓存下来。<br></p>
+<div class="highlight"><pre><span></span>git config --global credential.helper cache
+</pre></div>
+<p>
+也可以考虑将用户名和密码永久保存为硬盘文件， <b>注意</b> 使用这种配置会将密码保存在 ~ <code>/.git-cretidentials</code> 文件中，仅推荐在个人电脑中将配置文件保存下来。<br></p>
+<div class="highlight"><pre><span></span>git config --global credential.helper store
+</pre></div>
+
+<p>
+<b>参考资料</b><br><a href="https://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-on-github">stackoverflow question</a><br></p>
+    </div>
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/cpp-development-framework-on-windows/" class="u-url">windows平台下的C++开发框架</a></h1>
       <div class="metadata">
         
         
