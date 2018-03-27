@@ -573,19 +573,18 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 <p>
 考虑代码在运行时的结果：<br></p>
 <div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>  
+<span class="p">{</span>
   <span class="n">Derived</span>  <span class="n">d</span><span class="p">;</span>
   <span class="n">Base</span> <span class="o">*</span><span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
   <span class="n">Derived</span> <span class="o">*</span><span class="n">pd</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
 
   <span class="c1">// Good : behavior depends solely on type of the object</span>
-  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14  </span>
+  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14</span>
   <span class="n">pd</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14</span>
 
   <span class="c1">// Bad : behavior depends on type of the pointer</span>
   <span class="n">pb</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::g(float) 3.14</span>
-  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::g(int) 3        (surprise!)  </span>
-
+  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::g(int) 3        (surprise!)</span>
 
   <span class="c1">// Bad : behavior depends on type of the pointer</span>
   <span class="n">pb</span><span class="o">-&gt;</span><span class="n">h</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::h(float) 3.14      (surprise!)</span>
@@ -594,7 +593,37 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </pre></div>
 
 <p>
-在第一种调用中，函数的行为取决于指针所指向的对象。在第二第三种调用中，函数的行为取决于指针的类型。所以说，隐藏破坏了面向对象编程中多态这一特性，会使得OOP人员产生混乱。<br></p>
+在第一种调用中，函数的行为取决于指针所指向的对象。在第二第三种调用中，函数的行为取决于指针的类型。所以说，隐藏破坏了面向对象编程中多态这一特性，会使得开发人员产生混乱。<br></p>
+
+
+<p>
+<b>函数接口设计注意要点</b><br>
+在设计基类的函数接口时，不要出现既是虚函数，又对该虚函数进行了重载的情况。这样会对派生类的多态函数实现造成不便。<br>
+示例代码如下<br></p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Base</span>
+<span class="p">{</span>
+  <span class="k">virtual</span> <span class="n">foo</span><span class="p">();</span>
+  <span class="k">virtual</span> <span class="nf">foo</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span>
+<span class="p">{</span>
+  <span class="k">virtual</span> <span class="n">foo</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+从以上代码能够看出：<br></p>
+<ol class="org-ol">
+<li>
+<code>Derived::foo()</code> 与 <code>Base::foo()</code> 构成了多态关系<br>
+</li>
+<li>
+<code>Derived::foo()</code> 隐藏了 <code>Base::foo(int)</code><br>
+</li>
+</ol>
+<p>
+所以，如果派生类希望实现 <code>foo()</code> 函数的多态，也就必须实现 <code>foo(int)</code> 的多态，否则就会出现隐藏。<br>
+如果在现有代码中已经发生了上述 <code>Base</code> 的情况，在不改变原有代码的情况下，可以使用在派生类中使用这样的语法 <code>using Base::foo;</code> ，这会将基类中所有的名为 <code>foo</code> 的函数引入到派生类中来。<br></p>
     </div>
   </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/qt-chinese-encoding/" class="u-url">关于Qt中使用中文编码的一些问题</a></h1>
       <div class="metadata">
