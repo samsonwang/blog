@@ -56,7 +56,7 @@ public:
   {
     cout << "Derived::g(int) " << x << endl;
   }
-  
+
   void h(float x)
   {
     cout << "Derived::h(float) " << x << endl;
@@ -65,26 +65,25 @@ public:
 #+END_SRC
 
 从以上代码能够看出：
-（1）函数Derived::f(float)覆盖了Base::f(float)。  
-（2）函数Derived::g(int)隐藏了Base::g(float)，而不是重载。  
+（1）函数Derived::f(float)覆盖了Base::f(float)。
+（2）函数Derived::g(int)隐藏了Base::g(float)，而不是重载。
 （3）函数Derived::h(float)隐藏了Base::h(float)，而不是覆盖。
 
 考虑代码在运行时的结果：
 #+BEGIN_SRC cpp
 void main(void)
-{  
+{
   Derived  d;
   Base *pb = &d;
   Derived *pd = &d;
- 
+
   // Good : behavior depends solely on type of the object
-  pb->f(3.14f); // Derived::f(float) 3.14  
+  pb->f(3.14f); // Derived::f(float) 3.14
   pd->f(3.14f); // Derived::f(float) 3.14
 
   // Bad : behavior depends on type of the pointer
   pb->g(3.14f); // Base::g(float) 3.14
-  pd->g(3.14f); // Derived::g(int) 3        (surprise!)  
-
+  pd->g(3.14f); // Derived::g(int) 3        (surprise!)
 
   // Bad : behavior depends on type of the pointer
   pb->h(3.14f); // Base::h(float) 3.14      (surprise!)
@@ -92,6 +91,28 @@ void main(void)
 }
 #+END_SRC
 
-在第一种调用中，函数的行为取决于指针所指向的对象。在第二第三种调用中，函数的行为取决于指针的类型。所以说，隐藏破坏了面向对象编程中多态这一特性，会使得OOP人员产生混乱。
+在第一种调用中，函数的行为取决于指针所指向的对象。在第二第三种调用中，函数的行为取决于指针的类型。所以说，隐藏破坏了面向对象编程中多态这一特性，会使得开发人员产生混乱。
+
+
+*函数接口设计注意要点*
+在设计基类的函数接口时，不要出现既是虚函数，又对该虚函数进行了重载的情况。这样会对派生类的多态函数实现造成不便。
+示例代码如下
+#+BEGIN_SRC cpp
+class Base
+{
+  virtual foo();
+  virtual foo(int n);
+}
+
+class Derived : public Base
+{
+  virtual foo();
+}
+#+END_SRC
+从以上代码能够看出：
+1. ~Derived::foo()~ 与 ~Base::foo()~ 构成了多态关系
+2. ~Derived::foo()~ 隐藏了 ~Base::foo(int)~
+所以，如果派生类希望实现 ~foo()~ 函数的多态，也就必须实现 ~foo(int)~ 的多态，否则就会出现隐藏。
+如果在现有代码中已经发生了上述 ~Base~ 的情况，在不改变原有代码的情况下，可以使用在派生类中使用这样的语法 ~using Base::foo;~ ，这会将基类中所有的名为 ~foo~ 的函数引入到派生类中来。
 
 
