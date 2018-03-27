@@ -31,8 +31,10 @@ tcpdump -A -i eth0
 #+BEGIN_SRC shell
 tcpdump -XX -i eth0
 #+END_SRC
-** 5. 对抓到的数据打上更合适的时间戳
+** 5. 对抓取到的包上打出更方便阅读的时间戳
+增加 =-t= 参数能够将抓取到的包中的时间以方便阅读的形式打印出来，使用 =-tttt= 参数能够将包中的时间戳以更详细的方式打印出来。
 #+BEGIN_SRC shell
+tcpdump -t -i eth0
 tcpdump -tttt -i eth0
 #+END_SRC
 ** 6. 将抓取的包写入到文件中
@@ -43,27 +45,36 @@ tcpdump -w netdump.pcap -i eth0
 #+BEGIN_SRC shell
 tcpdump -r netdump.pcap
 #+END_SRC
-** 8. 在抓到的包中增加ip地址
+** 8. 在抓到的包中显示ip地址
+增加 =-n= 参数不会解析主机名，增加 =-nn= 参数不会解析主机名和端口名
 #+BEGIN_SRC shell
 tcpdump -n -i eth0
+tcpdump -nn -i eth0
 #+END_SRC
-** 9. 对抓到的包进行协议类型过滤
+** 9. 对抓取到的包显示更详细的信息
+参数 =-v= 是verbose的缩写，以下命令表示对抓取到的包显示更详细的信息。
+#+BEGIN_SRC shell
+tcpdump -v -i eth0
+tcpdump -vv -i eth0
+tcpdump -vvv -i eth0
+#+END_SRC
+** 10. 对抓到的包进行协议类型过滤
 支持的协议类型有：fddi, tr, wlan, ip, ip6, arp, rarp, decnet, tcp, udp
 以下命令只会抓取网卡eth0上的arp包
 #+BEGIN_SRC shell
 tcpdump -i eth0 arp
 #+END_SRC
-** 10. 在抓包时对包进行大小过滤
+** 11. 在抓包时对包进行大小过滤
 下面的命令会分别抓取大于1024字节和小于1024字节的包
 #+BEGIN_SRC shell
 tcpdump -i eth0 greater 1024
 tcpdump -i eth0 less 1024
 #+END_SRC
-** 11. 抓取指定端口上的包
+** 12. 抓取指定端口上的包
 #+BEGIN_SRC shell
 tcpdump -i eth0 port 22
 #+END_SRC
-** 12. 抓取发往指定目的和端口上包
+** 13. 抓取发往指定目的和端口上包
 可以使用 =and= 和 =or= 对过滤条件进行组合以实现精确的抓包。
 #+BEGIN_SRC shell
 tcpdump -w net_dump.pcap -i eth0 dst 10.181.140.216 and port 22
