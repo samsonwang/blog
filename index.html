@@ -15,8 +15,8 @@
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
 <link rel="canonical" href="http://samsonwang.me/">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="next" href="/index-3.html" type="text/html">
-<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><link rel="prefetch" href="/posts/change-linux-timezone-with-cli/" type="text/html">
+<link rel="next" href="/index-4.html" type="text/html">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><link rel="prefetch" href="/posts/fifo-pipe-unix-domain-socket/" type="text/html">
 </head>
 <body>
 <a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
@@ -81,7 +81,177 @@
   
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/change-linux-timezone-with-cli/" class="u-url">使用命令行修改Linux系统的时区</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/fifo-pipe-unix-domain-socket/" class="u-url">Linux下的fifo、pipe、unix domain socket漫谈</a></h1>
+      <div class="metadata">
+        
+        
+        <div class="date">
+          <a href="/posts/fifo-pipe-unix-domain-socket/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-04-11T13:03:25+08:00" title="2018-04-11 13:03">2018-04-11 13:03
+            </time></a>
+        </div>
+        
+          <div class="comment">
+            
+        
+    <a href="/posts/fifo-pipe-unix-domain-socket/#disqus_thread" data-disqus-identifier="cache/posts/fifo-pipe-unix-domain-socket.html">Comments</a>
+
+
+          </div>
+
+      </div>
+    </header><div class="e-content entry-content">
+      <p>
+在做Linux开发时，经常会接触 <code>管道</code> 、 <code>AF_UNIX</code> 等相关词汇，为了弄清他们之间的关系，查阅了一些资料，将结果整理并记录下来。<br></p>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">1. <code>FIFO</code> 与 <code>pipe</code> 的比较</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+FIFO可以通过 <code>mkfifo fifo_file</code> 在本地创建一个文件用来表示一个管道，数据的交换是在操作系统内核完成的，所以在文件中没有内容。<br>
+FIFO可以看做是一个带有名字的管道，我们在命令行中使用的管道是匿名管道。<br></p>
+
+<blockquote>
+<p>
+A FIFO special file (a named pipe) is similar to a pipe, except that it is accessed as part of the file system. It can be opened by multiple processes for reading or writing. When processes are exchanging data via the FIFO, the kernel passes all data internally without writing it to the file system. Thus, the FIFO special file has no contents on the file system; the file system entry merely serves as a reference point so that processes can access the pipe using a name in the file system.<br></p>
+</blockquote>
+<p>
+以上内容截取自Linux的帮助文档（ <code>man fifo</code> ）<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">2. <code>FIFO</code> 与 <code>unix domain socket</code> 的比较</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+FIFO与unix domain socket在他们的实现方式上有相似之处，但是他们是完全不同的两个概念。<br>
+FIFO是更底层的进程间通信方式，允许一端写入数据，另外一端读取数据；unix domain socket与 <code>TCP/IP</code> 的套接字很相似。<br>
+socket是双工的，支持多个进程同时访问。进程可以一个socket上同时允许多个客户端进程接入。在每次有新的 <code>connect</code> 或 ~accept~时， 操作系统内核会分配一个新的文件描述符，通信数据包会送达正确的进程。<br>
+FIFO并不支持以上特性。需要两个FIFO才能完成双工通信。对于每个客户端都需要一对FIFO才能完成通信交互。<br></p>
+
+<blockquote>
+<p>
+UNIX domain sockets and FIFO may share some part of their implementation but they are conceptually very different. FIFO functions at a very low level. One process writes bytes into the pipe and another one reads from it. A UNIX domain socket has the same behaviour as a TCP/IP socket.<br></p>
+
+<p>
+A socket is bidirectional and can be used by a lot of processes simultaneously. A process can accept many connections on the same socket and attend several clients simultaneously. The kernel delivers a new file descriptor each time connect(2) or accept(2) is called on the socket. The packets will always go to the right process.<br>
+On a FIFO, this would be impossible. For bidirectional comunication, you need two FIFOs, and you need a pair of FIFOs for each of your clients. There is no way of writing or reading in a selective way, because they are a much more primitive way to communicate.<br></p>
+
+<p>
+Anonymous pipes and FIFOs are very similar. The difference is that anonymous pipes don't exist as files on the filesystem so no process can open(2) it. They are used by processes that share them by another method. If a process opens a FIFOs and then performs, for example, a fork(2), its child will inherit its file descriptors and, among them, the pipe.<br></p>
+
+<p>
+The UNIX domain sockets, anonymous pipes and FIFOs are similar in the fact they use shared memory segments. The details of implementation may vary from one system to another but the idea is always the same: attach the same portion of memory in two distinct processes memory mapping to have them sharing data<br>
+(edit: that would one obvious way to implement it but that is not how it is actually done in Linux, which simply uses the kernel memory for the buffers, see answer by @tjb63 below).<br>
+The kernel then handles the system calls and abstracts the mechanism.<br></p>
+</blockquote>
+<p>
+以上内容截取自 <a href="https://unix.stackexchange.com/questions/75904/are-fifo-pipe-unix-domain-socket-the-same-thing-in-linux-kernel">unix stackexchange</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">3. <code>unix-domain-socket</code> 与 <code>ip socket</code> 的比较</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+unix domain socket是一种进程间通信方式，支持跑在同一个机器上的两个进程的双向数据交互。<br>
+ip socket是一种网络通信方式，能够让两个进程通过网络完成数据交互。<br>
+unix domain socket是针对于文件系统限制访问权限，而ip socket只能在过滤包的级别完成访问控制。<br>
+unix domain socket比ip socket的效率更高，因为省去了校验检查、路由等操作步骤。<br></p>
+
+<p>
+参考资料如下：<br></p>
+<ol class="org-ol">
+<li>
+<a href="https://unix.stackexchange.com/questions/236983/differences-between-unix-domain-sockets-and-network-sockets?utm_medium=organic&amp;utm_source=google_rich_qa&amp;utm_campaign=google_rich_qa">unix stackexchange</a><br>
+</li>
+<li>
+<a href="https://lists.freebsd.org/pipermail/freebsd-performance/2005-February/001143.html">lists freebsd</a><br>
+</li>
+</ol>
+<blockquote>
+<p>
+There are a few differences that might be of interest, in addition to the<br>
+already pointed out difference that if you start out using IP sockets, you<br>
+don't have to migrate to them later when you want inter-machine<br>
+connectivity:<br></p>
+
+<ul class="org-ul">
+<li>UNIX domain sockets use the file system as the address name space.  This<br>
+means you can use UNIX file permissions to control access to communicate<br>
+with them.  I.e., you can limit what other processes can connect to the<br>
+daemon – maybe one user can, but the web server can't, or the like.<br>
+With IP sockets, the ability to connect to your daemon is exposed off<br>
+the current system, so additional steps may have to be taken for<br>
+security.  On the other hand, you get network transparency.  With UNIX<br>
+domain sockets, you can actually retrieve the credential of the process<br>
+that created the remote socket, and use that for access control also,<br>
+which can be quite convenient on multi-user systems.<br>
+</li>
+
+<li>IP sockets over localhost are basically looped back network on-the-wire<br>
+IP.  There is intentionally "no special knowledge" of the fact that the<br>
+connection is to the same system, so no effort is made to bypass the<br>
+normal IP stack mechanisms for performance reasons.  For example,<br>
+transmission over TCP will always involve two context switches to get to<br>
+the remote socket, as you have to switch through the netisr, which<br>
+occurs following the "loopback" of the packet through the synthetic<br>
+loopback interface.  Likewise, you get all the overhead of ACKs, TCP<br>
+flow control, encapsulation/decapsulation, etc.  Routing will be<br>
+performed in order to decide if the packets go to the localhost.<br>
+Large sends will have to be broken down into MTU-size datagrams, which<br>
+also adds overhead for large writes.  It's really TCP, it just goes over<br>
+a loopback interface by virtue of a special address, or discovering that<br>
+the address requested is served locally rather than over an ethernet<br>
+(etc).<br>
+</li>
+
+<li>UNIX domain sockets have explicit knowledge that they're executing on<br>
+the same system.  They avoid the extra context switch through the<br>
+netisr, and a sending thread will write the stream or datagrams directly<br>
+into the receiving socket buffer.  No checksums are calculated, no<br>
+headers are inserted, no routing is performed, etc.  Because they have<br>
+access to the remote socket buffer, they can also directly provide<br>
+feedback to the sender when it is filling, or more importantly,<br>
+emptying, rather than having the added overhead of explicit<br>
+acknowledgement and window changes.  The one piece of functionality that<br>
+UNIX domain sockets don't provide that TCP does is out-of-band data.  In<br>
+practice, this is an issue for almost noone.<br>
+</li>
+</ul>
+<p>
+In general, the argument for implementing over TCP is that it gives you<br>
+location independence and immediate portability – you can move the client<br>
+or the daemon, update an address, and it will "just work".  The sockets<br>
+layer provides a reasonable abstraction of communications services, so<br>
+it's not hard to write an application so that the connection/binding<br>
+portion knows about TCP and UNIX domain sockets, and all the rest just<br>
+uses the socket it's given.  So if you're looking for performance locally,<br>
+I think UNIX domain sockets probably best meet your need.  Many people<br>
+will code to TCP anyway because performance is often less critical, and<br>
+the network portability benefit is substantial.<br></p>
+
+<p>
+Right now, the UNIX domain socket code is covered by a subsystem lock; I<br>
+have a version that used more fine-grain locking, but have not yet<br>
+evaluated the performance impact of those changes.  I've you're running in<br>
+an SMP environment with four processors, it could be that those changes<br>
+might positively impact performance, so if you'd like the patches, let me<br>
+know.  Right now they're on my schedule to start testing, but not on the<br>
+path for inclusion in FreeBSD 5.4.  The primary benefit of greater<br>
+granularity would be if you had many pairs of threads/processes<br>
+communicating across processors using UNIX domain sockets, and as a result<br>
+there was substantial contention on the UNIX domain socket subsystem lock.<br>
+The patches don't increase the cost of normal send/receive operations, but<br>
+due add extra mutex operations in the listen/accept/connect/bind paths.<br></p>
+
+<p>
+Robert N M Watson<br></p>
+</blockquote>
+</div>
+</div>
+    </div>
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/change-linux-timezone-with-cli/" class="u-url">使用命令行修改Linux系统的时区</a></h1>
       <div class="metadata">
         
         
@@ -540,143 +710,6 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
     </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/differences-among-overload-override-hide/" class="u-url">重载、覆盖和隐藏的区别</a></h1>
-      <div class="metadata">
-        
-        
-        <div class="date">
-          <a href="/posts/differences-among-overload-override-hide/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-03-19T21:51:03+08:00" title="2018-03-19 21:51">2018-03-19 21:51
-            </time></a>
-        </div>
-        
-          <div class="comment">
-            
-        
-    <a href="/posts/differences-among-overload-override-hide/#disqus_thread" data-disqus-identifier="cache/posts/differences-among-overload-override-hide.html">Comments</a>
-
-
-          </div>
-
-      </div>
-    </header><div class="e-content entry-content">
-      <p>
-<b>重载（overload）</b> ：就是函数或者方法有相同的名称，但是参数列表不相同的情形，这样的同名不同参数的函数或者方法之间，互相称之为重载函数或者方法。<br>
-多个重载函数在调用的时候根据函数的参数来区别不同的函数。<br>
-关键点：函数名相同，参数表不同<br></p>
-
-<p>
-<b>覆盖（override）</b> ：是指在派生类中重新对基类中的虚函数重新实现，即函数名和参数都一样，只是函数的实现体不一样。<br>
-关键词：派生类中，虚函数，函数名和参数表完全相同<br></p>
-
-<p>
-<b>隐藏（hide）</b> ：派生类中的函数把基类中相同名字的函数屏蔽掉了。<br>
-隐藏一词可以这么理解:在调用一个类的成员函数的时候,编译器会沿着类的继承链逐级的向上查找函数的定义,如果找到了那么就停止查找了,所以如果一个派生类和一个基类都有同一个同名(暂且不论参数是否相同)的函数,而编译器最终选择了在派生类中的函数,那么我们就说这个派生类的成员函数"隐藏"了基类的成员函数,也就是说它阻止了编译器继续向上查找函数的定义.<br></p>
-
-
-<p>
-关于这三种情况的示例代码如下<br></p>
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;iostream.h&gt;</span><span class="cp"></span>
-<span class="k">class</span> <span class="nc">Base</span>
-<span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::f(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::g(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">h</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::h(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-
-<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span>
-<span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::f(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::g(int) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">h</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::h(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-</pre></div>
-
-<p>
-从以上代码能够看出：<br>
-（1）函数Derived::f(float)覆盖了Base::f(float)。<br>
-（2）函数Derived::g(int)隐藏了Base::g(float)，而不是重载。<br>
-（3）函数Derived::h(float)隐藏了Base::h(float)，而不是覆盖。<br></p>
-
-<p>
-考虑代码在运行时的结果：<br></p>
-<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="n">Derived</span>  <span class="n">d</span><span class="p">;</span>
-  <span class="n">Base</span> <span class="o">*</span><span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
-  <span class="n">Derived</span> <span class="o">*</span><span class="n">pd</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
-
-  <span class="c1">// Good : behavior depends solely on type of the object</span>
-  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14</span>
-  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14</span>
-
-  <span class="c1">// Bad : behavior depends on type of the pointer</span>
-  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::g(float) 3.14</span>
-  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::g(int) 3        (surprise!)</span>
-
-  <span class="c1">// Bad : behavior depends on type of the pointer</span>
-  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">h</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::h(float) 3.14      (surprise!)</span>
-  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">h</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::h(float) 3.14</span>
-<span class="p">}</span>
-</pre></div>
-
-<p>
-在第一种调用中，函数的行为取决于指针所指向的对象。在第二第三种调用中，函数的行为取决于指针的类型。所以说，隐藏破坏了面向对象编程中多态这一特性，会使得开发人员产生混乱。<br></p>
-
-
-<p>
-<b>函数接口设计注意要点</b><br>
-在设计基类的函数接口时，不要出现既是虚函数，又对该虚函数进行了重载的情况。这样会对派生类的多态函数实现造成不便。<br>
-示例代码如下<br></p>
-<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Base</span>
-<span class="p">{</span>
-  <span class="k">virtual</span> <span class="n">foo</span><span class="p">();</span>
-  <span class="k">virtual</span> <span class="nf">foo</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span>
-<span class="p">{</span>
-  <span class="k">virtual</span> <span class="n">foo</span><span class="p">();</span>
-<span class="p">}</span>
-</pre></div>
-<p>
-从以上代码能够看出：<br></p>
-<ol class="org-ol">
-<li>
-<code>Derived::foo()</code> 与 <code>Base::foo()</code> 构成了多态关系<br>
-</li>
-<li>
-<code>Derived::foo()</code> 隐藏了 <code>Base::foo(int)</code><br>
-</li>
-</ol>
-<p>
-所以，如果派生类希望实现 <code>foo()</code> 函数的多态，也就必须实现 <code>foo(int)</code> 的多态，否则就会出现隐藏。<br>
-如果在现有代码中已经发生了上述 <code>Base</code> 的情况，在不改变原有代码的情况下，可以使用在派生类中使用这样的语法 <code>using Base::foo;</code> ，这会将基类中所有的名为 <code>foo</code> 的函数引入到派生类中来。<br></p>
-    </div>
   </article>
 </div>
 
@@ -721,7 +754,7 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 
         <nav class="postindexpager"><ul class="pager">
 <li class="next">
-                <a href="/index-3.html" rel="next">Older posts</a>
+                <a href="/index-4.html" rel="next">Older posts</a>
             </li>
         </ul></nav><!--End of body content--><footer id="footer"><div class="text-center">
 <p>Contents © 2017-2018 <a href="mailto:zl.wang@foxmail.com">Samson Wang</a>
