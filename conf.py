@@ -1397,13 +1397,23 @@ UNSLUGIFY_TITLES = True
 
 # Put in global_context things you want available on all your templates.
 # It can be anything, data, functions, modules, etc.
-SIDEBAR_ABOUT_ME = """<p>Zeal for Coding, C++ developer. </p>"""
-SIDEBAR_CATEGORY_ITEM = """<ol class="list-unstyled sidebar-category">
+SIDEBAR_ABOUT_ME = """
+<div class="sidebar-aboutme">
+<p>Zeal for coding, C++ developer.</p>
+<p>Focus on linux server dev.</p>
+<p>I use EMACS, and I am learning python.</p>
+<p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
+</div>
+"""
+
+SIDEBAR_CATEGORY_ITEM = """
+<ol class="list-unstyled sidebar-category">
 <li><a href="/categories/cat_cpp/">cpp</a>
 <li><a href="/categories/cat_emacs/">emacs</a>
 <li><a href="/categories/cat_linux/">linux</a>
 <li><a href="/categories/cat_windows/">windows</a>
 </ol>"""
+
 GLOBAL_CONTEXT = {
     "sidebar_about_me": SIDEBAR_ABOUT_ME,
 	"sidebar_category_item": SIDEBAR_CATEGORY_ITEM,
