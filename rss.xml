@@ -1,7 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note</title><link>http://samsonwang.me/</link><description>Constraint &amp; Focus</description><atom:link href="http://samsonwang.me/rss.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:zl.wang@foxmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Sun, 15 Apr 2018 14:45:06 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>Linux下的FIFO、pipe、unix domain socket漫谈</title><link>http://samsonwang.me/posts/fifo-pipe-unix-domain-socket/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+</copyright><lastBuildDate>Mon, 16 Apr 2018 06:07:49 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>C++11新特性：自动类型推导</title><link>http://samsonwang.me/posts/cpp11-automatic-deduction-and-decltype/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;关键字 &lt;code&gt;auto&lt;/code&gt; 用于自动类型推导&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;     &lt;span class="c1"&gt;// int&lt;/span&gt;
+&lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="sc"&gt;'a'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;   &lt;span class="c1"&gt;// char&lt;/span&gt;
+&lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;d&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mf"&gt;0.5&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;   &lt;span class="c1"&gt;// double&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+自动类型推导主要用于声明比较复杂的变量，或者变量是在泛型编程（模板）中自动生成出来的。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;vector&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;vecNumbers&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="n"&gt;vector&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;::&lt;/span&gt;&lt;span class="n"&gt;const_iterator&lt;/span&gt; &lt;span class="n"&gt;it&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;vecNumbers&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;begin&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;it&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;vecNumbers&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;begin&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;&lt;code&gt;auto&lt;/code&gt; 类型推导并不会指定 &lt;code&gt;const&lt;/code&gt; 和 &lt;code&gt;volatile&lt;/code&gt; 属性&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;p&gt;
+如果需要限定声明的变量为 &lt;code&gt;const&lt;/code&gt; 和 &lt;code&gt;volatile&lt;/code&gt; 属性，需要额外提供相应的关键字限定。因为编译器并不能推断出声明的变量是否具有常值属性和易失属性。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;volatile&lt;/span&gt; &lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;num&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;           &lt;span class="c1"&gt;// volatile int&lt;/span&gt;
+&lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="k"&gt;volatile&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;var&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nb"&gt;true&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;  &lt;span class="c1"&gt;//const valatile bool&lt;/span&gt;
+&lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;ch&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="sc"&gt;'a'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;             &lt;span class="c1"&gt;// const char&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-3" class="outline-2"&gt;
+&lt;h2 id="sec-3"&gt;关键字 &lt;code&gt;decltype&lt;/code&gt; 用于获取一个对量的类型&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-3"&gt;
+&lt;p&gt;
+使用 &lt;code&gt;decltype&lt;/code&gt; 存储一个对象或表达式的类型， &lt;code&gt;decltype&lt;/code&gt; 可以看做是 &lt;code&gt;auto&lt;/code&gt; 的补充。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;vector&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;vecNumbers&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="nf"&gt;decltype&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;vecNumbers&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;begin&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt; &lt;span class="n"&gt;Iterator&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="n"&gt;Iterator&lt;/span&gt; &lt;span class="n"&gt;it2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-4" class="outline-2"&gt;
+&lt;h2 id="sec-4"&gt;函数返回值类型推导&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-4"&gt;
+&lt;p&gt;
+在C++11中可以使用 &lt;code&gt;auto&lt;/code&gt; 和 &lt;code&gt;decltype&lt;/code&gt; 完成函数返回类型的推导。&lt;br&gt;
+旧的函数声明格式 &lt;code&gt;return_type func_name(param_type param, ...);&lt;/code&gt;&lt;br&gt;
+新的函数声明格式示例如下，以下函数接收 &lt;code&gt;bool&lt;/code&gt; 作为函数的参数，并返回 &lt;code&gt;bool&lt;/code&gt; 类型的结果。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="nf"&gt;func_name&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;bool&lt;/span&gt; &lt;span class="n"&gt;bParam&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="k"&gt;decltype&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;bParam&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;bParam&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;
+函数返回值类型推导在模板泛型编程中非常有用，模板函数能够定义一个通用的返回类型，返回值类型会根据 &lt;code&gt;decltype&lt;/code&gt; 自动推导。&lt;br&gt;
+新的函数声明格式更易于维护，因为返回值并没有作为硬编码写入源文件中，但这样做可能会牺牲代码的可读性。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;template&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;get_end&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;vector&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;decltype&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;end&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;end&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="n"&gt;vector&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;vecNumbers&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;it&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;get_end&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;vecNumbers&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;      &lt;span class="c1"&gt;// returns iterator&lt;/span&gt;
+
+&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;vector&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;vecNumbers2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;it2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;get_enm&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;vecNumbers2&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;    &lt;span class="c1"&gt;// returns const_iterator&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>cpp</category><guid>http://samsonwang.me/posts/cpp11-automatic-deduction-and-decltype/</guid><pubDate>Mon, 16 Apr 2018 00:44:40 GMT</pubDate></item><item><title>Linux下的FIFO、pipe、unix domain socket漫谈</title><link>http://samsonwang.me/posts/fifo-pipe-unix-domain-socket/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
 在做Linux开发时，经常会接触 &lt;code&gt;管道&lt;/code&gt; 、 &lt;code&gt;AF_UNIX&lt;/code&gt; 等相关词汇，为了弄清他们之间的关系，查阅了一些资料，将结果整理并记录下来。&lt;br&gt;
 &lt;/p&gt;
 
@@ -815,31 +889,4 @@ MFC是Microsoft Foundation Class的缩写，将win32的相关接口按照OOP的�
 ATL是Active Template Library的缩写，是针对COM组件的开发实现的一套开发框架。ATL简化了ActiveX COM组件的开发。&lt;br&gt;
 &lt;/p&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description><category>atl</category><category>cpp</category><category>mfc</category><category>win32</category><category>windows</category><guid>http://samsonwang.me/posts/cpp-development-framework-on-windows/</guid><pubDate>Wed, 07 Feb 2018 14:56:21 GMT</pubDate></item><item><title>使用emacs在目录中递归搜索字符串</title><link>http://samsonwang.me/posts/emacs-search-string-in-directory-recursively/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
-对文件中的字符串搜索是开发中经常遇到的情景，下面就对常见的搜索字符串的方式进行了总结。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-&lt;b&gt;对当前buffer进行搜索（单个文件）&lt;/b&gt;&lt;br&gt;
-&lt;code&gt;C-s&lt;/code&gt; 向后搜索&lt;br&gt;
-&lt;code&gt;C-r&lt;/code&gt; 向后搜索&lt;br&gt;
-&lt;code&gt;M-s o&lt;/code&gt; 使用occur对当前buffer中的指定关键字进行统计&lt;br&gt;
-在安装了helm以后可以使用 &lt;code&gt;helm-occur&lt;/code&gt; 完成当前buffer的搜索&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-&lt;b&gt;对目录中的指定文件进行搜索（一个目录下的多个文件）&lt;/b&gt;&lt;br&gt;
-&lt;code&gt;C-x d&lt;/code&gt; 进入dired模式，在dired模式中使用 &lt;code&gt;M-x &amp;lt;dired-do-find-regexp&amp;gt;&lt;/code&gt; (快捷键 &lt;code&gt;A&lt;/code&gt; )对标记的文件进行搜索。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-&lt;b&gt;对目录中的所有文件进行递归搜索（一个目录下的所有文件和所有子目录中的文件）&lt;/b&gt;&lt;br&gt;
-&lt;code&gt;M-x &amp;lt;rgrep&amp;gt;&lt;/code&gt; 能够对一个目录下所有的文件进行正则表达式匹配&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-&lt;b&gt;注意事项&lt;/b&gt;&lt;br&gt;
-在windows平台上使用grep和find指令时，需要借助仿linux环境中的程序完成，如cygwin中的程序。&lt;br&gt;
-需要将程序的路径添加到系统环境变量path中，并且为了覆盖windows系统自带的find命令，需要将该路径放在系统find路径之前。&lt;br&gt;
-tips： 对于安装了 &lt;code&gt;git bash&lt;/code&gt; 的同学，直接将其中的 &lt;code&gt;mingw64\bin&lt;/code&gt; 的绝对路径加入系统path中即可。&lt;br&gt;
-&lt;/p&gt;</description><category>emacs</category><category>grep</category><guid>http://samsonwang.me/posts/emacs-search-string-in-directory-recursively/</guid><pubDate>Tue, 06 Feb 2018 13:28:14 GMT</pubDate></item></channel></rss>
+&lt;/div&gt;</description><category>atl</category><category>cpp</category><category>mfc</category><category>win32</category><category>windows</category><guid>http://samsonwang.me/posts/cpp-development-framework-on-windows/</guid><pubDate>Wed, 07 Feb 2018 14:56:21 GMT</pubDate></item></channel></rss>

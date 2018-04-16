@@ -1,0 +1,75 @@
+#+BEGIN_COMMENT
+.. title: C++11新特性：自动类型推导
+.. slug: cpp11-automatic-deduction-and-decltype
+.. date: 2018-04-16 08:44:40 UTC+08:00
+.. tags: cpp
+.. category: cpp
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+
+#+TITLE:C++11新特性：自动类型推导
+** 关键字 =auto= 用于自动类型推导
+#+BEGIN_SRC c++
+auto x=0;     // int
+auto c='a';   // char
+auto d=0.5;   // double
+#+END_SRC
+
+自动类型推导主要用于声明比较复杂的变量，或者变量是在泛型编程（模板）中自动生成出来的。
+#+BEGIN_SRC c++
+vector<int> vecNumbers;
+vector<int>::const_iterator it = vecNumbers.begin();
+auto it = vecNumbers.begin();
+#+END_SRC
+
+** =auto= 类型推导并不会指定 =const= 和 =volatile= 属性
+如果需要限定声明的变量为 =const= 和 =volatile= 属性，需要额外提供相应的关键字限定。因为编译器并不能推断出声明的变量是否具有常值属性和易失属性。
+#+BEGIN_SRC c++
+volatile auto num=5;           // volatile int
+auto volatile const var=true;  //const valatile bool
+auto const ch='a';             // const char
+#+END_SRC
+
+** 关键字 =decltype= 用于获取一个对量的类型
+使用 =decltype= 存储一个对象或表达式的类型， =decltype= 可以看做是 =auto= 的补充。
+#+BEGIN_SRC c++
+vector<int> vecNumbers;
+typedef decltype(vecNumbers.begin()) Iterator;
+Iterator it2;
+#+END_SRC
+
+** 函数返回值类型推导
+在C++11中可以使用 =auto= 和 =decltype= 完成函数返回类型的推导。
+旧的函数声明格式 ~return_type func_name(param_type param, ...);~
+新的函数声明格式示例如下，以下函数接收 =bool= 作为函数的参数，并返回 =bool= 类型的结果。
+#+BEGIN_SRC c++
+auto func_name(bool bParam)->decltype(bParam)
+{
+  return bParam;
+}
+#+END_SRC
+函数返回值类型推导在模板泛型编程中非常有用，模板函数能够定义一个通用的返回类型，返回值类型会根据 =decltype= 自动推导。
+新的函数声明格式更易于维护，因为返回值并没有作为硬编码写入源文件中，但这样做可能会牺牲代码的可读性。
+#+BEGIN_SRC c++
+template <class T>
+auto get_end(vector<T>& v) -> decltype(v.end())
+{
+  return v.end();
+}
+
+vector<int> vecNumbers;
+auto it = get_end(vecNumbers);      // returns iterator
+
+const vector<int> vecNumbers2;
+auto it2 = get_enm(vecNumbers2);    // returns const_iterator
+#+END_SRC
+
+
+
+
+
+
+
+
