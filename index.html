@@ -16,7 +16,7 @@
 <link rel="canonical" href="http://samsonwang.me/">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
 <link rel="next" href="/index-4.html" type="text/html">
-<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><link rel="prefetch" href="/posts/cpp11-range-based-for-loop/" type="text/html">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><link rel="prefetch" href="/posts/gdb-ignore-received-signal/" type="text/html">
 </head>
 <body>
 <a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
@@ -81,7 +81,41 @@
   
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/cpp11-range-based-for-loop/" class="u-url">C++11新特性：基于范围的for循环</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/gdb-ignore-received-signal/" class="u-url">在gdb调试时忽略系统信号（signal）</a></h1>
+      <div class="metadata">
+        
+        
+        <div class="date">
+          <a href="/posts/gdb-ignore-received-signal/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-04-19T16:00:47+08:00" title="2018-04-19 16:00">2018-04-19 16:00
+            </time></a>
+        </div>
+        
+          <div class="comment">
+            
+        
+    <a href="/posts/gdb-ignore-received-signal/#disqus_thread" data-disqus-identifier="cache/posts/gdb-ignore-received-signal.html">Comments</a>
+
+
+          </div>
+
+      </div>
+    </header><div class="e-content entry-content">
+      <p>
+在gdb调试程序时，默认情况下gdb在收到信号时会中断程序的运行，并将收到的信号显示出来。这时，可以选择输入 <code>c</code> ( <code>continue</code> )让程序继续运行。如果程序会重复收到这信号，会非常影响调试效率。可以通过配置忽略指定的系统信号。<br>
+查看当前系统信号的处理信息的指令<br></p>
+<div class="highlight"><pre><span></span>(gdb) info signal
+</pre></div>
+
+<p>
+以调试网络程序为例，进程会经常收到 <code>SIGPIPE</code> 消息，对于网络进程的 <code>SIGPIPE</code> 消息在程序中会由自身处理，可以使用以下指令让gdb不再提示 <code>SIGPIPE</code> 信号。<br></p>
+<div class="highlight"><pre><span></span>(gdb) handle SIGPIPE nostop noprint
+</pre></div>
+
+<p>
+参考资料： <a href="ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_38.html">gnu gdb manual</a><br></p>
+    </div>
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/cpp11-range-based-for-loop/" class="u-url">C++11新特性：基于范围的for循环</a></h1>
       <div class="metadata">
         
         
@@ -476,40 +510,6 @@ Robert N M Watson<br></p>
 </blockquote>
 </div>
 </div>
-    </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/change-linux-timezone-with-cli/" class="u-url">使用命令行修改Linux系统的时区</a></h1>
-      <div class="metadata">
-        
-        
-        <div class="date">
-          <a href="/posts/change-linux-timezone-with-cli/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-04-03T21:32:42+08:00" title="2018-04-03 21:32">2018-04-03 21:32
-            </time></a>
-        </div>
-        
-          <div class="comment">
-            
-        
-    <a href="/posts/change-linux-timezone-with-cli/#disqus_thread" data-disqus-identifier="cache/posts/change-linux-timezone-with-cli.html">Comments</a>
-
-
-          </div>
-
-      </div>
-    </header><div class="e-content entry-content">
-      <p>
-<b>系统时区目录</b> 系统支持时区的配置文件存放在 <code>/usr/share/zoneinfo/</code> 目录下，可以进入到该目录下查看和搜索目标时区的相关配置文件。<br></p>
-
-<p>
-<b>时区配置文件</b> Linux系统的当前时区配置文件存放在 <code>/etc/localtime</code> , 可以将时区配置文件拷贝到该位置下，也可以建立一个软连接指向系统时区目录中的配置文件。<br></p>
-
-<p>
-<b>操作示例</b> 以将系统的时区改为中国时间为例，以下操作先将旧的时区配置文件删掉，然后建立新的时区配置文件的符号链接。<br></p>
-<div class="highlight"><pre><span></span>rm /etc/localtime
-ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-</pre></div>
-<p>
-完成以上操作后，可以执行 <code>date</code> 命令查看修改效果。<br></p>
     </div>
   </article>
 </div>

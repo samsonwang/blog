@@ -1,7 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note</title><link>http://samsonwang.me/</link><description>Constraint &amp; Focus</description><atom:link href="http://samsonwang.me/rss.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:zl.wang@foxmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Thu, 19 Apr 2018 07:50:07 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>C++11新特性：基于范围的for循环</title><link>http://samsonwang.me/posts/cpp11-range-based-for-loop/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+</copyright><lastBuildDate>Thu, 19 Apr 2018 10:08:24 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>在gdb调试时忽略系统信号（signal）</title><link>http://samsonwang.me/posts/gdb-ignore-received-signal/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+在gdb调试程序时，默认情况下gdb在收到信号时会中断程序的运行，并将收到的信号显示出来。这时，可以选择输入 &lt;code&gt;c&lt;/code&gt; ( &lt;code&gt;continue&lt;/code&gt; )让程序继续运行。如果程序会重复收到这信号，会非常影响调试效率。可以通过配置忽略指定的系统信号。&lt;br&gt;
+查看当前系统信号的处理信息的指令&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) info signal
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+以调试网络程序为例，进程会经常收到 &lt;code&gt;SIGPIPE&lt;/code&gt; 消息，对于网络进程的 &lt;code&gt;SIGPIPE&lt;/code&gt; 消息在程序中会由自身处理，可以使用以下指令让gdb不再提示 &lt;code&gt;SIGPIPE&lt;/code&gt; 信号。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) handle SIGPIPE nostop noprint
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+参考资料： &lt;a href="ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_38.html"&gt;gnu gdb manual&lt;/a&gt;&lt;br&gt;
+&lt;/p&gt;</description><category>gdb</category><guid>http://samsonwang.me/posts/gdb-ignore-received-signal/</guid><pubDate>Thu, 19 Apr 2018 08:00:47 GMT</pubDate></item><item><title>C++11新特性：基于范围的for循环</title><link>http://samsonwang.me/posts/cpp11-range-based-for-loop/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
 &lt;b&gt;在C++11中，介绍了一种新的for循环写法，基于范围的for循环。&lt;/b&gt;&lt;br&gt;
 与旧的for循环类似，也是用来对遍历容器中的所有元素，新的写法更加简洁方便。可以使用auto自动适配容器中的内容。为了遍历容器时提高效率，在访问容器内部时可以声明为元素的引用，进而避免不必要的对象拷贝。示例代码如下（代码节选自 &lt;a href="http://en.cppreference.com/w/cpp/language/range-for"&gt;cppreferance&lt;/a&gt;）&lt;br&gt;
 &lt;/p&gt;
@@ -863,55 +878,4 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 &lt;p&gt;
 所以，如果派生类希望实现 &lt;code&gt;foo()&lt;/code&gt; 函数的多态，也就必须实现 &lt;code&gt;foo(int)&lt;/code&gt; 的多态，否则就会出现隐藏。&lt;br&gt;
 如果在现有代码中已经发生了上述 &lt;code&gt;Base&lt;/code&gt; 的情况，在不改变原有代码的情况下，可以使用在派生类中使用这样的语法 &lt;code&gt;using Base::foo;&lt;/code&gt; ，这会将基类中所有的名为 &lt;code&gt;foo&lt;/code&gt; 的函数引入到派生类中来。&lt;br&gt;
-&lt;/p&gt;</description><category>cpp</category><guid>http://samsonwang.me/posts/differences-among-overload-override-hide/</guid><pubDate>Mon, 19 Mar 2018 13:51:03 GMT</pubDate></item><item><title>关于Qt中使用中文编码的一些问题</title><link>http://samsonwang.me/posts/qt-chinese-encoding/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
-Qt库作为一个开源库，并且支持多语言。在开发时需要考虑字符编码问题。&lt;br&gt;
-我现在的使用Qt开发环境为VS2012+Qt5.1.1，所以一下所讨论的也是基于这个版本而言的。目前Qt5已经将 &lt;code&gt;tr()&lt;/code&gt; 删掉了。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-&lt;b&gt;在windows下使用Qt库进行开发&lt;/b&gt;&lt;br&gt;
-有两种主流开发环境:&lt;br&gt;
-&lt;/p&gt;
-&lt;ol class="org-ol"&gt;
-&lt;li&gt;使用Qt Creator作为开发环境&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;使用Visual Studio + Visual Assist + Qt Visual Studio Addon作为开发环境&lt;br&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-目前我使用的就是第二种开发环境，鉴于在Windows平台下没有哪个开发环境能与Visual Studio相媲美。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-&lt;b&gt;使用VS开发Qt程序时需要注意源文件的编码格式&lt;/b&gt;&lt;br&gt;
-Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式就是UTF-8，使用QtCreator创建的源文件的编码格式也是UTF-8 without BOM。&lt;br&gt;
-但是VS在中文操作系统上，如果不进行特殊的设置，默认创建的含有中文的源文件编码格式为gb3212。这样的原始字符串就是gb2312格式的，在使用时需要进行特殊转换，这样显示在界面上才不会乱码。&lt;br&gt;
-推荐使用一下两种方法解决gb2312编码问题：&lt;br&gt;
-&lt;/p&gt;
-&lt;ul class="org-ul"&gt;
-&lt;li&gt;&lt;code&gt;QString::fromLocale8Bit()&lt;/code&gt; 会将gb2312编码的字符串转换为UTF-8格式以便存放在QString中。&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;QStringLiteral()&lt;/code&gt; 是一个宏定义，会在编译期将字符串实例化，对静态字符串使用这个字符串也是一个提高效率的方法(因为减少了运行时的内存申请开销)。&lt;br&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;
-&lt;b&gt;在VS中使用utf-8 with BOM的源文件格式&lt;/b&gt;&lt;br&gt;
-如果使用了utf-8 with BOM的源文件格式，VS会将其中的字符串转换为gb2312编码的中文，这样是为了兼容旧版本的编译器。&lt;br&gt;
-可以使用编译选项让VS编译器不进行这项转换，这样就可以直接使用字符串 &lt;code&gt;char*&lt;/code&gt; 初始化QString了。&lt;br&gt;
-&lt;/p&gt;
-&lt;ul class="org-ul"&gt;
-&lt;li&gt;微软在VS2010中提供了 &lt;code&gt;#pragma execution_character_set("utf-8")&lt;/code&gt; 这样的编译选项，能够防止编译器进行文件编码转换，保证字符串保留utf-8格式。&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;VS2012 并不支持以上编译选项，VS2012将这个特性取消了&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;VS2015 可以使用 &lt;code&gt;/utf-8&lt;/code&gt; 让编译器能够识别 utf-8 without BOM格式的文件，并保留utf-8的字符串编码。&lt;br&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;
-&lt;b&gt;C++11的编码格式支持&lt;/b&gt;&lt;br&gt;
-对于支持C++11标准的编译器，可以采用如下的写法产生utf-8格式的字符串。&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;szMsg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;u8&lt;/span&gt;&lt;span class="s"&gt;"字符串"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;</description><category>qt</category><category>visual studio</category><guid>http://samsonwang.me/posts/qt-chinese-encoding/</guid><pubDate>Wed, 28 Feb 2018 01:34:08 GMT</pubDate></item></channel></rss>
+&lt;/p&gt;</description><category>cpp</category><guid>http://samsonwang.me/posts/differences-among-overload-override-hide/</guid><pubDate>Mon, 19 Mar 2018 13:51:03 GMT</pubDate></item></channel></rss>
