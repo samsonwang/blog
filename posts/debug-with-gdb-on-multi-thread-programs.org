@@ -1,0 +1,53 @@
+#+BEGIN_COMMENT
+.. title: 使用gdb调试多线程程序
+.. slug: debug-with-gdb-on-multi-thread-programs
+.. date: 2018-04-20 21:25:09 UTC+08:00
+.. tags: draft, linux, gdb
+.. category: linux
+.. link: https://sourceware.org/gdb/onlinedocs/gdb/Threads.html
+.. description: 
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 使用gdb调试多线程程序
+
+** 查看当前线程信息
+#+BEGIN_SRC gdb
+(gdb) info threads
+#+END_SRC
+
+
+** 为某个线程设置断点
+#+BEGIN_SRC gdb
+(gdb) break linespec thread theadno
+#+END_SRC
+
+
+#+BEGIN_QUOTE
+Whenever your program stops under GDB for any reason, all threads of execution stop, not just the current thread. This allows you to examine the overall state of the program, including switching between threads, without worrying that things may change underfoot.
+#+END_QUOTE
+
+** 防止gdb自动切换线程
+在调试gdb程序时，在单步执行时，会出现线程间跳转切换，这样对跟踪代码执行状态十分不方便。
+可以通过设置 =scheduler-locking= 让gdb在所调试的线程中运行，防止线程的自动切换。
+#+BEGIN_SRC gdb
+(gdb) set scheduler-locking step
+#+END_SRC
+可以执行以下命令查看当前 =scheduler-locking= 的设置
+#+BEGIN_SRC gdb
+(gdb) show scheduler-locking
+#+END_SRC
+
+参考资料：[[https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_39.html][gnu manual]]
+
+#+BEGIN_QUOTE
+Set the scheduler locking mode. If it is off, then there is no locking and any thread may run at any time. If on, then only the current thread may run when the inferior is resumed. The step mode optimizes for single-stepping. It stops other threads from "seizing the prompt" by preempting the current thread while you are stepping. Other threads will only rarely (or never) get a chance to run when you step. They are more likely to run when you `next' over a function call, and they are completely free to run when you use commands like `continue', `until', or `finish'. However, unless another thread hits a breakpoint during its timeslice, they will never steal the GDB prompt away from the thread that you are debugging.
+#+END_QUOTE
+
+** 为指定的线程设置断点
+
+
+会在产生一个新的线程时会显示出LWP的字样
+LWP = light weight process
+
+

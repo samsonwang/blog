@@ -194,7 +194,7 @@ POSTS = (
     ("posts/*.org", "posts", "post.tmpl"),
 )
 PAGES = (
-	("pages/404.*", "", "story.tmpl"),
+    ("pages/404.*", "", "story.tmpl"),
 	
     ("pages/*.rst", "pages", "page.tmpl"),
     ("pages/*.md", "pages", "page.tmpl"),
@@ -202,11 +202,11 @@ PAGES = (
     ("pages/*.html", "pages", "page.tmpl"),
     ("pages/*.org", "pages", "page.tmpl"),
 	
-	("demos/*.rst", "demos", "page.tmpl"),
-    ("demos/*.md", "demos", "page.tmpl"),
-    ("demos/*.txt", "demos", "page.tmpl"),
-    ("demos/*.html", "demos", "page.tmpl"),
-    ("demos/*.org", "demos", "page.tmpl"),
+#    ("demos/*.rst", "demos", "page.tmpl"),
+#    ("demos/*.md", "demos", "page.tmpl"),
+#    ("demos/*.txt", "demos", "page.tmpl"),
+#    ("demos/*.html", "demos", "page.tmpl"),
+#    ("demos/*.org", "demos", "page.tmpl"),
 )
 
 
