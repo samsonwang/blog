@@ -137,8 +137,7 @@ NAVIGATION_LINKS = {
         ("/archive/", "Archives"),
         ("/categories/", "Tags"),
         ("/listings/", "Listings"),
-		("/galleries/", "Galleries"),
-#        ("https://github.com/samsonwang", "Github"),
+        ("/galleries/", "Galleries"),
         ("/rss.xml", "RSS Feed"),
     ),
 }
@@ -195,13 +194,13 @@ POSTS = (
 )
 PAGES = (
     ("pages/404.*", "", "story.tmpl"),
-	
+
     ("pages/*.rst", "pages", "page.tmpl"),
     ("pages/*.md", "pages", "page.tmpl"),
     ("pages/*.txt", "pages", "page.tmpl"),
     ("pages/*.html", "pages", "page.tmpl"),
     ("pages/*.org", "pages", "page.tmpl"),
-	
+
 #    ("demos/*.rst", "demos", "page.tmpl"),
 #    ("demos/*.md", "demos", "page.tmpl"),
 #    ("demos/*.txt", "demos", "page.tmpl"),
@@ -1416,7 +1415,7 @@ SIDEBAR_CATEGORY_ITEM = """
 
 GLOBAL_CONTEXT = {
     "sidebar_about_me": SIDEBAR_ABOUT_ME,
-	"sidebar_category_item": SIDEBAR_CATEGORY_ITEM,
+    "sidebar_category_item": SIDEBAR_CATEGORY_ITEM,
     "context_demo1": BLOG_AUTHOR,
     "context_demo2": time.gmtime().tm_year,
 }
