@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>使用命令行修改Linux系统的时区 | Hack Note</title>
+<title>Linux下使用gdb的调试技巧（2） | Hack Note</title>
 <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <link href="/assets/css/code.css" rel="stylesheet" type="text/css">
@@ -12,25 +12,62 @@
 <meta name="theme-color" content="#5670d4">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link rel="canonical" href="http://samsonwang.me/posts/change-linux-timezone-with-cli/">
+<link rel="canonical" href="http://samsonwang.me/posts/debug-with-gdb-on-linux-2/">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
 <!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
-<link rel="prev" href="/posts/linux-command-examples-tcpdump/" title="Linux常用命令行指令 - tcpdump" type="text/html">
-<link rel="next" href="/posts/debug-with-gdb-on-linux-2/" title="Linux下使用gdb的调试技巧（2）" type="text/html">
+<link rel="prev" href="/posts/change-linux-timezone-with-cli/" title="使用命令行修改Linux系统的时区" type="text/html">
+<link rel="next" href="/posts/fifo-pipe-unix-domain-socket/" title="Linux下的FIFO、pipe、unix domain socket漫谈" type="text/html">
 <meta property="og:site_name" content="Hack Note">
-<meta property="og:title" content="使用命令行修改Linux系统的时区">
-<meta property="og:url" content="http://samsonwang.me/posts/change-linux-timezone-with-cli/">
-<meta property="og:description" content="系统时区目录 系统支持时区的配置文件存放在 /usr/share/zoneinfo/ 目录下，可以进入到该目录下查看和搜索目标时区的相关配置文件。
+<meta property="og:title" content="Linux下使用gdb的调试技巧（2）">
+<meta property="og:url" content="http://samsonwang.me/posts/debug-with-gdb-on-linux-2/">
+<meta property="og:description" content="相关文章：Linux下使用gdb的调试技巧（1）
 
 
 
-时区配置文件 Linux系统的当前时区配置文件存放在 /etc/localtime , 可以将时区配置文件拷贝到该位置下，也可以建立一个软连接指向系统时区目录中的配置文件。
+本文重点介绍在gdb模式下的常用命令。
 
 
 
-操作示例 以将系统的时区改为中国时间为例，以下操作先将旧的时区配置">
+查看帮助信息
+
+(gdb) help all
+
+
+
+查看线程信息
+
+(gdb) info thread
+
+
+
+切换到某一线程
+
+(gdb) thread 2
+
+
+
+查看调用堆栈信息
+
+(gdb) bt
+
+
+
+查看某个调用栈
+
+(gdb) frame 3
+
+
+
+增加断点
+断点格式：
+
+
+函数名
+
+文">
 <meta property="og:type" content="article">
-<meta property="article:published_time" content="2018-04-03T21:32:42+08:00">
+<meta property="article:published_time" content="2018-04-03T22:51:39+08:00">
+<meta property="article:tag" content="gdb">
 <meta property="article:tag" content="linux">
 </head>
 <body>
@@ -87,49 +124,121 @@
       <div class="col-sm-9">
         
         
-<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name"><a href="/posts/change-linux-timezone-with-cli/" class="u-url">使用命令行修改Linux系统的时区</a></h1>
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name"><a href="/posts/debug-with-gdb-on-linux-2/" class="u-url">Linux下使用gdb的调试技巧（2）</a></h1>
 
       <div class="metadata">
         <div class="author">
             Samson Wang
         </div>
         <div class="date">
-          <a href="/posts/change-linux-timezone-with-cli/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-04-03T21:32:42+08:00" itemprop="datePublished" title="2018-04-03 21:32">2018-04-03 21:32
+          <a href="/posts/debug-with-gdb-on-linux-2/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-04-03T22:51:39+08:00" itemprop="datePublished" title="2018-04-03 22:51">2018-04-03 22:51
             </time></a>
         </div>
         
         
     <div class="source">
-      <p class="sourceline"><a href="/posts/change-linux-timezone-with-cli/index.org" class="sourcelink">Source</a></p>
+      <p class="sourceline"><a href="/posts/debug-with-gdb-on-linux-2/index.org" class="sourcelink">Source</a></p>
     </div>
 
         
-          <div class="link">
-            <a href="https://linuxacademy.com/blog/linux/changing-the-time-zone-in-linux-command-line/">Original site</a>
-          </div>
           
       </div>
       
 
   </header><ul itemprop="keywords" class="tags">
     Tags : 
+        <li><a class="tag p-category" href="/categories/gdb/" rel="tag">gdb</a></li>
         <li><a class="tag p-category" href="/categories/linux/" rel="tag">linux</a></li>
     </ul>
 <div class="e-content entry-content" itemprop="articleBody text">
     <p>
-<b>系统时区目录</b> 系统支持时区的配置文件存放在 <code>/usr/share/zoneinfo/</code> 目录下，可以进入到该目录下查看和搜索目标时区的相关配置文件。<br></p>
+相关文章：<a href="https://samsonwang.me/posts/debug-with-gdb-on-linux/">Linux下使用gdb的调试技巧（1）</a><br></p>
 
 <p>
-<b>时区配置文件</b> Linux系统的当前时区配置文件存放在 <code>/etc/localtime</code> , 可以将时区配置文件拷贝到该位置下，也可以建立一个软连接指向系统时区目录中的配置文件。<br></p>
+本文重点介绍在gdb模式下的常用命令。<br></p>
 
 <p>
-<b>操作示例</b> 以将系统的时区改为中国时间为例，以下操作先将旧的时区配置文件删掉，然后建立新的时区配置文件的符号链接。<br></p>
-<div class="highlight"><pre><span></span>rm /etc/localtime
-ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+查看帮助信息<br></p>
+<div class="highlight"><pre><span></span>(gdb) help all
 </pre></div>
+
 <p>
-完成以上操作后，可以执行 <code>date</code> 命令查看修改效果。<br></p>
+查看线程信息<br></p>
+<div class="highlight"><pre><span></span>(gdb) info thread
+</pre></div>
+
+<p>
+切换到某一线程<br></p>
+<div class="highlight"><pre><span></span>(gdb) thread 2
+</pre></div>
+
+<p>
+查看调用堆栈信息<br></p>
+<div class="highlight"><pre><span></span>(gdb) bt
+</pre></div>
+
+<p>
+查看某个调用栈<br></p>
+<div class="highlight"><pre><span></span>(gdb) frame 3
+</pre></div>
+
+<p>
+增加断点<br>
+断点格式：<br></p>
+<ul class="org-ul">
+<li>函数名<br>
+</li>
+<li>文件名：行号<br>
+</li>
+<li>当前调试文件的行号<br>
+</li>
+</ul>
+<div class="highlight"><pre><span></span>(gdb) breakpoint xxx
+</pre></div>
+
+<p>
+删除断点<br></p>
+<div class="highlight"><pre><span></span>(gdb) delete xxx
+</pre></div>
+
+<p>
+启用/禁用断点<br></p>
+<div class="highlight"><pre><span></span>(gdb) disable/enable xxx
+</pre></div>
+
+<p>
+查看断点信息<br></p>
+<div class="highlight"><pre><span></span>(gdb) info break
+</pre></div>
+
+<p>
+临时断点，临时断点的使用方法与普通断点相同<br></p>
+<div class="highlight"><pre><span></span>(gdb) tb xxx
+</pre></div>
+
+<p>
+在gdb模式下，回车会执行上一次输入的命令<br></p>
+
+<p>
+运行到指定行<br></p>
+<div class="highlight"><pre><span></span>until 81
+</pre></div>
+
+<p>
+在gdb中打印长字符串<br></p>
+<div class="highlight"><pre><span></span>(gdb) set print element 0
+</pre></div>
+
+<p>
+在gdb中强制在一个线程内调试运行<br></p>
+<div class="highlight"><pre><span></span>set scheduler-locking step
+</pre></div>
+
+<p>
+在gdb中向程序发送信号<br></p>
+<div class="highlight"><pre><span></span>(gdb) signal
+</pre></div>
   </div>
   
 
@@ -179,10 +288,10 @@ ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
         <ul class="pager hidden-print">
 <li class="previous">
-                <a href="/posts/linux-command-examples-tcpdump/" rel="prev" title="Linux常用命令行指令 - tcpdump">Previous post</a>
+                <a href="/posts/change-linux-timezone-with-cli/" rel="prev" title="使用命令行修改Linux系统的时区">Previous post</a>
             </li>
             <li class="next">
-                <a href="/posts/debug-with-gdb-on-linux-2/" rel="next" title="Linux下使用gdb的调试技巧（2）">Next post</a>
+                <a href="/posts/fifo-pipe-unix-domain-socket/" rel="next" title="Linux下的FIFO、pipe、unix domain socket漫谈">Next post</a>
             </li>
         </ul>
 <div class="row">
@@ -192,9 +301,9 @@ ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
         <div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-me",
-            disqus_url="http://samsonwang.me/posts/change-linux-timezone-with-cli/",
-        disqus_title="\u4f7f\u7528\u547d\u4ee4\u884c\u4fee\u6539Linux\u7cfb\u7edf\u7684\u65f6\u533a",
-        disqus_identifier="cache/posts/change-linux-timezone-with-cli.html",
+            disqus_url="http://samsonwang.me/posts/debug-with-gdb-on-linux-2/",
+        disqus_title="Linux\u4e0b\u4f7f\u7528gdb\u7684\u8c03\u8bd5\u6280\u5de7\uff082\uff09",
+        disqus_identifier="cache/posts/debug-with-gdb-on-linux-2.html",
         disqus_config = function () {
             this.language = "en";
         };

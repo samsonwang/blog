@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note</title><link>http://samsonwang.me/</link><description>Constraint &amp; Focus</description><atom:link href="http://samsonwang.me/rss.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:zl.wang@foxmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Tue, 24 Apr 2018 07:53:00 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>在gdb调试时忽略系统信号（signal）</title><link>http://samsonwang.me/posts/gdb-ignore-received-signal/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+</copyright><lastBuildDate>Wed, 25 Apr 2018 06:41:21 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>在gdb调试时忽略系统信号（signal）</title><link>http://samsonwang.me/posts/gdb-ignore-received-signal/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
 在gdb调试程序时，默认情况下gdb在收到信号时会中断程序的运行，并将收到的信号显示出来。这时，可以选择输入 &lt;code&gt;c&lt;/code&gt; ( &lt;code&gt;continue&lt;/code&gt; )让程序继续运行。如果程序会重复收到这信号，会非常影响调试效率。可以通过配置忽略指定的系统信号。&lt;br&gt;
 查看当前系统信号的处理信息的指令&lt;br&gt;
 &lt;/p&gt;
@@ -351,7 +351,110 @@ Robert N M Watson&lt;br&gt;
 &lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description><category>linux</category><guid>http://samsonwang.me/posts/fifo-pipe-unix-domain-socket/</guid><pubDate>Wed, 11 Apr 2018 05:03:25 GMT</pubDate></item><item><title>使用命令行修改Linux系统的时区</title><link>http://samsonwang.me/posts/change-linux-timezone-with-cli/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+&lt;/div&gt;</description><category>linux</category><guid>http://samsonwang.me/posts/fifo-pipe-unix-domain-socket/</guid><pubDate>Wed, 11 Apr 2018 05:03:25 GMT</pubDate></item><item><title>Linux下使用gdb的调试技巧（2）</title><link>http://samsonwang.me/posts/debug-with-gdb-on-linux-2/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+相关文章：&lt;a href="https://samsonwang.me/posts/debug-with-gdb-on-linux/"&gt;Linux下使用gdb的调试技巧（1）&lt;/a&gt;&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+本文重点介绍在gdb模式下的常用命令。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+查看帮助信息&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) help all
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+查看线程信息&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) info thread
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+切换到某一线程&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) thread 2
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+查看调用堆栈信息&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) bt
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+查看某个调用栈&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) frame 3
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+增加断点&lt;br&gt;
+断点格式：&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;函数名&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;文件名：行号&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;当前调试文件的行号&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) breakpoint xxx
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+删除断点&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) delete xxx
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+启用/禁用断点&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) disable/enable xxx
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+查看断点信息&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) info break
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+临时断点，临时断点的使用方法与普通断点相同&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) tb xxx
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+在gdb模式下，回车会执行上一次输入的命令&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+运行到指定行&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;until 81
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+在gdb中打印长字符串&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) set print element 0
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+在gdb中强制在一个线程内调试运行&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;set scheduler-locking step
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+在gdb中向程序发送信号&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) signal
+&lt;/pre&gt;&lt;/div&gt;</description><category>gdb</category><category>linux</category><guid>http://samsonwang.me/posts/debug-with-gdb-on-linux-2/</guid><pubDate>Tue, 03 Apr 2018 14:51:39 GMT</pubDate></item><item><title>使用命令行修改Linux系统的时区</title><link>http://samsonwang.me/posts/change-linux-timezone-with-cli/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
 &lt;b&gt;系统时区目录&lt;/b&gt; 系统支持时区的配置文件存放在 &lt;code&gt;/usr/share/zoneinfo/&lt;/code&gt; 目录下，可以进入到该目录下查看和搜索目标时区的相关配置文件。&lt;br&gt;
 &lt;/p&gt;
 
@@ -755,127 +858,4 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;lsof -N -u username
 &lt;/pre&gt;&lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description><category>linux</category><category>shell</category><guid>http://samsonwang.me/posts/linux-command-examples-lsof/</guid><pubDate>Wed, 21 Mar 2018 12:28:34 GMT</pubDate></item><item><title>重载、覆盖和隐藏的区别</title><link>http://samsonwang.me/posts/differences-among-overload-override-hide/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
-&lt;b&gt;重载（overload）&lt;/b&gt; ：就是函数或者方法有相同的名称，但是参数列表不相同的情形，这样的同名不同参数的函数或者方法之间，互相称之为重载函数或者方法。&lt;br&gt;
-多个重载函数在调用的时候根据函数的参数来区别不同的函数。&lt;br&gt;
-关键点：函数名相同，参数表不同&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-&lt;b&gt;覆盖（override）&lt;/b&gt; ：是指在派生类中重新对基类中的虚函数重新实现，即函数名和参数都一样，只是函数的实现体不一样。&lt;br&gt;
-关键词：派生类中，虚函数，函数名和参数表完全相同&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-&lt;b&gt;隐藏（hide）&lt;/b&gt; ：派生类中的函数把基类中相同名字的函数屏蔽掉了。&lt;br&gt;
-隐藏一词可以这么理解:在调用一个类的成员函数的时候,编译器会沿着类的继承链逐级的向上查找函数的定义,如果找到了那么就停止查找了,所以如果一个派生类和一个基类都有同一个同名(暂且不论参数是否相同)的函数,而编译器最终选择了在派生类中的函数,那么我们就说这个派生类的成员函数"隐藏"了基类的成员函数,也就是说它阻止了编译器继续向上查找函数的定义.&lt;br&gt;
-&lt;/p&gt;
-
-
-&lt;p&gt;
-关于这三种情况的示例代码如下&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;iostream.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
-&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Base&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-&lt;span class="k"&gt;public&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
-  &lt;span class="k"&gt;virtual&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;float&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;cout&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="s"&gt;"Base::f(float) "&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;endl&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-
-  &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;float&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;cout&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="s"&gt;"Base::g(float) "&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;endl&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-
-  &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;float&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;cout&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="s"&gt;"Base::h(float) "&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;endl&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;};&lt;/span&gt;
-
-&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Derived&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Base&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-&lt;span class="k"&gt;public&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
-  &lt;span class="k"&gt;virtual&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;float&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;cout&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="s"&gt;"Derived::f(float) "&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;endl&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-
-  &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;cout&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="s"&gt;"Derived::g(int) "&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;endl&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-
-  &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;float&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;cout&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="s"&gt;"Derived::h(float) "&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;endl&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;};&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-从以上代码能够看出：&lt;br&gt;
-（1）函数Derived::f(float)覆盖了Base::f(float)。&lt;br&gt;
-（2）函数Derived::g(int)隐藏了Base::g(float)，而不是重载。&lt;br&gt;
-（3）函数Derived::h(float)隐藏了Base::h(float)，而不是覆盖。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-考虑代码在运行时的结果：&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="n"&gt;Derived&lt;/span&gt;  &lt;span class="n"&gt;d&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="n"&gt;Base&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;pb&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;d&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="n"&gt;Derived&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;pd&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;d&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-  &lt;span class="c1"&gt;// Good : behavior depends solely on type of the object&lt;/span&gt;
-  &lt;span class="n"&gt;pb&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;3.14f&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// Derived::f(float) 3.14&lt;/span&gt;
-  &lt;span class="n"&gt;pd&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;3.14f&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// Derived::f(float) 3.14&lt;/span&gt;
-
-  &lt;span class="c1"&gt;// Bad : behavior depends on type of the pointer&lt;/span&gt;
-  &lt;span class="n"&gt;pb&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;3.14f&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// Base::g(float) 3.14&lt;/span&gt;
-  &lt;span class="n"&gt;pd&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;3.14f&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// Derived::g(int) 3        (surprise!)&lt;/span&gt;
-
-  &lt;span class="c1"&gt;// Bad : behavior depends on type of the pointer&lt;/span&gt;
-  &lt;span class="n"&gt;pb&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;3.14f&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// Base::h(float) 3.14      (surprise!)&lt;/span&gt;
-  &lt;span class="n"&gt;pd&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;3.14f&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// Derived::h(float) 3.14&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-在第一种调用中，函数的行为取决于指针所指向的对象。在第二第三种调用中，函数的行为取决于指针的类型。所以说，隐藏破坏了面向对象编程中多态这一特性，会使得开发人员产生混乱。&lt;br&gt;
-&lt;/p&gt;
-
-
-&lt;p&gt;
-&lt;b&gt;函数接口设计注意要点&lt;/b&gt;&lt;br&gt;
-在设计基类的函数接口时，不要出现既是虚函数，又对该虚函数进行了重载的情况。这样会对派生类的多态函数实现造成不便。&lt;br&gt;
-示例代码如下&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Base&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="k"&gt;virtual&lt;/span&gt; &lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-  &lt;span class="k"&gt;virtual&lt;/span&gt; &lt;span class="nf"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-
-&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Derived&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="n"&gt;Base&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="k"&gt;virtual&lt;/span&gt; &lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;
-从以上代码能够看出：&lt;br&gt;
-&lt;/p&gt;
-&lt;ol class="org-ol"&gt;
-&lt;li&gt;&lt;code&gt;Derived::foo()&lt;/code&gt; 与 &lt;code&gt;Base::foo()&lt;/code&gt; 构成了多态关系&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;Derived::foo()&lt;/code&gt; 隐藏了 &lt;code&gt;Base::foo(int)&lt;/code&gt;&lt;br&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;
-所以，如果派生类希望实现 &lt;code&gt;foo()&lt;/code&gt; 函数的多态，也就必须实现 &lt;code&gt;foo(int)&lt;/code&gt; 的多态，否则就会出现隐藏。&lt;br&gt;
-如果在现有代码中已经发生了上述 &lt;code&gt;Base&lt;/code&gt; 的情况，在不改变原有代码的情况下，可以使用在派生类中使用这样的语法 &lt;code&gt;using Base::foo;&lt;/code&gt; ，这会将基类中所有的名为 &lt;code&gt;foo&lt;/code&gt; 的函数引入到派生类中来。&lt;br&gt;
-&lt;/p&gt;</description><category>cpp</category><guid>http://samsonwang.me/posts/differences-among-overload-override-hide/</guid><pubDate>Mon, 19 Mar 2018 13:51:03 GMT</pubDate></item></channel></rss>
+&lt;/div&gt;</description><category>linux</category><category>shell</category><guid>http://samsonwang.me/posts/linux-command-examples-lsof/</guid><pubDate>Wed, 21 Mar 2018 12:28:34 GMT</pubDate></item></channel></rss>
