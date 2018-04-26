@@ -1,0 +1,75 @@
+#+BEGIN_COMMENT
+.. title: 使用gdb调试多线程程序
+.. slug: debug-with-gdb-on-multi-thread-programs
+.. date: 2018-04-20 21:25:09 UTC+08:00
+.. tags: linux, gdb
+.. category: linux
+.. link: https://sourceware.org/gdb/onlinedocs/gdb/Threads.html
+.. description: 
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 使用gdb调试多线程程序
+
+** 查看当前线程信息
+*将进程中的各个线程信息显示出来*
+#+BEGIN_SRC gdb
+(gdb) info threads
+#+END_SRC
+
+*切换到指定进程*
+#+BEGIN_SRC gdb
+(gdb) thread tid
+#+END_SRC
+
+*向指定的线程发送自定的指令*
+#+BEGIN_SRC gdb
+(gdb) thread apply tid/all args
+#+END_SRC
+常用的指定是查看所有线程的调用堆栈 =thread apply all bt= ，这个指令与 =pstack= 命令有些相似。
+
+*gdb默认会自动捕捉新产生线程*
+会在产生一个新的线程时会显示出LWP的字样提示用户，LWP = light weight process
+可以设置gdb是否提示线程相关的事件
+#+BEGIN_SRC gdb
+(gdb) set print thread-events on/off
+(gdb) show print thread-events
+#+END_SRC
+
+** 为指定的线程设置断点
+含有多线程的程序，可以为单独的线程设置断点
+#+BEGIN_SRC gdb
+(gdb) break linespec thread tid
+#+END_SRC
+
+任何时候当你的程序在GDB模式下停止的时候，包括当前调试线程的所有线程都会停下来，不会对继续对当前进程造成更改。这时你可以在线程间进行切换，查看整个进程的执行状况。
+#+BEGIN_QUOTE
+Whenever your program stops under GDB for any reason, all threads of execution stop, not just the current thread. This allows you to examine the overall state of the program, including switching between threads, without worrying that things may change underfoot.
+#+END_QUOTE
+
+** 防止gdb自动切换线程
+在调试gdb程序时，在单步执行时，会出现线程间跳转切换，这样对跟踪代码执行状态十分不方便。
+可以通过设置 =scheduler-locking= 让gdb在所调试的线程中运行，防止线程的自动切换。
+#+BEGIN_SRC gdb
+(gdb) set scheduler-locking step
+#+END_SRC
+可以执行以下命令查看当前 =scheduler-locking= 的设置
+#+BEGIN_SRC gdb
+(gdb) show scheduler-locking
+#+END_SRC
+=scheduler-locking= 有三种模式
+1. =off= 任何线程在任何时候都能执行
+2. =on= 只有当前线程能够执行
+3. =step= 为单步执行优化的模式，比较适合一般的调试
+
+#+BEGIN_QUOTE
+Set the scheduler locking mode. If it is off, then there is no locking and any thread may run at any time. If on, then only the current thread may run when the inferior is resumed. The step mode optimizes for single-stepping. It stops other threads from "seizing the prompt" by preempting the current thread while you are stepping. Other threads will only rarely (or never) get a chance to run when you step. They are more likely to run when you `next' over a function call, and they are completely free to run when you use commands like `continue', `until', or `finish'. However, unless another thread hits a breakpoint during its timeslice, they will never steal the GDB prompt away from the thread that you are debugging.
+#+END_QUOTE
+
+
+** 参考资料
+1. [[https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_39.html][gnu manual 1]]
+2. [[https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_24.html][gun manual 2]]
+3. [[https://sourceware.org/gdb/onlinedocs/gdb/Threads.html][sourceware gdb onlinedocs]]
+4. [[http://www.drdobbs.com/cpp/multithreaded-debugging-techniques/199200938?pgno%3D1][drdobbs.com]]
+
