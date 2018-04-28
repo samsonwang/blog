@@ -1,7 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note</title><link>http://samsonwang.me/</link><description>Constraint &amp; Focus</description><atom:link href="http://samsonwang.me/rss.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:zl.wang@foxmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Fri, 27 Apr 2018 10:06:12 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>Linux常用命令行指令 - ipcs</title><link>http://samsonwang.me/posts/linux-command-examples-ipcs/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+</copyright><lastBuildDate>Sat, 28 Apr 2018 02:36:28 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>Linux常用命令行指令 - xargs</title><link>http://samsonwang.me/posts/linux-command-examples-xargs/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;基础用法&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+&lt;code&gt;xargs&lt;/code&gt; 指令默认情况下从 &lt;code&gt;stdin&lt;/code&gt; 中读取信息，按照空格分或换行区分开，并且执行输入的命令（默认的命令是 &lt;code&gt;/bin/echo&lt;/code&gt; ）。命令可以通过 &lt;code&gt;xargs&lt;/code&gt; 的参数指定执行一次或多次，命令的执行参数为自身初始参数追加上由 &lt;code&gt;stdin&lt;/code&gt; 读到的内容，命令在执行时会忽略空行。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;
+xargs reads items from the standard input, delimited by blanks (which can be protected with double or single quotes or a backslash) or newlines, and executes the command (default is /bin/echo) one or more times with any initial-arguments followed by items read from standard input. Blank lines on the standard input are ignored.&lt;br&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;
+在命令行输入 &lt;code&gt;xargs&lt;/code&gt; 命令，输入 “a b c d” 后按回车，再按 &lt;code&gt;ctrl+d&lt;/code&gt; 完成本次输入，则 &lt;code&gt;xargs&lt;/code&gt; 的默认 &lt;code&gt;echo&lt;/code&gt; 命令会将接收到的字符串打印出来，效果如下所示。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# xargs
+a b c d
+a b c d
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;code&gt;xargs&lt;/code&gt; 单独使用时功能比较单一，但是它与其他指令一起使用十分强大。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;&lt;code&gt;xargs&lt;/code&gt; 与 &lt;code&gt;find&lt;/code&gt; 组合使用&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;p&gt;
+常见的使用方法是使用 &lt;code&gt;find&lt;/code&gt; 指令找到指定的文件，组合以 &lt;code&gt;xargs&lt;/code&gt; 指令实现对指定文件的操作。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;find . -name "demo_" | xargs file -i
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;
+由于 &lt;code&gt;xargs&lt;/code&gt; 是使用空格作为各个参数的分隔符，如果遇到的文件名中含有空格，则并不能按照预期处理。可以使用 &lt;code&gt;find&lt;/code&gt; 指令的 &lt;code&gt;-print0&lt;/code&gt; 含有空格的文件名转化为 &lt;code&gt;\n&lt;/code&gt; 结尾的字符串，再配置 &lt;code&gt;xargs&lt;/code&gt; 的 &lt;code&gt;-0&lt;/code&gt; 参数就能完成文件名中含有空格的处理，改进后的命令如下。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;find . -name "demo_" -print0 | xargs -0 file -i
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-3" class="outline-2"&gt;
+&lt;h2 id="sec-3"&gt;&lt;code&gt;xargs&lt;/code&gt; 与 &lt;code&gt;grep&lt;/code&gt; 组合使用&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-3"&gt;
+&lt;p&gt;
+常用命令如下，能够实现对指定规则文件的搜索匹配。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;find . -name "*.log" | xargs grep error
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-4" class="outline-2"&gt;
+&lt;h2 id="sec-4"&gt;使用 &lt;code&gt;-n&lt;/code&gt; 参数让 &lt;code&gt;xargs&lt;/code&gt; 的命令重复执行&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-4"&gt;
+&lt;p&gt;
+如果想用 &lt;code&gt;find&lt;/code&gt; 指令完成多个匹配规则的搜索，则可以使用 &lt;code&gt;-n&lt;/code&gt; 参数将 &lt;code&gt;xargs&lt;/code&gt; 的内容分割成多个。&lt;br&gt;
+下面的命令会执行3次 &lt;code&gt;find&lt;/code&gt; 命令， &lt;code&gt;xargs&lt;/code&gt; 会将接收的到的内容按照单词数为“1”分割，分3次传送给 &lt;code&gt;find&lt;/code&gt; 指令。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;echo *.c *.cpp *.h | xargs -n1 find . -name
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+
+&lt;div id="outline-container-sec-5" class="outline-2"&gt;
+&lt;h2 id="sec-5"&gt;参考资料&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-5"&gt;
+&lt;ol class="org-ol"&gt;
+&lt;li&gt;&lt;a href="http://man7.org/linux/man-pages/man1/xargs.1.html"&gt;http://man7.org/linux/man-pages/man1/xargs.1.html&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.howtoforge.com/tutorial/linux-xargs-command/"&gt;https://www.howtoforge.com/tutorial/linux-xargs-command/&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.thegeekstuff.com/2013/12/xargs-examples"&gt;https://www.thegeekstuff.com/2013/12/xargs-examples&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>linux</category><guid>http://samsonwang.me/posts/linux-command-examples-xargs/</guid><pubDate>Fri, 27 Apr 2018 06:03:39 GMT</pubDate></item><item><title>Linux常用命令行指令 - ipcs</title><link>http://samsonwang.me/posts/linux-command-examples-ipcs/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
 &lt;code&gt;IPC&lt;/code&gt; 是 &lt;code&gt;inter process communication&lt;/code&gt; 的缩写，这项技术能够让进程间相互通信。&lt;br&gt;
 Q：每个进程都有自己的地址空间和独立的用户空间，那么进程间是如何通信的呢？&lt;br&gt;
 A：内核，也就是操作系统的心脏，它能够访问整个操作系统的内存。我们可以要求内核分配一块用于进程间交互的空间。&lt;br&gt;
@@ -662,16 +741,4 @@ ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 &lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;
 完成以上操作后，可以执行 &lt;code&gt;date&lt;/code&gt; 命令查看修改效果。&lt;br&gt;
-&lt;/p&gt;</description><category>linux</category><guid>http://samsonwang.me/posts/change-linux-timezone-with-cli/</guid><pubDate>Tue, 03 Apr 2018 13:32:42 GMT</pubDate></item><item><title>Linux常用命令行指令 - netstat</title><link>http://samsonwang.me/posts/linux-command-examples-netstat/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
-常见的选项有：&lt;br&gt;
--a (all)显示所有选项，netstat默认不显示LISTEN相关&lt;br&gt;
--t (tcp)仅显示tcp相关选项&lt;br&gt;
--u (udp)仅显示udp相关选项&lt;br&gt;
--n 拒绝显示别名，能显示数字的全部转化成数字。(重要)&lt;br&gt;
--l 仅列出有在 Listen (监听) 的服务状态&lt;br&gt;
--p 显示建立相关链接的程序名(macOS中表示协议 -p protocol)&lt;br&gt;
--r 显示路由信息，路由表&lt;br&gt;
--e 显示扩展信息，例如uid等&lt;br&gt;
--s 按各个协议进行统计 (重要)&lt;br&gt;
--c 每隔一个固定时间，执行该netstat命令。&lt;br&gt;
-&lt;/p&gt;</description><category>linux</category><category>network</category><guid>http://samsonwang.me/posts/linux-command-examples-netstat/</guid><pubDate>Wed, 28 Mar 2018 14:55:16 GMT</pubDate></item></channel></rss>
+&lt;/p&gt;</description><category>linux</category><guid>http://samsonwang.me/posts/change-linux-timezone-with-cli/</guid><pubDate>Tue, 03 Apr 2018 13:32:42 GMT</pubDate></item></channel></rss>
