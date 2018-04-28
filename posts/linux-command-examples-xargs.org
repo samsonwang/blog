@@ -47,7 +47,19 @@ find . -name "*.log" | xargs grep error
 如果想用 =find= 指令完成多个匹配规则的搜索，则可以使用 =-n= 参数将 =xargs= 的内容分割成多个。
 下面的命令会执行3次 =find= 命令， =xargs= 会将接收的到的内容按照单词数为“1”分割，分3次传送给 =find= 指令。
 #+BEGIN_SRC shell
-echo *.c *.cpp *.h | xargs -n1 find . -name
+echo "*.c" "*.cpp" "*.h" | xargs -n 1 find . -name
+#+END_SRC
+
+** 使用 =-t= 参数让 =xargs= 打印将要执行的命令
+让 =xargs= 将指令的命令打印出来主要是方便查看命令执行情况，也方便在出现错误时进行调试。
+#+BEGIN_SRC shell
+find . -name *.log | xargs -t rm -f
+#+END_SRC
+
+** 使用 =-p= 参数让 =xargs= 在执行命令前询问用户
+增加 =-p= 参数后， =xargs= 在每次执行命令前会将指令打印出来并询问用户，只有用户输入 “y” 时才会真正执行该条命令。
+#+BEGIN_SRC shell
+echo "*.c" "*.cpp" "*.h" | xargs -n 1 -p find . -name
 #+END_SRC
 
 
