@@ -2,7 +2,7 @@
 .. title: Linux常用命令行指令 - xargs
 .. slug: linux-command-examples-xargs
 .. date: 2018-04-27 14:03:39 UTC+08:00
-.. tags: linux, shell, draft
+.. tags: linux
 .. category: linux
 .. link: 
 .. description: 
@@ -18,9 +18,37 @@
 xargs reads items from the standard input, delimited by blanks (which can be protected with double or single quotes or a backslash) or newlines, and executes the command (default is /bin/echo) one or more times with any initial-arguments followed by items read from standard input. Blank lines on the standard input are ignored.
 #+END_QUOTE
 
-** 
+在命令行输入 =xargs= 命令，输入 “a b c d” 后按回车，再按 =ctrl+d= 完成本次输入，则 =xargs= 的默认 =echo= 命令会将接收到的字符串打印出来，效果如下所示。
+#+BEGIN_SRC shell
+# xargs
+a b c d
+a b c d
+#+END_SRC
 
+=xargs= 单独使用时功能比较单一，但是它与其他指令一起使用十分强大。
 
+** =xargs= 与 =find= 组合使用
+常见的使用方法是使用 =find= 指令找到指定的文件，组合以 =xargs= 指令实现对指定文件的操作。
+#+BEGIN_SRC shell
+find . -name "demo_" | xargs file -i
+#+END_SRC
+由于 =xargs= 是使用空格作为各个参数的分隔符，如果遇到的文件名中含有空格，则并不能按照预期处理。可以使用 =find= 指令的 =-print0= 含有空格的文件名转化为 =\n= 结尾的字符串，再配置 =xargs= 的 =-0= 参数就能完成文件名中含有空格的处理，改进后的命令如下。
+#+BEGIN_SRC shell
+find . -name "demo_" -print0 | xargs -0 file -i
+#+END_SRC
+
+** =xargs= 与 =grep= 组合使用
+常用命令如下，能够实现对指定规则文件的搜索匹配。
+#+BEGIN_SRC shell
+find . -name "*.log" | xargs grep error
+#+END_SRC
+
+** 使用 =-n= 参数让 =xargs= 的命令重复执行
+如果想用 =find= 指令完成多个匹配规则的搜索，则可以使用 =-n= 参数将 =xargs= 的内容分割成多个。
+下面的命令会执行3次 =find= 命令， =xargs= 会将接收的到的内容按照单词数为“1”分割，分3次传送给 =find= 指令。
+#+BEGIN_SRC shell
+echo *.c *.cpp *.h | xargs -n1 find . -name
+#+END_SRC
 
 
 ** 参考资料
