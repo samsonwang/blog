@@ -135,7 +135,7 @@ TRANSLATIONS_PATTERN = "{path}.{lang}.{ext}"
 NAVIGATION_LINKS = {
     DEFAULT_LANG: (
         ("/archive/", "Archives"),
-        ("/categories/", "Tags"),
+        ("/tags/", "Tags"),
         ("/listings/", "Listings"),
         ("/galleries/", "Galleries"),
         ("/rss.xml", "RSS Feed"),
@@ -415,7 +415,7 @@ POSTS_SECTIONS = True
 # output / TRANSLATION[lang] / TAG_PATH / tag.html (list of posts for a tag)
 # output / TRANSLATION[lang] / TAG_PATH / tag.xml (RSS feed for a tag)
 # (translatable)
-# TAG_PATH = "categories"
+TAG_PATH = "tags"
 
 # By default, the list of tags is stored in
 #     output / TRANSLATION[lang] / TAG_PATH / index.html
@@ -474,7 +474,7 @@ HIDDEN_TAGS = ['mathjax']
 # output / TRANSLATION[lang] / CATEGORY_PATH / CATEGORY_PREFIX category.xml (RSS feed for a category)
 # (translatable)
 # CATEGORY_PATH = "categories"
-# CATEGORY_PREFIX = "cat_"
+CATEGORY_PREFIX = "category_"
 
 # By default, the list of categories is stored in
 #     output / TRANSLATION[lang] / CATEGORY_PATH / index.html
@@ -1407,10 +1407,10 @@ SIDEBAR_ABOUT_ME = """
 
 SIDEBAR_CATEGORY_ITEM = """
 <ol class="list-unstyled sidebar-category">
-<li><a href="/categories/cat_cpp/">cpp</a>
-<li><a href="/categories/cat_emacs/">emacs</a>
-<li><a href="/categories/cat_linux/">linux</a>
-<li><a href="/categories/cat_windows/">windows</a>
+<li><a href="/tags/category_cpp/">cpp</a>
+<li><a href="/tags/category_emacs/">emacs</a>
+<li><a href="/tags/category_linux/">linux</a>
+<li><a href="/tags/category_windows/">windows</a>
 </ol>"""
 
 GLOBAL_CONTEXT = {

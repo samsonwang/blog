@@ -1,0 +1,57 @@
+#+BEGIN_COMMENT
+.. title: 字节序与union类型
+.. slug: endianness-and-union-type
+.. date: 2018-05-11 09:55:34 UTC+08:00
+.. tags: cpp, computer science
+.. category: computer science
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+
+
+#+TITLE: 字节序与union类型
+
+** 字节序
+字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。
+字节序分为大端字节序和小端字节序，两种字节序不能混用。
+*大端字节序* ：高位字节保存在较低位地址的内存中
+*小端字节序* ：高位字节保存在较高位地址的内存中
+
+以 =int n = 0x12345678= 为例，大端字节序内存中的存储的顺序为 =0x12 0x34 0x56 0x78= ，小端字节序内存中的存储顺序为 =0x78 0x56 0x34 0x12= 。
+很明显可以看出大端字节序更符合人类的阅读习惯。
+
+常见的大端系统CPU：IBM z/Atchitecture
+常见的小端系统CPU：intel x86 处理器
+
+网络字节序使用的大端字节序，常用网络协议如IPv4、IPv6、TCP和UDP协议都是使用大端字节序完成数据传输的。
+
+
+** union类型
+可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。
+
+#+BEGIN_SRC cpp
+#include <stdio.h>
+
+typedef union un
+{
+    int32_t x;
+    char ch[4];
+}un;
+
+int main(int argc, char* argv[])
+{
+    un u;
+    u.ch[0] = 1;
+    u.ch[1] = 2;
+    u.ch[2] = 3;
+    u.ch[3] = 4;
+    printf("u.x=0x%x\n", u.x);
+    return 0;
+}
+#+END_SRC
+
+
+
+
+
