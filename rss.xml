@@ -1,7 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note</title><link>http://samsonwang.me/</link><description>Constraint &amp; Focus</description><atom:link href="http://samsonwang.me/rss.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:zl.wang@foxmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Thu, 10 May 2018 08:01:18 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>在Python日志中输出文件名和函数名</title><link>http://samsonwang.me/posts/python-logging-with-function-name/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+</copyright><lastBuildDate>Fri, 11 May 2018 03:19:28 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>字节序与union类型</title><link>http://samsonwang.me/posts/endianness-and-union-type/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;字节序&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。&lt;br&gt;
+字节序分为大端字节序和小端字节序，两种字节序不能混用。&lt;br&gt;
+&lt;b&gt;大端字节序&lt;/b&gt; ：高位字节保存在较低位地址的内存中&lt;br&gt;
+&lt;b&gt;小端字节序&lt;/b&gt; ：高位字节保存在较高位地址的内存中&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+以 &lt;code&gt;int n = 0x12345678&lt;/code&gt; 为例，大端字节序内存中的存储的顺序为 &lt;code&gt;0x12 0x34 0x56 0x78&lt;/code&gt; ，小端字节序内存中的存储顺序为 &lt;code&gt;0x78 0x56 0x34 0x12&lt;/code&gt; 。&lt;br&gt;
+很明显可以看出大端字节序更符合人类的阅读习惯。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+常见的大端系统CPU：IBM z/Atchitecture&lt;br&gt;
+常见的小端系统CPU：intel x86 处理器&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+网络字节序使用的大端字节序，常用网络协议如IPv4、IPv6、TCP和UDP协议都是使用大端字节序完成数据传输的。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;union类型&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;p&gt;
+可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="k"&gt;union&lt;/span&gt; &lt;span class="n"&gt;un&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kt"&gt;int32_t&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="n"&gt;un&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;argc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[])&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;un&lt;/span&gt; &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"u.x=0x%x&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>computer science</category><category>cpp</category><guid>http://samsonwang.me/posts/endianness-and-union-type/</guid><pubDate>Fri, 11 May 2018 01:55:34 GMT</pubDate></item><item><title>在Python日志中输出文件名和函数名</title><link>http://samsonwang.me/posts/python-logging-with-function-name/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
 Python内置了日志模块，在默认情况下输出的日志是不带文件名和函数名的，这样在排查问题时，遇到相似的日志就变得容易混淆，可以通过设置将输出的日志中带有文件名和函数名。参考了stackoverflow的回答，详细代码如下。&lt;br&gt;
 &lt;/p&gt;
 
@@ -669,107 +723,4 @@ Robert N M Watson&lt;br&gt;
 &lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description><category>linux</category><guid>http://samsonwang.me/posts/fifo-pipe-unix-domain-socket/</guid><pubDate>Wed, 11 Apr 2018 05:03:25 GMT</pubDate></item><item><title>Linux下使用gdb的调试技巧（2）</title><link>http://samsonwang.me/posts/debug-with-gdb-on-linux-2/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
-相关文章：&lt;a href="https://samsonwang.me/posts/debug-with-gdb-on-linux/"&gt;Linux下使用gdb的调试技巧（1）&lt;/a&gt;&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-本文重点介绍在gdb模式下的常用命令。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-查看帮助信息&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) help all
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-查看线程信息&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) info thread
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-切换到某一线程&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) thread 2
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-查看调用堆栈信息&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) bt
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-查看某个调用栈&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) frame 3
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-增加断点&lt;br&gt;
-断点格式：&lt;br&gt;
-&lt;/p&gt;
-&lt;ul class="org-ul"&gt;
-&lt;li&gt;函数名&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;文件名：行号&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;当前调试文件的行号&lt;br&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) breakpoint xxx
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-删除断点&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) delete xxx
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-启用/禁用断点&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) disable/enable xxx
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-查看断点信息&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) info break
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-临时断点，临时断点的使用方法与普通断点相同&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) tb xxx
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-在gdb模式下，回车会执行上一次输入的命令&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-运行到指定行&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;until 81
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-在gdb中打印长字符串&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) set print element 0
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-在gdb中强制在一个线程内调试运行&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;set scheduler-locking step
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-在gdb中向程序发送信号&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) signal
-&lt;/pre&gt;&lt;/div&gt;</description><category>gdb</category><category>linux</category><guid>http://samsonwang.me/posts/debug-with-gdb-on-linux-2/</guid><pubDate>Tue, 03 Apr 2018 14:51:39 GMT</pubDate></item></channel></rss>
+&lt;/div&gt;</description><category>linux</category><guid>http://samsonwang.me/posts/fifo-pipe-unix-domain-socket/</guid><pubDate>Wed, 11 Apr 2018 05:03:25 GMT</pubDate></item></channel></rss>

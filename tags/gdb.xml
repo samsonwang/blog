@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about gdb)</title><link>http://samsonwang.me/</link><description></description><atom:link href="http://samsonwang.me/tags/gdb.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:zl.wang@foxmail.com"&gt;Samson Wang&lt;/a&gt; 
+&lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
+</copyright><lastBuildDate>Fri, 11 May 2018 03:19:28 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>使用gdb调试多线程程序</title><link>http://samsonwang.me/posts/debug-with-gdb-on-multi-thread-programs/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;查看当前线程信息&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+&lt;b&gt;将进程中的各个线程信息显示出来&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) info threads
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;切换到指定进程&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) thread tid
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;向指定的线程发送自定的指令&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) thread apply tid/all args
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;
+常用的指定是查看所有线程的调用堆栈 &lt;code&gt;thread apply all bt&lt;/code&gt; ，这个指令与 &lt;code&gt;pstack&lt;/code&gt; 命令有些相似。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;gdb默认会自动捕捉新产生线程&lt;/b&gt;&lt;br&gt;
+会在产生一个新的线程时会显示出LWP的字样提示用户，LWP = light weight process&lt;br&gt;
+可以设置gdb是否提示线程相关的事件&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) set print thread-events on/off
+(gdb) show print thread-events
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;为指定的线程设置断点&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;p&gt;
+含有多线程的程序，可以为单独的线程设置断点&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) break linespec thread tid
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+任何时候当你的程序在GDB模式下停止的时候，包括当前调试线程的所有线程都会停下来，不会对继续对当前进程造成更改。这时你可以在线程间进行切换，查看整个进程的执行状况。&lt;br&gt;
+&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;
+Whenever your program stops under GDB for any reason, all threads of execution stop, not just the current thread. This allows you to examine the overall state of the program, including switching between threads, without worrying that things may change underfoot.&lt;br&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-3" class="outline-2"&gt;
+&lt;h2 id="sec-3"&gt;防止gdb自动切换线程&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-3"&gt;
+&lt;p&gt;
+在调试gdb程序时，在单步执行时，会出现线程间跳转切换，这样对跟踪代码执行状态十分不方便。&lt;br&gt;
+可以通过设置 &lt;code&gt;scheduler-locking&lt;/code&gt; 让gdb在所调试的线程中运行，防止线程的自动切换。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) set scheduler-locking step
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;
+可以执行以下命令查看当前 &lt;code&gt;scheduler-locking&lt;/code&gt; 的设置&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) show scheduler-locking
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;
+&lt;code&gt;scheduler-locking&lt;/code&gt; 有三种模式&lt;br&gt;
+&lt;/p&gt;
+&lt;ol class="org-ol"&gt;
+&lt;li&gt;&lt;code&gt;off&lt;/code&gt; 任何线程在任何时候都能执行&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;on&lt;/code&gt; 只有当前线程能够执行&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;step&lt;/code&gt; 为单步执行优化的模式，比较适合一般的调试&lt;br&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;
+Set the scheduler locking mode. If it is off, then there is no locking and any thread may run at any time. If on, then only the current thread may run when the inferior is resumed. The step mode optimizes for single-stepping. It stops other threads from "seizing the prompt" by preempting the current thread while you are stepping. Other threads will only rarely (or never) get a chance to run when you step. They are more likely to run when you `next' over a function call, and they are completely free to run when you use commands like `continue', `until', or `finish'. However, unless another thread hits a breakpoint during its timeslice, they will never steal the GDB prompt away from the thread that you are debugging.&lt;br&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+
+&lt;div id="outline-container-sec-4" class="outline-2"&gt;
+&lt;h2 id="sec-4"&gt;参考资料&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-4"&gt;
+&lt;ol class="org-ol"&gt;
+&lt;li&gt;&lt;a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_39.html"&gt;gnu manual 1&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_24.html"&gt;gun manual 2&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://sourceware.org/gdb/onlinedocs/gdb/Threads.html"&gt;sourceware gdb onlinedocs&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://www.drdobbs.com/cpp/multithreaded-debugging-techniques/199200938?pgno=1"&gt;drdobbs.com&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>gdb</category><category>linux</category><guid>http://samsonwang.me/posts/debug-with-gdb-on-multi-thread-programs/</guid><pubDate>Fri, 20 Apr 2018 13:25:09 GMT</pubDate></item><item><title>在gdb调试时忽略系统信号（signal）</title><link>http://samsonwang.me/posts/gdb-ignore-received-signal/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+在gdb调试程序时，默认情况下gdb在收到信号时会中断程序的运行，并将收到的信号显示出来。这时，可以选择输入 &lt;code&gt;c&lt;/code&gt; ( &lt;code&gt;continue&lt;/code&gt; )让程序继续运行。如果程序会重复收到这信号，会非常影响调试效率。可以通过配置忽略指定的系统信号。&lt;br&gt;
+查看当前系统信号的处理信息的指令&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) info signal
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+以调试网络程序为例，进程会经常收到 &lt;code&gt;SIGPIPE&lt;/code&gt; 消息，对于网络进程的 &lt;code&gt;SIGPIPE&lt;/code&gt; 消息在程序中会由自身处理，可以使用以下指令让gdb不再提示 &lt;code&gt;SIGPIPE&lt;/code&gt; 信号。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) handle SIGPIPE nostop noprint
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+参考资料： &lt;a href="ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_38.html"&gt;gnu gdb manual&lt;/a&gt;&lt;br&gt;
+&lt;/p&gt;</description><category>gdb</category><category>linux</category><guid>http://samsonwang.me/posts/gdb-ignore-received-signal/</guid><pubDate>Thu, 19 Apr 2018 08:00:47 GMT</pubDate></item><item><title>Linux下使用gdb的调试技巧（2）</title><link>http://samsonwang.me/posts/debug-with-gdb-on-linux-2/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+相关文章：&lt;a href="https://samsonwang.me/posts/debug-with-gdb-on-linux/"&gt;Linux下使用gdb的调试技巧（1）&lt;/a&gt;&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+本文重点介绍在gdb模式下的常用命令。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+查看帮助信息&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) help all
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+查看线程信息&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) info thread
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+切换到某一线程&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) thread 2
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+查看调用堆栈信息&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) bt
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+查看某个调用栈&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) frame 3
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+增加断点&lt;br&gt;
+断点格式：&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;函数名&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;文件名：行号&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;当前调试文件的行号&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) breakpoint xxx
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+删除断点&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) delete xxx
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+启用/禁用断点&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) disable/enable xxx
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+查看断点信息&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) info break
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+临时断点，临时断点的使用方法与普通断点相同&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) tb xxx
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+在gdb模式下，回车会执行上一次输入的命令&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+运行到指定行&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;until 81
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+在gdb中打印长字符串&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) set print element 0
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+在gdb中强制在一个线程内调试运行&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;set scheduler-locking step
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+在gdb中向程序发送信号&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) signal
+&lt;/pre&gt;&lt;/div&gt;</description><category>gdb</category><category>linux</category><guid>http://samsonwang.me/posts/debug-with-gdb-on-linux-2/</guid><pubDate>Tue, 03 Apr 2018 14:51:39 GMT</pubDate></item><item><title>Linux下使用GDB的调试技巧</title><link>http://samsonwang.me/posts/debug-with-gdb-on-linux/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;1 代码编译阶段&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+在调试C/C++代码时，在编译阶段使用 &lt;code&gt;gcc/g++ -g&lt;/code&gt; 命令编译，将调试信息生成在目标文件中。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;2 开启gdb模式&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;直接进入gdb模式: &lt;code&gt;gdb&lt;/code&gt; &lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;使用gdb模式开启一个新的进程: &lt;code&gt;gdb &amp;lt;appname&amp;gt;&lt;/code&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;使用指定的程序来调试core文件: &lt;code&gt;gdb &amp;lt;appname&amp;gt; &amp;lt;corename&amp;gt;&lt;/code&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a href="http://samsonwang.me/posts/debug-with-gdb-on-linux/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;</description><category>gdb</category><category>linux</category><guid>http://samsonwang.me/posts/debug-with-gdb-on-linux/</guid><pubDate>Tue, 24 Oct 2017 00:58:25 GMT</pubDate></item></channel></rss>
