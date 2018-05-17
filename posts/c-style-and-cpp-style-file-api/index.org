@@ -1,0 +1,64 @@
+#+BEGIN_COMMENT
+.. title: C风格和C++风格的文件操作库函数总结
+.. slug: c-style-and-cpp-style-file-api
+.. date: 2018-05-16 18:06:45 UTC+08:00
+.. tags: cpp, linux
+.. category: cpp
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+
+#+TITLE: C风格和C++风格的文件操作库函数总结
+
+由于C++是兼容C的，所以使用C++进行文件操作时，会发现有两套库函数可以使用，它们分别是C风格的和C++风格的。
+
+** C风格的文件操作函数
+打开文件，关闭文件
+#+BEGIN_SRC c
+#include <stdio.h>
+FILE* fopen(const char* path, const char* mode);
+int fclose(FILE* fp);
+#+END_SRC
+
+读取文件，写入文件
+#+BEGIN_SRC c
+#include <stdio.h>
+size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream);
+size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream);
+#+END_SRC
+
+改变文件指示器的位置
+#+BEGIN_SRC c
+#include <stdio.h>
+int fseek(FILE* stream, long offset, int whence);
+long ftell(FILE* stream);
+void rewind(FILE* stream);
+#+END_SRC
+
+
+** C++风格的文件操作函数
+C++将文件操作函数封装为 =fstream= 操作类，一个文件实际上就会对应一个 =fstream= 对象，一下函数都是 =fstream= 的成员函数。
+文件打开和关闭
+#+BEGIN_SRC cpp
+void open(const char* filename, ios_base::openmode mode = ios_base::in|ios_base::out);
+void open(const std::string& filename, ios_base::openmode mode = ios_base::in|ios_base::out);
+void close();
+#+END_SRC
+
+对于文件的读写可以才采用流运算符重载的方法完成。
+#+BEGIN_SRC cpp
+friend fstream& operator << (fstream& ofs, const CRecord& objRecord);
+friend fstream& operator >> (fstream& ifs, CRecord& objRecord);
+#+END_SRC
+
+
+** 题外话
+在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。
+
+
+
+
+
+
+
