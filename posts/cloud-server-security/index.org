@@ -1,0 +1,56 @@
+#+BEGIN_COMMENT
+.. title: 云服务器安全相关配置
+.. slug: cloud-server-security
+.. date: 2018-06-07 14:12:38 UTC+08:00
+.. tags: linux
+.. category: linux
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 云服务器安全相关配置
+
+我所租用的云服务器操作系统为CentOS Linux，在使用云服务器的过程中为了保证服务器的安全，进行了一些简单的配置，这样能够增加服务器被破解的难度。
+
+** 使用denyhosts防止暴力破解登录密码
+登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。
+
+*安装denyhosts*
+可以使用自带的包管理器安装denyhost，这样是比较方便的，后续的配置工作也会简单一些。
+#+BEGIN_SRC shell
+yum install denyhosts
+#+END_SRC
+
+*编辑配置文件*
+安装好denyhosts之后，它的默认配置文件为 =/etc/denyhosts.conf= 。该配置文件有很好的注释，对于每个配置项的作用都有很好的说明。可能需要修改的相关配置项有如下几个。
+#+BEGIN_SRC conf
+DENY_THRESHOLD_INVALID = 5
+DENY_THRESHOLD_VALID = 10
+DENY_THRESHOLD_ROOT = 5
+#+END_SRC
+
+*启动denyhosts*
+使用以下命令启动denyhosts，查看denyhosts的运行状态。
+
+#+BEGIN_SRC shell
+service denyhosts start
+service denyhosts status
+#+END_SRC
+
+使用以下命令让denyhosts能够自启动。
+#+BEGIN_SRC shell
+chkconfig denyhosts on
+#+END_SRC
+
+** 更改sshd的端口号
+sshd的默认端口号为22，通过修改默认的sshd的端口号，可以增加破解难度。
+
+*编辑配置文件*
+sshd的配置文件为 =/etc/ssh/sshd_config= ，端口号配置为这一行 =# Port 22= ，删去井号然后将22改为需要的端口号。
+
+*重启sshd服务*
+#+BEGIN_SRC shell
+service sshd restart
+#+END_SRC
+
