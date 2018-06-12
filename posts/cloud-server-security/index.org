@@ -14,7 +14,7 @@
 我所租用的云服务器操作系统为CentOS Linux，在使用云服务器的过程中为了保证服务器的安全，进行了一些简单的配置，这样能够增加服务器被破解的难度。
 
 ** 使用denyhosts防止暴力破解登录密码
-登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。
+登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，屏蔽该登录ip，限制密码的尝试次数。
 
 *安装denyhosts*
 可以使用自带的包管理器安装denyhost，这样是比较方便的，后续的配置工作也会简单一些。
@@ -23,7 +23,7 @@ yum install denyhosts
 #+END_SRC
 
 *编辑配置文件*
-安装好denyhosts之后，它的默认配置文件为 =/etc/denyhosts.conf= 。该配置文件有很好的注释，对于每个配置项的作用都有很好的说明。可能需要修改的相关配置项有如下几个。
+安装好denyhosts之后，它的默认配置文件为 =/etc/denyhosts.conf= 。该配置文件有很好的注释，对于每个配置项的作用都有很好的说明。可能需要修改的相关配置项有如下几个。denyhosts可以分别配置root用户、普通用户、无效用户用户名的尝试次数。
 #+BEGIN_SRC conf
 DENY_THRESHOLD_INVALID = 5
 DENY_THRESHOLD_VALID = 10
@@ -32,25 +32,29 @@ DENY_THRESHOLD_ROOT = 5
 
 *启动denyhosts*
 使用以下命令启动denyhosts，查看denyhosts的运行状态。
-
 #+BEGIN_SRC shell
 service denyhosts start
 service denyhosts status
 #+END_SRC
 
-使用以下命令让denyhosts能够自启动。
+使用以下命令让denyhosts能够随系统自启动。
 #+BEGIN_SRC shell
 chkconfig denyhosts on
 #+END_SRC
 
 ** 更改sshd的端口号
-sshd的默认端口号为22，通过修改默认的sshd的端口号，可以增加破解难度。
+sshd的默认端口号为22，很多暴力破解程序会直接对该端口进行登录尝试，通过修改默认的sshd的端口号，可以增加破解难度。需要注意的是，在修改sshd端口号之后，自己使用shell工具登录服务器也需要端口号进行修改。
 
 *编辑配置文件*
 sshd的配置文件为 =/etc/ssh/sshd_config= ，端口号配置为这一行 =# Port 22= ，删去井号然后将22改为需要的端口号。
 
 *重启sshd服务*
+更改配置文件后，需要重启服务使配置文件生效。
 #+BEGIN_SRC shell
 service sshd restart
 #+END_SRC
+
+** 使用 ~last~ 和 ~lastb~ 查看系统登录记录
+~last~ 指令能够查看登录成功的记录，而 ~lastb~ 指令能够查看登录失败的记录。通过查看登录失败的记录，能够判断出服务器是否有被暴力破解的记录。需要注意的是这两个命令均需要管理员权限才能够执行。
+
 
