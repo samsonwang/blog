@@ -21,8 +21,31 @@
 同步模型常用的函数接口：read,write,send,recv
 异步模型常用的函数接口：aio_write,aio_read
 异步模型示例代码：
-linux下的aio示例代码
-windows下的aio示例代码
+
+*** POSIX AIO
+在头文件 =aio.h= 中定义，链接时使用 =-lrt=
+
+*** Linux AIO
+在头文件 =libaio.h= 中定义，链接时使用 =-laio=
+
+*** Windows AIO
+
+
+*** POSIX AIO与Linux AIO的区别
+摘自 [[https://stackoverflow.com/questions/8768083/difference-between-posix-aio-and-libaio-on-linux][stackoverflow.com]]
+#+BEGIN_QUOTE
+On linux, the two AIO implementations are fundamentally different.
+The POSIX AIO is a user-level implementation that performs normal blocking I/O in multiple threads, hence giving the illusion that the I/Os are asynchronous. The main reason to do this is that:
+- it works with any filesystem
+- it works (essentially) on any operating system (keep in mind that gnu's libc is portable)
+- it works on files with buffering enabled (i.e. no O_DIRECT flag set)
+The main drawback is that your queue depth (i.e. the number of outstanding operations you can have in practice) is limited by the number of threads you choose to have, which also means that a slow operation on one disk may block an operation going to a different disk. It also affects which I/Os (or how many) is seen by the kernel and the disk scheduler as well.
+The kernel AIO (i.e. io_submit() et.al.) is kernel support for asynchronous I/O operations, where the io requests are actually queued up in the kernel, sorted by whatever disk scheduler you have, presumably some of them are forwarded (in somewhat optimal order one would hope) to the actual disk as asynchronous operations (using TCQ or NCQ). The main restriction with this approach is that not all filesystems work that well or at all with async I/O (and may fall back to blocking semantics), files have to be opened with O_DIRECT which comes with a whole lot of other restrictions on the I/O requests. If you fail to open your files with O_DIRECT, it may still "work", as in you get the right data back, but it probably isn't done asynchronously, but is falling back to blocking semantics.
+Also keep in mind that io_submit() can actually block on the disk under certain circumstances.
+#+END_QUOTE
+在Linux上两种AIO是完全不同的；
+POSIX AIO实现在用户层，实际上进行的操作是普通的多线程阻塞操作，表现为I/O操作是异步的，这种AIO的优点是兼容性和可移植性好，缺点是操作队列长度受限于最大线程数量。
+Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核中维护，这种AIO的缺点是并不支持所有的文件系统，Linux AIO在某些情况下的磁盘操作是会阻塞的。
 
 ** 阻塞和非阻塞
 
@@ -35,8 +58,7 @@ libevent框架，事件驱动框架
 
 
 ** 参考资料
-https://blog.csdn.net/hguisu/article/details/38638183
-
-
-
+- https://blog.csdn.net/hguisu/article/details/38638183
+- [[https://github.com/littledan/linux-aio%20repo][github.com linux-aio]]
+- [[https://www.ibm.com/developerworks/linux/library/l-async/index.html][ibm developerworks]]
 
