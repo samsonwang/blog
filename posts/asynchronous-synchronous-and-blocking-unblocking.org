@@ -1,13 +1,14 @@
 #+BEGIN_COMMENT
 .. title: 同步和异步、阻塞和非阻塞
 .. slug: asynchronous-synchronous-and-blocking-unblocking
-.. date: 2018-06-21 09:27:06 UTC+08:00
-.. tags: draft, network
-.. category: 
+.. date: 2018-06-26 09:27:06 UTC+08:00
+.. tags: computer science
+.. category: computer science
 .. link: 
 .. description: 
 .. type: text
 #+END_COMMENT
+#+OPTIONS: num:t
 
 #+TITLE: 同步和异步、阻塞和非阻塞
 
@@ -18,18 +19,61 @@
 一个简单的I/O操作方式就是启动连接并等待操作完成，但是这样的操作（同步阻塞I/O）在通信过程中会阻塞进程的处理进度。
 相应的，可以在启动通信的同时进行其他的处理，并不需要等待I/O操作的完成，这样的操作就被称作是异步I/O。那些依赖于I/O操作执行完成的任务会阻塞等待I/O操作的完成，其他不依赖与I/O操作的任务能够继续执行。
 
-同步模型常用的函数接口：read,write,send,recv
-异步模型常用的函数接口：aio_write,aio_read
-异步模型示例代码：
+同步模型常用的函数接口： ~read~ , ~write~ , ~send~ , ~recv~
+异步模型常用的函数接口： ~aio_write~ , ~aio_read~
 
 *** POSIX AIO
 在头文件 =aio.h= 中定义，链接时使用 =-lrt=
 
+*函数接口*
+异步写操作
+#+BEGIN_SRC c
+int aio_read(struct aiocb* aiocbp);
+#+END_SRC
+
+异步读操作
+#+BEGIN_SRC c
+int aio_write(struct aiocb* aiocbp);
+#+END_SRC
+
+获取异步操作结果
+#+BEGIN_SRC c
+int aio_return(struct aiocb* aiocbp);
+#+END_SRC
+
+获取异步操作中的错误
+#+BEGIN_SRC c
+int aio_error(struct aiocb* aiocbp);
+#+END_SRC
+
+示例代码： [[https://gist.github.com/rsms/771059][github gist]]
+
 *** Linux AIO
 在头文件 =libaio.h= 中定义，链接时使用 =-laio=
 
-*** Windows AIO
+*函数接口*
+需要注意的是aio的函数接口需要借助 ~syscall~ 进行调用。
+创建aio context对象
+#+BEGIN_SRC c
+int io_setup(unsigned nr, aio_context_t* ctxp);
+#+END_SRC
+销毁aio context对象
+#+BEGIN_SRC c
+int io_destroy(aio_context_t ctx);
+#+END_SRC
+提交异步操作
+#+BEGIN_SRC c
+int io_submit(aio_context_t ctx, long nr, struct iocb** iocbpp);
+#+END_SRC
+获取异步操作结果
+#+BEGIN_SRC c
+int io_getevents(aio_context_t ctx, long min_nr, long max_nr,
+                 io_event* events, struct timespec* timeout);
+#+END_SRC
 
+示例代码: 
+- [[-%20https://gist.github.com/larytet/87f90b08643ac3de934df2cadff4989c][github gist]]
+- [[http://www.xmailserver.org/eventfd-aio-test.c][xmailserver.org]]
 
 *** POSIX AIO与Linux AIO的区别
 摘自 [[https://stackoverflow.com/questions/8768083/difference-between-posix-aio-and-libaio-on-linux][stackoverflow.com]]
@@ -48,17 +92,19 @@ POSIX AIO实现在用户层，实际上进行的操作是普通的多线程阻�
 Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核中维护，这种AIO的缺点是并不支持所有的文件系统，Linux AIO在某些情况下的磁盘操作是会阻塞的。
 
 ** 阻塞和非阻塞
+阻塞与非阻塞的概念针对的是函数是否会立即返回。
+非阻塞模型常与IO复用技术组合使用。
+可以通过函数将IO设备设置为非阻塞模式。
 
 
-** 网络编程是一个比较大的话题
-
-reactor模式
-libevent框架，事件驱动框架
-常见的网络通信模型种类
+** 如何理解阻塞非阻塞与同步异步的区别
+在处理 IO 的时候，阻塞和非阻塞都是同步 IO。
+只有使用了特殊的 API 才是异步 IO。
 
 
 ** 参考资料
-- https://blog.csdn.net/hguisu/article/details/38638183
+- [[https://blog.csdn.net/hguisu/article/details/38638183][csdn.net]]
 - [[https://github.com/littledan/linux-aio%20repo][github.com linux-aio]]
 - [[https://www.ibm.com/developerworks/linux/library/l-async/index.html][ibm developerworks]]
+
 
