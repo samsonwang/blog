@@ -1,0 +1,48 @@
+#+BEGIN_COMMENT
+.. title: 在gdb中查看指定内存地址的内容
+.. slug: gdb-display-contents-of-memory-address
+.. date: 2018-06-29 16:45:09 UTC+08:00
+.. tags: gdb
+.. category: linux
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+#+OPTIONS: num:t
+
+#+TITLE: 在gdb中查看指定内存地址的内容
+
+** 引言
+调试 C/C++ 程序时，需要打印指定内存地址的内容。我最近调试程序中的序列化模块时，需要将类对象按照指定的格式转化为二进制流，为了验证转化结果，在调试时就需要将指定内存地址中的内容打印出来。
+
+** 指令语法
+在gdb模式下，使用 =x= （ =examine= 的缩写）指令能够将指令内存地址中的信息打印出来。指令的语法如下。
+#+BEGIN_SRC gdb
+x/nfu addr
+x addr
+#+END_SRC
+其中 =n= 、 =f= 、 =u= 都是可选参数， =n= 表示重复次数， =f= 表示显示格式（format）， =u= 表示显示单元大小(unix size)。
+
+=f= *可以取如下值* ：
+x 按十六进制格式显示变量
+d 按十进制格式显示变量
+o 按八进制格式显示变量
+t 按二进制格式显示变量
+
+=u= *可以取如下值* ：
+b 表示单字节（byte）
+h 表示双字节（halfword）
+w 表示四字节(word)
+g 表示八字节(giant word)
+
+** 示例
+以下指令会以16进制格式显示addr开始的100字节信息
+#+BEGIN_SRC gdb
+x/100xb addr
+#+END_SRC
+
+** 参考资料
+- [[ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_chapter/gdb_9.html#SEC56][GDB manual(gnu.org)]]
+- [[https://sourceware.org/gdb/onlinedocs/gdb/Memory.html][GDB manual(sourceware.org)]]
+
+
