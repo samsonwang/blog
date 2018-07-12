@@ -1,0 +1,81 @@
+#+BEGIN_COMMENT
+.. title: C/C++中的位域
+.. slug: bit-field
+.. date: 2018-07-11 18:03:37 UTC+08:00
+.. tags: cpp
+.. category: cpp
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+#+OPTIONS: num:t
+
+#+TITLE: C/C++中的位域
+
+** 什么是位域
+[[https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5][维基百科]] 给出了以下解释
+#+BEGIN_QUOTE
+位域（或称“位段”，bit field）为一种数据结构，可以把数据以位的形式紧凑的储存，并允许程序员对此结构的位进行操作。
+#+END_QUOTE
+
+[[https://en.cppreference.com/w/cpp/language/bit_field][cppreference]] 给出了以下定义
+#+BEGIN_QUOTE
+Declares a class data member with explicit size, in bits. Adjacent bit field members may be packed to share and straddle the individual bytes.
+#+END_QUOTE
+
+这种数据结构的好处：
+- 可以使数据单元节省储存空间，当程序需要成千上万个数据单元时，这种方法就显得尤为重要。
+- 位段可以很方便的访问一个整数值的部分内容从而可以简化程序源代码。
+而位域这种数据结构的缺点在于，其内存分配与内存对齐的实现方式依赖于具体的机器和系统，在不同的平台可能有不同的结果，这导致了位段在本质上是不可移植的。
+
+** 位域的语法
+#+BEGIN_SRC c
+identifier(optional) attr(optional) : size
+#+END_SRC
+
+注意：
+- size的大小不能超过identifier所包含最大比特位个数。
+- identifier为空时表示对应的size个数的比特位不使用
+- size为0时表示新启动一个字节
+
+#+BEGIN_SRC c
+struct S1 {
+    // will usually occupy 2 bytes:
+    // 3 bits: value of b1
+    // 2 bits: unused
+    // 6 bits: value of b2
+    // 2 bits: value of b3
+    // 3 bits: unused
+    unsigned char b1 : 3, : 2, b2 : 6, b3 : 2;
+};
+
+struct S2 {
+    // will usually occupy 2 bytes:
+    // 3 bits: value of b1
+    // 5 bits: unused
+    // 6 bits: value of b2
+    // 2 bits: value of b3
+    unsigned char b1 : 3;
+    unsigned char :0; // start a new byte
+    unsigned char b2 : 6;
+    unsigned char b3 : 2;
+};
+#+END_SRC
+
+多数例子都是以 =struct= 作为位域的组织标识，在C++中能否使用 =class= 作为位域的标识符。
+
+** 位域的常见应用场景
+*为什么要使用位域？位域适合那些情况？*
+位域的主要使用目的是节省对象的内存使用。在存放一些比较小的数据时，使用位域能够使字节中的每个比特位合理地利用起来，避免内存浪费。
+比较典型的应用是描述硬件寄存器。如果有32个一组的寄存器，每个寄存器代表一个比特位，就可以使用位域表示这组寄存器。
+
+** C++中的位操作接口
+C++中也提供了一套位操作的接口 =std::bitset= ，这套接口提供了指定比特位数据的操作接口。
+
+** 参考资料
+- [[https://zh.wikipedia.org/wiki/%25E4%25BD%258D%25E6%25AE%25B5][wikipedia bit-field]]
+- [[https://en.cppreference.com/w/cpp/language/bit_field][cppreference bit-field]]
+- [[https://msdn.microsoft.com/zh-cn/library/ewwyfdbe.aspx][microsoft msdn]]
+- [[https://stackoverflow.com/questions/24933242/when-to-use-bit-fields-in-c][stackoverflow]]
+- [[https://en.cppreference.com/w/cpp/utility/bitset][cppreference std::bitset]]
+
