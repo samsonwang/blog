@@ -1,7 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note</title><link>http://samsonwang.me/</link><description>Constraint &amp; Focus</description><atom:link href="http://samsonwang.me/rss.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:zl.wang@foxmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Thu, 12 Jul 2018 08:34:35 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>GCC的内存原子化操作函数接口</title><link>http://samsonwang.me/posts/gcc-built-in-functions-for-atomic-memory-access/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+</copyright><lastBuildDate>Thu, 12 Jul 2018 10:15:01 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>C/C++中的位域</title><link>http://samsonwang.me/posts/bit-field/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;&lt;span class="section-number-2"&gt;1&lt;/span&gt; 什么是位域&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+&lt;a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5"&gt;维基百科&lt;/a&gt; 给出了以下解释&lt;br&gt;
+&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;
+位域（或称“位段”，bit field）为一种数据结构，可以把数据以位的形式紧凑的储存，并允许程序员对此结构的位进行操作。&lt;br&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;
+&lt;a href="https://en.cppreference.com/w/cpp/language/bit_field"&gt;cppreference&lt;/a&gt; 给出了以下定义&lt;br&gt;
+&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;
+Declares a class data member with explicit size, in bits. Adjacent bit field members may be packed to share and straddle the individual bytes.&lt;br&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;
+这种数据结构的好处：&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;可以使数据单元节省储存空间，当程序需要成千上万个数据单元时，这种方法就显得尤为重要。&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;位段可以很方便的访问一个整数值的部分内容从而可以简化程序源代码。&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;
+而位域这种数据结构的缺点在于，其内存分配与内存对齐的实现方式依赖于具体的机器和系统，在不同的平台可能有不同的结果，这导致了位段在本质上是不可移植的。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;&lt;span class="section-number-2"&gt;2&lt;/span&gt; 位域的语法&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;identifier&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;optional&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;attr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;optional&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;size&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+注意：&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;size的大小不能超过identifier所包含最大比特位个数。&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;identifier为空时表示对应的size个数的比特位不使用&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;size为0时表示新启动一个字节&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;S1&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// will usually occupy 2 bytes:&lt;/span&gt;
+    &lt;span class="c1"&gt;// 3 bits: value of b1&lt;/span&gt;
+    &lt;span class="c1"&gt;// 2 bits: unused&lt;/span&gt;
+    &lt;span class="c1"&gt;// 6 bits: value of b2&lt;/span&gt;
+    &lt;span class="c1"&gt;// 2 bits: value of b3&lt;/span&gt;
+    &lt;span class="c1"&gt;// 3 bits: unused&lt;/span&gt;
+    &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="nl"&gt;b1&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nl"&gt;b2&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nl"&gt;b3&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+
+&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;S2&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// will usually occupy 2 bytes:&lt;/span&gt;
+    &lt;span class="c1"&gt;// 3 bits: value of b1&lt;/span&gt;
+    &lt;span class="c1"&gt;// 5 bits: unused&lt;/span&gt;
+    &lt;span class="c1"&gt;// 6 bits: value of b2&lt;/span&gt;
+    &lt;span class="c1"&gt;// 2 bits: value of b3&lt;/span&gt;
+    &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="nl"&gt;b1&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// start a new byte&lt;/span&gt;
+    &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="nl"&gt;b2&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="nl"&gt;b3&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+多数例子都是以 &lt;code&gt;struct&lt;/code&gt; 作为位域的组织标识，在C++中能否使用 &lt;code&gt;class&lt;/code&gt; 作为位域的标识符。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-3" class="outline-2"&gt;
+&lt;h2 id="sec-3"&gt;&lt;span class="section-number-2"&gt;3&lt;/span&gt; 位域的常见应用场景&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-3"&gt;
+&lt;p&gt;
+&lt;b&gt;为什么要使用位域？位域适合那些情况？&lt;/b&gt;&lt;br&gt;
+位域的主要使用目的是节省对象的内存使用。在存放一些比较小的数据时，使用位域能够使字节中的每个比特位合理地利用起来，避免内存浪费。&lt;br&gt;
+比较典型的应用是描述硬件寄存器。如果有32个一组的寄存器，每个寄存器代表一个比特位，就可以使用位域表示这组寄存器。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-4" class="outline-2"&gt;
+&lt;h2 id="sec-4"&gt;&lt;span class="section-number-2"&gt;4&lt;/span&gt; C++中的位操作接口&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-4"&gt;
+&lt;p&gt;
+C++中也提供了一套位操作的接口 &lt;code&gt;std::bitset&lt;/code&gt; ，这套接口提供了指定比特位数据的操作接口。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-5" class="outline-2"&gt;
+&lt;h2 id="sec-5"&gt;&lt;span class="section-number-2"&gt;5&lt;/span&gt; 参考资料&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-5"&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;&lt;a href="https://zh.wikipedia.org/wiki/%25E4%25BD%258D%25E6%25AE%25B5"&gt;wikipedia bit-field&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://en.cppreference.com/w/cpp/language/bit_field"&gt;cppreference bit-field&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://msdn.microsoft.com/zh-cn/library/ewwyfdbe.aspx"&gt;microsoft msdn&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/24933242/when-to-use-bit-fields-in-c"&gt;stackoverflow&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://en.cppreference.com/w/cpp/utility/bitset"&gt;cppreference std::bitset&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>cpp</category><guid>http://samsonwang.me/posts/bit-field/</guid><pubDate>Wed, 11 Jul 2018 10:03:37 GMT</pubDate></item><item><title>GCC的内存原子化操作函数接口</title><link>http://samsonwang.me/posts/gcc-built-in-functions-for-atomic-memory-access/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
 &lt;h2 id="sec-1"&gt;&lt;span class="section-number-2"&gt;1&lt;/span&gt; 原子化操作&lt;/h2&gt;
 &lt;div class="outline-text-2" id="text-1"&gt;
 &lt;p&gt;
@@ -868,116 +987,4 @@ Python内置了日志模块，在默认情况下输出的日志是不带文件�
 &lt;p&gt;
 &lt;b&gt;参考资料&lt;/b&gt;&lt;br&gt;
 &lt;a href="https://stackoverflow.com/questions/10973362/python-logging-function-name-file-name-line-number-using-a-single-file"&gt;stackoverflow&lt;/a&gt;&lt;br&gt;
-&lt;/p&gt;</description><category>python</category><guid>http://samsonwang.me/posts/python-logging-with-function-name/</guid><pubDate>Sat, 05 May 2018 14:30:41 GMT</pubDate></item><item><title>Linux常用命令行指令 - xargs</title><link>http://samsonwang.me/posts/linux-command-examples-xargs/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
-&lt;h2 id="sec-1"&gt;基础用法&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-1"&gt;
-&lt;p&gt;
-&lt;code&gt;xargs&lt;/code&gt; 指令默认情况下从 &lt;code&gt;stdin&lt;/code&gt; 中读取信息，按照空格分或换行区分开，并且执行输入的命令（默认的命令是 &lt;code&gt;/bin/echo&lt;/code&gt; ）。命令可以通过 &lt;code&gt;xargs&lt;/code&gt; 的参数指定执行一次或多次，命令的执行参数为自身初始参数追加上由 &lt;code&gt;stdin&lt;/code&gt; 读到的内容，命令在执行时会忽略空行。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;
-xargs reads items from the standard input, delimited by blanks (which can be protected with double or single quotes or a backslash) or newlines, and executes the command (default is /bin/echo) one or more times with any initial-arguments followed by items read from standard input. Blank lines on the standard input are ignored.&lt;br&gt;
-&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;
-在命令行输入 &lt;code&gt;xargs&lt;/code&gt; 命令，输入 “a b c d” 后按回车，再按 &lt;code&gt;ctrl+d&lt;/code&gt; 完成本次输入，则 &lt;code&gt;xargs&lt;/code&gt; 的默认 &lt;code&gt;echo&lt;/code&gt; 命令会将接收到的字符串打印出来，效果如下所示。&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# xargs
-a b c d
-a b c d
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-&lt;code&gt;xargs&lt;/code&gt; 单独使用时功能比较单一，但是它与其他指令一起使用十分强大。&lt;br&gt;
-&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-
-&lt;div id="outline-container-sec-2" class="outline-2"&gt;
-&lt;h2 id="sec-2"&gt;&lt;code&gt;xargs&lt;/code&gt; 与 &lt;code&gt;find&lt;/code&gt; 组合使用&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-2"&gt;
-&lt;p&gt;
-常见的使用方法是使用 &lt;code&gt;find&lt;/code&gt; 指令找到指定的文件，组合以 &lt;code&gt;xargs&lt;/code&gt; 指令实现对指定文件的操作。&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;find . -name "demo_" | xargs file -i
-&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;
-由于 &lt;code&gt;xargs&lt;/code&gt; 是使用空格作为各个参数的分隔符，如果遇到的文件名中含有空格，则并不能按照预期处理。可以使用 &lt;code&gt;find&lt;/code&gt; 指令的 &lt;code&gt;-print0&lt;/code&gt; 含有空格的文件名转化为 &lt;code&gt;\n&lt;/code&gt; 结尾的字符串，再配置 &lt;code&gt;xargs&lt;/code&gt; 的 &lt;code&gt;-0&lt;/code&gt; 参数就能完成文件名中含有空格的处理，改进后的命令如下。&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;find . -name "demo_" -print0 | xargs -0 file -i
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-
-&lt;div id="outline-container-sec-3" class="outline-2"&gt;
-&lt;h2 id="sec-3"&gt;&lt;code&gt;xargs&lt;/code&gt; 与 &lt;code&gt;grep&lt;/code&gt; 组合使用&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-3"&gt;
-&lt;p&gt;
-常用命令如下，能够实现对指定规则文件的搜索匹配。&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;find . -name "*.log" | xargs grep error
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-
-&lt;div id="outline-container-sec-4" class="outline-2"&gt;
-&lt;h2 id="sec-4"&gt;使用 &lt;code&gt;-n&lt;/code&gt; 参数让 &lt;code&gt;xargs&lt;/code&gt; 的命令重复执行&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-4"&gt;
-&lt;p&gt;
-如果想用 &lt;code&gt;find&lt;/code&gt; 指令完成多个匹配规则的搜索，则可以使用 &lt;code&gt;-n&lt;/code&gt; 参数将 &lt;code&gt;xargs&lt;/code&gt; 的内容分割成多个。&lt;br&gt;
-下面的命令会执行3次 &lt;code&gt;find&lt;/code&gt; 命令， &lt;code&gt;xargs&lt;/code&gt; 会将接收的到的内容按照单词数为“1”分割，分3次传送给 &lt;code&gt;find&lt;/code&gt; 指令。&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;echo "*.c" "*.cpp" "*.h" | xargs -n 1 find . -name
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-
-&lt;div id="outline-container-sec-5" class="outline-2"&gt;
-&lt;h2 id="sec-5"&gt;使用 &lt;code&gt;-t&lt;/code&gt; 参数让 &lt;code&gt;xargs&lt;/code&gt; 打印将要执行的命令&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-5"&gt;
-&lt;p&gt;
-让 &lt;code&gt;xargs&lt;/code&gt; 将指令的命令打印出来主要是方便查看命令执行情况，也方便在出现错误时进行调试。&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;find . -name *.log | xargs -t rm -f
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-
-&lt;div id="outline-container-sec-6" class="outline-2"&gt;
-&lt;h2 id="sec-6"&gt;使用 &lt;code&gt;-p&lt;/code&gt; 参数让 &lt;code&gt;xargs&lt;/code&gt; 在执行命令前询问用户&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-6"&gt;
-&lt;p&gt;
-增加 &lt;code&gt;-p&lt;/code&gt; 参数后， &lt;code&gt;xargs&lt;/code&gt; 在每次执行命令前会将指令打印出来并询问用户，只有用户输入 “y” 时才会真正执行该条命令。&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;echo "*.c" "*.cpp" "*.h" | xargs -n 1 -p find . -name
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-
-&lt;div id="outline-container-sec-7" class="outline-2"&gt;
-&lt;h2 id="sec-7"&gt;使用 &lt;code&gt;-I&lt;/code&gt; 参数让 &lt;code&gt;xargs&lt;/code&gt; 进行参数替换&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-7"&gt;
-&lt;p&gt;
-&lt;code&gt;xargs&lt;/code&gt; 默认会将读取到的内容追加在指令命令后面作为参数，使用 &lt;code&gt;-I&lt;/code&gt; 参数能够控制命令参数的组合方式。&lt;br&gt;
-以下命令会将当前目录中的可执行文件移动到bin文件夹下。&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;find . -executable -type f -print0 | xargs -0 -I {} mv {} ./bin
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-
-&lt;div id="outline-container-sec-8" class="outline-2"&gt;
-&lt;h2 id="sec-8"&gt;参考资料&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-8"&gt;
-&lt;ol class="org-ol"&gt;
-&lt;li&gt;&lt;a href="http://man7.org/linux/man-pages/man1/xargs.1.html"&gt;http://man7.org/linux/man-pages/man1/xargs.1.html&lt;/a&gt;&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://www.howtoforge.com/tutorial/linux-xargs-command/"&gt;https://www.howtoforge.com/tutorial/linux-xargs-command/&lt;/a&gt;&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://www.thegeekstuff.com/2013/12/xargs-examples"&gt;https://www.thegeekstuff.com/2013/12/xargs-examples&lt;/a&gt;&lt;br&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;/div&gt;
-&lt;/div&gt;</description><category>linux</category><guid>http://samsonwang.me/posts/linux-command-examples-xargs/</guid><pubDate>Fri, 27 Apr 2018 06:03:39 GMT</pubDate></item></channel></rss>
+&lt;/p&gt;</description><category>python</category><guid>http://samsonwang.me/posts/python-logging-with-function-name/</guid><pubDate>Sat, 05 May 2018 14:30:41 GMT</pubDate></item></channel></rss>
