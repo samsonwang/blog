@@ -36,7 +36,7 @@ identifier(optional) attr(optional) : size
 注意：
 - size的大小不能超过identifier所包含最大比特位个数。
 - identifier为空时表示对应的size个数的比特位不使用
-- size为0时表示新启动一个字节
+- size为0时表示根据前类型强制补齐
 
 #+BEGIN_SRC c
 struct S1 {
@@ -62,7 +62,85 @@ struct S2 {
 };
 #+END_SRC
 
+*** 在size取0时如何理解
+对于size取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。
+如下所示，定义了如下几种情况。
+
+**** case1
+#+BEGIN_SRC c
+union un1 {
+    int n1;
+    struct {
+        int nn1 : 4;
+        int : 0;
+        int nn2 : 16;
+    } st;
+};
+#+END_SRC
+对联合体中的结构体位段进行赋值，并将联合体中的内容打印出来。
+#+BEGIN_SRC c
+union un1 u1;
+u1.st.nn1 = 1;
+u1.st.nn2 = 1;
+printf("union u1.n1=0x%08x sizeof(un1)=%zu\n", u1.n1, sizeof(un1));
+#+END_SRC
+输出结果为
+#+BEGIN_SRC c
+union un1.n1=0x00000001 sizeof(un1)=8
+#+END_SRC
+
+**** case2
+#+BEGIN_SRC c
+union un1 {
+    int n1;
+    struct {
+        int nn1 : 4;
+        char : 0;
+        int nn2 : 16;
+    } st;
+};
+#+END_SRC
+输出结果为
+#+BEGIN_SRC c
+union un1.n1=0x00000101 sizeof(un1)=4
+#+END_SRC
+
+**** case3
+#+BEGIN_SRC c
+union un1 {
+    int n1;
+    struct {
+        int nn1 : 4;
+        short : 0;
+        int nn2 : 16;
+    } st;
+};
+#+END_SRC
+输出结果为
+#+BEGIN_SRC c
+union un1.n1=0x00010001 sizeof(un1)=4
+#+END_SRC
+
+
+**** case4
+#+BEGIN_SRC c
+union un1 {
+    int n1;
+    struct {
+        int nn1 : 8;
+        char : 0;
+        int nn2 : 16;
+    } st;
+};
+#+END_SRC
+输出结果为
+#+BEGIN_SRC c
+union un1.n1=0x00000101 sizeof(un1)=4
+#+END_SRC
+
+*** =struct= 标识符
 多数例子都是以 =struct= 作为位域的组织标识，在C++中能否使用 =class= 作为位域的标识符。
+经过测试，是可以使用 =class= 的，但是需要注意 =class= 的默认访问控制属性为 =private=
 
 ** 位域的常见应用场景
 *为什么要使用位域？位域适合那些情况？*
