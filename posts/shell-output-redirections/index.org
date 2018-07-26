@@ -1,0 +1,55 @@
+#+BEGIN_COMMENT
+.. title: shell的输出重定向
+.. slug: shell-output-redirections
+.. date: 2018-07-26 10:02:41 UTC+08:00
+.. tags: shell
+.. category: linux
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+
+#+TITLE: shell的输出重定向
+
+** 引言
+在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。
+
+** 使用尖括号完成重定向
+示例如下，运行下面的命令能够把 =ls= 命令的运行结果写入到 =ls-output.txt= 中。使用 =>= 会把程序运行时本该输出到 =stdout= 的内容重定向到指定名称的文件中。
+#+BEGIN_SRC sh
+ls . > ls-output.txt
+#+END_SRC
+可以在 =>= 左面写上数字和 =&= ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。
+
+*** 重定向 =stdout= 到指定文件中
+#+BEGIN_SRC sh
+ls . 1> ls-output.txt
+#+END_SRC
+
+*** 重定向 =stderr= 到指定文件中
+#+BEGIN_SRC sh
+ls . 2> ls-error.txt
+#+END_SRC
+
+*** 将 =stdout= 和 =stdout= 合并再重定向到指定文件中
+#+BEGIN_SRC sh
+ls . 2>&1 ls-output-and-error.txt
+#+END_SRC
+以下命令具有相同的效果
+#+BEGIN_SRC sh
+ls . &> ls-output-and-error.txt
+#+END_SRC
+
+*** 将程序的输出丢掉
+可以将输出重定向到一个特殊的文件 =/dev/null= ，所有写入到这个文件的内容都会被丢弃掉。
+#+BEGIN_SRC sh
+program > /dev/null
+#+END_SRC
+
+** 使用管道完成重定向
+使用管道符号 =|= 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 =ls= 的输出（ =stdout= ）重定向到 =grep= 的输入（ =stdin= ）中去。管道命令在linux中是最常见的用法。
+#+BEGIN_SRC sh
+ls | grep <pattern>
+#+END_SRC
+
+

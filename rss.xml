@@ -1,7 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note</title><link>http://samsonwang.me/</link><description>Constraint &amp; Focus</description><atom:link href="http://samsonwang.me/rss.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:zl.wang@foxmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Tue, 24 Jul 2018 03:13:10 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>libshmcache源码阅读笔记</title><link>http://samsonwang.me/posts/notes-on-libshmcache/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+</copyright><lastBuildDate>Thu, 26 Jul 2018 06:25:52 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>shell的输出重定向</title><link>http://samsonwang.me/posts/shell-output-redirections/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;引言&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;使用尖括号完成重定向&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;p&gt;
+示例如下，运行下面的命令能够把 &lt;code&gt;ls&lt;/code&gt; 命令的运行结果写入到 &lt;code&gt;ls-output.txt&lt;/code&gt; 中。使用 &lt;code&gt;&amp;gt;&lt;/code&gt; 会把程序运行时本该输出到 &lt;code&gt;stdout&lt;/code&gt; 的内容重定向到指定名称的文件中。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls . &amp;gt; ls-output.txt
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;
+可以在 &lt;code&gt;&amp;gt;&lt;/code&gt; 左面写上数字和 &lt;code&gt;&amp;amp;&lt;/code&gt; ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2-1" class="outline-3"&gt;
+&lt;h3 id="sec-2-1"&gt;重定向 &lt;code&gt;stdout&lt;/code&gt; 到指定文件中&lt;/h3&gt;
+&lt;div class="outline-text-3" id="text-2-1"&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls . &lt;span class="m"&gt;1&lt;/span&gt;&amp;gt; ls-output.txt
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2-2" class="outline-3"&gt;
+&lt;h3 id="sec-2-2"&gt;重定向 &lt;code&gt;stderr&lt;/code&gt; 到指定文件中&lt;/h3&gt;
+&lt;div class="outline-text-3" id="text-2-2"&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls . &lt;span class="m"&gt;2&lt;/span&gt;&amp;gt; ls-error.txt
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2-3" class="outline-3"&gt;
+&lt;h3 id="sec-2-3"&gt;将 &lt;code&gt;stdout&lt;/code&gt; 和 &lt;code&gt;stdout&lt;/code&gt; 合并再重定向到指定文件中&lt;/h3&gt;
+&lt;div class="outline-text-3" id="text-2-3"&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls . &lt;span class="m"&gt;2&lt;/span&gt;&amp;gt;&lt;span class="p"&gt;&amp;amp;&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt; ls-output-and-error.txt
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;
+以下命令具有相同的效果&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls . &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;&amp;gt; ls-output-and-error.txt
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2-4" class="outline-3"&gt;
+&lt;h3 id="sec-2-4"&gt;将程序的输出丢掉&lt;/h3&gt;
+&lt;div class="outline-text-3" id="text-2-4"&gt;
+&lt;p&gt;
+可以将输出重定向到一个特殊的文件 &lt;code&gt;/dev/null&lt;/code&gt; ，所有写入到这个文件的内容都会被丢弃掉。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;program &amp;gt; /dev/null
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-3" class="outline-2"&gt;
+&lt;h2 id="sec-3"&gt;使用管道完成重定向&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-3"&gt;
+&lt;p&gt;
+使用管道符号 &lt;code&gt;|&lt;/code&gt; 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 &lt;code&gt;ls&lt;/code&gt; 的输出（ &lt;code&gt;stdout&lt;/code&gt; ）重定向到 &lt;code&gt;grep&lt;/code&gt; 的输入（ &lt;code&gt;stdin&lt;/code&gt; ）中去。管道命令在linux中是最常见的用法。&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ls &lt;span class="p"&gt;|&lt;/span&gt; grep &amp;lt;pattern&amp;gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>shell</category><guid>http://samsonwang.me/posts/shell-output-redirections/</guid><pubDate>Thu, 26 Jul 2018 02:02:41 GMT</pubDate></item><item><title>libshmcache源码阅读笔记</title><link>http://samsonwang.me/posts/notes-on-libshmcache/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
 &lt;h2 id="sec-1"&gt;引言&lt;/h2&gt;
 &lt;div class="outline-text-2" id="text-1"&gt;
 &lt;p&gt;
@@ -1146,58 +1218,4 @@ C++将文件操作函数封装为 &lt;code&gt;fstream&lt;/code&gt; 操作类，�
 在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。&lt;br&gt;
 &lt;/p&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description><category>cpp</category><category>linux</category><guid>http://samsonwang.me/posts/c-style-and-cpp-style-file-api/</guid><pubDate>Wed, 16 May 2018 10:06:45 GMT</pubDate></item><item><title>字节序与union类型</title><link>http://samsonwang.me/posts/endianness-and-union-type/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
-&lt;h2 id="sec-1"&gt;字节序&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-1"&gt;
-&lt;p&gt;
-字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。&lt;br&gt;
-字节序分为大端字节序和小端字节序，两种字节序不能混用。&lt;br&gt;
-&lt;b&gt;大端字节序&lt;/b&gt; ：高位字节保存在较低位地址的内存中&lt;br&gt;
-&lt;b&gt;小端字节序&lt;/b&gt; ：高位字节保存在较高位地址的内存中&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-以 &lt;code&gt;int n = 0x12345678&lt;/code&gt; 为例，大端字节序内存中的存储的顺序为 &lt;code&gt;0x12 0x34 0x56 0x78&lt;/code&gt; ，小端字节序内存中的存储顺序为 &lt;code&gt;0x78 0x56 0x34 0x12&lt;/code&gt; 。&lt;br&gt;
-很明显可以看出大端字节序更符合人类的阅读习惯。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-常见的大端系统CPU：IBM z/Atchitecture&lt;br&gt;
-常见的小端系统CPU：intel x86 处理器&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-网络字节序使用的大端字节序，常用网络协议如IPv4、IPv6、TCP和UDP协议都是使用大端字节序完成数据传输的。&lt;br&gt;
-&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-
-
-&lt;div id="outline-container-sec-2" class="outline-2"&gt;
-&lt;h2 id="sec-2"&gt;union类型&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-2"&gt;
-&lt;p&gt;
-可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
-
-&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="k"&gt;union&lt;/span&gt; &lt;span class="n"&gt;un&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kt"&gt;int32_t&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="n"&gt;un&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;argc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[])&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="n"&gt;un&lt;/span&gt; &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;"u.x=0x%x&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;u&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;</description><category>computer science</category><category>cpp</category><guid>http://samsonwang.me/posts/endianness-and-union-type/</guid><pubDate>Fri, 11 May 2018 01:55:34 GMT</pubDate></item></channel></rss>
+&lt;/div&gt;</description><category>cpp</category><category>linux</category><guid>http://samsonwang.me/posts/c-style-and-cpp-style-file-api/</guid><pubDate>Wed, 16 May 2018 10:06:45 GMT</pubDate></item></channel></rss>
