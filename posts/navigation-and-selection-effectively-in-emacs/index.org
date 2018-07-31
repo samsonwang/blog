@@ -1,0 +1,137 @@
+#+BEGIN_COMMENT
+.. title: 提高emacs中浏览和选择等操作效率的技巧
+.. slug: navigation-and-selection-effectively-in-emacs
+.. date: 2018-07-30 11:14:41 UTC+08:00
+.. tags: emacs
+.. category: emacs
+.. link: https://lorefnon.tech/2018/07/14/getting-productive-with-selection-and-navigation-in-emacs/
+.. description: 
+.. type: text
+#+END_COMMENT
+#+OPTIONS: num:t
+
+#+TITLE: 提高emacs中浏览和选择等操作效率的技巧
+
+** 引言
+Gaurab Paul的 [[https://lorefnon.tech/2018/07/14/getting-productive-with-selection-and-navigation-in-emacs/][一篇博文]] 给了我很大的启发，他详细地介绍了emacs中的相关概念，并提供了许多充满想象力的小技巧。作为emacs的入门级选手确实学到了很多，也拓宽了自己的思路。
+
+我最初的开发环境是Visual Studio，这一类比较大型的IDE集成了许多功能，但同时也会束缚住使用者的想法。通过这篇文章我感受到的由普通操作指令能组合成的新编辑方式。
+
+如果英文水平允许的话，非常推荐阅读一下原版的博文，原文中有更加丰富形象的图片示例，无论是跟我一样刚刚入门emacs的新手，还是经验丰富的老兵，都能够从中获得启发。下面，我结合自己的理解和收获谈谈emacs中操作的体会。
+
+
+** =point= 、 =mark= 和 =region= 的概念
+我之前进行代码段复制的操作是十分基础的，用 =C-@= 模拟鼠标按下，方向键模拟鼠标拖动，在鼠标拖动的过程中就形成了一个选区，然后用 =M-w= 对这个选区进行复制操作，用 =C-y= 粘贴被复制的内容。
+
+以上操作带出了几个非常重要的概念 。在emacs中，鼠标光标所在位置被称作 =point= ；组合键 =C-@= 执行的是 =set-mark-command= 命令，就是将 =point= 所在位置标记为 =mark= ；通过移动光标，也就是移动 =point= 后，在 =point= 与 =mark= 之间就形成了 =region= 。
+
+
+** =region= 操作技巧
+
+*** 调整 =region= 的大小
+下面就来介绍一个非常重要的命令 =exchange-point-and-mark= ，这个命令默认被绑定在组合键 =C-x C-x= 上，从字面意思上很容易理解这条指令的作用，就是交换 =mark= 和 =point= 的位置。这样做的意义在于能够方便地切换 =region= 的可动边界，这样能够使 =region= 方便地分别从两端调整大小。
+下面的示例是截取自Paul的博文，需要注意的是，他习惯于使用 =C-SPC= 调用 =set-mark-command= 。
+
+#+BEGIN_SRC org
+Lorem ipsum dolor sit amet
+      ^ Cursor
+ 
+ 
+      Point
+      |
+      Mark
+      |
+Lorem ipsum dolor sit amet
+      ^ C-spc
+ 
+ 
+      Mark          Point
+      | ----region--|
+      |             |
+Lorem ipsum dolor sit amet
+         move       ^
+         forward ->
+ 
+
+      Mark          Point
+      | ----region--|
+      |             |
+Lorem ipsum dolor sit amet
+                    ^
+                    C-x C-x
+ 
+ 
+      Point         Mark
+      | ----region--|
+      |             |
+Lorem ipsum dolor sit amet
+ 
+Point and mark interchanged
+ #+END_SRC
+
+*** 使用 =region= 进行重复性输入
+对于 =region= 相关的操作，通常是对已经存在的代码段进行编辑的，如果我们在输入之前就知道有许多字段是需要重复输入的，那么就可以在输入之前设置好 =mark= ，对输入后形成的 =region= 完成复制。这个技巧在特定情况能够很大地提升输入效率，但是我个人认为，想要在实战中完成这个操作，还需要保证非常清晰的思路。可以通过下面的示例感受这种操作带来的方便(示例截取自Paul的博文)。
+
+[[img-url:/images/post-navigation-and-selection-effectively-in-emacs-1.gif]]
+
+下面给出了详细的操作解析
+
+#+BEGIN_SRC org
+class
+      ^ C-spc => Activate mark
+
+class Foo
+          ^ M-w => Foo has now been killed (copied)
+
+class Foo extends React.Component<
+                                  ^ C-spc => Activate mark
+
+class Foo extends React.Component<
+                                  ^ C-y => Yank (paste) Foo
+
+class Foo extends React.Component<FooProps
+                                          ^ M-w => FooProps has now been killed (copied)
+
+class Foo extends React.Component<FooProps>
+
+// Later
+interface
+           ^ C-y => Yank FooProps
+
+interface FooProps {}
+#+END_SRC
+
+*** 框选一个矩形的 =region=
+使用 =rectangle-mark-mode= 命令，默认快捷键 =C-x-SPC= ，能够框选出一个矩形的 =region= 。对于矩形 =region= ，Paul给出的示例是复制 =dired= 中的多个文件名称，貌似其他合适的使用场景不太多。
+
+[[img-url:/images/post-navigation-and-selection-effectively-in-emacs-2.gif]]
+
+
+** 其他插件支持
+有些插件拓展能够实现光标的快速定位，如 [[https://github.com/ShingoFukuyama/helm-swoop][helm-swoop]] 和 [[https://github.com/abo-abo/avy][avy]] 。
+
+*** helm swoop
+从我个人的使用体验来看 [[https://github.com/ShingoFukuyama/helm-swoop][helm-swoop]] 和helm occur的功能十分相似，它们都提供了方便的关键词跳转功能。
+
+下面的图片来自helm swoop的 [[https://github.com/ShingoFukuyama/helm-swoop][主页]]
+
+[[img-url:/images/post-navigation-and-selection-effectively-in-emacs-3.gif]]
+
+*** avy
+[[https://github.com/abo-abo/avy][avy]] 的思路非常独特，这样的跳转和定位让我想起了Chrome浏览器中的Vimium插件，他允许我们使用更少的按键就能跳转到当前buffer中的任意位置，略微遗憾的是它只支持拉丁字母，不过在编写代码的大多数情况下是够用的。
+
+下面的图片来自Paul的博文
+
+[[img-url:/images/post-navigation-and-selection-effectively-in-emacs-4.gif]]
+
+
+** 参考资料
+- [[https://lorefnon.tech/2018/07/14/getting-productive-with-selection-and-navigation-in-emacs/][lorefnon.tech]]
+- [[https://github.com/ShingoFukuyama/helm-swoop][helm-swoop]]
+- [[https://github.com/abo-abo/avy][avy]]
+
+
+
+
+
+
