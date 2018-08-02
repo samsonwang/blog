@@ -25,8 +25,8 @@ SITE_URL = "http://samsonwang.me/"
 # This is the URL where Nikola's output will be deployed.
 # If not set, defaults to SITE_URL
 # BASE_URL = "http://samsonwang.me/"
-BLOG_EMAIL = "zl.wang@foxmail.com"
-BLOG_DESCRIPTION = "Constraint & Focus"  # (translatable)
+BLOG_EMAIL = "wangzhilv@gmail.com"
+BLOG_DESCRIPTION = "Personal handnote on software development"  # (translatable)
 
 # Nikola is multilingual!
 #
@@ -191,7 +191,10 @@ POSTS = (
     ("posts/*.txt", "posts", "post.tmpl"),
     ("posts/*.html", "posts", "post.tmpl"),
     ("posts/*.org", "posts", "post.tmpl"),
+    
+#    ("alogrithms/*.org" , "algorithms", "post.tmpl"),
 )
+
 PAGES = (
     ("pages/404.*", "", "story.tmpl"),
 
