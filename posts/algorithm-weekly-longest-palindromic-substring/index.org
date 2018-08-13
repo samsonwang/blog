@@ -1,0 +1,187 @@
+#+BEGIN_COMMENT
+.. title: 每周算法:最长对称子串
+.. slug: algorithm-weekly-longest-palindromic-substring
+.. date: 2018-08-07 10:37:34 UTC+08:00
+.. tags: algorithm, leetcode
+.. category: algorithm
+.. link: https://leetcode.com/problems/longest-palindromic-substring/description/
+.. description: 
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 每周算法:最长对称子串
+
+** Description
+Given a string s, find the longest palindromic substring in s. You may assume that the maximum length of s is 1000.
+
+*Example 1:*
+Input: "babad"
+Output: "bab"
+Note: "aba" is also a valid answer.
+
+*Example 2:*
+Input: "cbbd"
+Output: "bb"
+
+来源：[[https://leetcode.com/problems/longest-palindromic-substring/description/][LeetCode 05 Longest Palindromic Substring]]
+
+** Solution
+我想到了两种方法：暴力解法、从中心展开
+
+*** Approach 1 暴力解法
+暴击解法的时间复杂度为 =O(n3)= , 找出所有子串的时间复杂度为 =O(n2)= , 判断一个子串的时间复杂度为 =O(n)= ; 空间复杂度为 =O(1)= 。
+
+需要注意的是，如果子串过短，就没有必要进行对称性判断了。
+
+下面是我的代码
+#+BEGIN_SRC cpp
+bool isPalindrome(const string& str) {
+
+    int len = str.length();
+    if (len <=0) {
+        return false;
+    }
+
+    int head = 0;
+    int tail = len - 1;
+
+    while (head < tail) {
+        if (str[head] != str[tail]) {
+            return false;
+        }
+
+        ++head;
+        --tail;
+    }
+    
+    return true;
+}
+
+string longestPalindrome(string s) {
+
+    string ans = "";
+    
+    for (size_t i=0; i < s.length(); ++i) {
+        for (size_t j=s.length()-i; j != 0; --j) {
+            if (ans.length() >= j) {
+                continue;
+            }
+            
+            string temp = s.substr(i, j);
+            if (ans.length() < temp.length()
+                && isPalindrome(temp)) {
+                ans = temp;
+            }
+        }
+    }
+
+    return ans;
+}
+
+#+END_SRC
+
+*** Approach 2 从中心展开
+从中心展开方法的时间复杂度为 =O(n2)= , 空间复杂度为 =O(1)= 。
+
+需要注意的是坐标的计算，这个在字符串处理题目中是十分关键的，也是很容易出错的。
+由于单个字符和两个相同字符都可以作为中心，这点需要额外注意一下。
+
+下面就是我的解法，使用的C++做的。
+#+BEGIN_SRC cpp
+string longestPalindrome(string s) {
+
+    string ans = "";
+    
+    for (size_t i=0; i < s.length(); ++i) {
+
+        // 如何确定初始的边界很重要
+        size_t j = i;
+        size_t k = i;
+
+        // 向两边拓展边界
+        while (j-1>=0 && s[j-1]==s[i]) {
+            --j;
+        }
+
+        while (k+1<s.length() && s[k+1]==s[i]) {
+            ++k;
+        }
+
+        while (j-1>=0
+               && k+1<s.length()
+               && s[j-1]==s[k+1]) {
+            --j;
+            ++k;
+        }
+
+        if (k-j+1 > ans.length()) {
+            ans = s.substr(j, k-j+1);
+        }
+    }
+
+    return ans;
+}
+#+END_SRC
+
+leetcode上还有一个解法，使用java完成的，它的坐标计算也很有技巧性。
+#+BEGIN_SRC java
+public String longestPalindrome(String s) {
+    if (s == null || s.length() < 1) return "";
+    int start = 0, end = 0;
+    for (int i = 0; i < s.length(); i++) {
+        int len1 = expandAroundCenter(s, i, i);
+        int len2 = expandAroundCenter(s, i, i + 1);
+        int len = Math.max(len1, len2);
+        if (len > end - start) {
+            start = i - (len - 1) / 2;
+            end = i + len / 2;
+        }
+    }
+    return s.substring(start, end + 1);
+}
+
+private int expandAroundCenter(String s, int left, int right) {
+    int L = left, R = right;
+    while (L >= 0 && R < s.length() && s.charAt(L) == s.charAt(R)) {
+        L--;
+        R++;
+    }
+    return R - L - 1;
+}
+#+END_SRC
+
+*** Approach 3 动态规划（dynamic programming）
+leetcode上还给给出了使用DP解决这个问题的方法。
+我在leetcode上的discuss上找了个java写的解法。
+
+动态规划的时间复杂度为 =O(n2)= , 空间复杂度为 =O(n2)= 。
+我对dp算法的了解还不多，个人感觉值得思考的是 =i= 和 =j= 的变化起点和变化方向。
+#+BEGIN_SRC java
+public String longestPalindrome(String s) {
+  int n = s.length();
+  String res = null;
+    
+  boolean[][] dp = new boolean[n][n];
+    
+  for (int i = n - 1; i >= 0; i--) {
+    for (int j = i; j < n; j++) {
+      dp[i][j] = s.charAt(i) == s.charAt(j) && (j - i < 3 || dp[i + 1][j - 1]);
+            
+      if (dp[i][j] && (res == null || j - i + 1 > res.length())) {
+        res = s.substring(i, j + 1);
+      }
+    }
+  }
+    
+  return res;
+}
+#+END_SRC
+
+*** Approach 4 Manacher算法
+这个算法思路实在是新奇，感兴趣的同学可以 [[https://articles.leetcode.com/longest-palindromic-substring-part-ii/][去看看]] 。
+
+
+
+
+
+
