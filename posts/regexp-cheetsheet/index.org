@@ -1,0 +1,280 @@
+#+BEGIN_COMMENT
+.. title: 正则表达式备忘
+.. slug: regexp-cheetsheet
+.. date: 2018-08-23 11:55:36 UTC+08:00
+.. tags: regexp, js, lisp, python
+.. category: regexp
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 正则表达式备忘
+
+** 引言
+近在FreeCodeCamp(FCC)学习前端的课程，其中有一节就是讲的 =regexp= ，也就是正则表达式，之前我零星地了解过一些正则表达式的相关知识，不足以对正则表达式得出一个完整的认识。FCC的教程循序渐进，由简到繁，在教学中结合练习，非常适合初学者的学习过程。如何你的英文能够达到阅读技术类文献的水平，又正好想学习一下正则表达式，我推荐你试一下FCC的正则表达式教程，花3~4个小时就能够对正则表达式有个完整的理解。
+
+本篇文章主要是对学习过程中的知识点进行总结，方便以后进行查阅。
+
+** 要点总结（js版）
+FCC的教程使用javascript作为开发语言，本节所有的代码都是js代码。
+
+js中内置了正则表达式模块，下面是正则表达式在js中的使用示例
+#+BEGIN_SRC js
+let myString = "Hello World";
+let myRegex = /Hello/;
+let result = myRegex.test(myString);
+#+END_SRC
+
+使用 =|= 进行or匹配
+#+BEGIN_SRC js
+let regex2 = /cat|bird/;
+#+END_SRC
+
+
+使用 =i= 标识符在匹配时忽略大小写
+#+BEGIN_SRC js
+let regex3 = /case/i;
+#+END_SRC
+
+
+使用正则表达式进行字符串过滤，使用 =match= 方法
+#+BEGIN_SRC js
+let extractStr = "Extract the word 'coding' from this string.";
+let codingRegex = /coding/; // Change this line
+let result = extractStr.match(codingRegex); // Change this line
+#+END_SRC
+
+
+使用 =g= 进行返回满足规则的多次结果， =g= 为global的缩写
+#+BEGIN_SRC js
+let twinkleStar = "Twinkle, twinkle, little star";
+let starRegex = /twinkle/gi; // Change this line
+let result = twinkleStar; // Change this line
+#+END_SRC
+
+
+使用 =.= 匹配所有的字符，使用 =[]= 匹配指定的字符
+#+BEGIN_SRC js
+let quoteSample = "Beware of bugs in the above code; I have only proved it correct, not tried it.";
+let vowelRegex = /[aeiou]/gi; // Change this line
+let result = quoteSample.match(vowelRegex); // Change this line
+#+END_SRC
+
+在 =[]= 中可以使用 =-= 代表一个范围
+#+BEGIN_SRC js
+let quoteSample2 = "The quick brown fox jumps over the lazy dog.";
+let alphabetRegex = /[a-z]/gi; // Change this line
+let result = quoteSample2.match(alphabetRegex); // Change this line
+#+END_SRC
+
+
+这个范围还可以是多个，并且允许包含数字
+#+BEGIN_SRC js
+let quoteSample3 = "Blueberry 3.141592653s are delicious.";
+let myRegex = /[h-s2-6]/gi; // Change this line
+let result = quoteSample3.match(myRegex); // Change this line
+#+END_SRC
+
+
+使用 =^= 符号能够匹配不包含某些字符
+#+BEGIN_SRC js
+let quoteSample4 = "3 blind mice.";
+let myRegex2 = /[^0-9aeiou]/gi; // Change this line
+let  result = quoteSample4.match(myRegex2); // Change this line
+#+END_SRC
+
+
+使用 =+= 对出现连续出现的字符进行匹配
+#+BEGIN_SRC js
+let difficultSpelling = "Mississippi";
+let  myRegex3 = /s+/g; // Change this line
+let result = difficultSpelling.match(myRegex3);
+#+END_SRC
+
+
+使用 =*= 星号匹配可能没有出现的次数（出现次数为 0~n 次）
+#+BEGIN_SRC js
+let chewieQuote = "Aaaaaaaaaaaaaaaarrrgh!";
+let chewieRegex = /Aa*/; // Change this line
+let result = chewieQuote.match(chewieRegex);
+#+END_SRC
+
+
+使用 =?= 进行较短匹配 （lazy match, 与greedy match 对应）
+#+BEGIN_SRC js
+let text = "<h1>Winter is coming</h1>";
+let myRegex = /<.*?>/; // Change this line
+let result = text.match(myRegex);
+#+END_SRC
+
+
+使用 =^= 对出现在字符串开始位置进行匹配
+注意上边也用到这个符号表示取反，是在 =[]= 中表示取反
+#+BEGIN_SRC js
+let rickyAndCal = "Cal and Ricky both like racing.";
+let calRegex = /^Cal/; // Change this line
+let result = calRegex.test(rickyAndCal);
+#+END_SRC
+
+
+使用 =$= 对出现在字符串结束位置进行匹配
+#+BEGIN_SRC js
+let caboose = "The last car on a train is the caboose";
+let lastRegex = /caboose$/; // Change this line
+let result = lastRegex.test(caboose);
+#+END_SRC
+
+
+使用 =\w= 代替 =[A-Za-z0-9_]= ，包含所有的数字、字母和下划线
+#+BEGIN_SRC js
+let quoteSample = "The five boxing wizards jump quickly.";
+let alphabetRegexV2 = /\w/g; // Change this line
+let result = quoteSample.match(alphabetRegexV2).length;
+#+END_SRC
+
+
+使用 =\W= 代替 =[^A-Za-z0-9_]= ，相当于上边的逆向匹配
+#+BEGIN_SRC js
+let quoteSample = "The five boxing wizards jump quickly.";
+let nonAlphabetRegex = /\W/g; // Change this line
+let result = quoteSample.match(nonAlphabetRegex).length;
+#+END_SRC
+
+
+使用 =\d= 代替 =[0-9]= ，所有数字匹配
+#+BEGIN_SRC js
+let numString = "Your sandwich will be $5.00";
+let numRegex = /\d/g; // Change this line
+let result = numString.match(numRegex).length;
+#+END_SRC
+
+
+使用 =\D= 代替 =[^0-9]= ，所有非数字匹配
+#+BEGIN_SRC js
+let numString = "Your sandwich will be $5.00";
+let noNumRegex = /\D/g; // Change this line
+let result = numString.match(noNumRegex).length;
+#+END_SRC
+
+
+使用 =\s= 代替 =[ \r\t\f\n\v]= ，与空格和换行相关
+#+BEGIN_SRC js
+let sample = "Whitespace is important in separating words";
+let countWhiteSpace = /\s/g; // Change this line
+let result = sample.match(countWhiteSpace);
+#+END_SRC
+
+
+使用 =\S=，代替 =[^ \r\t\f\n\v]= ，不包含空格和换行
+#+BEGIN_SRC js
+let sample = "Whitespace is important in separating words";
+let countNonWhiteSpace = /\S/g; // Change this line
+let result = sample.match(countNonWhiteSpace);
+#+END_SRC
+
+
+使用 ={min, max}= 对字符出现的次数进行限定
+回想起使用 =+= 限制次数为 ={0,}= ，使用 =-= 限制次数为 ={1,}=
+#+BEGIN_SRC js
+let ohStr = "Ohhh no";
+let ohRegex = /Oh{3,6} no/; // Change this line
+let result = ohRegex.test(ohStr);
+#+END_SRC
+
+
+仅限制出现次数的下限 ={min,}=
+#+BEGIN_SRC js
+let haStr = "Hazzzzah";
+let haRegex = /Haz{4,}ah/; // Change this line
+let result = haRegex.test(haStr);
+#+END_SRC
+
+
+指定出现的次数 ={count}=
+#+BEGIN_SRC js
+let timStr = "Timmmmber";
+let timRegex = /Tim{4}ber/; // Change this line
+let result = timRegex.test(timStr);
+#+END_SRC
+
+
+使用 =?= 匹配可能出现的字母
+问号用于声明lazy match，如何判断是lazy match还是匹配可能出现的东西呢
+#+BEGIN_SRC js
+let favWord = "favorite";
+let favRegex = /favou?rite/; // Change this line
+let result = favRegex.test(favWord);
+#+END_SRC
+
+
+
+lookahead 的概念， ~(?=...)~ 与 ~(?!...)~
+
+下面的正则表达式用于检查密码，由3~6个字母和至少1个数字组成
+#+BEGIN_SRC js
+let password = "abc123";
+let checkPass = /(?=\w{3,6})(?=\D*\d)/;
+let result = checkPass.test(password); // Returns true
+#+END_SRC
+
+下面的正则表达式用于检查密码，有5个以上的字符和至少2个数字组成
+#+BEGIN_SRC js
+let sampleWord = "astronaut";
+let pwRegex = /(?=\w{5,})(?=\D*\d{2,})/; // Change this line
+let result = pwRegex.test(sampleWord);
+#+END_SRC
+
+
+截取字符串中的重复部分，使用括号 () 对内容进行补充，是用 \1 表示第一个捕捉到的字符
+#+BEGIN_SRC js
+let repeatNum = "42 42 42";
+let reRegex = /^(\d*)\s\1\s\1$/; // Change this line
+let result = reRegex.test(repeatNum);
+#+END_SRC
+
+
+通过截取字符串，可以对截取的字符串进行修改或替换操作，需要使用 =replace= 方法
+#+BEGIN_SRC js
+"Code Camp".replace(/(\w+)\s(\w+)/, '$2 $1'); // Returns "Camp Code"
+#+END_SRC
+
+下面的正则表达式就是用于将 =good= 替换为 =okey-dokey=
+#+BEGIN_SRC js
+let huhText = "This sandwich is good.";
+let fixRegex = /good/; // Change this line
+let replaceText = "okey-dokey"; // Change this line
+let result = huhText.replace(fixRegex, replaceText);
+#+END_SRC
+
+使用正则表达式实现类似 =.trim()= 的功能
+#+BEGIN_SRC js
+let hello = "   Hello, World!  ";
+let wsRegex = /^\s+|\s+$/g; // Change this line
+let result = hello.replace(wsRegex, ''); // Change this line
+#+END_SRC
+
+** elisp和python中的正则表达式
+在emacs中内置了 =string-match= 函数进行正则表达式匹配，其函数原型为 =(string-match REGEXP STRING &optional START)= ，下面就是在emacs中使用regexp的示例。
+#+BEGIN_SRC emacs-lisp
+(setq str-regexp "\.[h|cpp]$")
+(setq str-sample-1 "sample1.h")
+(string-match str-regexp str-sample-1)
+#+END_SRC
+
+python中内置了 =re= 模块用于正则表达式匹配，下面就是在python中的regexp示例。
+#+BEGIN_SRC python
+import re
+pattern = r"Cookie"
+sequence = "Cookie"
+if re.match(pattern, sequence):
+    print("Match!")
+else:
+    print("Not a match!")
+#+END_SRC
+
+
+** 参考资料
+- [[https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/regular-expressions][FCC regular-expression tutorial]]
+- [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Simple-Match-Data.html][emacs string-match manual]]
+- [[https://docs.python.org/3/library/re.html][python re module]]
