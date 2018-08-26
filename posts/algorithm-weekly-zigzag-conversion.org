@@ -1,0 +1,153 @@
+#+BEGIN_COMMENT
+.. title: 每周算法：字符串锯齿变换
+.. slug: algorithm-weekly-zigzag-conversion
+.. date: 2018-08-16 11:52:48 UTC+08:00
+.. tags: algorithm, leetcode
+.. category: algorithm
+.. link: https://leetcode.com/problems/zigzag-conversion/description/
+.. description: 
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 每周算法：字符串锯齿变换
+
+** Description
+
+The string "PAYPALISHIRING" is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)
+
+#+BEGIN_SRC org
+P   A   H   N
+A P L S I I G
+Y   I   R
+#+END_SRC
+
+And then read line by line: "PAHNAPLSIIGYIR"
+Write the code that will take a string and make this conversion given a number of rows:
+string convert(string s, int numRows);
+
+*Example 1:*
+Input: s = "PAYPALISHIRING", numRows = 3
+Output: "PAHNAPLSIIGYIR"
+
+*Example 2:*
+Input: s = "PAYPALISHIRING", numRows = 4
+Output: "PINALSIGYAHRPI"
+Explanation:
+#+BEGIN_SRC org
+P     I    N
+A   L S  I G
+Y A   H R
+P     I
+#+END_SRC
+
+来源： [[https://leetcode.com/problems/zigzag-conversion/description/][LeetCode 06 ZigZag Conversion]]
+
+** Solution
+
+*** Approach 1 找规律
+我想到的第一个方法就是找规律，通过寻找每一行的变化规律，编写相应的计算逻辑。
+需要注意:
+- 有符号数和无符号数的比较，这个是非常容易出错的，不要在有符号和无符号数之间进行比较。
+- 特殊情况，也就是只有一行的情况，这个情况不需要进行转换，直接返回原字符串就好。
+
+#+BEGIN_SRC cpp
+string convert(string s, int numRows) {
+
+    int len = s.length();
+    assert(numRows > 0);
+    int base = 2*numRows - 2;
+    if (base == 0) {
+        return s;
+    }
+    
+    string ans;
+    
+    // 第一行和最后一行需要进行特殊处理
+
+    // 第一行
+    int i = 0;
+    while (base*i < len) {
+        ans += s[base*i];
+        ++i;
+    }
+
+    // 中间行
+    for (int j=1; j<numRows-1; ++j) {
+        i = 0;
+        while (base*i - j < len) {
+            
+            if (base*i - j >=0 ) {
+                ans += s[base*i-j];
+            }
+
+            if (base*i + j < len) {
+                ans += s[base*i+j];                
+            }
+
+            ++i;
+        }
+    }
+
+    // 最后一行
+    int lastStart = numRows - 1;
+    i = 0;
+    while (lastStart + base*i < len) {
+        ans += s[lastStart + base*i];
+        ++i;
+    }
+
+    return ans;
+}
+#+END_SRC
+
+
+*** Approach 2 Sort by Row
+这个方法是leetcode提供的一个方法，主要思路是使用一个二维矩阵将字符串按照顺序存储起来，时间复杂度为 =O(n)= ，空间复杂度为 =O(n)= 。
+
+#+BEGIN_SRC cpp
+string convert(string s, int numRows) {
+    if (numRows == 1) return s;
+
+    vector<string> rows(min(numRows, int(s.size())));
+    int curRow = 0;
+    bool goingDown = false;
+
+    for (char c : s) {
+        rows[curRow] += c;
+        if (curRow == 0 || curRow == numRows - 1) {
+            goingDown = !goingDown;
+        }
+
+        curRow += goingDown ? 1 : -1;
+    }
+
+    string ret;
+    for (string row : rows) ret += row;
+    return ret;
+}
+#+END_SRC
+
+*** Approach 3 Visit by Row
+这个方法是leetcode提供的另一个方法，通过计算下标完成字符串的转换，实际上也是对转换的规律进行了总结，时间复杂度为 =O(n)= ，空间复杂度为 =O(1)= 。
+对于空间复杂度，实际上需要额外的空间存储结果字符串，如果忽略函数所返回的结果字符串，则空间复杂度为 =O(1)= 。
+#+BEGIN_SRC cpp
+
+string convert(string s, int numRows) {
+    if (numRows == 1) return s;
+
+    string ret;
+    int n = s.size();
+    int cycleLen = 2 * numRows - 2;
+
+    for (int i = 0; i < numRows; i++) {
+        for (int j = 0; j + i < n; j += cycleLen) {
+            ret += s[j + i];
+            if (i != 0 && i != numRows - 1 && j + cycleLen - i < n)
+                ret += s[j + cycleLen - i];
+        }
+    }
+    return ret;
+}
+#+END_SRC
+
+

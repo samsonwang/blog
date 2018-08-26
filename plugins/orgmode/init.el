@@ -109,12 +109,19 @@ contextual information."
           (pygmentize (downcase lang) (org-html-decode-plain-text code))
         code-html))))
 
-;; Export images with custom link type
+;; Export images with custom img link type
 (defun org-custom-link-img-url-export (path desc format)
   (cond
    ((eq format 'html)
     (format "<img src=\"%s\" alt=\"%s\"/>" path desc))))
 (org-add-link-type "img-url" nil 'org-custom-link-img-url-export)
+
+;; Expand internal link
+(defun org-custom-link-internal-url-export (path desc format)
+  (cond
+   ((eq format 'html)
+    (format "<a href=\"%s\">%s</a>" path desc))))
+(org-add-link-type "link" nil 'org-custom-link-internal-url-export)
 
 ;; Export function used by Nikola.
 (defun nikola-html-export (infile outfile)
