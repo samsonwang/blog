@@ -1,0 +1,87 @@
+#+BEGIN_COMMENT
+.. title: 每周算法：最大容器
+.. slug: algorithm-weekly-container-with-most-water
+.. date: 2018-08-29 11:36:33 UTC+08:00
+.. tags: leetcode, algorithm
+.. category: algorithm
+.. link:
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 每周算法：最大容器
+** Description
+Given n non-negative integers a1, a2, ..., an , where each represents a point at coordinate (i, ai). n vertical lines are drawn such that the two endpoints of line i is at (i, ai) and (i, 0). Find two lines, which together with x-axis forms a container, such that the container contains the most water.
+
+*Note:* You may not slant the container and n is at least 2.
+
+*Example:*
+Input: [1,8,6,2,5,4,8,3,7]
+Output: 49
+
+来源： [[https://leetcode.com/problems/container-with-most-water/description/][leetcode 11 Container with most water]]
+
+** Solution
+*** Approach 1 暴力解法
+暴力解法是最容易想到的解法了，然而暴力解法肯定不是本题的意图。
+
+#+BEGIN_SRC C++
+int maxArea(vector<int>& height) {
+    int ans = 0;
+
+    int len = height.size();
+
+    for (int i=0; i < len-1; ++i) {
+        for (int j=i+1; j < len; ++j) {
+            int size = (j-i) * min(height[i], height[j]);
+            ans = ans > size ? ans : size;
+        }
+    }
+
+    return ans;
+}
+#+END_SRC
+
+使用这种解法只要把变量变化的范围想清楚就行了，没有什么特别的难点。
+暴力解法的时间复杂度为 O(n^2)，空间复杂度为 O(1)。
+
+*** Approach 2
+我在leetcode上看到这样一种解法，这种解法逻辑上不复杂，但是我的疑问在是否有推导出严密的论证。
+
+#+BEGIN_SRC C++
+int maxArea(vector<int>& height) {
+
+    int ans = 0;
+    int left = 0;
+    int right = height.size()-1;
+
+    while (left < right) {
+        int w = right - left;
+        int h = min(height[left], height[right]);
+
+        ans = max(w*h, ans);
+
+        if (height[left] < height[right]) {
+            ++left;
+        }
+        else {
+            --right;
+        }
+    }
+
+    return ans;
+}
+#+END_SRC
+
+这个算法的主要思想是最大面积由两端边界较短的板决定；所以在移动边界时要将长块板保留，移动短板。该算法的时间复杂度为 O(n)，空间复杂度为O（1）。
+
+在寻求该算法的数学推导时，我看到了 @nan15 给出的另外一种解释：
+#+BEGIN_QUOTE
+We starts with the widest container, =l = 0= and =r = n - 1= . Let's say the left one is shorter: =h[l] < h[r]= . Then, this is already the largest container the left one can possibly form. There's no need to consider it again. Therefore, we just throw it away and start again with =l = 1= and =r = n - 1= .
+#+END_QUOTE
+这个论证我认为是更加直观的：从最宽的容器开始，这时左边坐标 =l = 0= ，右边坐标 =r = n - 1= 。假设左边更短，也就是 =h[l] < h[r]= 。那么，对于左边的板子，这是已经是它能够形成的最大的面积了，也就不需要再考虑它了。因此，将左边的板子丢掉，使用 =l = 1= 和 =r = n - 1= 重新开始。
+
+** 参考资料
+- [[https://leetcode.com/problems/container-with-most-water/solution/][leetcode problem solution]]
+- [[https://leetcode.com/problems/container-with-most-water/discuss/6089/anyone-who-has-a-on-algorithm][leetcode discuss algorithm proof 1]]
+- [[https://leetcode.com/problems/container-with-most-water/discuss/6099/yet-another-way-to-see-what-happens-in-the-on-algorithm][leetcode discuss algorithm proof 2]]
