@@ -2,7 +2,7 @@
 .. title: 客户端使用非阻塞socket进行connect的流程
 .. slug: non-blocking-socket-connect-tips
 .. date: 2018-08-31 17:04:19 UTC+08:00
-.. tags: draft, network, socket, nio, non-blocking
+.. tags: network, socket, nio, non-blocking
 .. category: network
 .. link:
 .. description:
@@ -29,9 +29,14 @@ if (res == 0) {
     // case3. connection attempt is in progress
 }
 #+END_SRC
-由于是非阻塞模式，所以 =connect= 之后会直接返回，一般情况会进case 1，表示程序正在连接。
+由于是非阻塞模式，所以 =connect= 之后会直接返回，根据返回值 =res= 和 =errno= 能够判断建立连接的结果。
+- case1，表示连接失败；
+- case2，表示连接建立成功；
+- case3，表示正在建立连接的过程中，在这个情况下，需要等待socket变成可写（writable）状态，可以使用 =select= 或 =epoll= 完成；
 
-
+在 =case3= 情况下，socket可写后，执行下面的代码检查socket是否出现错误。
+- case4和case5，表示socket出现了错误，将会关闭连接；
+- case6，表示连接建立成功，可以开始 =read= 和 =write= 了。
 #+BEGIN_SRC c
 int result;
 socklen_t result_len = sizeof(result);
@@ -49,4 +54,4 @@ if (result != 0) {
 #+END_SRC
 
 ** 参考资料
- - [[https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883][stackoverflow.com]]
+- [[https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883][stackoverflow.com]]
