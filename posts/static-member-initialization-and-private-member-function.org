@@ -1,8 +1,8 @@
 #+BEGIN_COMMENT
 .. title: 静态成员变量初始化相关问题
 .. slug: static-member-initialization-and-private-member-function
-.. date: 2018-09-04 13:37:37 UTC+08:00
-.. tags: draft, cpp, syntax
+.. date: 2018-09-04 23:37:37 UTC+08:00
+.. tags: cpp, syntax
 .. category: cpp
 .. link:
 .. description:
@@ -11,37 +11,68 @@
 
 #+TITLE: 静态成员变量初始化相关问题
 
-** xxx
-why private constractor can be called outside to initialize private static member?
+** 引言
+这篇文章的起因是出于对于 =C++= 饿汉单例模式代码的一些疑问，查阅了一些资料。在仔细研究后，我发现在一些基础概念的理解还是存在偏差。
+下面请看这样的一段代码，能看出其中有那些不太“正常”的语句么。
 
 #+BEGIN_SRC cpp
 class Singleton
 {
 public:
-    static Singleton *getInstance();
+    static Singleton* getInstance();
 private:
     Singleton() {}
-    static Singleton *instance;
+    static Singleton* instance;
 };
 
 Singleton* Singleton::instance = new Singleton();
 Singleton* Singleton::getInstance() {
-    if(!instance) {
-        //        instance = new Singleton();
-        cout << "getInstance(): First instance\n";
-        return instance;
-    }
-    else {
-        cout << "getInstance(): Previous instance\n";
-        return instance;
-    }
+    return instance;
 }
 #+END_SRC
 
+** 私有静态成员的初始化
+上面的代码是饿汉单例模式的 =C++= 的实现，在没有查阅资料之前，我对其中私有静态成员变量的初始化存疑。主要有以下两点：
+- 为什么私有变量能够在类外被修改
+- 为什么私有构造函数能够在类外被调用
+
+在我之前的知识积累中， *私有的成员变量或成员函数是不能够在类外被访问的* 。那么为什么以上代码没有问题呢？
+
+在C++标准中找到了下面的一段话(可以在 [[http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf][C++11 standard]] 的 9.4.2节 或  [[http://eel.is/c%2B%2Bdraft/class.static.data#2][C++ standard working draft]] 的 10.3.9.2节 中找到)
+#+BEGIN_QUOTE
+The initializer expression in the definition of a static data member is in the scope of its class.
+#+END_QUOTE
+这句话的意思是：静态成员变量的初始化是被看做为它自身的类域中的（ +翻译的可能不是很准+ ）。这样就不难理解为什么私有的静态成员变量能够在其类外被初始化了，由其私有构造函数进行构造也能说的通了。
+
+
+*同样* ,在C++标准中给出了下面这样的示例代码：
+#+BEGIN_SRC cpp
+class process {
+  static process* run_chain;
+  static process* running;
+};
+
+process* process::running = get_main();
+process* process::run_chain = running;
+#+END_SRC
+
+给出的说明如下：
+#+BEGIN_QUOTE
+The static data member =run_chain= of class process is defined in global scope; the notation =process​::​run_chain= specifies that the member =run_chain= is a member of class =process= and in the scope of class =process=. In the static data member definition, the initializer expression refers to the static data member running of class =process=.
+#+END_QUOTE
+静态成员 =run_chain= 定义在全局域；而 =process::run_chain= 则表示 =run_chain= 是 =process= 类的成员变量，从而处在 =process= 类的作用域中。
+
+** 私有构造函数
+在查阅资料时，我发现 Peter 的 [[https://stackoverflow.com/a/41361967][描述]] 纠正了我对私有构造函数的一些看法。
+#+BEGIN_QUOTE
+The point of a =private= constructor is not preventing object construction. It is about controlling which code can access the constructor, and therefore limiting which code to create an object that is an instance of that class. A =private= constructor is accessible to all member functions ( =static= or otherwise) of the class, and to all declared =friend= s of the class (which may be individual functions, or other classes) - so any of those can create an instance of the class using a =private= constructor (assuming the constructor is defined).
+#+END_QUOTE
+私有构造函数的目的并不是禁止对象构造，其目的在于控制哪些代码能够调用这个构造函数，进而限制类对象的创建。私有的构造函数可以被该类的所有成员函数（静态或非静态的）调用，该类的友元类或友元方法也能访问该类的私有函数，所以在上述情况中都可以通过私有的构造函数实例化出类对象。
+
 ** 参考资料
-- https://stackoverflow.com/questions/38583989/access-to-private-static-function-during-static-member-initialization
-- https://en.cppreference.com/w/cpp/language/static#Static_data_members
-- https://stackoverflow.com/questions/41361223/why-private-constructor-prevents-object-creation-c
-- https://stackoverflow.com/questions/7857989/static-member-variable-when-declared-private
-- http://eel.is/c++draft/class.static.data#2
-- https://softwareengineering.stackexchange.com/questions/145299/why-the-static-data-members-have-to-be-defined-outside-the-class-separately-in-c
+- [[http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf][ISO C++11 standard]]
+- [[http://eel.is/c%2B%2Bdraft/class.static.data#2][ISO C++ standard working draft]]
+- [[https://stackoverflow.com/questions/38583989/access-to-private-static-function-during-static-member-initialization][stackoverflow.com - access to private static function...]]
+- [[https://stackoverflow.com/questions/41361223/why-private-constructor-prevents-object-creation-c][stackoverflow.com - private constructor]]
+- [[https://stackoverflow.com/questions/7857989/static-member-variable-when-declared-private][stackoverflow.com - static member variable when declared private]]
+- [[https://en.cppreference.com/w/cpp/language/static#Static_data_members][cppreference.com - static data members]]
