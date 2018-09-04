@@ -1,7 +1,123 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about cpp)</title><link>http://samsonwang.me/</link><description></description><atom:link href="http://samsonwang.me/tags/category_cpp.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:wangzhilv@gmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Tue, 04 Sep 2018 13:57:35 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>libshmcache源码阅读笔记</title><link>http://samsonwang.me/posts/notes-on-libshmcache/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+</copyright><lastBuildDate>Tue, 04 Sep 2018 15:44:23 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>静态成员变量初始化相关问题</title><link>http://samsonwang.me/posts/static-member-initialization-and-private-member-function/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;引言&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+这篇文章的起因是出于对于 &lt;code&gt;C++&lt;/code&gt; 饿汉单例模式代码的一些疑问，查阅了一些资料。在仔细研究后，我发现在一些基础概念的理解还是存在偏差。&lt;br&gt;
+下面请看这样的一段代码，能看出其中有那些不太“正常”的语句么。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Singleton&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="k"&gt;public&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Singleton&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;getInstance&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="k"&gt;private&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;Singleton&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{}&lt;/span&gt;
+    &lt;span class="k"&gt;static&lt;/span&gt; &lt;span class="n"&gt;Singleton&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+
+&lt;span class="n"&gt;Singleton&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;Singleton&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;instance&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="n"&gt;Singleton&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="n"&gt;Singleton&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;Singleton&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;getInstance&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;私有静态成员的初始化&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;p&gt;
+上面的代码是饿汉单例模式的 &lt;code&gt;C++&lt;/code&gt; 的实现，在没有查阅资料之前，我对其中私有静态成员变量的初始化存疑。主要有以下两点：&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;为什么私有变量能够在类外被修改&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;为什么私有构造函数能够在类外被调用&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;
+在我之前的知识积累中， &lt;b&gt;私有的成员变量或成员函数是不能够在类外被访问的&lt;/b&gt; 。那么为什么以上代码没有问题呢？&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+在C++标准中找到了下面的一段话(可以在 &lt;a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf"&gt;C++11 standard&lt;/a&gt; 的 9.4.2节 或  &lt;a href="http://eel.is/c++draft/class.static.data#2"&gt;C++ standard working draft&lt;/a&gt; 的 10.3.9.2节 中找到)&lt;br&gt;
+&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;
+The initializer expression in the definition of a static data member is in the scope of its class.&lt;br&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;
+这句话的意思是：静态成员变量的初始化是被看做为它自身的类域中的（ &lt;del&gt;翻译的可能不是很准&lt;/del&gt; ）。这样就不难理解为什么私有的静态成员变量能够在其类外被初始化了，由其私有构造函数进行构造也能说的通了。&lt;br&gt;
+&lt;/p&gt;
+
+
+&lt;p&gt;
+&lt;b&gt;同样&lt;/b&gt; ,在C++标准中给出了下面这样的示例代码：&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;process&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;static&lt;/span&gt; &lt;span class="n"&gt;process&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;run_chain&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="k"&gt;static&lt;/span&gt; &lt;span class="n"&gt;process&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;running&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+
+&lt;span class="n"&gt;process&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;process&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;running&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;get_main&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="n"&gt;process&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;process&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;run_chain&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;running&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+给出的说明如下：&lt;br&gt;
+&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;
+The static data member &lt;code&gt;run_chain&lt;/code&gt; of class process is defined in global scope; the notation &lt;code&gt;process​::​run_chain&lt;/code&gt; specifies that the member &lt;code&gt;run_chain&lt;/code&gt; is a member of class &lt;code&gt;process&lt;/code&gt; and in the scope of class &lt;code&gt;process&lt;/code&gt;. In the static data member definition, the initializer expression refers to the static data member running of class &lt;code&gt;process&lt;/code&gt;.&lt;br&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;
+静态成员 &lt;code&gt;run_chain&lt;/code&gt; 定义在全局域；而 &lt;code&gt;process::run_chain&lt;/code&gt; 则表示 &lt;code&gt;run_chain&lt;/code&gt; 是 &lt;code&gt;process&lt;/code&gt; 类的成员变量，从而处在 &lt;code&gt;process&lt;/code&gt; 类的作用域中。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-3" class="outline-2"&gt;
+&lt;h2 id="sec-3"&gt;私有构造函数&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-3"&gt;
+&lt;p&gt;
+在查阅资料时，我发现 Peter 的 &lt;a href="https://stackoverflow.com/a/41361967"&gt;描述&lt;/a&gt; 纠正了我对私有构造函数的一些看法。&lt;br&gt;
+&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;
+The point of a &lt;code&gt;private&lt;/code&gt; constructor is not preventing object construction. It is about controlling which code can access the constructor, and therefore limiting which code to create an object that is an instance of that class. A &lt;code&gt;private&lt;/code&gt; constructor is accessible to all member functions ( &lt;code&gt;static&lt;/code&gt; or otherwise) of the class, and to all declared &lt;code&gt;friend&lt;/code&gt; s of the class (which may be individual functions, or other classes) - so any of those can create an instance of the class using a &lt;code&gt;private&lt;/code&gt; constructor (assuming the constructor is defined).&lt;br&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;
+私有构造函数的目的并不是禁止对象构造，其目的在于控制哪些代码能够调用这个构造函数，进而限制类对象的创建。私有的构造函数可以被该类的所有成员函数（静态或非静态的）调用，该类的友元类或友元方法也能访问该类的私有函数，所以在上述情况中都可以通过私有的构造函数实例化出类对象。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-4" class="outline-2"&gt;
+&lt;h2 id="sec-4"&gt;参考资料&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-4"&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;&lt;a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf"&gt;ISO C++11 standard&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://eel.is/c++draft/class.static.data#2"&gt;ISO C++ standard working draft&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/38583989/access-to-private-static-function-during-static-member-initialization"&gt;stackoverflow.com - access to private static function…&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/41361223/why-private-constructor-prevents-object-creation-c"&gt;stackoverflow.com - private constructor&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/7857989/static-member-variable-when-declared-private"&gt;stackoverflow.com - static member variable when declared private&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://en.cppreference.com/w/cpp/language/static#Static_data_members"&gt;cppreference.com - static data members&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>cpp</category><category>syntax</category><guid>http://samsonwang.me/posts/static-member-initialization-and-private-member-function/</guid><pubDate>Tue, 04 Sep 2018 15:37:37 GMT</pubDate></item><item><title>libshmcache源码阅读笔记</title><link>http://samsonwang.me/posts/notes-on-libshmcache/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
 &lt;h2 id="sec-1"&gt;引言&lt;/h2&gt;
 &lt;div class="outline-text-2" id="text-1"&gt;
 &lt;p&gt;
@@ -797,9 +913,4 @@ C++将文件操作函数封装为 &lt;code&gt;fstream&lt;/code&gt; 操作类，�
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。&lt;br&gt;
 &lt;/p&gt;
 
-&lt;p&gt;&lt;a href="http://samsonwang.me/posts/frequent-improper-syntax-warning-on-compile/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</description><category>cpp</category><category>gcc</category><guid>http://samsonwang.me/posts/frequent-improper-syntax-warning-on-compile/</guid><pubDate>Wed, 03 Jan 2018 16:45:52 GMT</pubDate></item><item><title>GCC编译时的警告（warn）相关参数</title><link>http://samsonwang.me/posts/gcc-warn-on-compile/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;p&gt;
-编译阶段警告信息有助于排查代码中错误，合理配置编译警告信息能够提高开发效率。&lt;br&gt;
-通过了解编译警告，也能够了解到哪些代码风格是不好的，有哪些代码的书写格式是容易出现问题的，有助于让自己写出更高质量的代码。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="http://samsonwang.me/posts/gcc-warn-on-compile/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;</description><category>gcc</category><category>makefile</category><guid>http://samsonwang.me/posts/gcc-warn-on-compile/</guid><pubDate>Sun, 31 Dec 2017 01:51:01 GMT</pubDate></item></channel></rss>
+&lt;p&gt;&lt;a href="http://samsonwang.me/posts/frequent-improper-syntax-warning-on-compile/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</description><category>cpp</category><category>gcc</category><guid>http://samsonwang.me/posts/frequent-improper-syntax-warning-on-compile/</guid><pubDate>Wed, 03 Jan 2018 16:45:52 GMT</pubDate></item></channel></rss>
