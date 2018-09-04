@@ -96,18 +96,17 @@ See: http://orgmode.org/worg/org-contrib/babel/languages.html and
 http://pygments.org/docs/lexers/ for adding new languages to the mapping.")
 
 ;; Override the html export function to use pygments
-(defun org-html-src-block (src-block contents info)
-  "Transcode a SRC-BLOCK element from Org to HTML.
+(when (and nikola-use-pygments (executable-find "pygmentize"))
+  (defun org-html-src-block (src-block contents info)
+    "Transcode a SRC-BLOCK element from Org to HTML.
 CONTENTS holds the contents of the item.  INFO is a plist holding
 contextual information."
-  (if (org-export-read-attribute :attr_html src-block :textarea)
-      (org-html--textarea-block src-block)
-    (let ((lang (org-element-property :language src-block))
-          (code (org-element-property :value src-block))
-          (code-html (org-html-format-code src-block info)))
-      (if nikola-use-pygments
-          (pygmentize (downcase lang) (org-html-decode-plain-text code))
-        code-html))))
+    (if (org-export-read-attribute :attr_html src-block :textarea)
+        (org-html--textarea-block src-block)
+      (let ((lang (org-element-property :language src-block))
+            (code (org-element-property :value src-block))
+            (code-html (org-html-format-code src-block info)))
+        (pygmentize (downcase lang) (org-html-decode-plain-text code))))))
 
 ;; Export images with custom img link type
 (defun org-custom-link-img-url-export (path desc format)
