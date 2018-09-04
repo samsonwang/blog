@@ -1,0 +1,47 @@
+#+BEGIN_COMMENT
+.. title: 静态成员变量初始化相关问题
+.. slug: static-member-initialization-and-private-member-function
+.. date: 2018-09-04 13:37:37 UTC+08:00
+.. tags: draft, cpp, syntax
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 静态成员变量初始化相关问题
+
+** xxx
+why private constractor can be called outside to initialize private static member?
+
+#+BEGIN_SRC cpp
+class Singleton
+{
+public:
+    static Singleton *getInstance();
+private:
+    Singleton() {}
+    static Singleton *instance;
+};
+
+Singleton* Singleton::instance = new Singleton();
+Singleton* Singleton::getInstance() {
+    if(!instance) {
+        //        instance = new Singleton();
+        cout << "getInstance(): First instance\n";
+        return instance;
+    }
+    else {
+        cout << "getInstance(): Previous instance\n";
+        return instance;
+    }
+}
+#+END_SRC
+
+** 参考资料
+- https://stackoverflow.com/questions/38583989/access-to-private-static-function-during-static-member-initialization
+- https://en.cppreference.com/w/cpp/language/static#Static_data_members
+- https://stackoverflow.com/questions/41361223/why-private-constructor-prevents-object-creation-c
+- https://stackoverflow.com/questions/7857989/static-member-variable-when-declared-private
+- http://eel.is/c++draft/class.static.data#2
+- https://softwareengineering.stackexchange.com/questions/145299/why-the-static-data-members-have-to-be-defined-outside-the-class-separately-in-c
