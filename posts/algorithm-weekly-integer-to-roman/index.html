@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# " lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>每周算法：阿拉伯数字转换罗马数字 | Hack Note</title>
+<link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link rel="canonical" href="http://samsonwang.me/posts/algorithm-weekly-integer-to-roman/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/static-member-initialization-and-private-member-function/" title="静态成员变量初始化相关问题" type="text/html">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="每周算法：阿拉伯数字转换罗马数字">
+<meta property="og:url" content="http://samsonwang.me/posts/algorithm-weekly-integer-to-roman/">
+<meta property="og:description" content="Description
+
+
+Roman numerals are represented by seven different symbols: I , V , X , L , C , D and M.
+
+
+Symbol       Value
+I             1
+V             5
+X             10
+L             50
+C          ">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-09-05T09:15:43+08:00">
+<meta property="article:tag" content="algorithm">
+<meta property="article:tag" content="leetcode">
+</head>
+<body>
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav class="navbar navbar-inverse navbar-fixed-top"><div class="container">
+  <!-- This keeps the margins nice -->
+
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="http://samsonwang.me/">
+
+        <span id="blog-title">Hack Note</span>
+      </a>
+    </div>
+
+    <!-- /.navbar-header -->
+    <div class="collapse navbar-collapse" id="bs-navbar" aria-expanded="false">
+      <ul class="nav navbar-nav">
+<li>
+<a href="/archive/">Archives</a>
+                </li>
+<li>
+<a href="/tags/">Tags</a>
+                </li>
+<li>
+<a href="/listings/">Listings</a>
+                </li>
+<li>
+<a href="/galleries/">Galleries</a>
+                </li>
+<li>
+<a href="/rss.xml">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="nav navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-sm-9">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name"><a href="/posts/algorithm-weekly-integer-to-roman/" class="u-url">每周算法：阿拉伯数字转换罗马数字</a></h1>
+
+      <div class="metadata">
+        <div class="author">
+            Samson Wang
+        </div>
+        <div class="date">
+          <a href="/posts/algorithm-weekly-integer-to-roman/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-09-05T09:15:43+08:00" itemprop="datePublished" title="2018-09-05 09:15">2018-09-05 09:15
+            </time></a>
+        </div>
+        
+        
+    <div class="source">
+      <p class="sourceline"><a href="/posts/algorithm-weekly-integer-to-roman/index.org" class="sourcelink">Source</a></p>
+    </div>
+
+        
+          <div class="link">
+            <a href="https://leetcode.com/problems/integer-to-roman/description/">Original site</a>
+          </div>
+          
+      </div>
+      
+
+  </header><ul itemprop="keywords" class="tags">
+    Tags : 
+        <li><a class="tag p-category" href="/tags/algorithm/" rel="tag">algorithm</a></li>
+        <li><a class="tag p-category" href="/tags/leetcode/" rel="tag">leetcode</a></li>
+    </ul>
+<div class="e-content entry-content" itemprop="articleBody text">
+    <div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">Description</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Roman numerals are represented by seven different symbols: <code>I</code> , <code>V</code> , <code>X</code> , <code>L</code> , <code>C</code> , <code>D</code> and <code>M</code>.<br></p>
+<pre class="example">
+Symbol       Value
+I             1
+V             5
+X             10
+L             50
+C             100
+D             500
+M             1000
+</pre>
+
+<p>
+For example, two is written as <code>II</code> in Roman numeral, just two one's added together. Twelve is written as, <code>XII</code> , which is simply <code>X</code> + <code>II</code> . The number twenty seven is written as <code>XXVII</code> , which is <code>XX</code> + <code>V</code> + <code>II</code> .<br></p>
+
+<p>
+Roman numerals are usually written largest to smallest from left to right. However, the numeral for four is not <code>IIII</code> . Instead, the number four is written as <code>IV</code> . Because the one is before the five we subtract it making four. The same principle applies to the number nine, which is written as <code>IX</code>. There are six instances where subtraction is used:<br></p>
+
+<ul class="org-ul">
+<li>
+<code>I</code> can be placed before <code>V</code> (5) and <code>X</code> (10) to make 4 and 9.<br>
+</li>
+<li>
+<code>X</code> can be placed before <code>L</code> (50) and <code>C</code> (100) to make 40 and 90.<br>
+</li>
+<li>
+<code>C</code> can be placed before <code>D</code> (500) and <code>M</code> (1000) to make 400 and 900.<br>
+</li>
+</ul>
+<p>
+Given an integer, convert it to a roman numeral. Input is guaranteed to be within the range from 1 to 3999.<br></p>
+
+<p>
+<b>Example 1:</b><br></p>
+<pre class="example">
+Input: 3
+Output: "III"
+</pre>
+
+<p>
+<b>Example 2:</b><br></p>
+<pre class="example">
+Input: 4
+Output: "IV"
+</pre>
+
+<p>
+<b>Example 3:</b><br></p>
+<pre class="example">
+Input: 9
+Output: "IX"
+</pre>
+
+<p>
+<b>Example 4:</b><br></p>
+<pre class="example">
+Input: 58
+Output: "LVIII"
+Explanation: C = 100, L = 50, XXX = 30 and III = 3.
+</pre>
+
+<p>
+<b>Example 5:</b><br></p>
+<pre class="example">
+Input: 1994
+Output: "MCMXCIV"
+Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
+</pre>
+
+<p>
+来源：<a href="https://leetcode.com/problems/integer-to-roman/description/">leetcode 12 integer to roman</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">Solution</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">Approach 1</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+这道题并不难，方法也很容易想到，这道题被归为 <code>medium</code> 难度反而让我感到有些奇怪，下面的代码就是我的解法。<br></p>
+<div class="highlight"><pre><span></span><span class="n">string</span> <span class="nf">intToRoman</span><span class="p">(</span><span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="c1">// digit1 ~ 4 分别代表个十百千</span>
+    <span class="kt">int</span> <span class="n">digit1</span> <span class="o">=</span> <span class="n">num</span><span class="o">%</span><span class="mi">10</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">digit2</span> <span class="o">=</span> <span class="n">num</span><span class="o">/</span><span class="mi">10</span><span class="o">%</span><span class="mi">10</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">digit3</span> <span class="o">=</span> <span class="n">num</span><span class="o">/</span><span class="mi">100</span><span class="o">%</span><span class="mi">10</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">digit4</span> <span class="o">=</span> <span class="n">num</span><span class="o">/</span><span class="mi">1000</span><span class="o">%</span><span class="mi">10</span><span class="p">;</span>
+
+    <span class="n">string</span> <span class="n">ans</span><span class="p">;</span>
+
+    <span class="c1">// 千</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit4</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="sc">'M'</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 百</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">digit3</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">3</span><span class="o">:</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit3</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="sc">'C'</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="mi">4</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"CD"</span><span class="p">;</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="mi">5</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">6</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">7</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">8</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="sc">'D'</span><span class="p">;</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit3</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="sc">'C'</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="mi">9</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"CM"</span><span class="p">;</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="k">default</span><span class="o">:</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 十</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">digit2</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">3</span><span class="o">:</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit2</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">){</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="sc">'X'</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="mi">4</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"XL"</span><span class="p">;</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="mi">5</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">6</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">7</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">8</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="sc">'L'</span><span class="p">;</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit2</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="s">"X"</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="mi">9</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"XC"</span><span class="p">;</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">default</span><span class="o">:</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 个</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">digit1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">3</span><span class="o">:</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit1</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="sc">'I'</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="mi">4</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"IV"</span><span class="p">;</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="mi">5</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">6</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">7</span><span class="o">:</span>
+    <span class="k">case</span> <span class="mi">8</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="sc">'V'</span><span class="p">;</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit1</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="sc">'I'</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="mi">9</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"IX"</span><span class="p">;</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">default</span><span class="o">:</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+这样做感觉有点简单粗暴，而且代码看起来不够优雅。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">Approach 2</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+下面代码是从leetcode上找的，这样的打表法，看起来至少从形式上会更加美观，而且也非常好理解。<br></p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="k">const</span> <span class="k">static</span> <span class="n">string</span> <span class="n">THOUS</span><span class="p">[];</span>
+    <span class="k">const</span> <span class="k">static</span> <span class="n">string</span> <span class="n">HUNDS</span><span class="p">[];</span>
+    <span class="k">const</span> <span class="k">static</span> <span class="n">string</span> <span class="n">TENS</span><span class="p">[];</span>
+    <span class="k">const</span> <span class="k">static</span> <span class="n">string</span> <span class="n">ONES</span><span class="p">[];</span>
+    <span class="n">string</span> <span class="nf">intToRoman</span><span class="p">(</span><span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">string</span> <span class="n">result</span><span class="p">;</span>
+	<span class="n">result</span> <span class="o">+=</span> <span class="n">THOUS</span><span class="p">[(</span><span class="kt">int</span><span class="p">)(</span><span class="n">num</span><span class="o">/</span><span class="mi">1000</span><span class="p">)</span><span class="o">%</span><span class="mi">10</span><span class="p">];</span>
+	<span class="n">result</span> <span class="o">+=</span> <span class="n">HUNDS</span><span class="p">[(</span><span class="kt">int</span><span class="p">)(</span><span class="n">num</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span><span class="o">%</span><span class="mi">10</span><span class="p">];</span>
+	<span class="n">result</span> <span class="o">+=</span> <span class="n">TENS</span><span class="p">[(</span><span class="kt">int</span><span class="p">)(</span><span class="n">num</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">%</span><span class="mi">10</span><span class="p">];</span>
+	<span class="n">result</span> <span class="o">+=</span> <span class="n">ONES</span><span class="p">[</span><span class="n">num</span><span class="o">%</span><span class="mi">10</span><span class="p">];</span>
+	<span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">const</span> <span class="n">string</span> <span class="n">Solution</span><span class="o">::</span><span class="n">THOUS</span><span class="p">[]</span>  <span class="o">=</span> <span class="p">{</span><span class="s">""</span><span class="p">,</span><span class="s">"M"</span><span class="p">,</span><span class="s">"MM"</span><span class="p">,</span><span class="s">"MMM"</span><span class="p">};</span>
+<span class="k">const</span> <span class="n">string</span> <span class="n">Solution</span><span class="o">::</span><span class="n">HUNDS</span><span class="p">[]</span>  <span class="o">=</span> <span class="p">{</span><span class="s">""</span><span class="p">,</span><span class="s">"C"</span><span class="p">,</span><span class="s">"CC"</span><span class="p">,</span><span class="s">"CCC"</span><span class="p">,</span><span class="s">"CD"</span><span class="p">,</span><span class="s">"D"</span><span class="p">,</span><span class="s">"DC"</span><span class="p">,</span><span class="s">"DCC"</span><span class="p">,</span><span class="s">"DCCC"</span><span class="p">,</span><span class="s">"CM"</span><span class="p">};</span>
+<span class="k">const</span> <span class="n">string</span> <span class="n">Solution</span><span class="o">::</span><span class="n">TENS</span><span class="p">[]</span>   <span class="o">=</span> <span class="p">{</span><span class="s">""</span><span class="p">,</span><span class="s">"X"</span><span class="p">,</span><span class="s">"XX"</span><span class="p">,</span><span class="s">"XXX"</span><span class="p">,</span><span class="s">"XL"</span><span class="p">,</span><span class="s">"L"</span><span class="p">,</span><span class="s">"LX"</span><span class="p">,</span><span class="s">"LXX"</span><span class="p">,</span><span class="s">"LXXX"</span><span class="p">,</span><span class="s">"XC"</span><span class="p">};</span>
+<span class="k">const</span> <span class="n">string</span> <span class="n">Solution</span><span class="o">::</span><span class="n">ONES</span><span class="p">[]</span>   <span class="o">=</span> <span class="p">{</span><span class="s">""</span><span class="p">,</span><span class="s">"I"</span><span class="p">,</span><span class="s">"II"</span><span class="p">,</span><span class="s">"III"</span><span class="p">,</span><span class="s">"IV"</span><span class="p">,</span><span class="s">"V"</span><span class="p">,</span><span class="s">"VI"</span><span class="p">,</span><span class="s">"VII"</span><span class="p">,</span><span class="s">"VIII"</span><span class="p">,</span><span class="s">"IX"</span><span class="p">};</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-2-3" class="outline-3">
+<h3 id="sec-2-3">Approach 3</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+下面这段代码也是leetcode上的答案，这个答案的通用性要好一些，最起码找到了规律，这有助于算法的后续拓展。<br></p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">string</span> <span class="n">intToRoman</span><span class="p">(</span><span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">base</span><span class="p">{</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">};</span>
+	<span class="n">string</span> <span class="n">roman</span> <span class="o">=</span> <span class="s">"MDCLXVI"</span><span class="p">;</span>
+	<span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">r</span><span class="p">;</span>
+	<span class="n">string</span> <span class="n">ret</span> <span class="o">=</span> <span class="s">""</span><span class="p">;</span>
+	<span class="k">while</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">r</span> <span class="o">=</span> <span class="n">num</span><span class="o">/</span><span class="n">base</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
+	    <span class="n">num</span> <span class="o">=</span> <span class="n">num</span> <span class="o">-</span> <span class="n">r</span><span class="o">*</span><span class="n">base</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
+	    <span class="k">if</span><span class="p">(</span><span class="n">r</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">ret</span> <span class="o">+=</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span><span class="p">];</span>
+		<span class="n">ret</span> <span class="o">+=</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span><span class="o">-</span><span class="mi">1</span><span class="p">];</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">r</span> <span class="o">==</span> <span class="mi">9</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">ret</span> <span class="o">+=</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span><span class="p">];</span>
+		<span class="n">ret</span> <span class="o">+=</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span> <span class="o">-</span><span class="mi">2</span><span class="p">];</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">r</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">ret</span> <span class="o">+=</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+		<span class="c1">// 下面这个string的用法值得学习</span>
+		<span class="n">string</span> <span class="nf">tmp</span><span class="p">(</span><span class="n">r</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span><span class="p">]);</span>
+		<span class="n">ret</span> <span class="o">+=</span> <span class="n">tmp</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">r</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">string</span> <span class="n">tmp</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span><span class="p">]);</span>
+		<span class="n">ret</span> <span class="o">+=</span> <span class="n">tmp</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="n">index</span><span class="o">++</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+<p>
+此外，我还学到了 <code>string tmp(num, ch)</code> 这样的创建具有重复字符的字符串的方法。<br></p>
+</div>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-sm-3 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+<div class="sidebar-aboutme">
+<p>Zeal for coding, C++ developer.</p>
+<p>Focus on linux server dev.</p>
+<p>I use EMACS, and I am learning python.</p>
+<p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
+</div>
+
+</div>
+
+       
+<div class="sidebar-module">
+  <h4>Categories</h4>
+  
+<ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category_cpp/">cpp</a>
+</li>
+<li>
+<a href="/tags/category_emacs/">emacs</a>
+</li>
+<li>
+<a href="/tags/category_linux/">linux</a>
+</li>
+<li>
+<a href="/tags/category_windows/">windows</a>
+</li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+        <ul class="pager hidden-print">
+<li class="previous">
+                <a href="/posts/static-member-initialization-and-private-member-function/" rel="prev" title="静态成员变量初始化相关问题">Previous post</a>
+            </li>
+        </ul>
+<div class="row">
+  <section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="http://samsonwang.me/posts/algorithm-weekly-integer-to-roman/",
+        disqus_title="\u6bcf\u5468\u7b97\u6cd5\uff1a\u963f\u62c9\u4f2f\u6570\u5b57\u8f6c\u6362\u7f57\u9a6c\u6570\u5b57",
+        disqus_identifier="cache/posts/algorithm-weekly-integer-to-roman.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section>
+</div>
+
+        
+       <script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2018 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/cerulean.js"></script><script>
+    $('a.image-reference:not(.islink) img:not(.islink)').parent().colorbox({rel:"gal",maxWidth:"100%",maxHeight:"100%",scalePhotos:true});
+  </script><!-- fancy dates --><script>
+    moment.locale("en");
+    fancydates(2, "YYYY-MM-DD HH:mm");
+  </script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
