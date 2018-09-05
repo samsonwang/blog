@@ -1,0 +1,253 @@
+#+BEGIN_COMMENT
+.. title: 每周算法：阿拉伯数字转换罗马数字
+.. slug: algorithm-weekly-integer-to-roman
+.. date: 2018-09-05 09:15:43 UTC+08:00
+.. tags: algorithm, leetcode
+.. category: algorithm
+.. link: https://leetcode.com/problems/integer-to-roman/description/
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 每周算法：阿拉伯数字转换罗马数字
+** Description
+Roman numerals are represented by seven different symbols: =I= , =V= , =X= , =L= , =C= , =D= and =M=.
+#+BEGIN_EXAMPLE
+Symbol       Value
+I             1
+V             5
+X             10
+L             50
+C             100
+D             500
+M             1000
+#+END_EXAMPLE
+
+For example, two is written as =II= in Roman numeral, just two one's added together. Twelve is written as, =XII= , which is simply =X= + =II= . The number twenty seven is written as =XXVII= , which is =XX= + =V= + =II= .
+
+Roman numerals are usually written largest to smallest from left to right. However, the numeral for four is not =IIII= . Instead, the number four is written as =IV= . Because the one is before the five we subtract it making four. The same principle applies to the number nine, which is written as =IX=. There are six instances where subtraction is used:
+
+- =I= can be placed before =V= (5) and =X= (10) to make 4 and 9.
+- =X= can be placed before =L= (50) and =C= (100) to make 40 and 90.
+- =C= can be placed before =D= (500) and =M= (1000) to make 400 and 900.
+
+Given an integer, convert it to a roman numeral. Input is guaranteed to be within the range from 1 to 3999.
+
+*Example 1:*
+#+BEGIN_EXAMPLE
+Input: 3
+Output: "III"
+#+END_EXAMPLE
+
+*Example 2:*
+#+BEGIN_EXAMPLE
+Input: 4
+Output: "IV"
+#+END_EXAMPLE
+
+*Example 3:*
+#+BEGIN_EXAMPLE
+Input: 9
+Output: "IX"
+#+END_EXAMPLE
+
+*Example 4:*
+#+BEGIN_EXAMPLE
+Input: 58
+Output: "LVIII"
+Explanation: C = 100, L = 50, XXX = 30 and III = 3.
+#+END_EXAMPLE
+
+*Example 5:*
+#+BEGIN_EXAMPLE
+Input: 1994
+Output: "MCMXCIV"
+Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
+#+END_EXAMPLE
+
+来源：[[https://leetcode.com/problems/integer-to-roman/description/][leetcode 12 integer to roman]]
+
+** Solution
+
+*** Approach 1
+这道题并不难，方法也很容易想到，这道题被归为 =medium= 难度反而让我感到有些奇怪，下面的代码就是我的解法。
+#+BEGIN_SRC cpp
+string intToRoman(int num) {
+
+    // digit1 ~ 4 分别代表个十百千
+    int digit1 = num%10;
+    int digit2 = num/10%10;
+    int digit3 = num/100%10;
+    int digit4 = num/1000%10;
+
+    string ans;
+
+    // 千
+    for (int i=0; i<digit4; ++i) {
+        ans += 'M';
+    }
+
+    // 百
+    switch (digit3) {
+    case 1:
+    case 2:
+    case 3:
+        for (int i=0; i<digit3; ++i) {
+            ans += 'C';
+        }
+        break;
+
+    case 4:
+        ans += "CD";
+        break;
+
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+        ans += 'D';
+        for (int i=5; i<digit3; ++i) {
+            ans += 'C';
+        }
+        break;
+
+    case 9:
+        ans += "CM";
+        break;
+    default:
+        break;
+    }
+
+    // 十
+    switch (digit2) {
+    case 1:
+    case 2:
+    case 3:
+        for (int i=0; i<digit2; ++i){
+            ans += 'X';
+        }
+        break;
+
+    case 4:
+        ans += "XL";
+        break;
+
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+        ans += 'L';
+        for (int i=5; i<digit2; ++i) {
+            ans += "X";
+        }
+        break;
+
+    case 9:
+        ans += "XC";
+        break;
+
+    default:
+        break;
+    }
+
+    // 个
+    switch (digit1) {
+    case 1:
+    case 2:
+    case 3:
+        for (int i=0; i<digit1; ++i) {
+            ans += 'I';
+        }
+        break;
+
+    case 4:
+        ans += "IV";
+        break;
+
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+        ans += 'V';
+        for (int i=5; i<digit1; ++i) {
+            ans += 'I';
+        }
+        break;
+
+    case 9:
+        ans += "IX";
+        break;
+
+    default:
+        break;
+    }
+
+    return ans;
+}
+
+#+END_SRC
+这样做感觉有点简单粗暴，而且代码看起来不够优雅。
+
+*** Approach 2
+下面代码是从leetcode上找的，这样的打表法，看起来至少从形式上会更加美观，而且也非常好理解。
+#+BEGIN_SRC cpp
+class Solution {
+public:
+    const static string THOUS[];
+    const static string HUNDS[];
+    const static string TENS[];
+    const static string ONES[];
+    string intToRoman(int num) {
+        string result;
+        result += THOUS[(int)(num/1000)%10];
+        result += HUNDS[(int)(num/100)%10];
+        result += TENS[(int)(num/10)%10];
+        result += ONES[num%10];
+        return result;
+    }
+};
+
+const string Solution::THOUS[]	= {"","M","MM","MMM"};
+const string Solution::HUNDS[]	= {"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};
+const string Solution::TENS[]	= {"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};
+const string Solution::ONES[]	= {"","I","II","III","IV","V","VI","VII","VIII","IX"};
+#+END_SRC
+
+*** Approach 3
+下面这段代码也是leetcode上的答案，这个答案的通用性要好一些，最起码找到了规律，这有助于算法的后续拓展。
+#+BEGIN_SRC cpp
+class Solution {
+public:
+    string intToRoman(int num) {
+        vector<int> base{1000, 100, 10, 1};
+        string roman = "MDCLXVI";
+        int index = 0, r;
+        string ret = "";
+        while(num) {
+            r = num/base[index];
+            num = num - r*base[index];
+            if(r == 4) {
+                ret += roman[2*index];
+                ret += roman[2*index-1];
+            }
+            else if(r == 9) {
+                ret += roman[2*index];
+                ret += roman[2*index -2];
+            }
+            else if(r >= 5) {
+                ret += roman[2*index - 1];
+                // 下面这个string的用法值得学习
+                string tmp(r-5, roman[2*index]);
+                ret += tmp;
+            }
+            else if(r < 5) {
+                string tmp(r, roman[2*index]);
+                ret += tmp;
+            }
+            index++;
+        }
+        return ret;
+    }
+};
+#+END_SRC
+此外，我还学到了 =string tmp(num, ch)= 这样的创建具有重复字符的字符串的方法。
