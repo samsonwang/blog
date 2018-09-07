@@ -191,8 +191,6 @@ POSTS = (
     ("posts/*.txt", "posts", "post.tmpl"),
     ("posts/*.html", "posts", "post.tmpl"),
     ("posts/*.org", "posts", "post.tmpl"),
-    
-#    ("alogrithms/*.org" , "algorithms", "post.tmpl"),
 )
 
 PAGES = (
@@ -1158,7 +1156,7 @@ MARKDOWN_EXTENSIONS = ['markdown.extensions.fenced_code', 'markdown.extensions.c
 
 # Modify the number of Post per Index Page
 # Defaults to 10
-INDEX_DISPLAY_POST_COUNT = 5
+INDEX_DISPLAY_POST_COUNT = 3
 
 # By default, Nikola generates RSS files for the website and for tags, and
 # links to it.  Set this to False to disable everything RSS-related.
@@ -1270,11 +1268,10 @@ USE_BUNDLES = False
 BODY_END = """
 <!-- Baidu Analytics -->
 <script>
-var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
   hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
-  var s = document.getElementsByTagName("script")[0]; 
+  var s = document.getElementsByTagName("script")[0];
   s.parentNode.insertBefore(hm, s);
 })();
 </script>
@@ -1427,4 +1424,3 @@ GLOBAL_CONTEXT = {
 # GLOBAL_CONTEXT as parameter when the template is about to be
 # rendered
 GLOBAL_CONTEXT_FILLER = []
-
