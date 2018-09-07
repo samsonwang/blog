@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# " lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="Personal handnote on software development">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hack Note (old posts, page 19) | Hack Note</title>
+<link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link rel="canonical" href="http://samsonwang.me/index-19.html">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/" type="text/html">
+<link rel="next" href="/index-18.html" type="text/html">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+<body>
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav class="navbar navbar-inverse navbar-fixed-top"><div class="container">
+  <!-- This keeps the margins nice -->
+
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="http://samsonwang.me/">
+
+        <span id="blog-title">Hack Note</span>
+      </a>
+    </div>
+
+    <!-- /.navbar-header -->
+    <div class="collapse navbar-collapse" id="bs-navbar" aria-expanded="false">
+      <ul class="nav navbar-nav">
+<li>
+<a href="/archive/">Archives</a>
+                </li>
+<li>
+<a href="/tags/">Tags</a>
+                </li>
+<li>
+<a href="/listings/">Listings</a>
+                </li>
+<li>
+<a href="/galleries/">Galleries</a>
+                </li>
+<li>
+<a href="/rss.xml">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="nav navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-sm-9">
+        
+        
+
+
+  
+
+
+
+  
+
+<div class="postindex">
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/non-blocking-socket-connect-tips/" class="u-url">客户端使用非阻塞socket进行connect的流程</a></h1>
+      <div class="metadata">
+        
+        
+        <div class="date">
+          <a href="/posts/non-blocking-socket-connect-tips/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-08-31T17:04:19+08:00" title="2018-08-31 17:04">2018-08-31 17:04
+            </time></a>
+        </div>
+        
+          <div class="comment">
+            
+        
+    <a href="/posts/non-blocking-socket-connect-tips/#disqus_thread" data-disqus-identifier="cache/posts/non-blocking-socket-connect-tips.html">Comments</a>
+
+
+          </div>
+
+      </div>
+    </header><div class="e-content entry-content">
+      <div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">问题</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">解答</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+客户端建立连接的示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">...);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">errno</span> <span class="o">!=</span> <span class="n">EINPROGRESS</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// case1. error, fail somehow, close socket</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// case2. connection has succeeded immediately</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">// case3. connection attempt is in progress</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+由于是非阻塞模式，所以 <code>connect</code> 之后会直接返回，根据返回值 <code>res</code> 和 <code>errno</code> 能够判断建立连接的结果。<br></p>
+<ul class="org-ul">
+<li>case1，表示连接失败；<br>
+</li>
+<li>case2，表示连接建立成功；<br>
+</li>
+<li>case3，表示正在建立连接的过程中，在这个情况下，需要等待socket变成可写（writable）状态，可以使用 <code>select</code> 或 <code>epoll</code> 完成；<br>
+</li>
+</ul>
+<p>
+在 case3 情况下，socket可写后，执行下面的代码检查socket是否出现错误。<br></p>
+<ul class="org-ul">
+<li>case4和case5，表示socket出现了错误，将会关闭连接；<br>
+</li>
+<li>case6，表示连接建立成功，可以开始 <code>read</code> 和 <code>write</code> 了。<br>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">result</span><span class="p">;</span>
+<span class="kt">socklen_t</span> <span class="n">result_len</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">getsockopt</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">SO_ERROR</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">result</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">result_len</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// case4. error, fail somehow, close socket</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// case5. connection failed; error code is in 'result'</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// case6. socket is ready for read()/write()</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">参考资料</h2>
+<div class="outline-text-2" id="text-3">
+<ul class="org-ul">
+<li>
+<a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+  </article>
+</div>
+
+
+
+        
+       <script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+
+      <div class="col-sm-3 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+<div class="sidebar-aboutme">
+<p>Zeal for coding, C++ developer.</p>
+<p>Focus on linux server dev.</p>
+<p>I use EMACS, and I am learning python.</p>
+<p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
+</div>
+
+</div>
+
+       
+<div class="sidebar-module">
+  <h4>Categories</h4>
+  
+<ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category_cpp/">cpp</a>
+</li>
+<li>
+<a href="/tags/category_emacs/">emacs</a>
+</li>
+<li>
+<a href="/tags/category_linux/">linux</a>
+</li>
+<li>
+<a href="/tags/category_windows/">windows</a>
+</li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+        <nav class="postindexpager"><ul class="pager">
+<li class="previous">
+                <a href="/" rel="prev">Newer posts</a>
+            </li>
+            <li class="next">
+                <a href="/index-18.html" rel="next">Older posts</a>
+            </li>
+        </ul></nav><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2018 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/cerulean.js"></script><script>
+    $('a.image-reference:not(.islink) img:not(.islink)').parent().colorbox({rel:"gal",maxWidth:"100%",maxHeight:"100%",scalePhotos:true});
+  </script><!-- fancy dates --><script>
+    moment.locale("en");
+    fancydates(2, "YYYY-MM-DD HH:mm");
+  </script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

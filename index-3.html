@@ -83,20 +83,20 @@
   
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/qt-chinese-encoding/" class="u-url">关于Qt中使用中文编码的一些问题</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/emacs-find-replace-string-in-directory/" class="u-url">使用emacs查找替换指定目录所有文件中字符串</a></h1>
       <div class="metadata">
         
         
         <div class="date">
-          <a href="/posts/qt-chinese-encoding/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-02-28T09:34:08+08:00" title="2018-02-28 09:34">2018-02-28 09:34
+          <a href="/posts/emacs-find-replace-string-in-directory/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-01-17T10:18:46+08:00" title="2018-01-17 10:18">2018-01-17 10:18
             </time></a>
         </div>
         
           <div class="comment">
             
         
-    <a href="/posts/qt-chinese-encoding/#disqus_thread" data-disqus-identifier="cache/posts/qt-chinese-encoding.html">Comments</a>
+    <a href="/posts/emacs-find-replace-string-in-directory/#disqus_thread" data-disqus-identifier="cache/posts/emacs-find-replace-string-in-directory.html">Comments</a>
 
 
           </div>
@@ -104,287 +104,208 @@
       </div>
     </header><div class="e-content entry-content">
       <p>
-Qt库作为一个开源库，并且支持多语言。在开发时需要考虑字符编码问题。<br>
-我现在的使用Qt开发环境为VS2012+Qt5.1.1，所以一下所讨论的也是基于这个版本而言的。目前Qt5已经将 <code>tr()</code> 删掉了。<br></p>
-
-<p>
-<b>在windows下使用Qt库进行开发</b><br>
-有两种主流开发环境:<br></p>
-<ol class="org-ol">
-<li>使用Qt Creator作为开发环境<br>
-</li>
-<li>使用Visual Studio + Visual Assist + Qt Visual Studio Addon作为开发环境<br>
-</li>
-</ol>
-<p>
-目前我使用的就是第二种开发环境，鉴于在Windows平台下没有哪个开发环境能与Visual Studio相媲美。<br></p>
-
-<p>
-<b>使用VS开发Qt程序时需要注意源文件的编码格式</b><br>
-Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式就是UTF-8，使用QtCreator创建的源文件的编码格式也是UTF-8 without BOM。<br>
-但是VS在中文操作系统上，如果不进行特殊的设置，默认创建的含有中文的源文件编码格式为gb3212。这样的原始字符串就是gb2312格式的，在使用时需要进行特殊转换，这样显示在界面上才不会乱码。<br>
-推荐使用一下两种方法解决gb2312编码问题：<br></p>
-<ul class="org-ul">
-<li>
-<code>QString::fromLocale8Bit()</code> 会将gb2312编码的字符串转换为UTF-8格式以便存放在QString中。<br>
-</li>
-<li>
-<code>QStringLiteral()</code> 是一个宏定义，会在编译期将字符串实例化，对静态字符串使用这个字符串也是一个提高效率的方法(因为减少了运行时的内存申请开销)。<br>
-</li>
-</ul>
-<p>
-<b>在VS中使用utf-8 with BOM的源文件格式</b><br>
-如果使用了utf-8 with BOM的源文件格式，VS会将其中的字符串转换为gb2312编码的中文，这样是为了兼容旧版本的编译器。<br>
-可以使用编译选项让VS编译器不进行这项转换，这样就可以直接使用字符串 <code>char*</code> 初始化QString了。<br></p>
-<ul class="org-ul">
-<li>微软在VS2010中提供了 <code>#pragma execution_character_set("utf-8")</code> 这样的编译选项，能够防止编译器进行文件编码转换，保证字符串保留utf-8格式。<br>
-</li>
-<li>VS2012 并不支持以上编译选项，VS2012将这个特性取消了<br>
-</li>
-<li>VS2015 可以使用 <code>/utf-8</code> 让编译器能够识别 utf-8 without BOM格式的文件，并保留utf-8的字符串编码。<br>
-</li>
-</ul>
-<p>
-<b>C++11的编码格式支持</b><br>
-对于支持C++11标准的编译器，可以采用如下的写法产生utf-8格式的字符串。<br></p>
-<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">szMsg</span> <span class="o">=</span> <span class="sa">u8</span><span class="s">"字符串"</span><span class="p">;</span>
-</pre></div>
-    </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/use-git-with-socks5-proxy/" class="u-url">为git设置socks5代理</a></h1>
-      <div class="metadata">
-        
-        
-        <div class="date">
-          <a href="/posts/use-git-with-socks5-proxy/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-02-08T09:26:07+08:00" title="2018-02-08 09:26">2018-02-08 09:26
-            </time></a>
-        </div>
-        
-          <div class="comment">
-            
-        
-    <a href="/posts/use-git-with-socks5-proxy/#disqus_thread" data-disqus-identifier="cache/posts/use-git-with-socks5-proxy.html">Comments</a>
-
-
-          </div>
-
-      </div>
-    </header><div class="e-content entry-content">
-      <p>
-在某些时候，为了绕过网络封锁，在使用git时需要借助代理完成相关网络操作。<br></p>
-
-<p>
-<b>一个可用的vpn代理是先决条件</b><br>
-关于架设vpn的就不在此讨论了。<br></p>
-
-<p>
-<b>将repo的链接由ssh改为为https</b> （已经是https的repo跳过此步骤）<br>
-只有https（http）的repo是支持代理的，所以如果现有的repo是使用ssh方式clone到本地的，需要修改其为https方式。<br>
-需要修改 <code>repo_name/.git/config</code> 中的url配置，将其中的 <code>git格式</code> 改为 <code>https格式</code> 。<br>
-以github为例，需要将 <code>git@github.com:user_name/repo_name.git</code> 改为 <code>https://github.com/user_name/repo_name.git</code><br>
-可以使用 <code>sed</code> 指令完成替换。<br></p>
-<div class="highlight"><pre><span></span>sed -i 's/git@github.com:/git:\/\/github.com\//' ./.git/config
-</pre></div>
-
-<p>
-<b>设置git使用代理</b><br>
-将git配置为使用socks5代理。<br></p>
-<div class="highlight"><pre><span></span>git config --global http.proxy 'socks5://127.0.0.1:1080'
-git config --global https.proxy 'socks5://127.0.0.1:1080'
-</pre></div>
-
-<p>
-<b>将登录信息保存下来</b><br>
-使用https时，在推送时会要求验证用户名和密码，考虑将验证信息缓存下来。<br></p>
-<div class="highlight"><pre><span></span>git config --global credential.helper cache
-</pre></div>
-<p>
-也可以考虑将用户名和密码永久保存为硬盘文件， <b>注意</b> 使用这种配置会将密码保存在 ~ <code>/.git-cretidentials</code> 文件中，仅推荐在个人电脑中将配置文件保存下来。<br></p>
-<div class="highlight"><pre><span></span>git config --global credential.helper store
-</pre></div>
-
-<p>
-<b>参考资料</b><br><a href="https://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-on-github">stackoverflow question</a><br></p>
-    </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/cpp-development-framework-on-windows/" class="u-url">windows平台下的C++开发框架</a></h1>
-      <div class="metadata">
-        
-        
-        <div class="date">
-          <a href="/posts/cpp-development-framework-on-windows/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-02-07T22:56:21+08:00" title="2018-02-07 22:56">2018-02-07 22:56
-            </time></a>
-        </div>
-        
-          <div class="comment">
-            
-        
-    <a href="/posts/cpp-development-framework-on-windows/#disqus_thread" data-disqus-identifier="cache/posts/cpp-development-framework-on-windows.html">Comments</a>
-
-
-          </div>
-
-      </div>
-    </header><div class="e-content entry-content">
-      <p>
-在开发windows应用程序时，经常会遇到win32、mfc、atl的函数。下面就对三种API（或者说是开发框架）进行了总结。<br></p>
-
+本文主要介绍在emacs中对一个目录中的很多文件进行字符串查找和替换操作的方法。参考了 <a href="http://ergoemacs.org/emacs/blog.html">XahLee</a> 的教程后，在此记录做个备份。<br></p>
 <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">Win32开发框架</h2>
+<h2 id="sec-1">操作步骤</h2>
 <div class="outline-text-2" id="text-1">
 <p>
-win32开发框架是最基础的函数接口，更接近操作系统底层。<br>
-使用Win32接口的优点是程序的依赖最小，生成的可执行文件的体积也最小。<br></p>
+<b>进入dired模式</b> ： 我的快捷键配置为 <code>C-x d</code>, 也可以使用 <code>M-x &lt;dired&gt;</code> .<br><b>标记需要查找的文件</b> ： 在进入dired模式后，对需要操作的文件或目录进行操作。<br></p>
+<ul class="org-ul">
+<li>
+<code>m</code> 对光标所在的文件或目录进行标记<br>
+</li>
+<li>
+<code>u</code> 对光标所在的文件或目录取消标记<br>
+</li>
+<li>
+<code>U</code> 取消所有标记<br>
+</li>
+</ul>
+<p>
+可以通过 <code>M-x &lt;dired-mark-files-regexp&gt;</code> 使用正则表达式完成批量文件增加标记。<br><b>批量查找</b> ： 使用 <code>M-x &lt;dired-do-query-replace-regexp&gt;</code> 进行查找替换。在有 <code>grep</code> 的支持时（linux环境下或windows环境中增加了类似cygwin的程序），也可以使用 <code>&lt;dired-do-find-regexp-and-replace&gt;</code> 进行文本查找替换。<br><b>查找结果</b> ： 在查找结果中使用如下快捷键完成操作<br></p>
+<ul class="org-ul">
+<li>
+<code>y</code> 对当前记录执行替换操作<br>
+</li>
+<li>
+<code>n</code> 跳过当前记录<br>
+</li>
+<li>
+<code>C-g</code> 停止本次查找替换操作<br>
+</li>
+<li>
+<code>!</code> 同意本文件中的查找替换操作<br>
+</li>
+<li>
+<code>N</code> 跳过本文件中的查找替换操作<br>
+</li>
+<li>
+<code>Y</code> 同意本次所有的查找替换操作<br>
+</li>
+</ul>
 </div>
 </div>
 
 <div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">MFC开发框架</h2>
+<h2 id="sec-2">相关技巧</h2>
 <div class="outline-text-2" id="text-2">
 <p>
-MFC是Microsoft Foundation Class的缩写，将win32的相关接口按照OOP的思想封装了起来，目的是提供一个快速开发原生应用的框架。<br>
-使用MFC开发的程序体型略显臃肿，而且MFC也比较陈旧了，并不推荐使用MFC进行开发。<br></p>
+如果需要批量查找(不进行替换)，可以在dired模式中 <code>M-x &lt;dired-do-search&gt;</code> 进行查找，对于查找结果使用 <code>M-x tags-loop-continue</code> 进行逐条浏览。<br></p>
+</div>
+</div>
+    </div>
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/stl-iterator-invalidate/" class="u-url">STL容器的迭代器失效问题</a></h1>
+      <div class="metadata">
+        
+        
+        <div class="date">
+          <a href="/posts/stl-iterator-invalidate/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-01-10T22:06:04+08:00" title="2018-01-10 22:06">2018-01-10 22:06
+            </time></a>
+        </div>
+        
+          <div class="comment">
+            
+        
+    <a href="/posts/stl-iterator-invalidate/#disqus_thread" data-disqus-identifier="cache/posts/stl-iterator-invalidate.html">Comments</a>
+
+
+          </div>
+
+      </div>
+    </header><div class="e-content entry-content">
+      <div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">1 引言</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+常见的STL容器都能使用迭代器访问容器内元素，迭代器相同于一个指向容器内元素的指针，可以通过移动迭代器实现遍历容器。<br>
+但是在使用迭代器时需要考虑STL容器的失效问题；迭代器失效主要出现在对容器进行了增删操作之后，迭代器不再指向原本的元素。<br>
+这时如果再通过迭代器访问容器就有可能出现异常。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">2 map容器</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+<b>内部数据结构</b> ：红黑树<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入都红黑树中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
 <div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">ATL开发框架</h2>
+<h2 id="sec-3">3 vector容器</h2>
 <div class="outline-text-2" id="text-3">
 <p>
-ATL是Active Template Library的缩写，是针对COM组件的开发实现的一套开发框架。ATL简化了ActiveX COM组件的开发。<br></p>
+<b>内部数据结构</b> ：数组(一段连续内存空间)<br><b>插入操作</b> ：由于vector使用的是一段有长度限制的连续空间，插入( <code>push_back</code> / <code>insert</code> )操作在vector中加入新的元素时需要分情况考虑。<br></p>
+<ul class="org-ul">
+<li>当vector中元素总数仍不大于capacity，这时插入位置后的元素都被依次移动到下一个位置，所以插入位置之后的迭代器都会失效。<br>
+</li>
+<li>当vector中元素总数大于capacity，这个时候会重新开辟更大的内存空间，将原来的vector中的内容复制到新的vector中，回收原先vector的内存空间。由于新的vector的地址已完全改变，所以原先的所有迭代器都会失效。<br>
+</li>
+</ul>
+<p>
+<b>删除操作</b> ：删除( <code>pop_back</code> / <code>erase</code> )操作在vector中删除元素，删除位置后的元素都被依次复制到前一个位置，所以删除位置之后的迭代器都会失效。<br>
+示例代码：<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">4 list容器</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+<b>内部数据结构</b> ：双向环状链表<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入到链表中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5">5 小结</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+在操作STL容器时，对容器增删（ <code>erase</code> / <code>insert</code> ）之后应该注意接收返回值，这样可以有效避免迭代器失效的产生。<br>
+对容器进行遍历删除操作时，另一种语法技巧是在 <code>erase</code> 接口中对迭代器进行后自增（it++），这种写法也能够保证遍历正常进行。理解这种写法需要参考运算符重载的相关知识，后自增操作会产生一个临时变量用于函数返回。<br></p>
 </div>
 </div>
     </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/emacs-search-string-in-directory-recursively/" class="u-url">使用emacs在目录中递归搜索字符串</a></h1>
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/size_t-and-size_type/" class="u-url">关于size_t和size_type的比较</a></h1>
       <div class="metadata">
         
         
         <div class="date">
-          <a href="/posts/emacs-search-string-in-directory-recursively/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-02-06T21:28:14+08:00" title="2018-02-06 21:28">2018-02-06 21:28
+          <a href="/posts/size_t-and-size_type/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-01-08T17:27:13+08:00" title="2018-01-08 17:27">2018-01-08 17:27
             </time></a>
         </div>
         
           <div class="comment">
             
         
-    <a href="/posts/emacs-search-string-in-directory-recursively/#disqus_thread" data-disqus-identifier="cache/posts/emacs-search-string-in-directory-recursively.html">Comments</a>
+    <a href="/posts/size_t-and-size_type/#disqus_thread" data-disqus-identifier="cache/posts/size_t-and-size_type.html">Comments</a>
 
 
           </div>
 
       </div>
     </header><div class="e-content entry-content">
-      <p>
-对文件中的字符串搜索是开发中经常遇到的情景，下面就对常见的搜索字符串的方式进行了总结。<br></p>
-
-<p>
-<b>对当前buffer进行搜索（单个文件）</b><br><code>C-s</code> 向后搜索<br><code>C-r</code> 向后搜索<br><code>M-s o</code> 使用occur对当前buffer中的指定关键字进行统计<br>
-在安装了helm以后可以使用 <code>helm-occur</code> 完成当前buffer的搜索<br></p>
-
-<p>
-<b>对目录中的指定文件进行搜索（一个目录下的多个文件）</b><br><code>C-x d</code> 进入dired模式，在dired模式中使用 <code>M-x &lt;dired-do-find-regexp&gt;</code> (快捷键 <code>A</code> )对标记的文件进行搜索。<br></p>
-
-<p>
-<b>对目录中的所有文件进行递归搜索（一个目录下的所有文件和所有子目录中的文件）</b><br><code>M-x &lt;rgrep&gt;</code> 能够对一个目录下所有的文件进行正则表达式匹配<br></p>
-
-<p>
-<b>注意事项</b><br>
-在windows平台上使用grep和find指令时，需要借助仿linux环境中的程序完成，如cygwin中的程序。<br>
-需要将程序的路径添加到系统环境变量path中，并且为了覆盖windows系统自带的find命令，需要将该路径放在系统find路径之前。<br>
-tips： 对于安装了 <code>git bash</code> 的同学，直接将其中的 <code>mingw64\bin</code> 的绝对路径加入系统path中即可。<br></p>
-    </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/shadowsock-server-setup-guide/" class="u-url">ss服务器的配置指南</a></h1>
-      <div class="metadata">
-        
-        
-        <div class="date">
-          <a href="/posts/shadowsock-server-setup-guide/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-02-05T22:57:35+08:00" title="2018-02-05 22:57">2018-02-05 22:57
-            </time></a>
-        </div>
-        
-          <div class="comment">
-            
-        
-    <a href="/posts/shadowsock-server-setup-guide/#disqus_thread" data-disqus-identifier="cache/posts/shadowsock-server-setup-guide.html">Comments</a>
-
-
-          </div>
-
-      </div>
-    </header><div class="e-content entry-content">
-      <p>
-租一个服务器自己搭建梯子是科学上网方便稳定快捷的好方法。<br>
-本文主要是自己部署vpn服务端的笔记，作为备忘留存下来。<br></p>
-
-<div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">安装ss服务程序</h2>
+      <div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">1 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
-安装环境为CentOS7, 需要使用python的包管理工具pip完成对ss-server的安装。<br></p>
-<div class="highlight"><pre><span></span>sudo yum install m2crypto python-setuptools
-sudo easy_install pip
-sudo pip install shadowsocks
-</pre></div>
+编程中常见的表示两种大小的类型标识符有 <code>size_t</code> 和 <code>size_type</code> ，这两种类型十分相似，非常容易混淆。本文对他们的使用场景进行了比较，并提供了示例代码。<br></p>
 </div>
 </div>
 
 <div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">配置ss服务器</h2>
+<h2 id="sec-2">2 <code>size_t</code> 类型</h2>
 <div class="outline-text-2" id="text-2">
 <p>
-<b>配置文件示例</b> : <a href="/listings/shadowsocks.json.html">shadowsocks.json</a><br>
-这份配置中使用了多个端口作供ss-server使用<br></p>
-<div class="highlight"><pre><span></span>{
-    "server":"your-server-ip",
-    "local_address":"127.0.0.1",
-    "local_port":1080,
-    "port_password":
-    {
-	"32366":"shadowsocks",
-	"32367":"shadowsocks",
-	"32368":"shadowsocks",
-	"32369":"shadowsocks",
-	"52369":"shadowsocks"
-    },
-    "timeout":300,
-    "method":"aes-256-cfb",
-    "fast_open": false
-}
-</pre></div>
+当需要描述某个对象的大小（size）时都应该使用 <code>size_t</code> ，其大小被限制为 0 到 <code>SIZE_MAX</code> 之间。<br><code>size_t</code> 的定义在 <code>&lt;cstddef&gt;</code> 中， <code>SIZE_MAX</code> 的定义在 <code>&lt;climits&gt;</code> 中。<br><code>size_t</code> 一般会作为 <code>sizeof</code> 运算符的返回结果，可以理解为在给定的平台中是统一的。<br></p>
+</div>
+</div>
 
-
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">3 <code>size_type</code> 类型</h2>
+<div class="outline-text-2" id="text-3">
 <p>
-<b>启动脚本示例</b> : <a href="/listings/ss.sh.html">ss.sh</a><br>
-直接在命令行直接输入指令也能够完成ss服务的启动和停止，使用脚本只是为了方便一些。<br></p>
-<div class="highlight"><pre><span></span>#!/bin/bash
-ss_start()
-{
-  ssserver -c /root/shadowsocks/shadowsocks.json -d start
-}
-ss_stop()
-{
-  ssserver -c /root/shadowsocks/shadowsocks.json -d stop
-}
-# shell script main
-if [ "$#" -eq "0" ]; then
-  ss_start
-else
-  case "$1" in
-  start)
-    ss_start
-    exit;;
-  stop)
-    ss_stop
-    exit;;
-  esac
-fi
-</pre></div>
+在 <code>STL</code> 中定义了 <code>size_type</code> 是与 <code>Allocator::size_tpye</code> 相对应的。而 <code>Allocator</code> 是模板的一个参数。<br><code>size_type</code> 可以理解为在给定容器范围内是统一的。<br></p>
+</div>
+</div>
 
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">4 二者之间的比较</h2>
+<div class="outline-text-2" id="text-4">
 <p>
-<b>增加系统启动项</b><br>
-可以将启动脚本加入系统启动项，这样就能够保证在每次reboot后，服务都能自动开启。<br></p>
+这两种类型主要是为了提高代码的可移植性。一般情况来说，这两种类型是没有区别的，因为使用标准库默认的 <code>Allocator</code> 所对应的 <code>size_type</code> 就是 <code>size_t</code> 。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5">5 示例代码</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+注意 <code>size_type</code> 在使用时需要加上容器类型限定。<br></p>
+<div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">n1</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">v</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">size_type</span> <span class="n">n2</span> <span class="o">=</span> <span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">::</span><span class="n">size_type</span> <span class="n">n3</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-6" class="outline-2">
+<h2 id="sec-6">6 参考资料</h2>
+<div class="outline-text-2" id="text-6">
+<ul class="org-ul">
+<li>
+<a href="http://en.cppreference.com/w/cpp/types/size_t">http://en.cppreference.com/w/cpp/types/size_t</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/918567/size-t-vs-containersize-type">https://stackoverflow.com/questions/918567/size-t-vs-containersize-type</a><br>
+</li>
+</ul>
 </div>
 </div>
     </div>
@@ -471,11 +392,10 @@ fi
     moment.locale("en");
     fancydates(2, "YYYY-MM-DD HH:mm");
   </script><!-- end fancy dates --><!-- Baidu Analytics --><script>
-var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
   hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
-  var s = document.getElementsByTagName("script")[0]; 
+  var s = document.getElementsByTagName("script")[0];
   s.parentNode.insertBefore(hm, s);
 })();
 </script>

@@ -83,842 +83,171 @@
   
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/algorithm-weekly-longest-palindromic-substring/" class="u-url">每周算法：最长对称子串</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/gdb-ignore-received-signal/" class="u-url">在gdb调试时忽略系统信号（signal）</a></h1>
       <div class="metadata">
         
         
         <div class="date">
-          <a href="/posts/algorithm-weekly-longest-palindromic-substring/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-08-07T10:37:34+08:00" title="2018-08-07 10:37">2018-08-07 10:37
+          <a href="/posts/gdb-ignore-received-signal/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-04-19T16:00:47+08:00" title="2018-04-19 16:00">2018-04-19 16:00
             </time></a>
         </div>
         
           <div class="comment">
             
         
-    <a href="/posts/algorithm-weekly-longest-palindromic-substring/#disqus_thread" data-disqus-identifier="cache/posts/algorithm-weekly-longest-palindromic-substring.html">Comments</a>
+    <a href="/posts/gdb-ignore-received-signal/#disqus_thread" data-disqus-identifier="cache/posts/gdb-ignore-received-signal.html">Comments</a>
 
 
           </div>
 
       </div>
     </header><div class="e-content entry-content">
-      <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">Description</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-Given a string s, find the longest palindromic substring in s. You may assume that the maximum length of s is 1000.<br></p>
-
-<p>
-<b>Example 1:</b><br>
-Input: "babad"<br>
-Output: "bab"<br>
-Note: "aba" is also a valid answer.<br></p>
-
-<p>
-<b>Example 2:</b><br>
-Input: "cbbd"<br>
-Output: "bb"<br></p>
-
-<p>
-来源：<a href="https://leetcode.com/problems/longest-palindromic-substring/description/">LeetCode 05 Longest Palindromic Substring</a><br></p>
-</div>
-</div>
-
-<div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">Solution</h2>
-<div class="outline-text-2" id="text-2">
-<p>
-我想到了两种方法：暴力解法、从中心展开<br></p>
-</div>
-
-<div id="outline-container-sec-2-1" class="outline-3">
-<h3 id="sec-2-1">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-2-1">
-<p>
-暴击解法的时间复杂度为 <code>O(n3)</code> , 找出所有子串的时间复杂度为 <code>O(n2)</code> , 判断一个子串的时间复杂度为 <code>O(n)</code> ; 空间复杂度为 <code>O(1)</code> 。<br></p>
-
-<p>
-需要注意的是，如果子串过短，就没有必要进行对称性判断了。<br></p>
-
-<p>
-下面是我的代码<br></p>
-<div class="highlight"><pre><span></span><span class="kt">bool</span> <span class="nf">isPalindrome</span><span class="p">(</span><span class="k">const</span> <span class="n">string</span><span class="o">&amp;</span> <span class="n">str</span><span class="p">)</span> <span class="p">{</span>
-
-    <span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">();</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">len</span> <span class="o">&lt;=</span><span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-	<span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="kt">int</span> <span class="n">head</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
-
-    <span class="k">while</span> <span class="p">(</span><span class="n">head</span> <span class="o">&lt;</span> <span class="n">tail</span><span class="p">)</span> <span class="p">{</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">head</span><span class="p">]</span> <span class="o">!=</span> <span class="n">str</span><span class="p">[</span><span class="n">tail</span><span class="p">])</span> <span class="p">{</span>
-	    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
-	<span class="p">}</span>
-
-	<span class="o">++</span><span class="n">head</span><span class="p">;</span>
-	<span class="o">--</span><span class="n">tail</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="n">string</span> <span class="nf">longestPalindrome</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span> <span class="p">{</span>
-
-    <span class="n">string</span> <span class="n">ans</span> <span class="o">=</span> <span class="s">""</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">()</span><span class="o">-</span><span class="n">i</span><span class="p">;</span> <span class="n">j</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">;</span> <span class="o">--</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">ans</span><span class="p">.</span><span class="n">length</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
-		<span class="k">continue</span><span class="p">;</span>
-	    <span class="p">}</span>
-
-	    <span class="n">string</span> <span class="n">temp</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">);</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">ans</span><span class="p">.</span><span class="n">length</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">temp</span><span class="p">.</span><span class="n">length</span><span class="p">()</span>
-		<span class="o">&amp;&amp;</span> <span class="n">isPalindrome</span><span class="p">(</span><span class="n">temp</span><span class="p">))</span> <span class="p">{</span>
-		<span class="n">ans</span> <span class="o">=</span> <span class="n">temp</span><span class="p">;</span>
-	    <span class="p">}</span>
-	<span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-2-2" class="outline-3">
-<h3 id="sec-2-2">Approach 2 从中心展开</h3>
-<div class="outline-text-3" id="text-2-2">
-<p>
-从中心展开方法的时间复杂度为 <code>O(n2)</code> , 空间复杂度为 <code>O(1)</code> 。<br></p>
-
-<p>
-需要注意的是坐标的计算，这个在字符串处理题目中是十分关键的，也是很容易出错的。<br>
-由于单个字符和两个相同字符都可以作为中心，这点需要额外注意一下。<br></p>
-
-<p>
-下面就是我的解法，使用的C++做的。<br></p>
-<div class="highlight"><pre><span></span><span class="n">string</span> <span class="nf">longestPalindrome</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span> <span class="p">{</span>
-
-    <span class="n">string</span> <span class="n">ans</span> <span class="o">=</span> <span class="s">""</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-
-	<span class="c1">// 如何确定初始的边界很重要</span>
-	<span class="kt">size_t</span> <span class="n">j</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
-	<span class="kt">size_t</span> <span class="n">k</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
-
-	<span class="c1">// 向两边拓展边界</span>
-	<span class="k">while</span> <span class="p">(</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="o">&gt;=</span><span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="p">{</span>
-	    <span class="o">--</span><span class="n">j</span><span class="p">;</span>
-	<span class="p">}</span>
-
-	<span class="k">while</span> <span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="p">{</span>
-	    <span class="o">++</span><span class="n">k</span><span class="p">;</span>
-	<span class="p">}</span>
-
-	<span class="k">while</span> <span class="p">(</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="o">&gt;=</span><span class="mi">0</span>
-	       <span class="o">&amp;&amp;</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">()</span>
-	       <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="n">s</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span> <span class="p">{</span>
-	    <span class="o">--</span><span class="n">j</span><span class="p">;</span>
-	    <span class="o">++</span><span class="n">k</span><span class="p">;</span>
-	<span class="p">}</span>
-
-	<span class="k">if</span> <span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span> <span class="o">&gt;</span> <span class="n">ans</span><span class="p">.</span><span class="n">length</span><span class="p">())</span> <span class="p">{</span>
-	    <span class="n">ans</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="o">-</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
-	<span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
-<span class="p">}</span>
+      <p>
+在gdb调试程序时，默认情况下gdb在收到信号时会中断程序的运行，并将收到的信号显示出来。这时，可以选择输入 <code>c</code> ( <code>continue</code> )让程序继续运行。如果程序会重复收到这信号，会非常影响调试效率。可以通过配置忽略指定的系统信号。<br>
+查看当前系统信号的处理信息的指令<br></p>
+<div class="highlight"><pre><span></span>(gdb) info signal
 </pre></div>
 
 <p>
-leetcode上还有一个解法，使用java完成的，它的坐标计算也很有技巧性。<br></p>
-<div class="highlight"><pre><span></span><span class="kd">public</span> <span class="n">String</span> <span class="nf">longestPalindrome</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">)</span> <span class="o">{</span>
-    <span class="k">if</span> <span class="o">(</span><span class="n">s</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">s</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="o">)</span> <span class="k">return</span> <span class="s">""</span><span class="o">;</span>
-    <span class="kt">int</span> <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span><span class="o">,</span> <span class="n">end</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
-    <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">s</span><span class="o">.</span><span class="na">length</span><span class="o">();</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
-	<span class="kt">int</span> <span class="n">len1</span> <span class="o">=</span> <span class="n">expandAroundCenter</span><span class="o">(</span><span class="n">s</span><span class="o">,</span> <span class="n">i</span><span class="o">,</span> <span class="n">i</span><span class="o">);</span>
-	<span class="kt">int</span> <span class="n">len2</span> <span class="o">=</span> <span class="n">expandAroundCenter</span><span class="o">(</span><span class="n">s</span><span class="o">,</span> <span class="n">i</span><span class="o">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="o">);</span>
-	<span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="n">Math</span><span class="o">.</span><span class="na">max</span><span class="o">(</span><span class="n">len1</span><span class="o">,</span> <span class="n">len2</span><span class="o">);</span>
-	<span class="k">if</span> <span class="o">(</span><span class="n">len</span> <span class="o">&gt;</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="o">)</span> <span class="o">{</span>
-	    <span class="n">start</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="o">(</span><span class="n">len</span> <span class="o">-</span> <span class="mi">1</span><span class="o">)</span> <span class="o">/</span> <span class="mi">2</span><span class="o">;</span>
-	    <span class="n">end</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="n">len</span> <span class="o">/</span> <span class="mi">2</span><span class="o">;</span>
-	<span class="o">}</span>
-    <span class="o">}</span>
-    <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="na">substring</span><span class="o">(</span><span class="n">start</span><span class="o">,</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="o">);</span>
-<span class="o">}</span>
-
-<span class="kd">private</span> <span class="kt">int</span> <span class="nf">expandAroundCenter</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">,</span> <span class="kt">int</span> <span class="n">left</span><span class="o">,</span> <span class="kt">int</span> <span class="n">right</span><span class="o">)</span> <span class="o">{</span>
-    <span class="kt">int</span> <span class="n">L</span> <span class="o">=</span> <span class="n">left</span><span class="o">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">right</span><span class="o">;</span>
-    <span class="k">while</span> <span class="o">(</span><span class="n">L</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">R</span> <span class="o">&lt;</span> <span class="n">s</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">L</span><span class="o">)</span> <span class="o">==</span> <span class="n">s</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">R</span><span class="o">))</span> <span class="o">{</span>
-	<span class="n">L</span><span class="o">--;</span>
-	<span class="n">R</span><span class="o">++;</span>
-    <span class="o">}</span>
-    <span class="k">return</span> <span class="n">R</span> <span class="o">-</span> <span class="n">L</span> <span class="o">-</span> <span class="mi">1</span><span class="o">;</span>
-<span class="o">}</span>
+以调试网络程序为例，进程会经常收到 <code>SIGPIPE</code> 消息，对于网络进程的 <code>SIGPIPE</code> 消息在程序中会由自身处理，可以使用以下指令让gdb不再提示 <code>SIGPIPE</code> 信号。<br></p>
+<div class="highlight"><pre><span></span>(gdb) handle SIGPIPE nostop noprint
 </pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-2-3" class="outline-3">
-<h3 id="sec-2-3">Approach 3 动态规划（dynamic programming）</h3>
-<div class="outline-text-3" id="text-2-3">
-<p>
-leetcode上还给给出了使用DP解决这个问题的方法。<br>
-我在leetcode上的discuss上找了个java写的解法。<br></p>
 
 <p>
-动态规划的时间复杂度为 <code>O(n2)</code> , 空间复杂度为 <code>O(n2)</code> 。<br>
-我对dp算法的了解还不多，个人感觉值得思考的是 <code>i</code> 和 <code>j</code> 的变化起点和变化方向。<br></p>
-<div class="highlight"><pre><span></span><span class="kd">public</span> <span class="n">String</span> <span class="nf">longestPalindrome</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">)</span> <span class="o">{</span>
-  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="na">length</span><span class="o">();</span>
-  <span class="n">String</span> <span class="n">res</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-
-  <span class="kt">boolean</span><span class="o">[][]</span> <span class="n">dp</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">boolean</span><span class="o">[</span><span class="n">n</span><span class="o">][</span><span class="n">n</span><span class="o">];</span>
-
-  <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="o">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span><span class="o">--)</span> <span class="o">{</span>
-    <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">i</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">n</span><span class="o">;</span> <span class="n">j</span><span class="o">++)</span> <span class="o">{</span>
-      <span class="n">dp</span><span class="o">[</span><span class="n">i</span><span class="o">][</span><span class="n">j</span><span class="o">]</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">i</span><span class="o">)</span> <span class="o">==</span> <span class="n">s</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">j</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="o">||</span> <span class="n">dp</span><span class="o">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="o">][</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="o">]);</span>
-
-      <span class="k">if</span> <span class="o">(</span><span class="n">dp</span><span class="o">[</span><span class="n">i</span><span class="o">][</span><span class="n">j</span><span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">res</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">j</span> <span class="o">-</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="n">res</span><span class="o">.</span><span class="na">length</span><span class="o">()))</span> <span class="o">{</span>
-	<span class="n">res</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="na">substring</span><span class="o">(</span><span class="n">i</span><span class="o">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="o">);</span>
-      <span class="o">}</span>
-    <span class="o">}</span>
-  <span class="o">}</span>
-
-  <span class="k">return</span> <span class="n">res</span><span class="o">;</span>
-<span class="o">}</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-2-4" class="outline-3">
-<h3 id="sec-2-4">Approach 4 Manacher算法</h3>
-<div class="outline-text-3" id="text-2-4">
-<p>
-这个算法思路实在是新奇，感兴趣的同学可以 <a href="https://articles.leetcode.com/longest-palindromic-substring-part-ii/">去看看</a> 。<br></p>
-</div>
-</div>
-</div>
+参考资料： <a href="ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_38.html">gnu gdb manual</a><br></p>
     </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/algorithm-weekly-longest-substring-without-repeating-characters/" class="u-url">每周算法：最长不含重复字符的子串</a></h1>
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/cpp11-range-based-for-loop/" class="u-url">C++11新特性：基于范围的for循环</a></h1>
       <div class="metadata">
         
         
         <div class="date">
-          <a href="/posts/algorithm-weekly-longest-substring-without-repeating-characters/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-08-02T11:43:14+08:00" title="2018-08-02 11:43">2018-08-02 11:43
+          <a href="/posts/cpp11-range-based-for-loop/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-04-18T09:45:42+08:00" title="2018-04-18 09:45">2018-04-18 09:45
             </time></a>
         </div>
         
           <div class="comment">
             
         
-    <a href="/posts/algorithm-weekly-longest-substring-without-repeating-characters/#disqus_thread" data-disqus-identifier="cache/posts/algorithm-weekly-longest-substring-without-repeating-characters.html">Comments</a>
+    <a href="/posts/cpp11-range-based-for-loop/#disqus_thread" data-disqus-identifier="cache/posts/cpp11-range-based-for-loop.html">Comments</a>
 
 
           </div>
 
       </div>
     </header><div class="e-content entry-content">
-      <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">Description</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-Given a string, find the length of the longest substring without repeating characters.<br></p>
-
-<p>
-<b>Examples:</b><br>
-Given "abcabcbb", the answer is "abc", which the length is 3.<br>
-Given "bbbbb", the answer is "b", with the length of 1.<br>
-Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer must be a substring, "pwke" is a subsequence and not a substring.<br></p>
-
-<p>
-来源：<a href="https://leetcode.com/problems/longest-substring-without-repeating-characters/description/">LeetCode 03 Longest Substring Without Repeating Characters</a><br></p>
-</div>
-</div>
-
-<div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">Solution</h2>
-<div class="outline-text-2" id="text-2">
-<p>
-好久没刷算法题了，手有点生，没有什么思路，下面的答案是看过提示之后才写出来的。<br></p>
-</div>
-
-<div id="outline-container-sec-2-1" class="outline-3">
-<h3 id="sec-2-1">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-2-1">
-<p>
-将所有的子串都穷举出来，并对它们进行判断，就能够得到最长子串的长度。这个算法很显然需要耗费很长时间。<br>
-需要注意的是： C++20中才支持 <code>std::set::contains</code> 这个接口（根据cppreference.com）。<br></p>
-
-<div class="highlight"><pre><span></span><span class="kt">bool</span> <span class="nf">isStringWithUniqueString</span><span class="p">(</span><span class="k">const</span> <span class="n">string</span><span class="o">&amp;</span> <span class="n">str</span><span class="p">)</span>
+      <p>
+<b>在C++11中，介绍了一种新的for循环写法，基于范围的for循环。</b><br>
+与旧的for循环类似，也是用来对遍历容器中的所有元素，新的写法更加简洁方便。可以使用auto自动适配容器中的内容。为了遍历容器时提高效率，在访问容器内部时可以声明为元素的引用，进而避免不必要的对象拷贝。示例代码如下（代码节选自 <a href="http://en.cppreference.com/w/cpp/language/range-for">cppreferance</a>）<br></p>
+<div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">v</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">};</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="kt">int</span><span class="o">&amp;</span> <span class="nl">i</span> <span class="p">:</span> <span class="n">v</span><span class="p">)</span> <span class="c1">// access by const reference</span>
 <span class="p">{</span>
-    <span class="c1">// 用于判断字符串是否是具有唯一字符的</span>
-    <span class="n">set</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">setChar</span><span class="p">;</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">setChar</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">!=</span> <span class="n">setChar</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-	<span class="p">{</span>
-	    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
-	<span class="p">}</span>
-
-	<span class="n">setChar</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">i</span> <span class="o">&lt;&lt;</span> <span class="sc">' '</span><span class="p">;</span>
 <span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
 
-<span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="nl">i</span> <span class="p">:</span> <span class="n">v</span><span class="p">)</span> <span class="c1">// access by value, the type of i is int</span>
 <span class="p">{</span>
-    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">i</span> <span class="o">&lt;&lt;</span> <span class="sc">' '</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
 
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;=</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
-	<span class="p">{</span>
-	    <span class="c1">// get sub-string</span>
-	    <span class="n">string</span> <span class="n">strTemp</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="o">-</span><span class="n">i</span><span class="p">);</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">isStringWithUniqueString</span><span class="p">(</span><span class="n">strTemp</span><span class="p">))</span>
-	    <span class="p">{</span>
-		<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">strTemp</span><span class="p">.</span><span class="n">length</span><span class="p">());</span>
-	    <span class="p">}</span>
-	<span class="p">}</span>
-    <span class="p">}</span>
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="nl">n</span> <span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">})</span> <span class="c1">// the initializer may be a braced-init-list</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">n</span> <span class="o">&lt;&lt;</span> <span class="sc">' '</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
 
-    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">a</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">};</span>
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="nl">n</span> <span class="p">:</span> <span class="n">a</span><span class="p">)</span> <span class="c1">// the initializer may be an array</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">n</span> <span class="o">&lt;&lt;</span> <span class="sc">' '</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="nl">n</span> <span class="p">:</span> <span class="n">a</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="sc">' '</span><span class="p">;</span> <span class="c1">// the loop variable need not be used</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+</pre></div>
+
+<p>
+<b>注意 <code>std::map</code> 的范围for循环遍历的写法</b><br><code>std::map</code> 中存放的是 <code>key-value pair</code> 键值对，所以在遍历的时候每次拿到的是一个 <code>pair</code> ，在访问其中的元素时，需要注意书写方法。示例代码如下。<br></p>
+<div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">mapDemo</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="nl">kvp</span> <span class="p">:</span> <span class="n">mapDemo</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">kvp</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">" - "</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">kvp</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-sec-2-2" class="outline-3">
-<h3 id="sec-2-2">Approach 2 滑动窗口</h3>
-<div class="outline-text-3" id="text-2-2">
-<p>
-滑动窗口的概念在字符串处理问题中十分常用，保持子串的左端点不动，不断拓展右侧端点，就能穷举出所有满足条件的子串。<br>
-需要注意的是这句话： <code>lengthMax = max(lengthMax, int(j-i+1));</code><br></p>
-<ol class="org-ol">
-<li>
-<code>std::max</code> 并不能同时匹配 <code>int</code> 和 <code>size_t</code> ，所以需要进行强制类型转换。<br>
-</li>
-<li>在完成第 <code>j</code> 个字母的验证后，说明包含该字母的子串也满足条件，所以要进行 <code>+1</code> 操作，这个主要是针对只有一个字母的字符串。<br>
-</li>
-</ol>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="c1">// 这个循环目的是，验证从i到j的字符串是否满足条件</span>
-	<span class="n">set</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">setChar</span><span class="p">;</span>
-
-	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
-	<span class="p">{</span>
-	    <span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">setChar</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="o">!=</span> <span class="n">setChar</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-	    <span class="p">{</span>
-		<span class="k">break</span><span class="p">;</span>
-	    <span class="p">}</span>
-	    <span class="k">else</span>
-	    <span class="p">{</span>
-		<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span>
-	    <span class="p">}</span>
-
-	    <span class="n">setChar</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
-	<span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-sec-2-3" class="outline-3">
-<h3 id="sec-2-3">Approach 3 优化的滑动窗口</h3>
-<div class="outline-text-3" id="text-2-3">
-<p>
-使用 <code>map</code> 对字母出现的位置进行记录，这样在出现相同字母时，就能够从上一次出现的位置向后开始寻找。<br>
-需要注意句话 <code>it-&gt;second+1&gt;=i</code> , 需要对位置加1后再比较，这样才能保证 <code>i</code> 的坐标计算正确。<br></p>
-
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-
-    <span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">size_t</span><span class="o">&gt;</span> <span class="n">mapPos</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
-	<span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">size_t</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">it</span> <span class="o">=</span> <span class="n">mapPos</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">it</span> <span class="o">!=</span> <span class="n">mapPos</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-	<span class="p">{</span>
-	    <span class="c1">// 这里说明找到了字符上一次出现的位置</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">+</span> <span class="mi">1</span><span class="o">&gt;=</span> <span class="n">i</span><span class="p">)</span>
-	    <span class="p">{</span>
-		<span class="n">i</span> <span class="o">=</span> <span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
-	    <span class="p">}</span>
-	<span class="p">}</span>
-
-	<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span>
-
-	<span class="n">mapPos</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
     </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/navigation-and-selection-effectively-in-emacs/" class="u-url">提高emacs中浏览和选择操作效率的技巧</a></h1>
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/linux-command-examples-scp/" class="u-url">Linux常用命令行指令 - scp</a></h1>
       <div class="metadata">
         
         
         <div class="date">
-          <a href="/posts/navigation-and-selection-effectively-in-emacs/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-07-30T11:14:41+08:00" title="2018-07-30 11:14">2018-07-30 11:14
+          <a href="/posts/linux-command-examples-scp/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-04-17T16:08:06+08:00" title="2018-04-17 16:08">2018-04-17 16:08
             </time></a>
         </div>
         
           <div class="comment">
             
         
-    <a href="/posts/navigation-and-selection-effectively-in-emacs/#disqus_thread" data-disqus-identifier="cache/posts/navigation-and-selection-effectively-in-emacs.html">Comments</a>
+    <a href="/posts/linux-command-examples-scp/#disqus_thread" data-disqus-identifier="cache/posts/linux-command-examples-scp.html">Comments</a>
 
 
           </div>
 
       </div>
     </header><div class="e-content entry-content">
-      <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">
-<span class="section-number-2">1</span> 引言</h2>
+      <p>
+<code>scp</code> 命令代表的是 secure copy，与 <code>cp</code> 命令的本地拷贝十分相似，主要区别就在于 <code>scp</code> 的路径可以是一个远程机器的路径。使用 <code>scp</code> 进行文件拷贝时，文件的传输时加密的。<br></p>
+<div class="highlight"><pre><span></span>cp source_path dest_path
+</pre></div>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">从远程机器向本地拷贝</h2>
 <div class="outline-text-2" id="text-1">
 <p>
-Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with-selection-and-navigation-in-emacs/">一篇博文</a> 给了我很大的启发，他详细地介绍了emacs中的相关概念，并提供了许多充满想象力的小技巧。作为emacs的入门级选手确实学到了很多，也拓宽了自己的思路。<br></p>
-
-<p>
-我最初的开发环境是Visual Studio，这一类比较大型的IDE集成了许多功能，但同时也会束缚住使用者的想法。通过这篇文章我感受到的由普通操作指令能组合成的新编辑方式。<br></p>
-
-<p>
-如果英文水平允许的话，非常推荐阅读一下原版的博文，原文中有更加丰富形象的图片示例，无论是跟我一样刚刚入门emacs的新手，还是经验丰富的老兵，都能够从中获得启发。下面，我结合自己的理解和收获谈谈emacs中操作的体会。<br></p>
+以下命令会把 <code>host</code> 主机上的 <code>src_path</code> 文件拷贝到本地 <code>dest_path</code> 目录中。<br></p>
+<div class="highlight"><pre><span></span>scp user@host:src_path dest_path
+</pre></div>
 </div>
 </div>
-
 
 <div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">
-<span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
+<h2 id="sec-2">从本地向远程机器拷贝</h2>
 <div class="outline-text-2" id="text-2">
 <p>
-我之前进行代码段复制的操作是十分基础的，用 <code>C-@</code> 模拟鼠标按下，方向键模拟鼠标拖动，在鼠标拖动的过程中就形成了一个选区，然后用 <code>M-w</code> 对这个选区进行复制操作，用 <code>C-y</code> 粘贴被复制的内容。<br></p>
-
-<p>
-以上操作带出了几个非常重要的概念 。在emacs中，鼠标光标所在位置被称作 <code>point</code> ；组合键 <code>C-@</code> 执行的是 <code>set-mark-command</code> 命令，就是将 <code>point</code> 所在位置标记为 <code>mark</code> ；通过移动光标，也就是移动 <code>point</code> 后，在 <code>point</code> 与 <code>mark</code> 之间就形成了 <code>region</code> 。<br></p>
+以下命令会把本地 <code>src_path</code> 的文件拷贝打 <code>host</code> 主机上的 <code>dest_path</code> 路径上。<br></p>
+<div class="highlight"><pre><span></span>scp src_path user@host:dest_path
+</pre></div>
 </div>
 </div>
-
 
 <div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">
-<span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
+<h2 id="sec-3">拷贝目录下的所有文件</h2>
 <div class="outline-text-2" id="text-3">
-</div>
-<div id="outline-container-sec-3-1" class="outline-3">
-<h3 id="sec-3-1">
-<span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
-<div class="outline-text-3" id="text-3-1">
 <p>
-下面就来介绍一个非常重要的命令 <code>exchange-point-and-mark</code> ，这个命令默认被绑定在组合键 <code>C-x C-x</code> 上，从字面意思上很容易理解这条指令的作用，就是交换 <code>mark</code> 和 <code>point</code> 的位置。这样做的意义在于能够方便地切换 <code>region</code> 的可动边界，这样能够使 <code>region</code> 方便地分别从两端调整大小。<br>
-下面的示例是截取自Paul的博文，需要注意的是，他习惯于使用 <code>C-SPC</code> 调用 <code>set-mark-command</code> 。<br></p>
-
-<div class="highlight"><pre><span></span>Lorem ipsum dolor sit amet
-      ^ Cursor
-
-
-      Point
-      |
-      Mark
-      |
-Lorem ipsum dolor sit amet
-      ^ C-spc
-
-
-      Mark          Point
-      | ----region--|
-      |             |
-Lorem ipsum dolor sit amet
-	 move       ^
-	 forward -&gt;
-
-
-      Mark          Point
-      | ----region--|
-      |             |
-Lorem ipsum dolor sit amet
-		    ^
-		    C-x C-x
-
-
-      Point         Mark
-      | ----region--|
-      |             |
-Lorem ipsum dolor sit amet
-
-Point and mark interchanged
+可以使用 <code>-r</code> 参数完成目录的递归拷贝， <code>r</code> 代表 <code>recursive</code> 递归。<br></p>
+<div class="highlight"><pre><span></span>scp -r user@host:/src_path dest_path
 </pre></div>
 </div>
 </div>
-
-<div id="outline-container-sec-3-2" class="outline-3">
-<h3 id="sec-3-2">
-<span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
-<div class="outline-text-3" id="text-3-2">
-<p>
-对于 <code>region</code> 相关的操作，通常是对已经存在的代码段进行编辑的，如果我们在输入之前就知道有许多字段是需要重复输入的，那么就可以在输入之前设置好 <code>mark</code> ，对输入后形成的 <code>region</code> 完成复制。这个技巧在特定情况能够很大地提升输入效率，但是我个人认为，想要在实战中完成这个操作，还需要保证非常清晰的思路。可以通过下面的示例感受这种操作带来的方便(示例截取自Paul的博文)。<br></p>
-
-<p>
-<img src="/images/post-navigation-and-selection-effectively-in-emacs-1.gif" alt="nil"><br></p>
-
-<p>
-下面给出了详细的操作解析<br></p>
-
-<div class="highlight"><pre><span></span>class
-      ^ C-spc =&gt; Activate mark
-
-class Foo
-	  ^ M-w =&gt; Foo has now been killed (copied)
-
-class Foo extends React.Component&lt;
-				  ^ C-spc =&gt; Activate mark
-
-class Foo extends React.Component&lt;
-				  ^ C-y =&gt; Yank (paste) Foo
-
-class Foo extends React.Component&lt;FooProps
-					  ^ M-w =&gt; FooProps has now been killed (copied)
-
-class Foo extends React.Component&lt;FooProps&gt;
-
-// Later
-interface
-	   ^ C-y =&gt; Yank FooProps
-
-interface FooProps {}
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-3-3" class="outline-3">
-<h3 id="sec-3-3">
-<span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
-</h3>
-<div class="outline-text-3" id="text-3-3">
-<p>
-使用 <code>rectangle-mark-mode</code> 命令，默认快捷键 <code>C-x-SPC</code> ，能够框选出一个矩形的 <code>region</code> 。对于矩形 <code>region</code> ，Paul给出的示例是复制 <code>dired</code> 中的多个文件名称，貌似其他合适的使用场景不太多。<br></p>
-
-<p>
-<img src="/images/post-navigation-and-selection-effectively-in-emacs-2.gif" alt="nil"><br></p>
-</div>
-</div>
-</div>
-
 
 <div id="outline-container-sec-4" class="outline-2">
-<h2 id="sec-4">
-<span class="section-number-2">4</span> 其他插件支持</h2>
+<h2 id="sec-4">在拷贝时限制带宽</h2>
 <div class="outline-text-2" id="text-4">
 <p>
-有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
-</div>
-
-<div id="outline-container-sec-4-1" class="outline-3">
-<h3 id="sec-4-1">
-<span class="section-number-3">4.1</span> helm swoop</h3>
-<div class="outline-text-3" id="text-4-1">
-<p>
-从我个人的使用体验来看 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和helm occur的功能十分相似，它们都提供了方便的关键词跳转功能。<br></p>
-
-<p>
-下面的图片来自helm swoop的 <a href="https://github.com/ShingoFukuyama/helm-swoop">主页</a><br></p>
-
-<p>
-<img src="/images/post-navigation-and-selection-effectively-in-emacs-3.gif" alt="nil"><br></p>
-</div>
-</div>
-
-<div id="outline-container-sec-4-2" class="outline-3">
-<h3 id="sec-4-2">
-<span class="section-number-3">4.2</span> avy</h3>
-<div class="outline-text-3" id="text-4-2">
-<p>
-<a href="https://github.com/abo-abo/avy">avy</a> 的思路非常独特，这样的跳转和定位让我想起了Chrome浏览器中的Vimium插件，他允许我们使用更少的按键就能跳转到当前buffer中的任意位置，略微遗憾的是它只支持拉丁字母，不过在编写代码的大多数情况下是够用的。<br></p>
-
-<p>
-下面的图片来自Paul的博文<br></p>
-
-<p>
-<img src="/images/post-navigation-and-selection-effectively-in-emacs-4.gif" alt="nil"><br></p>
-</div>
-</div>
-</div>
-
-
-<div id="outline-container-sec-5" class="outline-2">
-<h2 id="sec-5">
-<span class="section-number-2">5</span> 参考资料</h2>
-<div class="outline-text-2" id="text-5">
-<ul class="org-ul">
-<li>
-<a href="https://lorefnon.tech/2018/07/14/getting-productive-with-selection-and-navigation-in-emacs/">lorefnon.tech</a><br>
-</li>
-<li>
-<a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a><br>
-</li>
-<li>
-<a href="https://github.com/abo-abo/avy">avy</a><br>
-</li>
-</ul>
-</div>
-</div>
-    </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/shell-output-redirections/" class="u-url">shell的输出重定向</a></h1>
-      <div class="metadata">
-        
-        
-        <div class="date">
-          <a href="/posts/shell-output-redirections/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-07-26T10:02:41+08:00" title="2018-07-26 10:02">2018-07-26 10:02
-            </time></a>
-        </div>
-        
-          <div class="comment">
-            
-        
-    <a href="/posts/shell-output-redirections/#disqus_thread" data-disqus-identifier="cache/posts/shell-output-redirections.html">Comments</a>
-
-
-          </div>
-
-      </div>
-    </header><div class="e-content entry-content">
-      <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">引言</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
-</div>
-</div>
-
-<div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">使用尖括号完成重定向</h2>
-<div class="outline-text-2" id="text-2">
-<p>
-示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
-<div class="highlight"><pre><span></span>ls . &gt; ls-output.txt
+可以使用 <code>-l</code> 参数限制传输的带宽， <code>l</code> 代表 <code>limit</code> 限制，限制带宽的单位是 <code>kbps</code> 。<br>
+命令会在将拷贝传输的速度限制为 100kbps。<br></p>
+<div class="highlight"><pre><span></span>scp -l 100 src_path dest_path
 </pre></div>
-<p>
-可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
-</div>
-
-<div id="outline-container-sec-2-1" class="outline-3">
-<h3 id="sec-2-1">重定向 <code>stdout</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-2-1">
-<div class="highlight"><pre><span></span>ls . <span class="m">1</span>&gt; ls-output.txt
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-2-2" class="outline-3">
-<h3 id="sec-2-2">重定向 <code>stderr</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-2-2">
-<div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt; ls-error.txt
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-2-3" class="outline-3">
-<h3 id="sec-2-3">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
-<div class="outline-text-3" id="text-2-3">
-<div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> ls-output-and-error.txt
-</pre></div>
-<p>
-以下命令具有相同的效果<br></p>
-<div class="highlight"><pre><span></span>ls . <span class="p">&amp;</span>&gt; ls-output-and-error.txt
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-2-4" class="outline-3">
-<h3 id="sec-2-4">将程序的输出丢掉</h3>
-<div class="outline-text-3" id="text-2-4">
-<p>
-可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
-<div class="highlight"><pre><span></span>program &gt; /dev/null
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-2-5" class="outline-3">
-<h3 id="sec-2-5">将输出追加到指定文件尾部</h3>
-<div class="outline-text-3" id="text-2-5">
-<p>
-使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
-<div class="highlight"><pre><span></span><span class="nb">echo</span> <span class="nb">test</span> &gt;&gt; file-output.txt
-</pre></div>
-</div>
-</div>
-</div>
-
-<div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">使用管道完成重定向</h2>
-<div class="outline-text-2" id="text-3">
-<p>
-使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
-<div class="highlight"><pre><span></span>ls <span class="p">|</span> grep &lt;pattern&gt;
-</pre></div>
-</div>
-</div>
-    </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/notes-on-libshmcache/" class="u-url">libshmcache源码阅读笔记</a></h1>
-      <div class="metadata">
-        
-        
-        <div class="date">
-          <a href="/posts/notes-on-libshmcache/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-07-23T10:51:59+08:00" title="2018-07-23 10:51">2018-07-23 10:51
-            </time></a>
-        </div>
-        
-          <div class="comment">
-            
-        
-    <a href="/posts/notes-on-libshmcache/#disqus_thread" data-disqus-identifier="cache/posts/notes-on-libshmcache.html">Comments</a>
-
-
-          </div>
-
-      </div>
-    </header><div class="e-content entry-content">
-      <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">引言</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
-
-<p>
-libshmcache与redis相似的是都使用内存进行数据缓存；与redis不同的是，redis使用的进程自己申请的动态内存，而libshmcache使用的是共享内存。使用共享内存就意味着libshmcache主要的应用场景是同一台主机上的数据缓存。<br></p>
-
-<p>
-我花了一周时间阅读了比较感兴趣的部分代码，收获不少，现就以下几个方面总结一下自己的心得：<br></p>
-<ul class="org-ul">
-<li>纯C语言开发的代码风格<br>
-</li>
-<li>hash table的原理和实现<br>
-</li>
-<li>gcc原子化操作接口<br>
-</li>
-<li>有锁写和无锁读的实现细节<br>
-</li>
-<li>共享内存的两套函数接口(POSIX和SystemV)<br>
-</li>
-</ul>
-</div>
-</div>
-
-
-<div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-2">
-<p>
-我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
-
-<p>
-纵观所有项目代码，我感受比较深的就是使用结构体中嵌套匿名结构体，这样做能够增强数据结构的层次感，示例代码如下：<br></p>
-<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">shmcache_context</span> <span class="p">{</span>
-    <span class="kt">pid_t</span> <span class="n">pid</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">lock_fd</span><span class="p">;</span>    <span class="c1">//for file lock</span>
-    <span class="kt">int</span> <span class="n">detect_deadlock_clocks</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="n">shmcache_config</span> <span class="n">config</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="n">shm_memory_info</span> <span class="o">*</span><span class="n">memory</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="p">{</span>
-	<span class="k">struct</span> <span class="n">shmcache_segment_info</span> <span class="n">hashtable</span><span class="p">;</span>
-	<span class="k">struct</span> <span class="p">{</span>
-	    <span class="kt">int</span> <span class="n">count</span><span class="p">;</span>
-	    <span class="k">struct</span> <span class="n">shmcache_segment_info</span> <span class="o">*</span><span class="n">items</span><span class="p">;</span>
-	<span class="p">}</span> <span class="n">values</span><span class="p">;</span>
-    <span class="p">}</span> <span class="n">segments</span><span class="p">;</span>
-
-    <span class="k">struct</span> <span class="n">shmcache_value_allocator_context</span> <span class="n">value_allocator</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="n">shmcache_list</span> <span class="n">list</span><span class="p">;</span>   <span class="c1">//for value recycle</span>
-    <span class="kt">bool</span> <span class="n">create_segment</span><span class="p">;</span>  <span class="c1">//if check segment size                                  </span>
-<span class="p">};</span>
-</pre></div>
-<p>
-注意 <code>shmcache_context</code> 中的匿名结构体 <code>segments</code> 和 <code>values</code> ，这样的写法体现了相互包含关系，也使后续的操作该数据结构的语句更加容易理解。<br></p>
-
-<p>
-另外对于联合体和位域这两种技术也是我在之前开发中使用比较少的，通过阅读源码能够让我对其有了更深刻的理解。示例代码如下：<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">shm_hentry_offset</span> <span class="p">{</span>
-    <span class="kt">int64_t</span> <span class="n">offset</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="p">{</span>
-	<span class="kt">int</span> <span class="nl">index</span> <span class="p">:</span><span class="mi">16</span><span class="p">;</span>
-	<span class="kt">int64_t</span> <span class="nl">offset</span> <span class="p">:</span><span class="mi">48</span><span class="p">;</span>
-    <span class="p">}</span> <span class="n">segment</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-<p>
-这段代码使用了联合体赋予了 <code>shm_hentry_offset</code> 两种访问方式，又使用了位域将 <code>int64_t</code> 分割为两段。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-3">
-<p>
-libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
-之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
-对于hash计算中出现的hash值冲突，即在hash计算时出现了两个不同的key在经过hash计算后得到的bucket相同，libshmcache采用的解决方案是使用linked list来存放这些相同bucket对应的value。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-sec-4" class="outline-2">
-<h2 id="sec-4">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-4">
-<p>
-使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-sec-5" class="outline-2">
-<h2 id="sec-5">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-5">
-<p>
-在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
-对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
-将 <code>pthread_mutex_t</code> 保存在共享内存中，不同的进程通过映射共享内存就能获得同一个互斥量，通过这个互斥量就能完成进程间同步。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-sec-6" class="outline-2">
-<h2 id="sec-6">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-6">
-<p>
-在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
 </div>
     </div>
@@ -1005,11 +334,10 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
     moment.locale("en");
     fancydates(2, "YYYY-MM-DD HH:mm");
   </script><!-- end fancy dates --><!-- Baidu Analytics --><script>
-var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
   hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
-  var s = document.getElementsByTagName("script")[0]; 
+  var s = document.getElementsByTagName("script")[0];
   s.parentNode.insertBefore(hm, s);
 })();
 </script>
