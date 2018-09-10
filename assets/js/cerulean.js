@@ -15,5 +15,10 @@ function initScrollTop () {
 }
 
 $(document).ready(function () {
+
+  $("img[data-src]").lazyload({
+    data_attribute: "src"
+  });
+
   initScrollTop();
 });
