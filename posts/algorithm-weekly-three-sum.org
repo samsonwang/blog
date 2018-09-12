@@ -30,5 +30,66 @@ A solution set is:
 来源：[[https://leetcode.com/problems/3sum/description/][leetcode.com 15 3Sum]]
 
 ** Solution
-
 *** Approach 1
+这道题有点难度，第一时间没有什么思路。我想到的主要问题是如何保证返回结果中不包含重复的一组数。如果使用暴力解法，将所有满足条件的组合取到后进行重复性清洗，应该是一种可行的解法，只是这样做时间复杂度有点高。
+
+下面的代码就是暴力解法的实现。不出意外，在leetcode中结果为超时。这种算法的时间复杂度为 =O(n^3 * nlogn) + O(n^2)= 。
+#+BEGIN_SRC cpp
+vector<vector<int>> threeSum(vector<int>& nums) {
+    vector<vector<int>> ans;
+    for (size_t i=0; i<nums.size(); ++i) {
+        int n1 = nums[i];
+        for (size_t j=i+1; j<nums.size(); ++j) {
+            int n2 = nums[j];
+            for (size_t k=j+1; k<nums.size(); ++k) {
+                int n3 = nums[k];
+                if (n1 + n2 + n3 == 0) {
+                    vector<int> triplet{n1, n2, n3};
+                    sort(triplet.begin(), triplet.end());
+                    ans.push_back(triplet);
+                }
+            }
+        }
+    }
+
+    // 将结果中的重复组合删掉
+    for (vector<vector<int>>::iterator it1 = ans.begin();
+         it1 != ans.end(); ++it1) {
+        for (vector<vector<int>>::iterator it2=it1+1; it2!=ans.end();) {
+            if (*it1 == *it2) {
+                it2 = ans.erase(it2);
+            }
+            else {
+                ++it2;
+            }
+        }
+    }
+
+    return ans;
+}
+#+END_SRC
+从上面这个解法中，我能够得到的 +教训+ 经验是对 =vector= 进行具有删除操作的循环时，使用迭代器完成更不容易出错。我之前的去重逻辑是这样的。
+#+BEGIN_SRC cpp
+for (int i=0; i<ans.size(); ++i) {
+    for (int j=i+1; j<ans.size(); ++j) {
+        if (ans[i] == ans[j]) {
+            ans.erase(ans.begin() + j);
+        }
+    }
+}
+#+END_SRC
+很显然，上面的代码在一些情况下并不能彻底删去所有重复的元素，下面的代码才是真正正确的实现。
+#+BEGIN_SRC cpp
+for (int i=0; i<ans.size(); ++i) {
+    for (int j=i+1; j<ans.size();) {
+        if (ans[i] == ans[j]) {
+            ans.erase(ans.begin() + j);
+        }
+        else {
+            ++j;
+        }
+    }
+}
+#+END_SRC
+
+*** Approach 2
