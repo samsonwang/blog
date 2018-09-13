@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about network)</title><link>http://samsonwang.me/</link><description></description><atom:link href="http://samsonwang.me/tags/category-network.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:wangzhilv@gmail.com"&gt;Samson Wang&lt;/a&gt; 
+&lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
+</copyright><lastBuildDate>Thu, 13 Sep 2018 09:42:47 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>客户端使用非阻塞socket进行connect的流程</title><link>http://samsonwang.me/posts/non-blocking-socket-connect-tips/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;问题&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+使用非阻塞（ &lt;code&gt;non-blocking&lt;/code&gt; ） socket尝试与服务端建立连接（ &lt;code&gt;connect&lt;/code&gt; ）时，由于是io非阻塞的，所以 &lt;code&gt;connect&lt;/code&gt; 函数会立即返回，那么如何判断client与server连接成功了呢？&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;解答&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;p&gt;
+客户端建立连接的示例代码如下：&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;res&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fd&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;...);&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;res&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;errno&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;EINPROGRESS&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// case1. error, fail somehow, close socket&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;res&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// case2. connection has succeeded immediately&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// case3. connection attempt is in progress&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;
+由于是非阻塞模式，所以 &lt;code&gt;connect&lt;/code&gt; 之后会直接返回，根据返回值 &lt;code&gt;res&lt;/code&gt; 和 &lt;code&gt;errno&lt;/code&gt; 能够判断建立连接的结果。&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;case1，表示连接失败；&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;case2，表示连接建立成功；&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;case3，表示正在建立连接的过程中，在这个情况下，需要等待socket变成可写（writable）状态，可以使用 &lt;code&gt;select&lt;/code&gt; 或 &lt;code&gt;epoll&lt;/code&gt; 完成；&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;
+在 case3 情况下，socket可写后，执行下面的代码检查socket是否出现错误。&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;case4和case5，表示socket出现了错误，将会关闭连接；&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;case6，表示连接建立成功，可以开始 &lt;code&gt;read&lt;/code&gt; 和 &lt;code&gt;write&lt;/code&gt; 了。&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;result&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kt"&gt;socklen_t&lt;/span&gt; &lt;span class="n"&gt;result_len&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;sizeof&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;result&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;getsockopt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fd&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;SOL_SOCKET&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;SO_ERROR&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;result&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;result_len&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// case4. error, fail somehow, close socket&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;result&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// case5. connection failed; error code is in 'result'&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="c1"&gt;// case6. socket is ready for read()/write()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-3" class="outline-2"&gt;
+&lt;h2 id="sec-3"&gt;参考资料&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-3"&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883"&gt;stackoverflow.com&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>network</category><category>nio</category><category>non-blocking</category><category>socket</category><guid>http://samsonwang.me/posts/non-blocking-socket-connect-tips/</guid><pubDate>Fri, 31 Aug 2018 09:04:19 GMT</pubDate></item></channel></rss>
