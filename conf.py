@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals
+# from __future__ import unicode_literals
 import time
 
 # !! This is the configuration of Nikola. !! #
@@ -210,7 +210,9 @@ PAGES = (
 )
 
 
+##########################################
 # Below this point, everything is optional
+#########################################
 
 # Post's dates are considered in UTC by default, if you want to use
 # another time zone, please set TIMEZONE to match. Check the available
@@ -337,14 +339,6 @@ COMPILERS = {
 # Writes tag cloud data in form of tag_cloud_data.json.
 # Warning: this option will change its default value to False in v8!
 WRITE_TAG_CLOUD = True
-
-# Generate pages for each section. The site must have at least two sections
-# for this option to take effect. It wouldn't build for just one section.
-POSTS_SECTIONS = True
-
-# Setting this to False generates a list page instead of an index. Indexes
-# are the default and will apply GENERATE_ATOM if set.
-# POSTS_SECTIONS_ARE_INDEXES = True
 
 # Final locations are:
 # output / TRANSLATION[lang] / SECTION_PATH / SECTION_NAME / index.html (list of posts for a section)
@@ -481,6 +475,11 @@ CATEGORY_OUTPUT_FLAT_HIERARCHY = False
 # If CATEGORY_PAGES_ARE_INDEXES is set to True, each category's page will contain
 # the posts themselves. If set to False, it will be just a list of links.
 # CATEGORY_PAGES_ARE_INDEXES = False
+
+# If no category is specified in a post, the destination path of the post
+# can be used in its place. This replaces the sections feature. Using
+# category hierarchies is recommended.
+# CATEGORY_DESTPATH_AS_DEFAULT = FALSE
 
 # Set descriptions for category pages to make them more interesting. The
 # default is no description. The value is used in the meta description
