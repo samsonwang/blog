@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article# " lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reactor模式 | Hack Note</title>
+<link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="http://samsonwang.me/posts/reactor-pattern/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/asynchronous-synchronous-and-blocking-unblocking/" title="同步和异步、阻塞和非阻塞" type="text/html">
+<link rel="next" href="/posts/gdb-display-contents-of-memory-address/" title="在gdb中查看指定内存地址的内容" type="text/html">
+</head>
+<body>
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav class="navbar navbar-inverse navbar-fixed-top"><div class="container">
+  <!-- This keeps the margins nice -->
+
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="http://samsonwang.me/">
+
+        <span id="blog-title">Hack Note</span>
+      </a>
+    </div>
+
+    <!-- /.navbar-header -->
+    <div class="collapse navbar-collapse" id="bs-navbar" aria-expanded="false">
+      <ul class="nav navbar-nav">
+<li>
+<a href="/archive/">Archives</a>
+                </li>
+<li>
+<a href="/tags/">Tags</a>
+                </li>
+<li>
+<a href="/listings/">Listings</a>
+                </li>
+<li>
+<a href="/galleries/">Galleries</a>
+                </li>
+<li>
+<a href="/rss.xml">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="nav navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-sm-9">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name"><a href="/posts/reactor-pattern/" class="u-url">Reactor模式</a></h1>
+
+      <div class="metadata">
+        <div class="author">
+            Samson Wang
+        </div>
+        <div class="date">
+          <a href="/posts/reactor-pattern/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-06-28T09:58:43+08:00" itemprop="datePublished" title="2018-06-28 09:58">2018-06-28 09:58
+            </time></a>
+        </div>
+        
+        
+    <div class="source">
+      <p class="sourceline"><a href="/posts/reactor-pattern/index.org" class="sourcelink">Source</a></p>
+    </div>
+
+        
+          
+      </div>
+      
+
+  </header><ul itemprop="keywords" class="tags">
+    Tags : 
+        <li><a class="tag p-category" href="/tags/design-pattern/" rel="tag">design pattern</a></li>
+        <li><a class="tag p-category" href="/tags/network/" rel="tag">network</a></li>
+    </ul>
+<div class="e-content entry-content" itemprop="articleBody text">
+    <div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">
+<span class="section-number-2">1</span> 什么是Reactor模式</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Reactor模式是一种事件驱动的设计模式，用于处理多输入源的并发服务请求。服务处理者（service handler）将接收到的服务请求同步分发给每个请求处理者（request handler）。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">
+<span class="section-number-2">2</span> Reactor模式的优缺点</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">
+<span class="section-number-3">2.1</span> 优点</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+节选自 DC.Shmidt 的论文<br></p>
+<blockquote>
+<ul class="org-ul">
+<li>Separation of concerns: The Reactor pattern decouples application-independent demultiplexing and dispatching mechanisms from application-specific hook method functionality. The application-independent mechanisms become reusable components that know how to demultiplex events and dispatch the appropriate hook methods defined by Event Handlers. In contrast, the application-specific functionality in a hook method knows how to perform a particular type of service.<br>
+</li>
+
+<li>Improve modularity, reusability, and configurability of event-driven applications: The pattern decouples application functionality into separate classes. For instance, there are two separate classes in the logging server: one for establishing connections and another for receiving and processing logging records. This decoupling enables the reuse of the connection establishment class for different types of connection-oriented services (such as file transfer, remote login, and video-on-demand). Therefore, modifying or extending the functionality of the logging server only affects the implementation of the logging handler class.<br>
+</li>
+
+<li>Improves application portability: The Initiation Dispatcher’s interface can be reused independently of the OS system calls that perform event demultiplexing. These system calls detect and report the occurrence of one or more events that may occur simultaneously on multiple sources of events. Common sources of events may include I/O handles, timers, and synchronization objects. On UNIX platforms, the event demultiplexing system calls are called select and poll. In the Win32 API, the WaitForMultipleObjects system call performs event demultiplexing.<br>
+</li>
+
+<li>Provides coarse-grained concurrency control: The Reactor pattern serializes the invocation of event handlers at the level of event demultiplexing and dispatching within a process or thread. Serialization at the Initiation Dispatcher level often eliminates the need for more complicated synchronization or locking within an application process.<br>
+</li>
+</ul>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">
+<span class="section-number-3">2.2</span> 缺点</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+节选的 DC.Schmidt 的论文<br></p>
+<blockquote>
+<ul class="org-ul">
+<li>Restricted applicability: The Reactor pattern can only be applied efficiently if the OS supports Handles. It is possible to emulate the semantics of the Reactor pattern using multiple threads within the Initiation Dispatcher, e.g. one thread for each Handle. Whenever there are events available on a handle, its associated thread will read the event and place it on a queue that is processed sequentially by the initiation dispatcher. However, this design is typically very inefficient since it serializes all Event Handlers, thereby increasing synchronization and context switching overhead without enhancing parallelism.<br>
+</li>
+
+<li>Non-preemptive: In a single-threaded application process, Event Handlers are not preempted while they are executing. This implies that an Event Handler should not perform blocking I/O on an individual Handle since this will block the entire process and impede the responsiveness for clients connected to other Handles. Therefore, for long-duration operations, such as transferring multimegabyte medical images, the Active Object pattern may be more effective. An Active Object uses multithreading or multi-processing to complete its tasks in parallel with the Initiation Dispatcher’s main event-loop.<br>
+</li>
+
+<li>Hard to debug: Applications written with the Reactor pattern can be hard to debug since the inverted flow of control oscillates between the framework infrastructure and the method callbacks on application-specific handlers. This increases the difficulty of “single-stepping” through the runtime behavior of a framework within a debugger since application developers may not understand or have access to the framework code. This is similar to the problems encountered trying to debug a compiler lexical analyzer and parser written with LEX and YACC. In these applications, debugging is straightforward when the thread of control is within the user-defined action routines. Once the thread of control returns to the generated Deterministic Finite Automata (DFA) skeleton, however, it is hard to follow the program logic.<br>
+</li>
+</ul>
+</blockquote>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">
+<span class="section-number-2">3</span> 使用Reactor模式的代码示例</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+D.C.shmidt提出的Reactor模式，在他的ACE框架中广泛使用了该设计模式。<br>
+libevent是否是使用Reactor模式进行设计编写的呢？<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">
+<span class="section-number-2">4</span> Reactor模式与Proactor模式</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+Proacotor模式是一种异步IO的方式，。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5">
+<span class="section-number-2">5</span> 参考资料</h2>
+<div class="outline-text-2" id="text-5">
+<ul class="org-ul">
+<li>
+<a href="https://en.wikipedia.org/wiki/Reactor_pattern">https://en.wikipedia.org/wiki/Reactor_pattern</a><br>
+</li>
+<li>
+<a href="http://www.cs.wustl.edu/~schmidt/PDF/reactor-siemens.pdf">http://www.cs.wustl.edu/~schmidt/PDF/reactor-siemens.pdf</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/9138294/what-is-the-difference-between-event-driven-model-and-reactor-pattern">https://stackoverflow.com/questions/9138294/what-is-the-difference-between-event-driven-model-and-reactor-pattern</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-sm-3 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+<div class="sidebar-aboutme">
+<p>Zeal for coding, C++ developer.</p>
+<p>Focus on linux server dev.</p>
+<p>I use EMACS, and I am learning python.</p>
+<p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
+</div>
+
+</div>
+
+       
+<div class="sidebar-module">
+  <h4>Categories</h4>
+  
+<ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category_cpp/">cpp</a>
+</li>
+<li>
+<a href="/tags/category_emacs/">emacs</a>
+</li>
+<li>
+<a href="/tags/category_linux/">linux</a>
+</li>
+<li>
+<a href="/tags/category_windows/">windows</a>
+</li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+        <ul class="pager hidden-print">
+<li class="previous">
+                <a href="/posts/asynchronous-synchronous-and-blocking-unblocking/" rel="prev" title="同步和异步、阻塞和非阻塞">Previous post</a>
+            </li>
+            <li class="next">
+                <a href="/posts/gdb-display-contents-of-memory-address/" rel="next" title="在gdb中查看指定内存地址的内容">Next post</a>
+            </li>
+        </ul>
+<div class="row">
+  <section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="http://samsonwang.me/posts/reactor-pattern/",
+        disqus_title="Reactor\u6a21\u5f0f",
+        disqus_identifier="cache/posts/reactor-pattern.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section>
+</div>
+
+        
+       <script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2018 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><script src="https://cdn.bootcss.com/jquery_lazyload/1.9.7/jquery.lazyload.min.js"></script><script src="https://cdn.bootcss.com/jquery.colorbox/1.6.4/jquery.colorbox-min.js"></script><script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><script>
+    $('a.image-reference:not(.islink) img:not(.islink)').parent().colorbox({rel:"gal",maxWidth:"100%",maxHeight:"100%",scalePhotos:true});
+  </script><!-- fancy dates --><script>
+    moment.locale("en");
+    fancydates(2, "YYYY-MM-DD HH:mm");
+  </script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+#+BEGIN_COMMENT
+.. title:
+.. slug: epoll-study-note
+.. date: 2018-07-27 14:31:30 UTC+08:00
+.. tags: nikola
+.. category:
+.. link:
+.. description:
+.. type: text
+·· status: draft
+#+END_COMMENT
+
+#+TITLE: epoll学习笔记
+
+** “水平触发”与“边缘触发”
+
+水平触发：英文是level-triggered，简称LT，会得到所有可读（readable）的文件描述符
+边缘触发：英文是edge-triggered，简称ET，在文件描述符变成可读状态时得到通知
+
+所以，在水平触发模式时，必须将文件描述符中的数据都都读出来，让文件描述符由可读变为不可读的状态。只有这样，在文件描述符中有新数据可读时，epoll才会重新发出通知。
+
+=epoll= 在水平触发模式下就是一个速度更快的 =poll= ，能够使用在任何 =poll= 的使用场景。
+=epoll= 在边缘触发模式（ET）下需要使用非阻塞IO，以防止任务在处理多个文件描述符时卡住。
+
+边缘触发模式的 =epoll= 推荐用法：
+1. 使用非阻塞的文件描述符
+2. 调用 =read= 或 =write= 直到返回 =EAGAIN= 后再等待下一个事件
+
+
+** epoll相关的函数接口
+
+头文件
+#+BEGIN_SRC c
+#include <sys/epoll.h>
+#+END_SRC
+
+*** =epoll_create=
+用于创建一个epoll文件描述符
+#+BEGIN_SRC c
+int epoll_create(int size);
+int epoll_create1(int flags);
+#+END_SRC
+
+对于 =epoll_create= 的 =size= 参数的问题，对于最初的实现 =size= 参数用于通知内核调用者希望添加到 =epoll= 实例中文件描述符个数。内核会使用这个参数作为预分配描述事件的数据结构的依据。而现在，内核会动态调整需要数据结构而不再需要这个参数了，为了保证代码运行在较旧内核上的兼容性，只需要保证 =size= 大于0即可。
+
+
+
+*** =epoll_ctrl=
+
+
+*** =epoll_wait=

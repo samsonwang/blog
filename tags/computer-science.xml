@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about computer science)</title><link>http://samsonwang.me/</link><description></description><atom:link href="http://samsonwang.me/tags/computer-science.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:wangzhilv@gmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Mon, 10 Sep 2018 10:19:07 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>同步和异步、阻塞和非阻塞</title><link>http://samsonwang.me/posts/asynchronous-synchronous-and-blocking-unblocking/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+</copyright><lastBuildDate>Thu, 13 Sep 2018 09:01:28 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>同步和异步、阻塞和非阻塞</title><link>http://samsonwang.me/posts/asynchronous-synchronous-and-blocking-unblocking/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
 &lt;h2 id="sec-1"&gt;&lt;span class="section-number-2"&gt;1&lt;/span&gt; 同步和异步&lt;/h2&gt;
 &lt;div class="outline-text-2" id="text-1"&gt;
 &lt;p&gt;
@@ -170,7 +170,48 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description><category>computer science</category><guid>http://samsonwang.me/posts/asynchronous-synchronous-and-blocking-unblocking/</guid><pubDate>Tue, 26 Jun 2018 01:27:06 GMT</pubDate></item><item><title>字节序与union类型</title><link>http://samsonwang.me/posts/endianness-and-union-type/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;/div&gt;</description><category>computer science</category><guid>http://samsonwang.me/posts/asynchronous-synchronous-and-blocking-unblocking/</guid><pubDate>Tue, 26 Jun 2018 01:27:06 GMT</pubDate></item><item><title>线程与进程之间的比较</title><link>http://samsonwang.me/posts/compares-between-thread-and-process/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;进程与线程之间有什么区别&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+进程（process）是指在系统中正在运行的一个应用程序，是系统资源分配的基本单位，在内存中有其完备的数据空间和代码空间，拥有完整的虚拟空间地址。一个进程所拥有的数据和变量只属于它自己。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+线程（thread）是进程内相对独立的可执行单元，所以也被称为轻量进程（lightweight processes）；是操作系统进行任务调度的基本单元。它与父进程的其它线程共享该进程所拥有的全部代码空间和全局变量，但拥有独立的堆栈（即局部变量对于线程来说是私有的）。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+进程和线程都具有就绪、阻塞和运行三种基本状态。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;联系&lt;/b&gt;&lt;br&gt;
+ 一个进程至少拥有一个线程——主线程，也可以拥有多个线程；一个线程必须有一个父进程。多个进程可以并发执行；一个线程可以创建和撤销另一个线程；同一个进程中的多个线程之间可以并发执行。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;区别&lt;/b&gt;&lt;br&gt;
+系统开销：在创建或撤消进程时，由于系统都要为之分配和回收资源，导致系统的开销明显大于创建或撤消线程时的开销&lt;br&gt;
+资源管理：进程有独立的地址空间，一个进程崩溃后，在保护模式下不会对其它进程产生影响，而线程只是一个进程中的不同执行路径。线程有自己的堆栈和局部变量，但线程之间没有单独的地址空间，一个线程死掉就等于整个进程死掉，所以多进程的程序要比多线程的程序健壮，但在进程切换时，耗费资源较大，效率要差一些。但对于一些要求同时进行并且又要共享某些变量的并发操作，只能用线程，不能用进程。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+通信方式：进程间通信主要包括管道、系统IPC(包括消息队列,信号量,共享存储)、SOCKET，具体说明参考linux进程间通信方式。进程间通信其实是指分属于不同进程的线程之间的通讯，所以进程间的通信方法同样适用于线程间的通信。但对应归于同一进程的不同线程来说，使用全局变量进行通信效率会更高。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;a href="https://blog.csdn.net/xiexievv/article/details/7294189"&gt;https://blog.csdn.net/xiexievv/article/details/7294189&lt;/a&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+
+
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;为什么创建进程的开销要比创建线程的开销更大&lt;/h2&gt;
+&lt;/div&gt;</description><category>computer science</category><guid>http://samsonwang.me/posts/compares-between-thread-and-process/</guid><pubDate>Thu, 24 May 2018 01:51:15 GMT</pubDate></item><item><title>字节序与union类型</title><link>http://samsonwang.me/posts/endianness-and-union-type/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
 &lt;h2 id="sec-1"&gt;字节序&lt;/h2&gt;
 &lt;div class="outline-text-2" id="text-1"&gt;
 &lt;p&gt;
