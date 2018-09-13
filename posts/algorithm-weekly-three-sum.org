@@ -2,7 +2,7 @@
 .. title: 每周算法：三数之和
 .. slug: algorithm-weekly-three-sum
 .. date: 2018-09-10 16:14:02 UTC+08:00
-.. tags: draft, leetcode, algorithm
+.. tags: leetcode, algorithm
 .. category: algorithm
 .. link: https://leetcode.com/problems/3sum/description/
 .. description:
@@ -93,3 +93,54 @@ for (int i=0; i<ans.size(); ++i) {
 #+END_SRC
 
 *** Approach 2
+
+我认为这到题的主要难点啊主要是在去除重复的问题上。下面的解法来自 [[https://leetcode.com/problems/3sum/discuss/7402/Share-my-AC-C++-solution-around-50ms-O(N*N)-with-explanation-and-comments][leetcode]] ，在处理重复性问题时，在匹配答案时将重复的数字跳过，这样就不用在后续的结果中进行剔除重复元素的步骤了。
+
+#+BEGIN_SRC cpp
+vector<vector<int> > threeSum(vector<int> &num) {
+
+    std::sort(num.begin(), num.end());
+
+    vector<vector<int> > res;
+    for (int i = 0; i < num.size(); i++) {
+
+        int target = -num[i];
+        int front = i + 1;
+        int back = num.size() - 1;
+
+        while (front < back) {
+
+            int sum = num[front] + num[back];
+
+            // Finding answer which start from number num[i]
+            if (sum < target)
+                front++;
+
+            else if (sum > target)
+                back--;
+
+            else {
+                vector<int> triplet = {num[i], num[front], num[back]};
+                res.push_back(triplet);
+
+                // Processing duplicates of Number 2
+                // Rolling the front pointer to the next different number forwards
+                while (front < back && num[front] == triplet[1])
+                    ++front;
+            }
+        }
+
+        // Processing duplicates of Number 1
+        while (i + 1 < num.size() && num[i + 1] == num[i])
+            ++i;
+    }
+
+    return res;
+}
+#+END_SRC
+
+上面的代码中，只需要跳过 =front= 所对应的数字就好，因为 =back= 对应的数字会自然地随 =front= 变化而变化。
+
+
+** Reference
+- [[https://leetcode.com/problems/3sum/discuss/7402/Share-my-AC-C++-solution-around-50ms-O(N*N)-with-explanation-and-comments][leetcode.com discuss]]
