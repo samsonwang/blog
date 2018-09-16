@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about liunx)</title><link>http://samsonwang.me/</link><description></description><atom:link href="http://samsonwang.me/tags/liunx.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:wangzhilv@gmail.com"&gt;Samson Wang&lt;/a&gt; 
+&lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
+</copyright><lastBuildDate>Sun, 16 Sep 2018 03:33:56 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>在shell中使用正则表达式</title><link>http://samsonwang.me/posts/using-regexp-in-linux-shell/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;引言&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+本篇文章主要是针对shell中的 &lt;code&gt;grep&lt;/code&gt; 和 &lt;code&gt;egrep&lt;/code&gt; 的讲解，对于正则表达式的规则本身并没有太多的内容。在阅读本篇文章之前，读者应该对正则表达式有个大致的了解。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;&lt;code&gt;grep&lt;/code&gt; 命令&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;p&gt;
+&lt;code&gt;grep&lt;/code&gt; 命令是linux终端中最常用的命令之一，它的全称是“global regular expression print”，从字面上理解， &lt;code&gt;grep&lt;/code&gt; 可以用来进行正则表达式匹配。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;常用选项&lt;/b&gt;&lt;br&gt;
+使用一些选项命令能够更加方便地进行匹配&lt;br&gt;
+&lt;code&gt;-i&lt;/code&gt; 忽略大小写&lt;br&gt;
+&lt;code&gt;-v&lt;/code&gt; 进行逆向匹配&lt;br&gt;
+&lt;code&gt;-n&lt;/code&gt; 打印行号&lt;br&gt;
+&lt;code&gt;--color=auto&lt;/code&gt; 彩色输出结果&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;支持的表达式&lt;/b&gt;&lt;br&gt;
+正则表达式有很多规则， &lt;code&gt;grep&lt;/code&gt; 支持的有如下：&lt;br&gt;
+在每一行的开始&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;grep &lt;span class="s2"&gt;"^GUN"&lt;/span&gt; GPL-3
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+在每一行的结尾&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;grep &lt;span class="s2"&gt;"and&lt;/span&gt;$&lt;span class="s2"&gt;"&lt;/span&gt; GPL-3
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+匹配任意字符&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;grep &lt;span class="s2"&gt;"..cept"&lt;/span&gt; GPL-3
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+在指定的字符中进行匹配&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;grep &lt;span class="s2"&gt;"t[wo]o"&lt;/span&gt; GPL-3
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+在指定的字符中进行逆向匹配&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;grep &lt;span class="s2"&gt;"[^c]ode"&lt;/span&gt; GPL-3
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+使用范围来指定字符&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;grep &lt;span class="s2"&gt;"^[A-Z]"&lt;/span&gt; GPL-3
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+限定出现的次数为0次或0次以上&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;grep &lt;span class="s2"&gt;"([A-Za-z ]*)"&lt;/span&gt; GPL-3
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-3" class="outline-2"&gt;
+&lt;h2 id="sec-3"&gt;&lt;code&gt;egrep&lt;/code&gt; 命令&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-3"&gt;
+&lt;p&gt;
+&lt;code&gt;egrep&lt;/code&gt; 的含义为“extended grep”，相对于 &lt;code&gt;grep&lt;/code&gt; 有更多的正则表达式特性。同样，可以在使用 &lt;code&gt;grep&lt;/code&gt; 时增加 &lt;code&gt;-E&lt;/code&gt; 参数获得相同的效果。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;表达式分组&lt;/b&gt;&lt;br&gt;
+使用括号能够将表达式进行分组，下面的任何一个都能够实现这个效果&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;grep &lt;span class="s2"&gt;"\(grouping\)"&lt;/span&gt; file.txt
+grep -E &lt;span class="s2"&gt;"(grouping)"&lt;/span&gt; file.txt
+egrep &lt;span class="s2"&gt;"(grouping)"&lt;/span&gt; file.txt
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+表达式进行中多选一&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;egrep &lt;span class="s2"&gt;"(GPL|General Public License)"&lt;/span&gt; GPL-3
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+匹配的重复次数为0次或0次以上，与 &lt;code&gt;*&lt;/code&gt; 限定符类似，但是 &lt;code&gt;?&lt;/code&gt; 可以作用于一组字符&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;egrep &lt;span class="s2"&gt;"(copy)?right"&lt;/span&gt; GPL-3
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+指定匹配的重复次数&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;egrep &lt;span class="s2"&gt;"[AEIOUaeiou]{3}"&lt;/span&gt; GPL-3
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+
+&lt;div id="outline-container-sec-4" class="outline-2"&gt;
+&lt;h2 id="sec-4"&gt;参考资料&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-4"&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;&lt;a href="https://www.digitalocean.com/community/tutorials/using-grep-regular-expressions-to-search-for-text-patterns-in-linux"&gt;digital ocean - grep tutorial&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://man7.org/linux/man-pages/man1/grep.1.html"&gt;linux man page&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>egrep</category><category>grep</category><category>liunx</category><category>shell</category><guid>http://samsonwang.me/posts/using-regexp-in-linux-shell/</guid><pubDate>Sun, 16 Sep 2018 01:47:01 GMT</pubDate></item></channel></rss>

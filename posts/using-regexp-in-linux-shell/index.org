@@ -1,0 +1,93 @@
+#+BEGIN_COMMENT
+.. title: 在shell中使用正则表达式
+.. slug: using-regexp-in-linux-shell
+.. date: 2018-09-16 09:47:01 UTC+08:00
+.. tags: shell, liunx, grep, egrep
+.. category: linux
+.. link:
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 在shell中使用正则表达式
+
+** 引言
+本篇文章主要是针对shell中的 =grep= 和 =egrep= 的讲解，对于正则表达式的规则本身并没有太多的内容。在阅读本篇文章之前，读者应该对正则表达式有个大致的了解。
+
+** =grep= 命令
+=grep= 命令是linux终端中最常用的命令之一，它的全称是“global regular expression print”，从字面上理解， =grep= 可以用来进行正则表达式匹配。
+
+*常用选项*
+使用一些选项命令能够更加方便地进行匹配
+=-i= 忽略大小写
+=-v= 进行逆向匹配
+=-n= 打印行号
+=--color=auto= 彩色输出结果
+
+*支持的表达式*
+正则表达式有很多规则， =grep= 支持的有如下：
+在每一行的开始
+#+BEGIN_SRC sh
+grep "^GUN" GPL-3
+#+END_SRC
+
+在每一行的结尾
+#+BEGIN_SRC sh
+grep "and$" GPL-3
+#+END_SRC
+
+匹配任意字符
+#+BEGIN_SRC sh
+grep "..cept" GPL-3
+#+END_SRC
+
+在指定的字符中进行匹配
+#+BEGIN_SRC sh
+grep "t[wo]o" GPL-3
+#+END_SRC
+
+在指定的字符中进行逆向匹配
+#+BEGIN_SRC sh
+grep "[^c]ode" GPL-3
+#+END_SRC
+
+使用范围来指定字符
+#+BEGIN_SRC sh
+grep "^[A-Z]" GPL-3
+#+END_SRC
+
+限定出现的次数为0次或0次以上
+#+BEGIN_SRC sh
+grep "([A-Za-z ]*)" GPL-3
+#+END_SRC
+
+** =egrep= 命令
+=egrep= 的含义为“extended grep”，相对于 =grep= 有更多的正则表达式特性。同样，可以在使用 =grep= 时增加 =-E= 参数获得相同的效果。
+
+*表达式分组*
+使用括号能够将表达式进行分组，下面的任何一个都能够实现这个效果
+#+BEGIN_SRC sh
+grep "\(grouping\)" file.txt
+grep -E "(grouping)" file.txt
+egrep "(grouping)" file.txt
+#+END_SRC
+
+表达式进行中多选一
+#+BEGIN_SRC sh
+egrep "(GPL|General Public License)" GPL-3
+#+END_SRC
+
+匹配的重复次数为0次或0次以上，与 =*= 限定符类似，但是 =?= 可以作用于一组字符
+#+BEGIN_SRC sh
+egrep "(copy)?right" GPL-3
+#+END_SRC
+
+指定匹配的重复次数
+#+BEGIN_SRC sh
+egrep "[AEIOUaeiou]{3}" GPL-3
+#+END_SRC
+
+
+** 参考资料
+- [[https://www.digitalocean.com/community/tutorials/using-grep-regular-expressions-to-search-for-text-patterns-in-linux][digital ocean - grep tutorial]]
+- [[http://man7.org/linux/man-pages/man1/grep.1.html][linux man page]]
