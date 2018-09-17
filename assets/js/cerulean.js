@@ -14,11 +14,33 @@ function initScrollTop () {
   });
 }
 
-$(document).ready(function () {
-
+function initLazyLoad () {
   $("img[data-src]").lazyload({
     data_attribute: "src"
   });
+}
 
+function initNavbar () {
+  var $navbar = $("nav.navbar");
+
+  AdjustHeader(); // Incase the user loads the page from halfway down (or something);
+  $(window).scroll(function() {
+      AdjustHeader();
+  });
+
+  function AdjustHeader(){
+    if ($(window).scrollTop() > 5) {
+      if ($navbar.hasClass("fixed-top")) {
+        $navbar.removeClass("fixed-top");
+      }
+    } else {
+      $navbar.addClass("fixed-top");
+    }
+  }
+}
+
+$(document).ready(function () {
+//  initNavbar();
+  initLazyLoad();
   initScrollTop();
 });
