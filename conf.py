@@ -142,7 +142,7 @@ NAVIGATION_LINKS = {
 }
 
 # Name of the theme to use.
-#THEME = "bootstrap3"
+#THEME = "bootstrap4"
 THEME = "cerulean"
 
 # Primary color of your theme. This will be used to customize your theme.
@@ -876,9 +876,8 @@ FEED_LINKS_APPEND_QUERY = False
 # I recommend using the Creative Commons' wizard:
 # https://creativecommons.org/choose/
 LICENSE = """
-<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="border-width:0; vertical-align:text-top;" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /></a>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /></a>
 """
-
 
 # A small copyright notice for the page footer (in HTML).
 # (translatable)
