@@ -1,0 +1,94 @@
+#+BEGIN_COMMENT
+.. title: 每周算法：电话拨号盘上的字符组合
+.. slug: algorithm-weekly-letter-combinations-of-a-phone-number
+.. date: 2018-09-18 15:46:00 UTC+08:00
+.. tags: algorithm, leetcode
+.. category: algorithm
+.. link: https://leetcode.com/problems/letter-combinations-of-a-phone-number/description/
+.. description:
+.. type: text
+.. status: draft
+#+END_COMMENT
+
+#+TITLE: 每周算法：电话拨号盘上的字符组合
+
+** Description
+Given a string containing digits from =2-9= inclusive, return all possible letter combinations that the number could represent.
+
+A mapping of digit to letters (just like on the telephone buttons) is given below. Note that 1 does not map to any letters.
+
+| 1     | 2abc | 3def  |
+| 4ghi  | 5jkl | 6mno  |
+| 7pqrs | 8tuv | 9wxyz |
+
+*Example:*
+#+BEGIN_EXAMPLE
+Input: "23"
+Output: ["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"].
+#+END_EXAMPLE
+
+*Note:*
+Although the above answer is in lexicographical order, your answer could be in any order you want.
+
+来源：[[https://leetcode.com/problems/letter-combinations-of-a-phone-number/description/][leetcode 17 letter combinations of a phone number]]
+
+** Solution
+
+*** Approach 1
+借助加法计算进位的思想，下面是我的解法。一开始我并没有注意输入字符串为空的情况，这个需要注意。
+
+#+BEGIN_SRC cpp
+vector<string> letterCombinations(string digits) {
+    vector<string> ans;
+    if (digits.empty()) {
+        return ans;
+    }
+
+    vector<string> letters {"",  "", "abc", "def", "ghi",
+            "jkl", "mno", "pqrs", "tuv", "wxyz"};
+    vector<int> nums;
+    for (char ch : digits) {
+        int n = ch - '0';
+        nums.push_back(n);
+    }
+
+    // 类似于数学进位的思想
+    vector<int> carry(nums.size(), 0);
+
+    do{
+        string str;
+        for (size_t i=0; i<carry.size(); ++i) {
+            str += letters[nums[i]] [carry[i]];
+        }
+        ans.push_back(str);
+
+        int c = 1;
+        for (int i=carry.size()-1; i >= 0; --i) {
+            int d = carry[i] + c;
+            if (d >= letters[nums[i]].size()) {
+                carry[i] = 0;
+                c = 1;
+            }
+            else {
+                carry[i] = d;
+                c = 0;
+                break;
+            }
+        }
+
+        if ( 1 == c) {
+            break;
+        }
+
+    } while (1);
+
+    return ans;
+}
+#+END_SRC
+我在想的是这个算法的时间复杂度是多少，
+
+*** Approach 2
+使用递归
+
+*** Approach 3
+深度优先搜索
