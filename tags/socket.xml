@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about socket)</title><link>http://samsonwang.me/</link><description></description><atom:link href="http://samsonwang.me/tags/socket.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:wangzhilv@gmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Tue, 18 Sep 2018 04:20:20 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>客户端使用非阻塞socket进行connect的流程</title><link>http://samsonwang.me/posts/non-blocking-socket-connect-tips/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+</copyright><lastBuildDate>Tue, 18 Sep 2018 07:16:28 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>客户端使用非阻塞socket进行connect的流程</title><link>http://samsonwang.me/posts/non-blocking-socket-connect-tips/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
 &lt;h2 id="sec-1"&gt;问题&lt;/h2&gt;
 &lt;div class="outline-text-2" id="text-1"&gt;
 &lt;p&gt;
@@ -74,4 +74,115 @@
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description><category>network</category><category>nio</category><category>non-blocking</category><category>socket</category><guid>http://samsonwang.me/posts/non-blocking-socket-connect-tips/</guid><pubDate>Fri, 31 Aug 2018 09:04:19 GMT</pubDate></item></channel></rss>
+&lt;/div&gt;</description><category>network</category><category>nio</category><category>non-blocking</category><category>socket</category><guid>http://samsonwang.me/posts/non-blocking-socket-connect-tips/</guid><pubDate>Fri, 31 Aug 2018 09:04:19 GMT</pubDate></item><item><title>Linux下的FIFO、pipe、unix domain socket漫谈</title><link>http://samsonwang.me/posts/fifo-pipe-unix-domain-socket/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+在做Linux开发时，经常会接触 &lt;code&gt;管道&lt;/code&gt; 、 &lt;code&gt;AF_UNIX&lt;/code&gt; 等相关词汇，为了弄清他们之间的关系，查阅了一些资料，将结果整理并记录下来。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;1. &lt;code&gt;FIFO&lt;/code&gt; 与 &lt;code&gt;pipe&lt;/code&gt; 的比较&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+FIFO可以通过 &lt;code&gt;mkfifo fifo_file&lt;/code&gt; 在本地创建一个文件用来表示一个管道，数据的交换是在操作系统内核完成的，所以在文件中没有内容。&lt;br&gt;
+FIFO可以看做是一个带有名字的管道，我们在命令行中使用的管道是匿名管道。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;
+A FIFO special file (a named pipe) is similar to a pipe, except that it is accessed as part of the file system. It can be opened by multiple processes for reading or writing. When processes are exchanging data via the FIFO, the kernel passes all data internally without writing it to the file system. Thus, the FIFO special file has no contents on the file system; the file system entry merely serves as a reference point so that processes can access the pipe using a name in the file system.&lt;br&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;
+以上内容截取自Linux的帮助文档（ &lt;code&gt;man fifo&lt;/code&gt; ）&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;2. &lt;code&gt;FIFO&lt;/code&gt; 与 &lt;code&gt;unix domain socket&lt;/code&gt; 的比较&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;p&gt;
+FIFO与unix domain socket在他们的实现方式上有相似之处，但是他们是完全不同的两个概念。&lt;br&gt;
+FIFO是更底层的进程间通信方式，允许一端写入数据，另外一端读取数据；unix domain socket与 &lt;code&gt;TCP/IP&lt;/code&gt; 的套接字很相似。&lt;br&gt;
+socket是双工的，支持多个进程同时访问。进程可以一个socket上同时允许多个客户端进程接入。在每次有新的 &lt;code&gt;connect&lt;/code&gt; 或 &lt;code&gt;accept&lt;/code&gt; 时， 操作系统内核会分配一个新的文件描述符，通信数据包会送达正确的进程。&lt;br&gt;
+FIFO并不支持以上特性。需要两个FIFO才能完成双工通信。对于每个客户端都需要一对FIFO才能完成通信交互。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;
+UNIX domain sockets and FIFO may share some part of their implementation but they are conceptually very different. FIFO functions at a very low level. One process writes bytes into the pipe and another one reads from it. A UNIX domain socket has the same behaviour as a TCP/IP socket.&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+A socket is bidirectional and can be used by a lot of processes simultaneously. A process can accept many connections on the same socket and attend several clients simultaneously. The kernel delivers a new file descriptor each time connect(2) or accept(2) is called on the socket. The packets will always go to the right process.&lt;br&gt;
+On a FIFO, this would be impossible. For bidirectional comunication, you need two FIFOs, and you need a pair of FIFOs for each of your clients. There is no way of writing or reading in a selective way, because they are a much more primitive way to communicate.&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+Anonymous pipes and FIFOs are very similar. The difference is that anonymous pipes don't exist as files on the filesystem so no process can open(2) it. They are used by processes that share them by another method. If a process opens a FIFOs and then performs, for example, a fork(2), its child will inherit its file descriptors and, among them, the pipe.&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+The UNIX domain sockets, anonymous pipes and FIFOs are similar in the fact they use shared memory segments. The details of implementation may vary from one system to another but the idea is always the same: attach the same portion of memory in two distinct processes memory mapping to have them sharing data&lt;br&gt;
+(edit: that would one obvious way to implement it but that is not how it is actually done in Linux, which simply uses the kernel memory for the buffers, see answer by @tjb63 below).&lt;br&gt;
+The kernel then handles the system calls and abstracts the mechanism.&lt;br&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;
+以上内容截取自 &lt;a href="https://unix.stackexchange.com/questions/75904/are-fifo-pipe-unix-domain-socket-the-same-thing-in-linux-kernel"&gt;unix stackexchange&lt;/a&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-3" class="outline-2"&gt;
+&lt;h2 id="sec-3"&gt;3. &lt;code&gt;unix-domain-socket&lt;/code&gt; 与 &lt;code&gt;ip socket&lt;/code&gt; 的比较&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-3"&gt;
+&lt;p&gt;
+unix domain socket是一种进程间通信方式，支持跑在同一个机器上的两个进程的双向数据交互。&lt;br&gt;
+ip socket是一种网络通信方式，能够让两个进程通过网络完成数据交互。&lt;br&gt;
+unix domain socket是针对于文件系统限制访问权限，而ip socket只能在过滤包的级别完成访问控制。&lt;br&gt;
+unix domain socket比ip socket的效率更高，因为省去了校验检查、路由等操作步骤。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+以下内容摘抄自 freebsd list:&lt;br&gt;
+&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;
+There are a few differences that might be of interest, in addition to the already pointed out difference that if you start out using IP sockets, you don't have to migrate to them later when you want inter-machine connectivity:&lt;br&gt;
+&lt;/p&gt;
+
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;UNIX domain sockets use the file system as the address name space.  This means you can use UNIX file permissions to control access to communicate with them.  I.e., you can limit what other processes can connect to the daemon – maybe one user can, but the web server can't, or the like. With IP sockets, the ability to connect to your daemon is exposed off the current system, so additional steps may have to be taken for security.  On the other hand, you get network transparency.  With UNIX domain sockets, you can actually retrieve the credential of the process that created the remote socket, and use that for access control also, which can be quite convenient on multi-user systems.&lt;br&gt;
+&lt;/li&gt;
+
+&lt;li&gt;IP sockets over localhost are basically looped back network on-the-wire IP. There is intentionally "no special knowledge" of the fact that the connection is to the same system, so no effort is made to bypass the normal IP stack mechanisms for performance reasons. For example, transmission over TCP will always involve two context switches to get to the remote socket, as you have to switch through the netisr, which occurs following the "loopback" of the packet through the synthetic loopback interface. Likewise, you get all the overhead of ACKs, TCP flow control, encapsulation/decapsulation, etc. Routing will be performed in order to decide if the packets go to the localhost. Large sends will have to be broken down into MTU-size datagrams, which also adds overhead for large writes.  It's really TCP, it just goes over a loopback interface by virtue of a special address, or discovering that the address requested is served locally rather than over an ethernet (etc).&lt;br&gt;
+&lt;/li&gt;
+
+&lt;li&gt;UNIX domain sockets have explicit knowledge that they're executing on the same system. They avoid the extra context switch through the netisr, and a sending thread will write the stream or datagrams directly into the receiving socket buffer. No checksums are calculated, no headers are inserted, no routing is performed, etc. Because they have access to the remote socket buffer, they can also directly provide feedback to the sender when it is filling, or more importantly, emptying, rather than having the added overhead of explicit acknowledgement and window changes. The one piece of functionality that UNIX domain sockets don't provide that TCP does is out-of-band data. In practice, this is an issue for almost noone.&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;
+In general, the argument for implementing over TCP is that it gives you location independence and immediate portability – you can move the client or the daemon, update an address, and it will "just work".  The sockets layer provides a reasonable abstraction of communications services, so it's not hard to write an application so that the connection/binding portion knows about TCP and UNIX domain sockets, and all the rest just uses the socket it's given.  So if you're looking for performance locally, I think UNIX domain sockets probably best meet your need.  Many people will code to TCP anyway because performance is often less critical, and the network portability benefit is substantial.&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+Right now, the UNIX domain socket code is covered by a subsystem lock; I have a version that used more fine-grain locking, but have not yet evaluated the performance impact of those changes.  I've you're running in an SMP environment with four processors, it could be that those changes might positively impact performance, so if you'd like the patches, let me know.  Right now they're on my schedule to start testing, but not on the path for inclusion in FreeBSD 5.4.  The primary benefit of greater granularity would be if you had many pairs of threads/processes communicating across processors using UNIX domain sockets, and as a result there was substantial contention on the UNIX domain socket subsystem lock. The patches don't increase the cost of normal send/receive operations, but due add extra mutex operations in the listen/accept/connect/bind paths.&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+Robert N M Watson&lt;br&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;
+参考资料如下：&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;&lt;a href="https://unix.stackexchange.com/questions/236983/differences-between-unix-domain-sockets-and-network-sockets?utm_medium=organic&amp;amp;utm_source=google_rich_qa&amp;amp;utm_campaign=google_rich_qa"&gt;unix stackexchange&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://lists.freebsd.org/pipermail/freebsd-performance/2005-February/001143.html"&gt;lists freebsd&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>fifo</category><category>ipc</category><category>linux</category><category>pipe</category><category>socket</category><guid>http://samsonwang.me/posts/fifo-pipe-unix-domain-socket/</guid><pubDate>Wed, 11 Apr 2018 05:03:25 GMT</pubDate></item></channel></rss>

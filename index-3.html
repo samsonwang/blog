@@ -731,7 +731,7 @@ A FIFO special file (a named pipe) is similar to a pipe, except that it is acces
 <p>
 FIFO与unix domain socket在他们的实现方式上有相似之处，但是他们是完全不同的两个概念。<br>
 FIFO是更底层的进程间通信方式，允许一端写入数据，另外一端读取数据；unix domain socket与 <code>TCP/IP</code> 的套接字很相似。<br>
-socket是双工的，支持多个进程同时访问。进程可以一个socket上同时允许多个客户端进程接入。在每次有新的 <code>connect</code> 或 ~accept~时， 操作系统内核会分配一个新的文件描述符，通信数据包会送达正确的进程。<br>
+socket是双工的，支持多个进程同时访问。进程可以一个socket上同时允许多个客户端进程接入。在每次有新的 <code>connect</code> 或 <code>accept</code> 时， 操作系统内核会分配一个新的文件描述符，通信数据包会送达正确的进程。<br>
 FIFO并不支持以上特性。需要两个FIFO才能完成双工通信。对于每个客户端都需要一对FIFO才能完成通信交互。<br></p>
 
 <blockquote>
@@ -765,94 +765,41 @@ unix domain socket是针对于文件系统限制访问权限，而ip socket只�
 unix domain socket比ip socket的效率更高，因为省去了校验检查、路由等操作步骤。<br></p>
 
 <p>
+以下内容摘抄自 freebsd list:<br></p>
+<blockquote>
+<p>
+There are a few differences that might be of interest, in addition to the already pointed out difference that if you start out using IP sockets, you don't have to migrate to them later when you want inter-machine connectivity:<br></p>
+
+<ul class="org-ul">
+<li>UNIX domain sockets use the file system as the address name space.  This means you can use UNIX file permissions to control access to communicate with them.  I.e., you can limit what other processes can connect to the daemon – maybe one user can, but the web server can't, or the like. With IP sockets, the ability to connect to your daemon is exposed off the current system, so additional steps may have to be taken for security.  On the other hand, you get network transparency.  With UNIX domain sockets, you can actually retrieve the credential of the process that created the remote socket, and use that for access control also, which can be quite convenient on multi-user systems.<br>
+</li>
+
+<li>IP sockets over localhost are basically looped back network on-the-wire IP. There is intentionally "no special knowledge" of the fact that the connection is to the same system, so no effort is made to bypass the normal IP stack mechanisms for performance reasons. For example, transmission over TCP will always involve two context switches to get to the remote socket, as you have to switch through the netisr, which occurs following the "loopback" of the packet through the synthetic loopback interface. Likewise, you get all the overhead of ACKs, TCP flow control, encapsulation/decapsulation, etc. Routing will be performed in order to decide if the packets go to the localhost. Large sends will have to be broken down into MTU-size datagrams, which also adds overhead for large writes.  It's really TCP, it just goes over a loopback interface by virtue of a special address, or discovering that the address requested is served locally rather than over an ethernet (etc).<br>
+</li>
+
+<li>UNIX domain sockets have explicit knowledge that they're executing on the same system. They avoid the extra context switch through the netisr, and a sending thread will write the stream or datagrams directly into the receiving socket buffer. No checksums are calculated, no headers are inserted, no routing is performed, etc. Because they have access to the remote socket buffer, they can also directly provide feedback to the sender when it is filling, or more importantly, emptying, rather than having the added overhead of explicit acknowledgement and window changes. The one piece of functionality that UNIX domain sockets don't provide that TCP does is out-of-band data. In practice, this is an issue for almost noone.<br>
+</li>
+</ul>
+<p>
+In general, the argument for implementing over TCP is that it gives you location independence and immediate portability – you can move the client or the daemon, update an address, and it will "just work".  The sockets layer provides a reasonable abstraction of communications services, so it's not hard to write an application so that the connection/binding portion knows about TCP and UNIX domain sockets, and all the rest just uses the socket it's given.  So if you're looking for performance locally, I think UNIX domain sockets probably best meet your need.  Many people will code to TCP anyway because performance is often less critical, and the network portability benefit is substantial.<br></p>
+
+<p>
+Right now, the UNIX domain socket code is covered by a subsystem lock; I have a version that used more fine-grain locking, but have not yet evaluated the performance impact of those changes.  I've you're running in an SMP environment with four processors, it could be that those changes might positively impact performance, so if you'd like the patches, let me know.  Right now they're on my schedule to start testing, but not on the path for inclusion in FreeBSD 5.4.  The primary benefit of greater granularity would be if you had many pairs of threads/processes communicating across processors using UNIX domain sockets, and as a result there was substantial contention on the UNIX domain socket subsystem lock. The patches don't increase the cost of normal send/receive operations, but due add extra mutex operations in the listen/accept/connect/bind paths.<br></p>
+
+<p>
+Robert N M Watson<br></p>
+</blockquote>
+
+<p>
 参考资料如下：<br></p>
-<ol class="org-ol">
+<ul class="org-ul">
 <li>
 <a href="https://unix.stackexchange.com/questions/236983/differences-between-unix-domain-sockets-and-network-sockets?utm_medium=organic&amp;utm_source=google_rich_qa&amp;utm_campaign=google_rich_qa">unix stackexchange</a><br>
 </li>
 <li>
 <a href="https://lists.freebsd.org/pipermail/freebsd-performance/2005-February/001143.html">lists freebsd</a><br>
 </li>
-</ol>
-<blockquote>
-<p>
-There are a few differences that might be of interest, in addition to the<br>
-already pointed out difference that if you start out using IP sockets, you<br>
-don't have to migrate to them later when you want inter-machine<br>
-connectivity:<br></p>
-
-<ul class="org-ul">
-<li>UNIX domain sockets use the file system as the address name space.  This<br>
-means you can use UNIX file permissions to control access to communicate<br>
-with them.  I.e., you can limit what other processes can connect to the<br>
-daemon – maybe one user can, but the web server can't, or the like.<br>
-With IP sockets, the ability to connect to your daemon is exposed off<br>
-the current system, so additional steps may have to be taken for<br>
-security.  On the other hand, you get network transparency.  With UNIX<br>
-domain sockets, you can actually retrieve the credential of the process<br>
-that created the remote socket, and use that for access control also,<br>
-which can be quite convenient on multi-user systems.<br>
-</li>
-
-<li>IP sockets over localhost are basically looped back network on-the-wire<br>
-IP.  There is intentionally "no special knowledge" of the fact that the<br>
-connection is to the same system, so no effort is made to bypass the<br>
-normal IP stack mechanisms for performance reasons.  For example,<br>
-transmission over TCP will always involve two context switches to get to<br>
-the remote socket, as you have to switch through the netisr, which<br>
-occurs following the "loopback" of the packet through the synthetic<br>
-loopback interface.  Likewise, you get all the overhead of ACKs, TCP<br>
-flow control, encapsulation/decapsulation, etc.  Routing will be<br>
-performed in order to decide if the packets go to the localhost.<br>
-Large sends will have to be broken down into MTU-size datagrams, which<br>
-also adds overhead for large writes.  It's really TCP, it just goes over<br>
-a loopback interface by virtue of a special address, or discovering that<br>
-the address requested is served locally rather than over an ethernet<br>
-(etc).<br>
-</li>
-
-<li>UNIX domain sockets have explicit knowledge that they're executing on<br>
-the same system.  They avoid the extra context switch through the<br>
-netisr, and a sending thread will write the stream or datagrams directly<br>
-into the receiving socket buffer.  No checksums are calculated, no<br>
-headers are inserted, no routing is performed, etc.  Because they have<br>
-access to the remote socket buffer, they can also directly provide<br>
-feedback to the sender when it is filling, or more importantly,<br>
-emptying, rather than having the added overhead of explicit<br>
-acknowledgement and window changes.  The one piece of functionality that<br>
-UNIX domain sockets don't provide that TCP does is out-of-band data.  In<br>
-practice, this is an issue for almost noone.<br>
-</li>
 </ul>
-<p>
-In general, the argument for implementing over TCP is that it gives you<br>
-location independence and immediate portability – you can move the client<br>
-or the daemon, update an address, and it will "just work".  The sockets<br>
-layer provides a reasonable abstraction of communications services, so<br>
-it's not hard to write an application so that the connection/binding<br>
-portion knows about TCP and UNIX domain sockets, and all the rest just<br>
-uses the socket it's given.  So if you're looking for performance locally,<br>
-I think UNIX domain sockets probably best meet your need.  Many people<br>
-will code to TCP anyway because performance is often less critical, and<br>
-the network portability benefit is substantial.<br></p>
-
-<p>
-Right now, the UNIX domain socket code is covered by a subsystem lock; I<br>
-have a version that used more fine-grain locking, but have not yet<br>
-evaluated the performance impact of those changes.  I've you're running in<br>
-an SMP environment with four processors, it could be that those changes<br>
-might positively impact performance, so if you'd like the patches, let me<br>
-know.  Right now they're on my schedule to start testing, but not on the<br>
-path for inclusion in FreeBSD 5.4.  The primary benefit of greater<br>
-granularity would be if you had many pairs of threads/processes<br>
-communicating across processors using UNIX domain sockets, and as a result<br>
-there was substantial contention on the UNIX domain socket subsystem lock.<br>
-The patches don't increase the cost of normal send/receive operations, but<br>
-due add extra mutex operations in the listen/accept/connect/bind paths.<br></p>
-
-<p>
-Robert N M Watson<br></p>
-</blockquote>
 </div>
 </div>
     </div>
