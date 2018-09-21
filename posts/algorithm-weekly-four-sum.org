@@ -1,0 +1,139 @@
+#+BEGIN_COMMENT
+.. title: 每周算法：四数之和
+.. slug: algorithm-weekly-four-sum
+.. date: 2018-09-21 09:56:09 UTC+08:00
+.. tags: algorithm, leetcode
+.. category: algorithm
+.. link: https://leetcode.com/problems/4sum/description/
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 每周算法：四数之和
+
+** Description
+Given an array =nums= of n integers and an integer =target= , are there elements /a/, /b/, /c/, and /d/ in =nums= such that /a/ + /b/ + /c/ + /d/ = =target= ? Find all unique quadruplets in the array which gives the sum of =target= .
+
+*Note:*
+The solution set must not contain duplicate quadruplets.
+
+*Example:*
+#+BEGIN_EXAMPLE
+Given array nums = [1, 0, -1, 0, -2, 2], and target = 0.
+
+A solution set is:
+[
+  [-1,  0, 0, 1],
+  [-2, -1, 1, 2],
+  [-2,  0, 0, 2]
+]
+#+END_EXAMPLE
+
+** Solution
+
+*** Apporach 1 暴力解法
+将所有的组合穷举出来，与目标进行逐一比对，将满足条件的组合收集起来，就能得到结果。需要注意的是去除结果中的重复项。
+#+BEGIN_SRC cpp
+vector<vector<int>> fourSum(vector<int>& nums, int target) {
+    set<vector<int>> ans;
+    for (size_t i = 0; i < nums.size(); ++i) {
+        for (size_t j=i+1; j < nums.size(); ++j) {
+            for (size_t k=j+1; k < nums.size(); ++k) {
+                for (size_t m=k+1; m < nums.size(); ++m) {
+                    if (nums[i] + nums[j] + nums[k] + nums[m] == target) {
+                        vector<int> t({nums[i], nums[j], nums[k], nums[m]});
+                        sort(t.begin(), t.end());
+                        ans.insert(t);
+                    }
+                }
+            }
+        }
+    }
+    return vector<vector<int>>(ans.begin(), ans.end());
+}
+#+END_SRC
+
+*** Approach 2 拓展3sum算法
+这道题的与之前的 [[link:/posts/algorithm-weekly-three-sum/][3 sum]] 十分类似，通过简单的拓展就能得到该问题的解法。
+#+BEGIN_SRC cpp
+vector<vector<int>> fourSum(vector<int>& nums, int target) {
+    vector<vector<int>> ans;
+    std::sort(nums.begin(), nums.end());
+    for (size_t i = 0; i < nums.size();) {
+        int n1 = nums[i];
+        int target_1 = target - n1;
+        for (size_t j=i+1; j<nums.size();) {
+            int n2 = nums[j];
+            int target_2 = target_1 - n2;
+
+            int front = j+1;
+            int end = nums.size() - 1;
+            while (front < end) {
+                int n3 = nums[front];
+                int sum = n3 + nums[end];
+                if (sum == target_2) {
+                    ans.push_back(vector<int> ({n1, n2, n3, nums[end]}));
+                    do { ++front; } while(front < end && nums[front] == n3);
+                }
+                else if (sum > target_2) {
+                    --end;
+                }
+                else {
+                    ++front;
+                }
+            }
+            do { ++j; } while (j<nums.size() && nums[j] == n2);
+        }
+        do { ++i; } while (i < nums.size() && nums[i] == n1);
+    }
+    return ans;
+}
+#+END_SRC
+
+*** Approach 3 优化的拓展3sum算法
+在 approach 2 的基础上，增加一些边界条件判断，能够很大程度上提升算法的速度。下面的代码截取自leetcode，通过增加边界条件的判断，可以明显缩短代码的运行耗时。其中注释的代码是令一种较慢边界条件的判断方法，该代码的作者进一步优化了边界条件的判断逻辑。可以说，这种解法就是压榨算法的性能。这种优化方法是值得思考和学习的。
+#+BEGIN_SRC cpp
+vector<vector<int>> fourSum(vector<int>& nums, int target) {
+    vector<vector<int>> res;
+    if (nums.size() < 4) return res;
+    sort(nums.begin(), nums.end());
+    int len = nums.size();
+    for (int i = 0; i < len-3; i++) {
+        //avoid duplicate
+        if (i > 0 && nums[i] == nums[i-1]) continue;
+        // if (nums[i] + nums[i+1] + nums[i+2] + nums[i+3] > target) break;
+        // if (nums[i] + nums[len-3] + nums[len-2] + nums[len-1] < target) continue;
+        //version3: less tight pruning
+        if (4 * nums[i] > target) break;
+        if (nums[i] +  3 * nums[len-1] < target) continue;
+        for (int j = i+1; j < len-2; ++j) {
+            if (j > i+1 && nums[j] == nums[j-1]) continue;
+            // if (nums[i] + nums[j] + nums[j+1] + nums[j+2] > target) break;
+            // if (nums[i] + nums[j] + nums[len-2] + nums[len-1] < target) continue;
+            //version3: less tight pruning
+            if (nums[i] + 3* nums[j] > target) break;
+            if (nums[i] + nums[j] + 2 * nums[len-1] < target) continue;
+            //now the problems becomes 3 sum problem and only two other elements only to be considered
+            int left  = j+1, right = len-1;
+            int sofar = nums[i] + nums[j];
+            while (left < right) {
+                if (sofar + nums[left] + nums[right] == target) {
+                    res.push_back(vector<int>({nums[i], nums[j], nums[left], nums[right]}));
+                    //how to skip the duplicate left and right
+                    //version1: my own version
+                    //  left++;
+                    //  right--;
+                    //  while (left < right && nums[left-1] == nums[left])  ++left;
+                    // while (right > left && nums[right+1] == nums[right]) --right;
+                    //version2: refer others
+                    do{left++;} while (left < right && nums[left] == nums[left-1]);
+                    do{right--;} while (right > left && nums[right] == nums[right+1]);
+                }
+                else if (sofar + nums[left] + nums[right] < target) left++;
+                else right--;
+            }
+        }
+    }
+    return res;
+}
+#+END_SRC
