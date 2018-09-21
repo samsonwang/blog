@@ -17,7 +17,7 @@
 <link rel="canonical" href="http://samsonwang.me/">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
 <link rel="next" href="/index-6.html" type="text/html">
-<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><link rel="prefetch" href="/posts/breadth-first-search/" type="text/html">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><link rel="prefetch" href="/posts/algorithm-weekly-four-sum/" type="text/html">
 </head>
 <body>
 <a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
@@ -75,7 +75,176 @@
 
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/breadth-first-search/" class="u-url">广度优先搜索</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/algorithm-weekly-four-sum/" class="u-url">每周算法：四数之和</a></h1>
+      <div class="metadata">
+
+
+        <div class="date">
+          <a href="/posts/algorithm-weekly-four-sum/" rel="bookmark">
+            <time class="published dt-published" datetime="2018-09-21T09:56:09+08:00" title="2018-09-21 09:56">2018-09-21 09:56
+            </time></a>
+        </div>
+
+          <div class="comment">
+            
+        
+    <a href="/posts/algorithm-weekly-four-sum/#disqus_thread" data-disqus-identifier="cache/posts/algorithm-weekly-four-sum.html">Comments</a>
+
+
+          </div>
+
+      </div>
+    </header><div class="e-content entry-content">
+      <div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">Description</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Given an array <code>nums</code> of n integers and an integer <code>target</code> , are there elements <i>a</i>, <i>b</i>, <i>c</i>, and <i>d</i> in <code>nums</code> such that <i>a</i> + <i>b</i> + <i>c</i> + <i>d</i> = <code>target</code> ? Find all unique quadruplets in the array which gives the sum of <code>target</code> .<br></p>
+
+<p>
+<b>Note:</b><br>
+The solution set must not contain duplicate quadruplets.<br></p>
+
+<p>
+<b>Example:</b><br></p>
+<pre class="example">
+Given array nums = [1, 0, -1, 0, -2, 2], and target = 0.
+
+A solution set is:
+[
+  [-1,  0, 0, 1],
+  [-2, -1, 1, 2],
+  [-2,  0, 0, 2]
+]
+</pre>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">Solution</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">Apporach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+将所有的组合穷举出来，与目标进行逐一比对，将满足条件的组合收集起来，就能得到结果。需要注意的是去除结果中的重复项。<br></p>
+<div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">fourSum</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">set</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">ans</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">k</span><span class="o">=</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">k</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">m</span><span class="o">=</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span> <span class="n">m</span> <span class="o">&lt;</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">m</span><span class="p">)</span> <span class="p">{</span>
+		    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">==</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+			<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">t</span><span class="p">({</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">nums</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">nums</span><span class="p">[</span><span class="n">m</span><span class="p">]});</span>
+			<span class="n">sort</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">t</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+			<span class="n">ans</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">t</span><span class="p">);</span>
+		    <span class="p">}</span>
+		<span class="p">}</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="n">ans</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">ans</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">Approach 2 拓展3sum算法</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+这道题的与之前的 <a href="/posts/algorithm-weekly-three-sum/">3 sum</a> 十分类似，通过简单的拓展就能得到该问题的解法。<br></p>
+<div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">fourSum</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">ans</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">nums</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();)</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="n">n1</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+	<span class="kt">int</span> <span class="n">target_1</span> <span class="o">=</span> <span class="n">target</span> <span class="o">-</span> <span class="n">n1</span><span class="p">;</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();)</span> <span class="p">{</span>
+	    <span class="kt">int</span> <span class="n">n2</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+	    <span class="kt">int</span> <span class="n">target_2</span> <span class="o">=</span> <span class="n">target_1</span> <span class="o">-</span> <span class="n">n2</span><span class="p">;</span>
+
+	    <span class="kt">int</span> <span class="n">front</span> <span class="o">=</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span>
+	    <span class="kt">int</span> <span class="n">end</span> <span class="o">=</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="k">while</span> <span class="p">(</span><span class="n">front</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kt">int</span> <span class="n">n3</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">front</span><span class="p">];</span>
+		<span class="kt">int</span> <span class="n">sum</span> <span class="o">=</span> <span class="n">n3</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">end</span><span class="p">];</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">sum</span> <span class="o">==</span> <span class="n">target_2</span><span class="p">)</span> <span class="p">{</span>
+		    <span class="n">ans</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="p">({</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n3</span><span class="p">,</span> <span class="n">nums</span><span class="p">[</span><span class="n">end</span><span class="p">]}));</span>
+		    <span class="k">do</span> <span class="p">{</span> <span class="o">++</span><span class="n">front</span><span class="p">;</span> <span class="p">}</span> <span class="k">while</span><span class="p">(</span><span class="n">front</span> <span class="o">&lt;</span> <span class="n">end</span> <span class="o">&amp;&amp;</span> <span class="n">nums</span><span class="p">[</span><span class="n">front</span><span class="p">]</span> <span class="o">==</span> <span class="n">n3</span><span class="p">);</span>
+		<span class="p">}</span>
+		<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">sum</span> <span class="o">&gt;</span> <span class="n">target_2</span><span class="p">)</span> <span class="p">{</span>
+		    <span class="o">--</span><span class="n">end</span><span class="p">;</span>
+		<span class="p">}</span>
+		<span class="k">else</span> <span class="p">{</span>
+		    <span class="o">++</span><span class="n">front</span><span class="p">;</span>
+		<span class="p">}</span>
+	    <span class="p">}</span>
+	    <span class="k">do</span> <span class="p">{</span> <span class="o">++</span><span class="n">j</span><span class="p">;</span> <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">j</span><span class="o">&lt;</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="n">n2</span><span class="p">);</span>
+	<span class="p">}</span>
+	<span class="k">do</span> <span class="p">{</span> <span class="o">++</span><span class="n">i</span><span class="p">;</span> <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">n1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-2-3" class="outline-3">
+<h3 id="sec-2-3">Approach 3 优化的拓展3sum算法</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+在 approach 2 的基础上，增加一些边界条件判断，能够很大程度上提升算法的速度。下面的代码截取自leetcode，通过增加边界条件的判断，可以明显缩短代码的运行耗时。其中注释的代码是令一种较慢边界条件的判断方法，该代码的作者进一步优化了边界条件的判断逻辑。可以说，这种解法就是压榨算法的性能。这种优化方法是值得思考和学习的。<br></p>
+<div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">fourSum</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">res</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">)</span> <span class="k">return</span> <span class="n">res</span><span class="p">;</span>
+    <span class="n">sort</span><span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">nums</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+    <span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">len</span><span class="o">-</span><span class="mi">3</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c1">//avoid duplicate</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">continue</span><span class="p">;</span>
+	<span class="c1">// if (nums[i] + nums[i+1] + nums[i+2] + nums[i+3] &gt; target) break;</span>
+	<span class="c1">// if (nums[i] + nums[len-3] + nums[len-2] + nums[len-1] &lt; target) continue;</span>
+	<span class="c1">//version3: less tight pruning</span>
+	<span class="k">if</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">target</span><span class="p">)</span> <span class="k">break</span><span class="p">;</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span>  <span class="mi">3</span> <span class="o">*</span> <span class="n">nums</span><span class="p">[</span><span class="n">len</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">target</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">len</span><span class="o">-</span><span class="mi">2</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">j</span> <span class="o">&gt;</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">continue</span><span class="p">;</span>
+	    <span class="c1">// if (nums[i] + nums[j] + nums[j+1] + nums[j+2] &gt; target) break;</span>
+	    <span class="c1">// if (nums[i] + nums[j] + nums[len-2] + nums[len-1] &lt; target) continue;</span>
+	    <span class="c1">//version3: less tight pruning</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">target</span><span class="p">)</span> <span class="k">break</span><span class="p">;</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nums</span><span class="p">[</span><span class="n">len</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">target</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+	    <span class="c1">//now the problems becomes 3 sum problem and only two other elements only to be considered</span>
+	    <span class="kt">int</span> <span class="n">left</span>  <span class="o">=</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">len</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+	    <span class="kt">int</span> <span class="n">sofar</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+	    <span class="k">while</span> <span class="p">(</span><span class="n">left</span> <span class="o">&lt;</span> <span class="n">right</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">sofar</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">left</span><span class="p">]</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">right</span><span class="p">]</span> <span class="o">==</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+		    <span class="n">res</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">({</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">nums</span><span class="p">[</span><span class="n">left</span><span class="p">],</span> <span class="n">nums</span><span class="p">[</span><span class="n">right</span><span class="p">]}));</span>
+		    <span class="c1">//how to skip the duplicate left and right</span>
+		    <span class="c1">//version1: my own version</span>
+		    <span class="c1">//  left++;</span>
+		    <span class="c1">//  right--;</span>
+		    <span class="c1">//  while (left &lt; right &amp;&amp; nums[left-1] == nums[left])  ++left;</span>
+		    <span class="c1">// while (right &gt; left &amp;&amp; nums[right+1] == nums[right]) --right;</span>
+		    <span class="c1">//version2: refer others</span>
+		    <span class="k">do</span><span class="p">{</span><span class="n">left</span><span class="o">++</span><span class="p">;}</span> <span class="k">while</span> <span class="p">(</span><span class="n">left</span> <span class="o">&lt;</span> <span class="n">right</span> <span class="o">&amp;&amp;</span> <span class="n">nums</span><span class="p">[</span><span class="n">left</span><span class="p">]</span> <span class="o">==</span> <span class="n">nums</span><span class="p">[</span><span class="n">left</span><span class="o">-</span><span class="mi">1</span><span class="p">]);</span>
+		    <span class="k">do</span><span class="p">{</span><span class="n">right</span><span class="o">--</span><span class="p">;}</span> <span class="k">while</span> <span class="p">(</span><span class="n">right</span> <span class="o">&gt;</span> <span class="n">left</span> <span class="o">&amp;&amp;</span> <span class="n">nums</span><span class="p">[</span><span class="n">right</span><span class="p">]</span> <span class="o">==</span> <span class="n">nums</span><span class="p">[</span><span class="n">right</span><span class="o">+</span><span class="mi">1</span><span class="p">]);</span>
+		<span class="p">}</span>
+		<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">sofar</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">left</span><span class="p">]</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">right</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">target</span><span class="p">)</span> <span class="n">left</span><span class="o">++</span><span class="p">;</span>
+		<span class="k">else</span> <span class="n">right</span><span class="o">--</span><span class="p">;</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">res</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+    </div>
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/breadth-first-search/" class="u-url">广度优先搜索</a></h1>
       <div class="metadata">
 
 
@@ -497,7 +666,7 @@ Although the above answer is in lexicographical order, your answer could be in a
           <div class="comment">
             
         
-    <a href="/posts/algorithm-weekly-three-sum-closest/#disqus_thread" data-disqus-identifier="cache/posts/algorithm-weekly-three-sum-weekly.html">Comments</a>
+    <a href="/posts/algorithm-weekly-three-sum-closest/#disqus_thread" data-disqus-identifier="cache/posts/algorithm-weekly-three-sum-closest.html">Comments</a>
 
 
           </div>
@@ -1812,97 +1981,6 @@ The point of a <code>private</code> constructor is not preventing object constru
 </li>
 <li>
 <a href="https://en.cppreference.com/w/cpp/language/static#Static_data_members">cppreference.com - static data members</a><br>
-</li>
-</ul>
-</div>
-</div>
-    </div>
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/non-blocking-socket-connect-tips/" class="u-url">客户端使用非阻塞socket进行connect的流程</a></h1>
-      <div class="metadata">
-
-
-        <div class="date">
-          <a href="/posts/non-blocking-socket-connect-tips/" rel="bookmark">
-            <time class="published dt-published" datetime="2018-08-31T17:04:19+08:00" title="2018-08-31 17:04">2018-08-31 17:04
-            </time></a>
-        </div>
-
-          <div class="comment">
-            
-        
-    <a href="/posts/non-blocking-socket-connect-tips/#disqus_thread" data-disqus-identifier="cache/posts/non-blocking-socket-connect-tips.html">Comments</a>
-
-
-          </div>
-
-      </div>
-    </header><div class="e-content entry-content">
-      <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">问题</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
-</div>
-</div>
-
-<div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">解答</h2>
-<div class="outline-text-2" id="text-2">
-<p>
-客户端建立连接的示例代码如下：<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">...);</span>
-<span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">errno</span> <span class="o">!=</span> <span class="n">EINPROGRESS</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// case1. error, fail somehow, close socket</span>
-    <span class="k">return</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// case2. connection has succeeded immediately</span>
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="c1">// case3. connection attempt is in progress</span>
-<span class="p">}</span>
-</pre></div>
-<p>
-由于是非阻塞模式，所以 <code>connect</code> 之后会直接返回，根据返回值 <code>res</code> 和 <code>errno</code> 能够判断建立连接的结果。<br></p>
-<ul class="org-ul">
-<li>case1，表示连接失败；<br>
-</li>
-<li>case2，表示连接建立成功；<br>
-</li>
-<li>case3，表示正在建立连接的过程中，在这个情况下，需要等待socket变成可写（writable）状态，可以使用 <code>select</code> 或 <code>epoll</code> 完成；<br>
-</li>
-</ul>
-<p>
-在 case3 情况下，socket可写后，执行下面的代码检查socket是否出现错误。<br></p>
-<ul class="org-ul">
-<li>case4和case5，表示socket出现了错误，将会关闭连接；<br>
-</li>
-<li>case6，表示连接建立成功，可以开始 <code>read</code> 和 <code>write</code> 了。<br>
-</li>
-</ul>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">result</span><span class="p">;</span>
-<span class="kt">socklen_t</span> <span class="n">result_len</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
-<span class="k">if</span> <span class="p">(</span><span class="n">getsockopt</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">SO_ERROR</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">result</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">result_len</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// case4. error, fail somehow, close socket</span>
-    <span class="k">return</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// case5. connection failed; error code is in 'result'</span>
-    <span class="k">return</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="c1">// case6. socket is ready for read()/write()</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">参考资料</h2>
-<div class="outline-text-2" id="text-3">
-<ul class="org-ul">
-<li>
-<a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
 </li>
 </ul>
 </div>
