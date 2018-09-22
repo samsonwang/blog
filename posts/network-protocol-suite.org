@@ -1,0 +1,86 @@
+#+BEGIN_COMMENT
+.. title: 网络通信协议
+.. slug: network-protocol-suite
+.. date: 2018-09-21 17:51:57 UTC+08:00
+.. tags: network, tcp, ip, osi
+.. category: network
+.. link:
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 网络通信协议
+
+** OSI模型
+OSI（open system interconnection）模型是一个概念模型，它特征化、标准化了计算机系统之间的通信过程。OSI模型分为7层，在模型中对端的同一层间使用相同的通信协议。
+
+*OSI模型及其常见协议*
+- 7 - Application（应用层）: DNS, HTTP, NTP, SMTP, Telnet, DHCP
+- 6 - Presentation（表示层）: MIME, XDR, ASN.1
+- 5 - Session（会话层）: Named pipe, NetBIOS, SAP, PPTP, RTP, SOCKS
+- 4 - Transport（传输层）: TCP, UDP, SCTP, DCCP, SPX
+- 3 - Network（网络层）: IP, ICMP, IPsec, IGMP, IPX, AppleTalk
+- 2 - Data link（链路层）: ARP, MAC, IEEE 802.2, L2TP, PPP
+- 1 - Physical（物理层）: RS-232, USB, IEEE 1394, IEEE 802.3
+
+*PDU与SDU的概念*
+在每一层上，在两个通信设备上互为同层的对端交换的是按照该层协议的PDU(protocol data units)。每个PDU中包含的载荷被称作SDU（service data units）。每个PDU包含该层协议的包头包尾与SDU。通俗地讲，上层协议在向下层传递时，会按照对应的协议增加包头和包尾。
+
+*常见通信方式都使用了哪些层协议*
+以太网（ethernet）的标准协议IEEE 802.3，无线网（Wi-Fi）的标准协议IEEE 802.11
+
+** TCP/IP协议（互联网协议）
+互联网协议是以TCP协议（transmission control protocol）和IP协议（internet protocol）做为基础的，所以它也称为TCP/IP协议。
+
+*互联网协议分层*
+- Application（应用层）: SMTP, FTP, SSH, HTTP
+- Transport（传输层）: TCP, UDP
+- Internet（网络层）: IP, ICMP
+- Link（链路层）: ARP, MAC
+
+*应用层*
+应用程序之间进行用户数据的交换就在应用层。应用程序或进程借助较底层提供的“管道”与其他进程实现信息交互。高层通信协议在这一层运作，常见的有SMTP、FTP、SSH、HTTP。通过端口号来够区分不同的服务。
+
+*传输层*
+传输层进行主机到主机（host-to-host）的通信，这个过程可以发生在同一个主机上，也可以借助路由放生在不同网络的主机之间。UDP是基本的传输层协议，提供一个不可靠的数据报服务。TCP提供拥塞控制（flow control）、连接建立和数据的可靠传输。
+
+*网络层*
+网络层提供一个统一的网络接口，将底层的网络拓扑和网络分布隐藏起来。这一层定义了网络寻址和路由结构。这一层的主要协议是IP协议，IP协议定义了IP地址。路由的功能是将数据报传输到距离终点更近的下一个路由上，最终完成数据包的传输。
+
+*链路层*
+链路层定义了除路由之外的本地网络连接之间的通信。这一层包括用于描述本地网络的拓扑结构的协议和相邻主机之间传输网络层数据包所需要的接口。
+
+
+** TCP/IP协议与OSI模型的比较
+
+两种网络协议的区别可以通过下面的图表看出来。
+
+|-------------+--------------|
+| TCP/IP      | OSI          |
+|-------------+--------------|
+| Application | Application  |
+|             | Presentation |
+|             | Session      |
+|-------------+--------------|
+| Transport   | Transport    |
+|-------------+--------------|
+| Internet    | Network      |
+|-------------+--------------|
+| Link        | Data link    |
+|-------------+--------------|
+|             | Physical     |
+|-------------+--------------|
+
+#+BEGIN_COMMENT
+=ping= 命令在第几层
+=ping= 是 =ICMP= 协议
+- 为什么网络协议被称作是协议栈（protocol stack）
+MAC（medium access control）
+教材：computer networks a system approach
+#+END_COMMENT
+
+** 参考资料
+- https://codeburst.io/learning-tcp-ip-protocol-suite-6947b601ea11
+- [[https://zh.wikipedia.org/wiki/OSI%25E6%25A8%25A1%25E5%259E%258B][wikipedia - OSI网络模型]]
+- https://en.wikipedia.org/wiki/Internet_protocol_suite
+- https://en.wikipedia.org/wiki/Protocol_stack
