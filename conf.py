@@ -20,7 +20,7 @@ BLOG_AUTHOR = "Samson Wang"  # (translatable)
 BLOG_TITLE = "Hack Note"  # (translatable)
 # This is the main URL for your site. It will be used
 # in a prominent link. Don't forget the protocol (http/https)!
-SITE_URL = "http://samsonwang.me/"
+SITE_URL = "https://samsonwang.me/"
 # This is the URL where Nikola's output will be deployed.
 # If not set, defaults to SITE_URL
 # BASE_URL = "http://samsonwang.me/"
@@ -876,7 +876,7 @@ FEED_LINKS_APPEND_QUERY = False
 # I recommend using the Creative Commons' wizard:
 # https://creativecommons.org/choose/
 LICENSE = """
-<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /></a>
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /></a>
 """
 
 # A small copyright notice for the page footer (in HTML).
