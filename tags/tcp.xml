@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about tcp)</title><link>https://samsonwang.me/</link><description></description><atom:link href="https://samsonwang.me/tags/tcp.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:wangzhilv@gmail.com"&gt;Samson Wang&lt;/a&gt; 
+&lt;a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
+</copyright><lastBuildDate>Sat, 22 Sep 2018 10:39:00 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>网络通信协议</title><link>https://samsonwang.me/posts/network-protocol-suite/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;OSI模型&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+OSI（open system interconnection）模型是一个概念模型，它特征化、标准化了计算机系统之间的通信过程。OSI模型分为7层，在模型中对端的同一层间使用相同的通信协议。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;OSI模型及其常见协议&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;7 - Application（应用层）: DNS, HTTP, NTP, SMTP, Telnet, DHCP&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;6 - Presentation（表示层）: MIME, XDR, ASN.1&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;5 - Session（会话层）: Named pipe, NetBIOS, SAP, PPTP, RTP, SOCKS&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;4 - Transport（传输层）: TCP, UDP, SCTP, DCCP, SPX&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;3 - Network（网络层）: IP, ICMP, IPsec, IGMP, IPX, AppleTalk&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;2 - Data link（链路层）: ARP, MAC, IEEE 802.2, L2TP, PPP&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;1 - Physical（物理层）: RS-232, USB, IEEE 1394, IEEE 802.3&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;
+&lt;b&gt;PDU与SDU的概念&lt;/b&gt;&lt;br&gt;
+在每一层上，在两个通信设备上互为同层的对端交换的是按照该层协议的PDU(protocol data units)。每个PDU中包含的载荷被称作SDU（service data units）。每个PDU包含该层协议的包头包尾与SDU。通俗地讲，上层协议在向下层传递时，会按照对应的协议增加包头和包尾。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;常见通信方式都使用了哪些层协议&lt;/b&gt;&lt;br&gt;
+以太网（ethernet）的标准协议IEEE 802.3，无线网（Wi-Fi）的标准协议IEEE 802.11&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;TCP/IP协议（互联网协议）&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;p&gt;
+互联网协议是以TCP协议（transmission control protocol）和IP协议（internet protocol）做为基础的，所以它也称为TCP/IP协议。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;互联网协议分层&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;Application（应用层）: SMTP, FTP, SSH, HTTP&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;Transport（传输层）: TCP, UDP&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;Internet（网络层）: IP, ICMP&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;Link（链路层）: ARP, MAC&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;
+&lt;b&gt;应用层&lt;/b&gt;&lt;br&gt;
+应用程序之间进行用户数据的交换就在应用层。应用程序或进程借助较底层提供的“管道”与其他进程实现信息交互。高层通信协议在这一层运作，常见的有SMTP、FTP、SSH、HTTP。通过端口号来够区分不同的服务。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;传输层&lt;/b&gt;&lt;br&gt;
+传输层进行主机到主机（host-to-host）的通信，这个过程可以发生在同一个主机上，也可以借助路由放生在不同网络的主机之间。UDP是基本的传输层协议，提供一个不可靠的数据报服务。TCP提供拥塞控制（flow control）、连接建立和数据的可靠传输。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;网络层&lt;/b&gt;&lt;br&gt;
+网络层提供一个统一的网络接口，将底层的网络拓扑和网络分布隐藏起来。这一层定义了网络寻址和路由结构。这一层的主要协议是IP协议，IP协议定义了IP地址。路由的功能是将数据报传输到距离终点更近的下一个路由上，最终完成数据包的传输。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;链路层&lt;/b&gt;&lt;br&gt;
+链路层定义了除路由之外的本地网络连接之间的通信。这一层包括用于描述本地网络的拓扑结构的协议和相邻主机之间传输网络层数据包所需要的接口。&lt;br&gt;
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+
+&lt;div id="outline-container-sec-3" class="outline-2"&gt;
+&lt;h2 id="sec-3"&gt;TCP/IP协议与OSI模型的比较&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-3"&gt;
+&lt;p&gt;
+两种网络协议的区别可以通过下面的图表看出来。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides"&gt;
+
+
+&lt;colgroup&gt;
+&lt;col class="left"&gt;
+
+&lt;col class="left"&gt;
+&lt;/colgroup&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th scope="col" class="left"&gt;TCP/IP&lt;/th&gt;
+&lt;th scope="col" class="left"&gt;OSI&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class="left"&gt;Application&lt;/td&gt;
+&lt;td class="left"&gt;Application&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td class="left"&gt; &lt;/td&gt;
+&lt;td class="left"&gt;Presentation&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td class="left"&gt; &lt;/td&gt;
+&lt;td class="left"&gt;Session&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class="left"&gt;Transport&lt;/td&gt;
+&lt;td class="left"&gt;Transport&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class="left"&gt;Internet&lt;/td&gt;
+&lt;td class="left"&gt;Network&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class="left"&gt;Link&lt;/td&gt;
+&lt;td class="left"&gt;Data link&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class="left"&gt; &lt;/td&gt;
+&lt;td class="left"&gt;Physical&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-4" class="outline-2"&gt;
+&lt;h2 id="sec-4"&gt;参考资料&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-4"&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;&lt;a href="https://codeburst.io/learning-tcp-ip-protocol-suite-6947b601ea11"&gt;https://codeburst.io/learning-tcp-ip-protocol-suite-6947b601ea11&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://zh.wikipedia.org/wiki/OSI%25E6%25A8%25A1%25E5%259E%258B"&gt;wikipedia - OSI网络模型&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Internet_protocol_suite"&gt;https://en.wikipedia.org/wiki/Internet_protocol_suite&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Protocol_stack"&gt;https://en.wikipedia.org/wiki/Protocol_stack&lt;/a&gt;&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>ip</category><category>network</category><category>osi</category><category>tcp</category><guid>https://samsonwang.me/posts/network-protocol-suite/</guid><pubDate>Fri, 21 Sep 2018 09:51:57 GMT</pubDate></item></channel></rss>
