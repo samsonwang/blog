@@ -1,0 +1,129 @@
+#+BEGIN_COMMENT
+.. title: IP协议(RFC791)
+.. slug: internet-protocol
+.. date: 2018-09-24 20:16:15 UTC+08:00
+.. tags: ip, network, nnprotocol
+.. category: network
+.. link: https://tools.ietf.org/html/rfc791
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: IP协议(RFC791)
+
+** 引言
+   本文是IPv4协议的摘要和笔记，IPv4协议由RFC791规定，RFC791协议的原文可以在 [[https://tools.ietf.org/html/rfc791][这里]] 找到。
+
+** 协议规格
+
+*** 协议头格式
+    [[img-url:/images/post-ip-protocol-1.png][header format]]
+    其中，每一个小格代表1bit.
+
+    *Version:* 4 bits
+    The Version field indicates the format of the internet header. This document describes version 4.
+
+    *IHL:* 4 bits
+    Internet Header Length is the length of the internet header in 32 bit words, and thus points to the beginning of the data. Note that the minimum value for a correct header is 5.
+
+    *Type of Service:* 8 bits
+    The Type of Service provides an indication of the abstract parameters of the quality of service desired. These parameters are to be used to guide the selection of the actual service parameters when transmitting a datagram through a particular network. Several networks offer service precedence, which somehow treats high precedence traffic as more important than other traffic (generally by accepting only traffic above a certain precedence at time of high load). The major choice is a three way tradeoff between low-delay, high-reliability, and high-throughput.
+    Bits 0-2: Precedence.
+    Bit 3: 0 = Normal Delay, 1 = Low Delay.
+    Bits 4: 0 = Normal Throughput, 1 = High Throughput.
+    Bits 5: 0 = Normal Relibility, 1 = High Relibility.
+    Bit 6-7: Reserved for Future Use.
+    Precedence:
+    111 - Network Control
+    110 - Internetwork Control
+    101 - CRITIC/ECP
+    100 - Flash Override
+    011 - Flash
+    010 - Immediate
+    001 - Priority
+    000 - Routine
+    The use of the Delay, Throughput, and Reliability indications may increase the cost (in some sense) of the service. In many networks better performance for one of these parameters is coupled with worse performance on another. Except for very unusual cases at most two of these three indications should be set.The type of service is used to specify the treatment of the datagram during its transmission through the internet system.
+
+    *Total Length:* 16 bits
+    Total Length is the length of the datagram, measured in octets,  including internet header and data. This field allows the length of a datagram to be up to 65,535 octets. Such long datagrams are impractical for most hosts and networks. All hosts must be prepared to accept datagrams of up to 576 octets (whether they arrive whole or in fragments). It is recommended that hosts only send datagrams larger than 576 octets if they have assurance that the destination is prepared to accept the larger datagrams. The number 576 is selected to allow a reasonable sized data block to be transmitted in addition to the required header information. For example, this size allows a data block of 512 octets plus 64 header octets to fit in a datagram. The maximal internet header is 60 octets, and a typical internet header is 20 octets, allowing a margin for headers of higher level protocols.
+
+    *Identification:* 16 bits
+    An identifying value assigned by the sender to aid in assembling the fragments of a datagram.
+
+    *Flags:* 3 bits
+    Various Control Flags.
+    Bit 0: reserved, must be zero
+    Bit 1: (DF) 0 = May Fragment, 1 = Don’t Fragment.
+    Bit 2: (MF) 0 = Last Fragment, 1 = More Fragments.
+
+    *Fragment Offset:* 13 bits
+    This field indicates where in the datagram this fragment belongs. The fragment offset is measured in units of 8 octets (64 bits). The first fragment has offset zero.
+
+    *Time to Live:* 8 bits
+    This field indicates the maximum time the datagram is allowed to remain in the internet system. If this field contains the value zero, then the datagram must be destroyed. This field is modified in internet header processing. The time is measured in units of seconds, but since every module that processes a datagram must decrease the TTL by at least one even if it process the datagram in less than a second, the TTL must be thought of only as an upper bound on the time a datagram may exist. The intention is to cause undeliverable datagrams to be discarded, and to bound the maximum datagram lifetime.
+
+    *Protocol:* 8 bits
+    This field indicates the next level protocol used in the data portion of the internet datagram. The values for various protocols are specified in "Assigned Numbers".
+
+    *Header Checksum:* 16 bits
+    A checksum on the header only. Since some header fields change (e.g., time to live), this is recomputed and verified at each point that the internet header is processed.
+
+    *Source Address:* 32 bits
+    *Destination Address:* 32 bits
+    详见下文的地址说明
+
+    *Options:* variable
+    The options may appear or not in datagrams. They must be implemented by all IP modules (host and gateways). What is optional is their transmission in any particular datagram, not their implementation.
+
+    *Padding:* variable
+    The internet header padding is used to ensure that the internet header ends on a 32 bit boundary. The padding is zero.
+
+*** 额外说明
+    *Addressing*
+    To provide for flexibility in assigning address to networks and allow for the large number of small to intermediate sized networks the interpretation of the address field is coded to specify a small number of networks with a large number of host, a moderate number of networks with a moderate number of hosts, and a large number of networks with a small number of hosts. In addition there is an escape code for extended addressing mode.
+
+    | High Order Bit | Format                             | Class |
+    |----------------+------------------------------------+-------|
+    |              0 | 7 bits of net, 24 bits of host     | a     |
+    |             10 | 14 bits of net, 16 bits of host    | b     |
+    |            110 | 21 bits of net, 8 bits of host     | d     |
+    |            111 | escape to extended addressing mode |       |
+
+    The local address, assigned by the local network, must allow for a single physical host to act as several distinct internet hosts. That is, there must be a mapping between internet host addresses and network/host interfaces that allows several internet addresses to correspond to one interface. It must also be allowed for a host to have several physical interfaces and to treat the datagrams from several of them as if they were all addressed to a single host.
+    有关ip地址更详细的说明在 [[https://tools.ietf.org/html/rfc790][rfc790]] 中，该文档中还包含ip地址和端口号的分配。
+
+
+    *Fragmentation and Reassembly*
+    The internet identification field (ID) is used together with the source and destination address, and the protocol fields, to identify datagram fragments for reassembly.
+    The More Fragments flag bit (MF) is set if the datagram is not the last fragment. The Fragment Offset field identifies the fragment location, relative to the beginning of the original unfragmented datagram. Fragments are counted in units of 8 octets. The fragmentation strategy is designed so than an unfragmented datagram has all zero fragmentation information (MF = 0, fragment offset = 0). If an internet datagram is fragmented, its data portion must be broken on 8 octet boundaries.
+    When fragmentation occurs, some options are copied, but others remain with the first fragment only.
+
+    *Type of Service*
+    The type of service (TOS) is for internet service quality selection. The type of service is specified along the abstract parameters precedence, delay, throughput, and reliability. These abstract parameters are to be mapped into the actual service parameters of the particular networks the datagram traverses.
+    Precedence. An independent measure of the importance of this datagram.
+    Delay. Prompt delivery is important for datagrams with this indication.
+    Throughput. High data rate is important for datagrams with this indication.
+    Reliability. A higher level of effort to ensure delivery is important for datagrams with this indication.
+
+    *Time to Live*
+    The time to live is set by the sender to the maximum time the datagram is allowed to be in the internet system. If the datagram is in the internet system longer than the time to live, then the datagram must be destroyed.
+    This field must be decreased at each point that the internet header is processed to reflect the time spent processing the datagram. Even if no local information is available on the time actually spent, the field must be decremented by 1. The time is measured in units of seconds (i.e. the value 1 means one second). Thus, the maximum time to live is 255 seconds or 4.25 minutes. Since every module that processes a datagram must decrease the TTL by at least one even if it process the datagram in less than a second, the TTL must be thought of only as an upper bound on the time a datagram may exist. The intention is to cause undeliverable datagrams to be discarded, and to bound the maximum datagram lifetime.
+    Some higher level reliable connection protocols are based on assumptions that old duplicate datagrams will not arrive after a certain time elapses. The TTL is a way for such protocols to have an assurance that their assumption is met.
+
+    *Options*
+    The options are optional in each datagram, but required in implementations. That is, the presence or absence of an option is the choice of the sender, but each internet module must be able to parse every option. There can be several options present in the option field.
+    The options might not end on a 32-bit boundary. The internet header must be filled out with octets of zeros. The first of these would be interpreted as the end-of-options option, and the remainder as internet header padding.
+    Every internet module must be able to act on every option. The Security Option is required if classified, restricted, or compartmented traffic is to be passed.
+
+    *Checksum*
+    The internet header checksum is recomputed if the internet header is changed. For example, a reduction of the time to live, additions or changes to internet options, or due to fragmentation. This checksum at the internet level is intended to protect the internet header fields from transmission errors.
+    There are some applications where a few data bit errors are acceptable while retransmission delays are not. If the internet protocol enforced data correctness such applications could not be supported.
+
+    *Errors*
+    Internet protocol errors may be reported via the ICMP messages.
+
+
+** 参考资料
+   - [[https://en.wikipedia.org/wiki/Internet_Protocol][wikipedia - internet protocol]]
+   - [[https://tools.ietf.org/html/rfc791][ietf - rfc791 (Sep. 1981)]]
+   - [[https://tools.ietf.org/html/rfc790][ietf - rfc790 (Sep. 1981)]]
