@@ -228,7 +228,7 @@ PAGES = (
 
 ##########################################
 # Below this point, everything is optional
-#########################################
+##########################################
 
 # Post's dates are considered in UTC by default, if you want to use
 # another time zone, please set TIMEZONE to match. Check the available
@@ -248,6 +248,8 @@ TIMEZONE = "Asia/Shanghai"
 # Used by babel.dates, CLDR style: http://cldr.unicode.org/translation/date-time
 # You can also use 'full', 'long', 'medium', or 'short'
 # DATE_FORMAT = 'YYYY-MM-dd HH:mm'
+DATE_FORMAT = {"en": "MMM dd yyyy  '('HH:mm')'",
+               "pl": "dd MMMM yyyy 'o' HH:mm"}
 
 # Date format used to display post dates, if local dates are used. (translatable)
 # (str used by moment.js)
