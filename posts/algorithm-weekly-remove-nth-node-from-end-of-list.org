@@ -1,0 +1,102 @@
+#+BEGIN_COMMENT
+.. title: 每周算法：删去单向链表倒数第n个节点
+.. slug: algorithm-weekly-remove-nth-node-from-end-of-list
+.. date: 2018-09-26 09:26:58 UTC+08:00
+.. tags: algorithm, leetcode, list, linked list
+.. category: algorithm
+.. link: https://leetcode.com/problems/remove-nth-node-from-end-of-list/description/
+.. description:
+.. type: text
+.. status: draft
+#+END_COMMENT
+
+#+TITLE: 每周算法：删去单向链表倒数第n个节点
+
+leetcode算法题第19道，难度为medium，考察链表的基本操作。
+
+{{{TEASER_END}}}
+
+** Description
+Given a linked list, remove the n-th node from the end of list and return its head.
+
+*Example:*
+#+BEGIN_EXAMPLE
+Given linked list: 1->2->3->4->5, and n = 2.
+After removing the second node from the end, the linked list becomes 1->2->3->5.
+#+END_EXAMPLE
+
+*Note:*
+Given n will always be valid.
+
+来源：[[https://leetcode.com/problems/remove-nth-node-from-end-of-list/description/][leetcode 19 remove nth node from end of list]]
+
+** Solution
+*** Approach 1
+这道题是比较基础的一道题，我的思路是将链表翻转，这样就将题目转换为删去正数第n个元素。但是这种方法需要将链表翻转两次，所以从效率上来讲并不好，而且需要注意的边界条件还挺多，在这里仅作为参考思路。
+#+BEGIN_SRC cpp
+// 翻转链表
+ListNode* reverseList(ListNode* head) {
+    ListNode* temp1 = head;
+    ListNode* temp2 = head->next;
+    while (temp2) {
+        ListNode* t = temp2->next;
+        temp2->next = temp1;
+        temp1 = temp2;
+        temp2 = t;
+    }
+    head->next = NULL;
+    return temp1;
+}
+
+ListNode* removeNthFromEnd(ListNode* head, int n) {
+    if (head == NULL) {
+        return NULL;
+    }
+    // 删去最后一个
+    if (n==1) {
+        if (head->next == NULL) {
+            return NULL;
+        }
+        ListNode* temp = head;
+        while (temp->next) {
+            if (temp->next->next == NULL) {
+                temp->next = NULL;
+                break;
+            }
+            temp = temp->next;
+        }
+        return head;
+    }
+    // 翻转链表
+    ListNode* temp1 = reverseList(head);
+    // 找到需要删除的倒数第n个结点
+    ListNode* temp3 = temp1;
+    for (int i=2; i<n; ++i) {
+        temp3 = temp3->next;
+    }
+    // temp3 此时是需要删除的节点的前一个节点
+    // 如果删去的是头结点
+    if (temp3->next == head) {
+        temp3->next = NULL;
+    }
+    else {
+        temp3->next = temp3->next->next;
+    }
+    // 关于内存释放问题，由于不知道内存是如何申请的（malloc，new），所以不能轻易释放
+    // 此时节点删除完成
+    return reverseList(temp1);
+}
+#+END_SRC
+
+*** Approach 2
+
+
+
+
+*** Approach 3
+
+
+
+
+** Reference
+- [[https://leetcode.com/problems/remove-nth-node-from-end-of-list/solution/][leetcode 19 solution]]
