@@ -45,6 +45,6 @@ $(document).ready(function () {
 });
 
 // avoid css transition on load
-$(window).load(function() {
+$(window).on("load", function() {
   $("body").removeClass("preload");
 });
