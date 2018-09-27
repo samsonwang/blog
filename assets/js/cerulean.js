@@ -40,7 +40,11 @@ function initNavbar () {
 }
 
 $(document).ready(function () {
-//  initNavbar();
   initLazyLoad();
   initScrollTop();
+});
+
+// avoid css transition on load
+$(window).load(function() {
+  $("body").removeClass("preload");
 });
