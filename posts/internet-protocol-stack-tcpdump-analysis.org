@@ -1,0 +1,79 @@
+#+BEGIN_COMMENT
+.. title: 网络协议的抓包分析
+.. slug: internet-protocol-stack-tcpdump-analysis
+.. date: 2018-09-28 17:19:19 UTC+08:00
+.. tags: tcp, ip, network, tcpdump
+.. category: network
+.. link:
+.. description:
+.. type: text
+.. status: draft
+#+END_COMMENT
+
+#+TITLE: 网络协议的抓包分析
+本文主要内容是对tcpdump所抓取的数据包进行分析，按照网络协议解出每个字节所代表的含义。
+通过前面几篇博客的学习和总结，我对网络协议有了一定的了解，这时需要理论结合实际，使学到的知识记忆更加深刻。
+
+{{{TEASER_END}}}
+
+阅读本文需要了解tcp、ip、tcpdump的相关知识，可以参考我之前的文章：
+- tcp：
+- ip：[[link:/posts/internet-protocol/][ IP协议(RFC791)]]
+- tcpdump：[[link:/posts/linux-command-examples-tcpdump/][Linux常用命令行指令 - tcpdump]]
+
+** 抓包
+
+#+BEGIN_SRC shell
+tcpdump -i any 'dst host 169.10.36.66 port 20014' -XX -nn -vv
+#+END_SRC
+
+抓包的结果，
+
+数据包的基础信息
+#+BEGIN_EXAMPLE
+15:39:13.865699 IP (tos 0x0, ttl 64, id 36429, offset 0, flags [DF], proto TCP (6), length 57)
+   169.10.10.10.47912 > 169.10.36.66.20014: Flags [P.], cksum 0x808c (incorrect -> 0x5ebe), seq 1353274499:1353274504, ack 2930227654, win 9444, options [nop,nop,TS val 2177524110 ecr 229721019], length 5
+#+END_EXAMPLE
+
+数据包的具体内容：使用16进制表示
+#+BEGIN_EXAMPLE
+0x0000:  0004 0001 0006 000c 29a7 fe3b 0000 0800
+0x0010:  4500 0039 8e4d 4000 4006 2c11 a90a 0a0a
+0x0020:  a90a 2442 bb28 4e2e 50a9 5483 aea7 b9c6
+0x0030:  8018 24e4 808c 0000 0101 080a 81ca 618e
+0x0040:  0db1 43bb 107b 007b 1600 0000 0000 0000
+0x0050:  0000 0000 0000 0000 00
+#+END_EXAMPLE
+
+** 链路协议
+0004 0001 0006
+000c 29a7 fe3b      本机mac地址
+0000 0800
+
+** IP协议分析
+
+4             ver
+5             ihl
+00            tos
+0039          totoal length
+8e4d          id
+4000          flags [0:3] frag offset[4:15]
+40            ttl
+06            protocol （6-tcp）
+2c11          header cksum
+a90a 0a0a     src addr
+a90a 2442     dst addr
+
+
+
+** TCP协议分析
+total 37d data，tcp data
+
+bb28 4e2e 50a9 5483 aea7 b9c6
+8018 24e4 808c 0000 0101 080a 81ca 618e
+0db1 43bb 107b 007b 16
+
+尾部16字节的全空
+
+
+（EOF）
