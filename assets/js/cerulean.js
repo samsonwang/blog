@@ -21,25 +21,40 @@ function initLazyLoad () {
 }
 
 function initNavbar () {
-  var $navbar = $("nav.navbar");
+  let isScrolled = false;
+  let lastPos = 0;
+  let nav = document.querySelectorAll("#top-nav")[0];
+  let navHeight = nav.offsetHeight;
+  document.addEventListener("scroll", function() { isScrolled = true }, false);
+  setInterval(function() {
+    isScrolled && (!function() {
+      let currPos = void 0 !== window.pageYOffset ?
+          window.pageYOffset :
+          (document.documentElement || document.body.parentNode || document.body).scrollTop;
 
-  AdjustHeader(); // Incase the user loads the page from halfway down (or something);
-  $(window).scroll(function() {
-      AdjustHeader();
-  });
-
-  function AdjustHeader(){
-    if ($(window).scrollTop() > 5) {
-      if ($navbar.hasClass("fixed-top")) {
-        $navbar.removeClass("fixed-top");
+      if (Math.abs(lastPos - currPos) <= 5) {
+        return;
       }
-    } else {
-      $navbar.addClass("fixed-top");
-    }
-  }
+
+      let maxHeight = Math.max(document.documentElement.clientHeight,
+                               document.body.scrollHeight,
+                               document.documentElement.scrollHeight,
+                               document.body.offsetHeight,
+                               document.documentElement.offsetHeight);
+
+      if (lastPos < currPos && navHeight < currPos) {
+        nav.classList.add("scroll-up");
+      }
+      else if (currPos + window.innerHeight < maxHeight) {
+        nav.classList.remove("scroll-up");
+      }
+      lastPos = currPos;
+    }(), isScrolled = false)
+  }, 100);
 }
 
 $(document).ready(function () {
+  initNavbar();
   initLazyLoad();
   initScrollTop();
 });
