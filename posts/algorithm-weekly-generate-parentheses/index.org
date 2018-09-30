@@ -1,0 +1,185 @@
+#+BEGIN_COMMENT
+.. title: 每周算法：生成有效的括号组合
+.. slug: algorithm-weekly-generate-parentheses
+.. date: 2018-09-30 13:31:46 UTC+08:00
+.. tags: algorithm, leetcode
+.. category: algorithm
+.. link: https://leetcode.com/problems/generate-parentheses/description/
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 每周算法：生成有效的括号组合
+
+leetcode 算法题第22道，难度为medium，对指定数量的括号进行排列组合，列举出其中有效的结果。对括号的处理通常出现在表达式分析中，这道题目是了解括号表达式特性的很好切入点。
+
+{{{TEASER_END}}}
+
+** Description
+Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
+For example, given /n/ = 3, a solution set is:
+#+BEGIN_EXAMPLE
+[
+  "((()))",
+  "(()())",
+  "(())()",
+  "()(())",
+  "()()()"
+]
+#+END_EXAMPLE
+
+** Solution
+
+*** Approach 1 DP
+这是我想到的方法，按照DP解法的思想，将 =n= 分解为 （1 和 =n-1= ）、（2 和 =n-2= ）以及（ =i= 和 =n-i= ），再将分解后的两部分进行前后组合。这样，解决 =n= 的情况需要依赖于 =n-1= 的情况，依此递推，最终需要解决的问题得以简化为只有一个括号的情况。
+
+下面是DP解法的实现：
+#+BEGIN_SRC cpp
+vector<string> generateParenthesis(int n) {
+    vector<vector<string>> dp;
+    dp.reserve(n+1);
+
+    dp.push_back(vector<string>());
+    dp.push_back(vector<string>({"()"}));
+
+    for (int i=2; i<n+1; ++i) {
+        set<string> s;
+        for (int j=1; j<=i-j; ++j) {
+            for (size_t m=0; m<dp[j].size(); ++m) {
+                for (size_t n=0; n<dp[i-j].size(); ++n) {
+                    s.insert(dp[j][m] + dp[i-j][n]);
+                    s.insert(dp[i-j][n] + dp[j][m]);
+
+                    if (j == 1) {
+                        s.insert('(' + dp[i-j][n] + ')');
+                    }
+                }
+            }
+        }
+        dp.push_back(vector<string>(s.begin(), s.end()));
+    }
+    return dp[n];
+}
+#+END_SRC
+
+下面是DP解法的递归实现：
+#+BEGIN_SRC cpp
+vector<string> generateParenthesis(int n) {
+    if (n == 1) {
+        return vector<string>({"()"});
+    }
+    else if (n <= 0) {
+        return vector<string>();
+    }
+
+    set<string> ans;
+    for (int j=1; j<=n-j; ++j) {
+        vector<string> pre1 = generateParenthesis(n-j);
+        vector<string> pre2 = generateParenthesis(j);
+        for (size_t i=0; i<pre1.size(); ++i) {
+            for (size_t j=0; j<pre2.size(); ++j) {
+                ans.insert(pre1[i] + pre2[j]);
+                ans.insert(pre2[j] + pre1[i]);
+            }
+            if (j==1) {
+                ans.insert('(' + pre1[i] + ')');
+            }
+        }
+    }
+    return vector<string>(ans.begin(), ans.end());
+}
+#+END_SRC
+
+这种解法由于涉及到结果的二次组合，所以会出现重复的情况。为了过滤掉重复的组合，我使用 =set= 作为中间存储结构。这也使得解法的时间复杂度变高。
+
+*** Approach 2 Brute Force
+大部分的算法题都能够使用暴力解法，这道题也不例外。下面的代码截取自leetcode的solution解析，使用java编写。
+
+#+BEGIN_SRC java
+class Solution {
+    public List<String> generateParenthesis(int n) {
+        List<String> combinations = new ArrayList();
+        generateAll(new char[2 * n], 0, combinations);
+        return combinations;
+    }
+
+    public void generateAll(char[] current, int pos, List<String> result) {
+        if (pos == current.length) {
+            if (valid(current))
+                result.add(new String(current));
+        } else {
+            current[pos] = '(';
+            generateAll(current, pos+1, result);
+            current[pos] = ')';
+            generateAll(current, pos+1, result);
+        }
+    }
+
+    public boolean valid(char[] current) {
+        int balance = 0;
+        for (char c: current) {
+            if (c == '(') balance++;
+            else balance--;
+            if (balance < 0) return false;
+        }
+        return (balance == 0);
+    }
+}
+#+END_SRC
+
+其中判断括号是否是有效的算法也是值得学习的。
+
+时间复杂度为O(2^2n  * n)，字符串长度为2n，所以就有 2^2n 种可能，对每一种情况进行验证的时间复杂度为O(n)。空间复杂度为O(2^2n * n)。
+
+*** Approach 3 Backtracking
+针对上一种算法，如果将左右括号的数量记录下来，就能够在追加新的括号的时候加以判断，保证每个追加加的括号都是合理的。
+
+#+BEGIN_SRC java
+class Solution {
+    public List<String> generateParenthesis(int n) {
+        List<String> ans = new ArrayList();
+        backtrack(ans, "", 0, 0, n);
+        return ans;
+    }
+
+    public void backtrack(List<String> ans, String cur, int open, int close, int max){
+        if (str.length() == max * 2) {
+            ans.add(cur);
+            return;
+        }
+        if (open < max)
+            backtrack(ans, cur+"(", open+1, close, max);
+        if (close < open)
+            backtrack(ans, cur+")", open, close+1, max);
+    }
+}
+#+END_SRC
+
+时间复杂度和时间复杂度均为O(4^n / sqrt(n))，这个算法的时杂度分析与结果的数量有关，结果的数量是n阶Catalan numbers序列，具体可以参考 [[http://mathforum.org/advanced/robertd/catalan.html][这里]] 。
+
+*** Approach 4 Closure Number
+这个解法也来自于leetcode的solution解析，它在形式上与我的 approach 1 十分相似，但是这里的组合方式能够保证不包含重复的结果，这个规律找的更加有技巧性。
+
+#+BEGIN_SRC java
+class Solution {
+    public List<String> generateParenthesis(int n) {
+        List<String> ans = new ArrayList();
+        if (n == 0) {
+            ans.add("");
+        }
+        else {
+            for (int c = 0; c < n; ++c)
+                for (String left: generateParenthesis(c))
+                    for (String right: generateParenthesis(n-1-c))
+                        ans.add("(" + left + ")" + right);
+        }
+        return ans;
+    }
+}
+#+END_SRC
+
+这个算法也不会产生多余的结果，所以分析过程与 approach 3 相同。
+
+** Reference
+- [[https://leetcode.com/problems/generate-parentheses/solution/][leetcode solution analysis]]
+- [[http://mathforum.org/advanced/robertd/catalan.html][mathforum - catalan numbers]]

@@ -32,7 +32,7 @@ function initNavbar () {
           window.pageYOffset :
           (document.documentElement || document.body.parentNode || document.body).scrollTop;
 
-      if (Math.abs(lastPos - currPos) <= 5) {
+      if (Math.abs(lastPos - currPos) <= 150) {
         return;
       }
 
