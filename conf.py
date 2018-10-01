@@ -174,10 +174,10 @@ THEME_CONFIG = {
         <p>View my code on <a href="https://github.com/samsonwang"> Github</a></p></div>''',
         'sidebar_categories': '''
         <ol class="list-unstyled sidebar-category">
-        <li><a href="/tags/category_cpp/">cpp</a>
-        <li><a href="/tags/category_emacs/">emacs</a>
-        <li><a href="/tags/category_linux/">linux</a>
-        <li><a href="/tags/category_windows/">windows</a>
+        <li><a href="/tags/category-cpp/">cpp</a>
+        <li><a href="/tags/category-emacs/">emacs</a>
+        <li><a href="/tags/category-linux/">linux</a>
+        <li><a href="/tags/category-windows/">windows</a>
         </ol>'''
 }
 }
