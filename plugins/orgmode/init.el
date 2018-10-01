@@ -4,8 +4,15 @@
 ;; Requires org-mode v8.x
 
 (require 'package)
-(setq package-load-list '((htmlize t)))
+;;(setq package-load-list '((htmlize t)))
 (package-initialize)
+(add-to-list 'package-archives
+             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+
+(unless (package-installed-p 'htmlize)
+  (package-refresh-contents)
+  (package-install 'htmlize))
+(require 'htmlize)
 
 (require 'org)
 (require 'ox-html)
@@ -113,14 +120,18 @@ contextual information."
   (cond
    ((eq format 'html)
     (format "<img src=\"/assets/images/spinner.svg\" data-src=\"%s\" alt=\"%s\"/>" path desc))))
-(org-add-link-type "img-url" nil 'org-custom-link-img-url-export)
+(org-link-set-parameters "img-url"
+                         :follow nil
+                         :export 'org-custom-link-img-url-export)
 
 ;; Expand internal link
 (defun org-custom-link-internal-url-export (path desc format)
   (cond
    ((eq format 'html)
     (format "<a href=\"%s\">%s</a>" path desc))))
-(org-add-link-type "link" nil 'org-custom-link-internal-url-export)
+(org-link-set-parameters "link"
+                         :follow nil
+                         :export 'org-custom-link-internal-url-export)
 
 ;; Export function used by Nikola.
 (defun nikola-html-export (infile outfile)
