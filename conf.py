@@ -157,19 +157,29 @@ THEME_COLOR = '#5670d4'
 THEME_CONFIG = {
     DEFAULT_LANG: {
         # Show the latest featured post in a large box, with the previewimage as its background.
-         'featured_large': False,
+        'featured_large': False,
         # Show the first (remaining) two featured posts in small boxes.
-         'featured_small': False,
+        'featured_small': False,
         # Show featured posts on mobile.
-         'featured_on_mobile': True,
+        'featured_on_mobile': True,
         # Show image in `featured_large` on mobile.
         # `featured_small` displays them only on desktop.
-         'featured_large_image_on_mobile': True,
+        'featured_large_image_on_mobile': True,
         # Strip HTML from featured post text.
-         'featured_strip_html': False,
+        'featured_strip_html': False,
         # Contents of the sidebar, If empty, the sidebar is not displayed.
-         'sidebar': ''
-    }
+        'sidebar_aboutme': '''
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focus on linux server dev. I use EMACS, and I am learning python.</p>
+        <p>View my code on <a href="https://github.com/samsonwang"> Github</a></p></div>''',
+        'sidebar_categories': '''
+        <ol class="list-unstyled sidebar-category">
+        <li><a href="/tags/category_cpp/">cpp</a>
+        <li><a href="/tags/category_emacs/">emacs</a>
+        <li><a href="/tags/category_linux/">linux</a>
+        <li><a href="/tags/category_windows/">windows</a>
+        </ol>'''
+}
 }
 
 
@@ -1151,13 +1161,13 @@ INDEX_DISPLAY_POST_COUNT = 12
 # Bootstrap is served from BootstrapCDN (provided by MaxCDN)
 # Set this to False if you want to host your site without requiring access to
 # external resources.
-USE_CDN = True
+USE_CDN = False
 
 # Check for USE_CDN compatibility.
 # If you are using custom themes, have configured the CSS properly and are
 # receiving warnings about incompatibility but believe they are incorrect, you
 # can set this to False.
-USE_CDN_WARNING = False
+# USE_CDN_WARNING = False
 
 # use custom.css to change default
 # HAS_CUSTOM_CSS = True
@@ -1299,26 +1309,7 @@ FILE_METADATA_UNSLUGIFY_TITLES = True
 
 # Put in global_context things you want available on all your templates.
 # It can be anything, data, functions, modules, etc.
-SIDEBAR_ABOUT_ME = """
-<div class="sidebar-aboutme">
-<p>Zeal for coding, C++ developer.</p>
-<p>Focus on linux server dev.</p>
-<p>I use EMACS, and I am learning python.</p>
-<p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
-</div>
-"""
-
-SIDEBAR_CATEGORY_ITEM = """
-<ol class="list-unstyled sidebar-category">
-<li><a href="/tags/category_cpp/">cpp</a>
-<li><a href="/tags/category_emacs/">emacs</a>
-<li><a href="/tags/category_linux/">linux</a>
-<li><a href="/tags/category_windows/">windows</a>
-</ol>"""
-
 GLOBAL_CONTEXT = {
-    "sidebar_about_me": SIDEBAR_ABOUT_ME,
-    "sidebar_category_item": SIDEBAR_CATEGORY_ITEM,
     "context_demo1": BLOG_AUTHOR,
     "context_demo2": time.gmtime().tm_year,
 }
