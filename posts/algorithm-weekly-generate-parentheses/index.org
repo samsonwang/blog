@@ -2,7 +2,7 @@
 .. title: 每周算法：生成有效的括号组合
 .. slug: algorithm-weekly-generate-parentheses
 .. date: 2018-09-30 13:31:46 UTC+08:00
-.. tags: algorithm, leetcode
+.. tags: algorithm, leetcode, dp, bfs
 .. category: algorithm
 .. link: https://leetcode.com/problems/generate-parentheses/description/
 .. description:
@@ -90,7 +90,7 @@ vector<string> generateParenthesis(int n) {
 }
 #+END_SRC
 
-这种解法由于涉及到结果的二次组合，所以会出现重复的情况。为了过滤掉重复的组合，我使用 =set= 作为中间存储结构。这也使得解法的时间复杂度变高。
+这种解法由于涉及到结果的二次组合，所以会出现重复的情况。为了过滤掉重复的组合，我使用 =std::set= 作为中间存储结构，这必定也使得解法的时间复杂度变高。
 
 *** Approach 2 Brute Force
 大部分的算法题都能够使用暴力解法，这道题也不例外。下面的代码截取自leetcode的solution解析，使用java编写。
@@ -127,9 +127,26 @@ class Solution {
 }
 #+END_SRC
 
-其中判断括号是否是有效的算法也是值得学习的。
+其中判断括号是否是有效的算法也是值得学习的。另外，对于生成所有的可能组合，这让我回想起之前的一道使用BFS题目，于是我使用C++实现了出来。
 
-时间复杂度为O(2^2n  * n)，字符串长度为2n，所以就有 2^2n 种可能，对每一种情况进行验证的时间复杂度为O(n)。空间复杂度为O(2^2n * n)。
+#+BEGIN_SRC cpp
+void generateAllPossible(vector<string>& all, int n) {
+    list<string> bfs;
+    bfs.push_back("");
+    while (bfs.size() != 0) {
+        string frt = bfs.front();
+        bfs.pop_front();
+        if (frt.size() == n*2) {
+            all.push_back(frt);
+            continue;
+        }
+        bfs.push_back(frt + '(');
+        bfs.push_back(frt + ')');
+    }
+}
+#+END_SRC
+
+该算法的时间复杂度为O(2^2n  * n)，字符串长度为2n，所以就有 2^2n 种可能，对每一种情况进行验证的时间复杂度为O(n)。空间复杂度为O(2^2n * n)。
 
 *** Approach 3 Backtracking
 针对上一种算法，如果将左右括号的数量记录下来，就能够在追加新的括号的时候加以判断，保证每个追加加的括号都是合理的。
