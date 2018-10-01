@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about visual studio)</title><link>https://samsonwang.me/</link><description></description><atom:link href="https://samsonwang.me/tags/visual-studio.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:wangzhilv@gmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Mon, 01 Oct 2018 10:14:19 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>关于Qt中使用中文编码的一些问题</title><link>https://samsonwang.me/posts/qt-chinese-encoding/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+</copyright><lastBuildDate>Mon, 01 Oct 2018 13:48:29 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>关于Qt中使用中文编码的一些问题</title><link>https://samsonwang.me/posts/qt-chinese-encoding/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
 Qt库作为一个开源库，并且支持多语言。在开发时需要考虑字符编码问题。&lt;br&gt;
 我现在的使用Qt开发环境为VS2012+Qt5.1.1，所以一下所讨论的也是基于这个版本而言的。目前Qt5已经将 &lt;code&gt;tr()&lt;/code&gt; 删掉了。&lt;br&gt;
 &lt;/p&gt;
@@ -11,10 +11,8 @@ Qt库作为一个开源库，并且支持多语言。在开发时需要考虑字
 有两种主流开发环境:&lt;br&gt;
 &lt;/p&gt;
 &lt;ol class="org-ol"&gt;
-&lt;li&gt;使用Qt Creator作为开发环境&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;使用Visual Studio + Visual Assist + Qt Visual Studio Addon作为开发环境&lt;br&gt;
-&lt;/li&gt;
+&lt;li&gt;使用Qt Creator作为开发环境&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;使用Visual Studio + Visual Assist + Qt Visual Studio Addon作为开发环境&lt;br&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;
 目前我使用的就是第二种开发环境，鉴于在Windows平台下没有哪个开发环境能与Visual Studio相媲美。&lt;br&gt;
@@ -27,10 +25,8 @@ Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式�
 推荐使用一下两种方法解决gb2312编码问题：&lt;br&gt;
 &lt;/p&gt;
 &lt;ul class="org-ul"&gt;
-&lt;li&gt;&lt;code&gt;QString::fromLocale8Bit()&lt;/code&gt; 会将gb2312编码的字符串转换为UTF-8格式以便存放在QString中。&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;QStringLiteral()&lt;/code&gt; 是一个宏定义，会在编译期将字符串实例化，对静态字符串使用这个字符串也是一个提高效率的方法(因为减少了运行时的内存申请开销)。&lt;br&gt;
-&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;QString::fromLocale8Bit()&lt;/code&gt; 会将gb2312编码的字符串转换为UTF-8格式以便存放在QString中。&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;QStringLiteral()&lt;/code&gt; 是一个宏定义，会在编译期将字符串实例化，对静态字符串使用这个字符串也是一个提高效率的方法(因为减少了运行时的内存申请开销)。&lt;br&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;
@@ -39,12 +35,9 @@ Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式�
 可以使用编译选项让VS编译器不进行这项转换，这样就可以直接使用字符串 &lt;code&gt;char*&lt;/code&gt; 初始化QString了。&lt;br&gt;
 &lt;/p&gt;
 &lt;ul class="org-ul"&gt;
-&lt;li&gt;微软在VS2010中提供了 &lt;code&gt;#pragma execution_character_set("utf-8")&lt;/code&gt; 这样的编译选项，能够防止编译器进行文件编码转换，保证字符串保留utf-8格式。&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;VS2012 并不支持以上编译选项，VS2012将这个特性取消了&lt;br&gt;
-&lt;/li&gt;
-&lt;li&gt;VS2015 可以使用 &lt;code&gt;/utf-8&lt;/code&gt; 让编译器能够识别 utf-8 without BOM格式的文件，并保留utf-8的字符串编码。&lt;br&gt;
-&lt;/li&gt;
+&lt;li&gt;微软在VS2010中提供了 &lt;code&gt;#pragma execution_character_set("utf-8")&lt;/code&gt; 这样的编译选项，能够防止编译器进行文件编码转换，保证字符串保留utf-8格式。&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;VS2012 并不支持以上编译选项，VS2012将这个特性取消了&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;VS2015 可以使用 &lt;code&gt;/utf-8&lt;/code&gt; 让编译器能够识别 utf-8 without BOM格式的文件，并保留utf-8的字符串编码。&lt;br&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;
