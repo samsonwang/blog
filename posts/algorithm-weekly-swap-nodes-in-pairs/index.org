@@ -1,0 +1,54 @@
+#+BEGIN_COMMENT
+.. title: 每周算法：调换链表中节点
+.. slug: algorithm-weekly-swap-nodes-in-pairs
+.. date: 2018-10-04 12:26:16 UTC+08:00
+.. tags: algorithm, leetcode
+.. category: algorithm
+.. link: https://leetcode.com/problems/swap-nodes-in-pairs/description/
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 调换链表中节点
+
+leetcode算法第24题，难度为medium。将链表中的节点成对翻转，考察链表结构的理解和节点的操作。
+
+{{{TEASER_END}}}
+
+** Description
+Given a linked list, swap every two adjacent nodes and return its head.
+
+*Example:*
+#+BEGIN_EXAMPLE
+Given 1->2->3->4, you should return the list as 2->1->4->3.
+#+END_EXAMPLE
+
+*Note:*
+- Your algorithm should use only constant extra space.
+- You may not modify the values in the list's nodes, only nodes itself may be changed.
+
+来源：[[https://leetcode.com/problems/swap-nodes-in-pairs/description/][leetcode 24 swap nodes in pairs]]
+
+** Solution
+
+这道题还是对链表操作的考察，在熟悉链表之后还是比较容易想到答案的。下面就是我的解法:
+
+#+BEGIN_SRC cpp
+ListNode* swapPairs(ListNode* head) {
+    ListNode preHead(0);
+    preHead.next = head;
+    ListNode* p0 = &preHead;
+    ListNode* p1 = p0->next;
+    ListNode* p2 = p1 ? p1->next : NULL;
+    while (p1 && p2) {
+        p0->next = p2;
+        p1->next = p2->next;
+        p2->next = p1;
+
+        p0 = p1;
+        p1 = p0->next;
+        p2 = p1 ? p1->next : NULL;
+    }
+    return preHead.next;
+}
+#+END_SRC
