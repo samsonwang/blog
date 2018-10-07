@@ -30,7 +30,7 @@ Given 1->2->3->4, you should return the list as 2->1->4->3.
 来源：[[https://leetcode.com/problems/swap-nodes-in-pairs/description/][leetcode 24 swap nodes in pairs]]
 
 ** Solution
-
+*** Apporach 1
 这道题还是对链表操作的考察，在熟悉链表之后还是比较容易想到答案的。下面就是我的解法:
 
 #+BEGIN_SRC cpp
@@ -52,3 +52,32 @@ ListNode* swapPairs(ListNode* head) {
     return preHead.next;
 }
 #+END_SRC
+
+*** Approach 2 recursive
+这道题的另一种解法是使用递归，这种解法能够完成题目中要求的节点交换操作。不过需要注意的是递归会使用额外的空间，所以并不能满足题目中要求的常数空间复杂度。
+
+#+BEGIN_SRC cpp
+void helper(ListNode* preHead){
+    ListNode* p1 = preHead->next;
+    ListNode* p2 = p1 ? p1->next : NULL;
+    if (!p1 || !p2) {
+        return;
+    }
+
+    preHead->next = p2;
+    p1->next = p2->next;
+    p2->next = p1;
+
+    helper(p1);
+}
+
+ListNode* swapPairs(ListNode* head) {
+    ListNode preHead(0);
+    preHead.next = head;
+    helper(&preHead);
+    return preHead.next;
+}
+#+END_SRC
+
+** Reference
+- [[https://stackoverflow.com/questions/43298938/space-complexity-of-recursive-function][stackoverflow - space complexity of recursive function]]
