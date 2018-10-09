@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>每周算法：删去有序数组中的重复元素 | Hack Note</title>
+<link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="https://samsonwang.me/posts/algorithm-weekly-remove-duplicates-from-sorted-array/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/algorithm-weekly-swap-nodes-in-pairs/" title="每周算法：调换链表中节点" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="https://samsonwang.me/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav mr-auto">
+<li class="nav-item">
+<a href="/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/listings/" class="nav-link">Listings</a>
+                </li>
+<li class="nav-item">
+<a href="/galleries/" class="nav-link">Galleries</a>
+                </li>
+<li class="nav-item">
+<a href="/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">每周算法：删去有序数组中的重复元素</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-10-09T21:06:21+08:00" itemprop="datePublished" title="2018-10-09 21:06">Oct 09 2018  (21:06)
+    </time>
+</div>
+
+      
+    <div class="source blur-1">
+      <a href="/posts/algorithm-weekly-remove-duplicates-from-sorted-array/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+     <div class="link blur-1">
+       <a href="https://leetcode.com/problems/remove-duplicates-from-sorted-array/description/">Original site</a>
+     </div>
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/algorithm/" rel="tag">algorithm</a></li>
+        <li><a class="tag p-category" href="/tags/leetcode/" rel="tag">leetcode</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+leetcode算法题第26道，难度为easy，这是非常基础的一道题。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org489b45b" class="outline-2">
+<h2 id="org489b45b">Description</h2>
+<div class="outline-text-2" id="text-org489b45b">
+<p>
+Given a sorted array nums, remove the duplicates <b>in-place</b> such that each element appear only once and return the new length.<br></p>
+
+<p>
+Do not allocate extra space for another array, you must do this by modifying the input array <b>in-place</b> with O(1) extra memory.<br></p>
+
+<p>
+<b>Example 1:</b><br></p>
+<pre class="example">
+Given nums = [1,1,2],
+
+Your function should return length = 2, with the first two elements of nums being 1 and 2 respectively.
+
+It doesn't matter what you leave beyond the returned length.
+</pre>
+
+
+<p>
+<b>Example 2:</b><br></p>
+<pre class="example">
+Given nums = [0,0,1,1,1,2,2,3,3,4],
+
+Your function should return length = 5, with the first five elements of nums being modified to 0, 1, 2, 3, and 4 respectively.
+
+It doesn't matter what values are set beyond the returned length.
+</pre>
+
+<p>
+<b>Clarification:</b><br></p>
+
+<p>
+Confused why the returned value is an integer but your answer is an array?<br></p>
+
+<p>
+Note that the input array is passed in by reference, which means modification to the input array will be known to the caller as well.<br></p>
+
+<p>
+Internally you can think of this:<br></p>
+
+<pre class="example">
+// nums is passed in by reference. (i.e., without making a copy)
+int len = removeDuplicates(nums);
+
+// any modification to nums in your function would be known by the caller.
+// using the length returned by your function, it prints the first len elements.
+for (int i = 0; i &lt; len; i++) {
+    print(nums[i]);
+}
+</pre>
+
+<p>
+来源：<a href="https://leetcode.com/problems/remove-duplicates-from-sorted-array/description/">leetcode 26 remove duplicates from sorted array</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org3a2203a" class="outline-2">
+<h2 id="org3a2203a">Solution</h2>
+<div class="outline-text-2" id="text-org3a2203a">
+</div>
+<div id="outline-container-org7ac601e" class="outline-3">
+<h3 id="org7ac601e">Approach 1</h3>
+<div class="outline-text-3" id="text-org7ac601e">
+<p>
+这到题难度不高，方法也很容易想到，下面就是我的解法。容易看出时间复杂度为O(n)。<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">removeDuplicates</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="kt">size_t</span> <span class="n">left</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">size_t</span> <span class="n">right</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(;</span> <span class="n">right</span><span class="o">&lt;</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">right</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">left</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nums</span><span class="p">[</span><span class="n">right</span><span class="p">])</span> <span class="p">{</span>
+	    <span class="o">++</span><span class="n">left</span><span class="p">;</span>
+	    <span class="n">nums</span><span class="p">[</span><span class="n">left</span><span class="p">]</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">right</span><span class="p">];</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">left</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgc5cb5bd" class="outline-3">
+<h3 id="orgc5cb5bd">Approach 2</h3>
+<div class="outline-text-3" id="text-orgc5cb5bd">
+<p>
+在我的答案AC后，我查看了下别人的提交记录，结果真的让我十分意外， <code>unique</code> 这个接口我还是不熟练。<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">removeDuplicates</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">nums_end_it</span> <span class="o">=</span> <span class="n">unique</span><span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">nums</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+    <span class="k">return</span> <span class="n">nums_end_it</span> <span class="o">-</span> <span class="n">nums</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focus on linux server dev. I use EMACS, and I am learning python.</p>
+        <p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
+</div>
+</div>
+
+       
+<div class="sidebar-module">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+        <ul class="pager hidden-print">
+<li class="previous">
+                <a href="/posts/algorithm-weekly-swap-nodes-in-pairs/" rel="prev" title="每周算法：调换链表中节点">Previous post</a>
+            </li>
+        </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="https://samsonwang.me/posts/algorithm-weekly-remove-duplicates-from-sorted-array/",
+        disqus_title="\u6bcf\u5468\u7b97\u6cd5\uff1a\u5220\u53bb\u6709\u5e8f\u6570\u7ec4\u4e2d\u7684\u91cd\u590d\u5143\u7d20",
+        disqus_identifier="cache/posts/algorithm-weekly-remove-duplicates-from-sorted-array.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2018 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="/assets/js/jquery.min.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/jquery.lazyload.min.js"></script><script src="/assets/js/popper.min.js"></script><script src="/assets/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
