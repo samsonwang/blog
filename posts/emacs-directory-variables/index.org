@@ -1,0 +1,41 @@
+#+BEGIN_COMMENT
+.. title: 在EMACS中对目录进行独立配置
+.. slug: emacs-directory-variables
+.. date: 2018-10-11 17:11:57 UTC+08:00
+.. tags: emacs, lisp, elisp
+.. category: emacs
+.. link:
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 在EMACS中对目录进行独立配置
+
+如果你曾经同时维护多个软件项目，每个软件项目的代码风格都有各自的偏好。举个常见的例子，项目A要求使用 =tab= 进行缩进，而项目B要求使用空格进行缩进，虽然这样的代码风格问题看起来无关紧要，但这确实是代码编写中实实在在的问题。本文无意于讨论两者风格的优劣，而是想介绍在EMACS中优雅地解决这个问题的方法。
+
+{{{TEASER_END}}}
+
+** 目录变量（directory variables）
+Emacs中允许为指定的目录和其中的子文件夹中的文件设置一套相同的配置，它通过目录变量（directory-local variables）实现。设定目录变量的方法是在目录中创建一个名为 =.dir-locals.el= 的文件，当Emacs打开该目录下的文件时，会将文件中的配置的目录变量应用在打开的文件上。
+
+下面就是 =.dir-locals.el= 文件的示例：
+#+BEGIN_SRC elisp
+((nil . ((indent-tabs-mode . t)
+         (fill-column . 80)))
+ (c-mode . ((c-file-style . "BSD")
+            (subdirs . nil)))
+ ("src/imported"
+  . ((nil . ((change-log-default-name
+              . "ChangeLog.local"))))))
+#+END_SRC
+
+=.dir-locals.el= 文件需要按照上面所示的格式编写， 可以对特定的主模式（major mode）进行配置，使用 =nil= 表示对所有的主模式生效。
+
+当 =.dir-locals.el= 在版本控制系统（VCS）中被用作共享的配置文件时，可以是使用 =.dir-locals-2.el= 作为个人的配置文件，Emacs会同时加载两个文件中的配置。
+
+使用 =add-dir-local-variable= 命令可以交互地设置目录变量，按照命令要求依次输入主模式、变量名称、变量值，最终会在 =.dir-locals.el= 文件中完成相应的配置。如果你同时在使用 =Projectile= ，你可以使用 =projectile-edit-dir-locals= 完成相同的操作， 由 =Project= 负责把 =.dir-locals.el= 存放的项目的根目录。
+
+** 参考资料
+- [[https://www.emacswiki.org/emacs/DirectoryVariables][emacs wiki - directory variables]]
+- [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Directory-Variables.html][emacs manual - directory variables]]
+- [[http://endlessparentheses.com/a-quick-guide-to-directory-local-variables.html][endlessparenthesses.com - quick guide to directory variables]]
