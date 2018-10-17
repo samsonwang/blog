@@ -1,0 +1,126 @@
+#+BEGIN_COMMENT
+.. title: 每周算法：下一个组合
+.. slug: algorithm-weekly-next-permutation
+.. date: 2018-10-17 09:30:17 UTC+08:00
+.. tags: algorithm, leetcode
+.. category: algorithm
+.. link: https://leetcode.com/problems/next-permutation/description/
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 每周算法：下一个组合
+leetcode算法题第31道，难度为medium。这道题考察题意理解的准确性和思路的全面性，对于题目所包含规律的总结也很重要。
+
+{{{TEASER_END}}}
+
+** Description
+Implement *next permutation*, which rearranges numbers into the lexicographically next greater permutation of numbers.
+
+If such arrangement is not possible, it must rearrange it as the lowest possible order (ie, sorted in ascending order).
+
+The replacement must be /in-place/ and use only constant extra memory.
+
+Here are some examples. Inputs are in the left-hand column and its corresponding outputs are in the right-hand column.
+
+=1,2,3= → =1,3,2=
+=3,2,1= → =1,2,3=
+=1,1,5= → =1,5,1=
+
+来源：https://leetcode.com/problems/next-permutation/description/
+
+** Solution
+*** Approach 1
+虽然这个方法是我自己想出来的，不过我不得不承认，在我提交过leetcode之后才发现这道题比我想象中的要难。主要是leetcode给出了 =1,3,2= 这样的测试用例，这个测试用例提醒我题目中 =next greater= 的要求。
+下面就是解法代码：
+#+BEGIN_SRC cpp
+void reverse(vector<int>& nums) {
+    int front = 0;
+    int end = nums.size() - 1;
+    while (front < end) {
+        int t = nums[front];
+        nums[front] = nums[end];
+        nums[end] = t;
+        ++front;
+        --end;
+    }
+}
+void nextPermutation(vector<int>& nums) {
+    int left = -1;
+    int right = -1;
+    for (int i = 0; i < nums.size(); ++i) {
+        int right_t = i+1;
+        bool matched = false;
+        for (int j = i+1; j < nums.size(); ++j) {
+            if (nums[j] > nums[i]
+                && nums[j] <= nums[right_t]) {
+                right_t = j;
+                matched = true;
+            }
+        }
+        if (matched) {
+            left = i;
+            right = right_t;
+        }
+    }
+    if (left < 0 || right < 0) {
+        reverse(nums);
+        return;
+    }
+    // swap
+    int t = nums[left];
+    nums[left] = nums[right];
+    nums[right] = t;
+    if (left+1 < nums.size()) {
+        sort(nums.begin()+left+1,
+             nums.end());
+    }
+}
+#+END_SRC
+这个解法是从前向后找的，目的是为了满足题目中要求的 =next greater= ，这样做目的是为了穷尽所有可能的组合。
+
+*** Approach 2 Single Pass Approach
+这个方法是从leetcode的solution讲解中摘出来的。与Approach 1不同，这个方法是用后向前找的，这种寻找方法好像在时间复杂度上更优。
+
+下面的这张动图简明地展示了算法的过程。
+[[img-url:/images/post-algorithm-weekly-next-permutation.gif]]
+
+下面就是这个解法的java实现：
+#+BEGIN_SRC java
+public class Solution {
+    public void nextPermutation(int[] nums) {
+        int i = nums.length - 2;
+        while (i >= 0 && nums[i + 1] <= nums[i]) {
+            i--;
+        }
+        if (i >= 0) {
+            int j = nums.length - 1;
+            while (j >= 0 && nums[j] <= nums[i]) {
+                j--;
+            }
+            swap(nums, i, j);
+        }
+        reverse(nums, i + 1);
+    }
+
+    private void reverse(int[] nums, int start) {
+        int i = start, j = nums.length - 1;
+        while (i < j) {
+            swap(nums, i, j);
+            i++;
+            j--;
+        }
+    }
+
+    private void swap(int[] nums, int i, int j) {
+        int temp = nums[i];
+        nums[i] = nums[j];
+        nums[j] = temp;
+    }
+}
+#+END_SRC
+
+这个算法的时间复杂度为O(n)，在最坏情况下，需要对数组执行两次遍历。空间复杂度为为O(1)。
+
+** Reference
+- [[https://leetcode.com/problems/next-permutation/solution/][leetcode - solution]]
