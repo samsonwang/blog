@@ -76,7 +76,202 @@
 
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/regexp-cheetsheet/" class="u-url">正则表达式备忘</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/javascript-object-oriented-programming/" class="u-url">javscript中的OOP特性</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-08-26T10:31:37+08:00" itemprop="datePublished" title="2018-08-26 10:31">Aug 26 2018  (10:31)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/javascript-object-oriented-programming/#disqus_thread" data-disqus-identifier="cache/posts/javascript-object-oriented-programming.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
+        <li><a class="tag p-category" href="/tags/javascript/" rel="tag">javascript</a></li>
+        <li><a class="tag p-category" href="/tags/oop/" rel="tag">oop</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-orgb439be7" class="outline-2">
+<h2 id="orgb439be7">
+<span class="section-number-2">1</span> 引言</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+js也是具有OOP（object oriented programming）特性的，OOP在构建一些大型应用程序还是有一套成熟理论的。作为C++的使用者在学习js中的OOP特性的过程中，能够较快地理解其中的各种术语和概念，也能比较两种语言的异同，深化知识理解。通过js的OOP特性的学习也让我开始从语言层面考虑程序设计问题。<br>
+本篇文章主要介绍了js中的一些OOP特性，并且比较了js与C++的语言特性。如果你能熟练掌握C++的OOP特性，本文能帮助你快速地对js中的OOP特性建立整体的认识。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org0b162f2" class="outline-2">
+<h2 id="org0b162f2">
+<span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-org1b58ede" class="outline-3">
+<h3 id="org1b58ede">
+<span class="section-number-3">2.1</span> 创建对象（object）</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+js中创建object的代码，示例如下：<br></p>
+<div class="highlight"><pre><span></span>let duck = {
+  name: "Aflac",
+  numLegs: 2,
+  sayName: function() {
+    return "The name of this duck is " + this.name + ".";
+  }
+};
+</pre></div>
+<p>
+js直接通过 <code>{}</code> 就可以创建出对象示例来，不需要对该对象（object）的类（class）进行声明。这点和C++不是很相同，C++需要先声明一个class再创建object。<br>
+这个object有两个成员变量和一个成员函数，需要注意的是这两个成员变量都是公有（public）的，他们是可以直接用 <code>.</code> 符号访问的。<br>
+js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关键字用于表示当前实例。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgb19e640" class="outline-3">
+<h3 id="orgb19e640">
+<span class="section-number-3">2.2</span> 类（class）的声明</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+js中声明一个类的操作实际上就是声明一个构造函数。<br></p>
+<div class="highlight"><pre><span></span>let Bird = function(name, color) {
+  this.name = name;
+  this.color = color;
+  this.numLegs = 2;
+}
+
+let crow = new Bird("Alexis", "black");
+
+crow instanceof Bird; // =&gt; true
+</pre></div>
+<p>
+上面的代码声明了Bird类，在js中通常类的名字都是由首字母大写的单词表示的。类的构造函数也能接受参数用于对实例的初始化，这点与C++非常相似，使用 <code>new</code> 关键字就能够创建该类的实例。<br>
+使用 <code>instanceof</code> 关键字用于检查对象是否属于某个类，也可通过验证 <code>constructor</code> 属性来判断一个对象是否属于一个类 <code>crow.constructor == Bird</code> 。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org2e701ba" class="outline-3">
+<h3 id="org2e701ba">
+<span class="section-number-3">2.3</span> 类的共有成员</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还不太合适）能够实现C++中静态成员变量和静态成员函数的特性。<br></p>
+<div class="highlight"><pre><span></span>Bird.prototype.numLegs = 2;
+</pre></div>
+<p>
+上面的代码就给Bird类增加了一个静态成员变量。这个 <code>prototype</code> 可以是一个对象，这样类的共有成员就能方便地承载更多的属性了，示例代码如下。<br></p>
+<div class="highlight"><pre><span></span>Bird.prototype = {
+  constructor: Bird,
+  numLegs: 2,
+  eat: function() {
+    console.log("nom nom nom");
+  },
+  describe: function() {
+    console.log("My name is " + this.name);
+  }
+};
+</pre></div>
+<p>
+需要注意的是需要设置好 <code>constructor</code> 属性，这样是为了保证代码逻辑的一致性。<br>
+对象会获得类的 <code>prototype</code> 属性，可以通过 <code>isPrototypeof</code> 方法来验证。<br></p>
+<div class="highlight"><pre><span></span>Bird.prototype.isPrototypeOf(duck);
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org7143cb0" class="outline-3">
+<h3 id="org7143cb0">
+<span class="section-number-3">2.4</span> 类的私有成员</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+js与C++一样，也可以有私有成员变量，代码如下所示。 <code>hatchedEgg</code> 就相当与是Bird的私有成员变量，并且提供了修改这个成员变量的方法 <code>getHatchedEggCount</code> 。<br></p>
+<div class="highlight"><pre><span></span>function Bird() {
+  let hatchedEgg = 10; // private property
+
+  this.getHatchedEggCount = function() {
+    // publicly available method that a bird object can use
+    return hatchedEgg;
+  };
+}
+let ducky = new Bird();
+ducky.getHatchedEggCount(); // returns 10
+</pre></div>
+<p>
+这种形式在js中被称作闭包（closure），函数能够访问到与他处在同一个作用域（context）中的变量。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org2cc18b1" class="outline-3">
+<h3 id="org2cc18b1">
+<span class="section-number-3">2.5</span> 类的继承和派生</h3>
+<div class="outline-text-3" id="text-2-5">
+<p>
+js中的派生主要通过 <code>prototype</code> 体现，下面的代码表示Bird派生自Object。同样，需要注意将 <code>constructor</code> 属性设置好。<br></p>
+<div class="highlight"><pre><span></span>Bird.prototype = Object.create(Animal.prototype);
+Bird.prototype.constructor = Bird;
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org1a0cf59" class="outline-3">
+<h3 id="org1a0cf59">
+<span class="section-number-3">2.6</span> 类的覆盖</h3>
+<div class="outline-text-3" id="text-2-6">
+<p>
+js中可以重写基类中的方法，代码如下所示，这点与C++中的 <code>override</code> 相同。<br></p>
+<div class="highlight"><pre><span></span>function Animal() { }
+Animal.prototype.eat = function() {
+  return "nom nom nom";
+};
+function Bird() { }
+
+// Inherit all methods from Animal
+Bird.prototype = Object.create(Animal.prototype);
+
+// Bird.eat() overrides Animal.eat()
+Bird.prototype.eat = function() {
+  return "peck peck peck";
+};
+
+Bird.prototype.fly = function() {
+  console.log("I'm flying!");
+};
+</pre></div>
+<p>
+通样也在派生之后也可以通过修改派生类的 <code>prototype</code> 以达到特化派生类的作用，上面的 <code>fly</code> 方法就是在Bird完成派生之后新增的方法。现在Bird有两个方法，它们分别是 <code>eat</code> 和 <code>fly</code> 。<br></p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org4c6b76d" class="outline-2">
+<h2 id="org4c6b76d">
+<span class="section-number-2">3</span> 参考资料</h2>
+<div class="outline-text-2" id="text-3">
+<ul class="org-ul">
+<li>
+<a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/object-oriented-programming/">FCC javascript oop tutorial</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/regexp-cheetsheet/" class="u-url">正则表达式备忘</a></h1>
       <div class="metadata">
         
 
@@ -107,9 +302,9 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orge2c16e2" class="outline-2">
-<h2 id="orge2c16e2">引言</h2>
-<div class="outline-text-2" id="text-orge2c16e2">
+      <div id="outline-container-orgddaf3ae" class="outline-2">
+<h2 id="orgddaf3ae">引言</h2>
+<div class="outline-text-2" id="text-orgddaf3ae">
 <p>
 近在FreeCodeCamp(FCC)学习前端的课程，其中有一节就是讲的 <code>regexp</code> ，也就是正则表达式，之前我零星地了解过一些正则表达式的相关知识，不足以对正则表达式得出一个完整的认识。FCC的教程循序渐进，由简到繁，在教学中结合练习，非常适合初学者的学习过程。如何你的英文能够达到阅读技术类文献的水平，又正好想学习一下正则表达式，我推荐你试一下FCC的正则表达式教程，花3~4个小时就能够对正则表达式有个完整的理解。<br></p>
 
@@ -118,9 +313,9 @@
 </div>
 </div>
 
-<div id="outline-container-org77ed058" class="outline-2">
-<h2 id="org77ed058">要点总结（js版）</h2>
-<div class="outline-text-2" id="text-org77ed058">
+<div id="outline-container-orgb695fbb" class="outline-2">
+<h2 id="orgb695fbb">要点总结（js版）</h2>
+<div class="outline-text-2" id="text-orgb695fbb">
 <p>
 FCC的教程使用javascript作为开发语言，本节所有的代码都是js代码。<br></p>
 
@@ -362,9 +557,9 @@ lookahead 的概念， <code>(?=...)</code> 与 <code>(?!...)</code><br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd2ac612" class="outline-2">
-<h2 id="orgd2ac612">elisp和python中的正则表达式</h2>
-<div class="outline-text-2" id="text-orgd2ac612">
+<div id="outline-container-org81ad983" class="outline-2">
+<h2 id="org81ad983">elisp和python中的正则表达式</h2>
+<div class="outline-text-2" id="text-org81ad983">
 <p>
 在emacs中内置了 <code>string-match</code> 函数进行正则表达式匹配，其函数原型为 <code>(string-match REGEXP STRING &amp;optional START)</code> ，下面就是在emacs中使用regexp的示例。<br></p>
 <div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span> <span class="nv">str-regexp</span> <span class="s">"\.[h|cpp]$"</span><span class="p">)</span>
@@ -386,9 +581,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 </div>
 
 
-<div id="outline-container-org0fe92ef" class="outline-2">
-<h2 id="org0fe92ef">参考资料</h2>
-<div class="outline-text-2" id="text-org0fe92ef">
+<div id="outline-container-org599d501" class="outline-2">
+<h2 id="org599d501">参考资料</h2>
+<div class="outline-text-2" id="text-org599d501">
 <ul class="org-ul">
 <li>
 <a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/regular-expressions">FCC regular-expression tutorial</a><br>
@@ -433,9 +628,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org0357d95" class="outline-2">
-<h2 id="org0357d95">Description</h2>
-<div class="outline-text-2" id="text-org0357d95">
+      <div id="outline-container-org007533f" class="outline-2">
+<h2 id="org007533f">Description</h2>
+<div class="outline-text-2" id="text-org007533f">
 <p>
 Implement <code>atoi</code> which converts a string to an integer.<br></p>
 
@@ -493,13 +688,13 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0c251fe" class="outline-2">
-<h2 id="org0c251fe">Solution</h2>
-<div class="outline-text-2" id="text-org0c251fe">
+<div id="outline-container-org57cbd14" class="outline-2">
+<h2 id="org57cbd14">Solution</h2>
+<div class="outline-text-2" id="text-org57cbd14">
 </div>
-<div id="outline-container-org1d5c27f" class="outline-3">
-<h3 id="org1d5c27f">Approach 1</h3>
-<div class="outline-text-3" id="text-org1d5c27f">
+<div id="outline-container-orgab294f5" class="outline-3">
+<h3 id="orgab294f5">Approach 1</h3>
+<div class="outline-text-3" id="text-orgab294f5">
 <p>
 这道题并不难，思路也比较容易想出来，下面就是我想到的解法。<br>
 可能需要注意的问题是：<br></p>
@@ -571,9 +766,9 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3fe478b" class="outline-3">
-<h3 id="org3fe478b">Approach 2</h3>
-<div class="outline-text-3" id="text-org3fe478b">
+<div id="outline-container-orgfcbdfaf" class="outline-3">
+<h3 id="orgfcbdfaf">Approach 2</h3>
+<div class="outline-text-3" id="text-orgfcbdfaf">
 <p>
 下面这段代码目前是leetcode上运行速度最快的solution sample，仅仅耗时了4ms。作者使用了很多让程序跑得更快的方法，其中的技巧值得我学习。<br></p>
 <div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span> <span class="n">fast</span> <span class="o">=</span> <span class="p">[]()</span> <span class="p">{</span>
@@ -642,9 +837,9 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgcafaf68" class="outline-2">
-<h2 id="orgcafaf68">Reference</h2>
-<div class="outline-text-2" id="text-orgcafaf68">
+<div id="outline-container-org5370546" class="outline-2">
+<h2 id="org5370546">Reference</h2>
+<div class="outline-text-2" id="text-org5370546">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/31162367/significance-of-ios-basesync-with-stdiofalse-cin-tienull">stackoverflow.com sync with stdio</a><br>
@@ -685,17 +880,17 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org6e16774" class="outline-2">
-<h2 id="org6e16774">序言</h2>
-<div class="outline-text-2" id="text-org6e16774">
+      <div id="outline-container-org2029380" class="outline-2">
+<h2 id="org2029380">序言</h2>
+<div class="outline-text-2" id="text-org2029380">
 <p>
 对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3e86269" class="outline-2">
-<h2 id="org3e86269">什么是MapReduce</h2>
-<div class="outline-text-2" id="text-org3e86269">
+<div id="outline-container-org0bf706e" class="outline-2">
+<h2 id="org0bf706e">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-org0bf706e">
 <p>
 MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
 
@@ -711,9 +906,9 @@ MapReduce是面向大数据并行处理的计算模型、框架和平台，它�
 </div>
 </div>
 
-<div id="outline-container-orga117987" class="outline-2">
-<h2 id="orga117987">map和reduce</h2>
-<div class="outline-text-2" id="text-orga117987">
+<div id="outline-container-org195a838" class="outline-2">
+<h2 id="org195a838">map和reduce</h2>
+<div class="outline-text-2" id="text-org195a838">
 <p>
 <b>从编程语言的角度上来说</b><br>
 map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
@@ -732,9 +927,9 @@ reduce操作也会接收到两个参数，一个列表和一个变换过程，�
 </div>
 </div>
 
-<div id="outline-container-org5366019" class="outline-2">
-<h2 id="org5366019">并行计算与大数据</h2>
-<div class="outline-text-2" id="text-org5366019">
+<div id="outline-container-org80bbd7d" class="outline-2">
+<h2 id="org80bbd7d">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-org80bbd7d">
 <p>
 mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
 
@@ -765,9 +960,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-org540e624" class="outline-2">
-<h2 id="org540e624">参考资料</h2>
-<div class="outline-text-2" id="text-org540e624">
+<div id="outline-container-org4ff620c" class="outline-2">
+<h2 id="org4ff620c">参考资料</h2>
+<div class="outline-text-2" id="text-org4ff620c">
 <ul class="org-ul">
 <li>
 <a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
@@ -812,9 +1007,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org5cc312d" class="outline-2">
-<h2 id="org5cc312d">Description</h2>
-<div class="outline-text-2" id="text-org5cc312d">
+      <div id="outline-container-org6758c49" class="outline-2">
+<h2 id="org6758c49">Description</h2>
+<div class="outline-text-2" id="text-org6758c49">
 <p>
 The string "PAYPALISHIRING" is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)<br></p>
 
@@ -849,13 +1044,13 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-org1495c95" class="outline-2">
-<h2 id="org1495c95">Solution</h2>
-<div class="outline-text-2" id="text-org1495c95">
+<div id="outline-container-org800a18d" class="outline-2">
+<h2 id="org800a18d">Solution</h2>
+<div class="outline-text-2" id="text-org800a18d">
 </div>
-<div id="outline-container-org4217b10" class="outline-3">
-<h3 id="org4217b10">Approach 1 找规律</h3>
-<div class="outline-text-3" id="text-org4217b10">
+<div id="outline-container-org45bf4a4" class="outline-3">
+<h3 id="org45bf4a4">Approach 1 找规律</h3>
+<div class="outline-text-3" id="text-org45bf4a4">
 <p>
 我想到的第一个方法就是找规律，通过寻找每一行的变化规律，编写相应的计算逻辑。<br>
 需要注意:<br></p>
@@ -917,9 +1112,9 @@ P     I
 </div>
 
 
-<div id="outline-container-org8a704ec" class="outline-3">
-<h3 id="org8a704ec">Approach 2 Sort by Row</h3>
-<div class="outline-text-3" id="text-org8a704ec">
+<div id="outline-container-orgc58c627" class="outline-3">
+<h3 id="orgc58c627">Approach 2 Sort by Row</h3>
+<div class="outline-text-3" id="text-orgc58c627">
 <p>
 这个方法是leetcode提供的一个方法，主要思路是使用一个二维矩阵将字符串按照顺序存储起来，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(n)</code> 。<br></p>
 
@@ -947,9 +1142,9 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-org79d7708" class="outline-3">
-<h3 id="org79d7708">Approach 3 Visit by Row</h3>
-<div class="outline-text-3" id="text-org79d7708">
+<div id="outline-container-org8f8bb62" class="outline-3">
+<h3 id="org8f8bb62">Approach 3 Visit by Row</h3>
+<div class="outline-text-3" id="text-org8f8bb62">
 <p>
 这个方法是leetcode提供的另一个方法，通过计算下标完成字符串的转换，实际上也是对转换的规律进行了总结，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(1)</code> 。<br>
 对于空间复杂度，实际上需要额外的空间存储结果字符串，如果忽略函数所返回的结果字符串，则空间复杂度为 <code>O(1)</code> 。<br></p>
@@ -1005,17 +1200,17 @@ P     I
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgf67c70f" class="outline-2">
-<h2 id="orgf67c70f">引言</h2>
-<div class="outline-text-2" id="text-orgf67c70f">
+      <div id="outline-container-org1443adb" class="outline-2">
+<h2 id="org1443adb">引言</h2>
+<div class="outline-text-2" id="text-org1443adb">
 <p>
 本文主要对css flexbox的关键点了总结，方便以后在以后的查阅。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org8a6cf45" class="outline-2">
-<h2 id="org8a6cf45">容器的属性</h2>
-<div class="outline-text-2" id="text-org8a6cf45">
+<div id="outline-container-org9806026" class="outline-2">
+<h2 id="org9806026">容器的属性</h2>
+<div class="outline-text-2" id="text-org9806026">
 <p>
 对于容器需要指定其显示方式为flexbox<br></p>
 <div class="highlight"><pre><span></span><span class="nt">display</span><span class="o">:</span> <span class="nt">flex</span><span class="o">;</span>
@@ -1047,9 +1242,9 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-org18020ac" class="outline-2">
-<h2 id="org18020ac">条目的属性</h2>
-<div class="outline-text-2" id="text-org18020ac">
+<div id="outline-container-org5acccb6" class="outline-2">
+<h2 id="org5acccb6">条目的属性</h2>
+<div class="outline-text-2" id="text-org5acccb6">
 <p>
 用于调整顺序<br></p>
 <div class="highlight"><pre><span></span><span class="nt">order</span><span class="o">:</span> <span class="o">&lt;</span><span class="nt">integer</span><span class="o">&gt;;</span> <span class="c">/* default is 0 */</span>
@@ -1083,9 +1278,9 @@ P     I
 </div>
 
 
-<div id="outline-container-org3105e33" class="outline-2">
-<h2 id="org3105e33">参考资料</h2>
-<div class="outline-text-2" id="text-org3105e33">
+<div id="outline-container-orgc1c7c1c" class="outline-2">
+<h2 id="orgc1c7c1c">参考资料</h2>
+<div class="outline-text-2" id="text-orgc1c7c1c">
 <ul class="org-ul">
 <li>
 <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">css-tricks.com</a><br>
@@ -1177,9 +1372,9 @@ P     I
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgbf81577" class="outline-2">
-<h2 id="orgbf81577">Description</h2>
-<div class="outline-text-2" id="text-orgbf81577">
+      <div id="outline-container-org32ef319" class="outline-2">
+<h2 id="org32ef319">Description</h2>
+<div class="outline-text-2" id="text-org32ef319">
 <p>
 Given a string s, find the longest palindromic substring in s. You may assume that the maximum length of s is 1000.<br></p>
 
@@ -1199,16 +1394,16 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgabbb99b" class="outline-2">
-<h2 id="orgabbb99b">Solution</h2>
-<div class="outline-text-2" id="text-orgabbb99b">
+<div id="outline-container-org479e0e0" class="outline-2">
+<h2 id="org479e0e0">Solution</h2>
+<div class="outline-text-2" id="text-org479e0e0">
 <p>
 我想到了两种方法：暴力解法、从中心展开<br></p>
 </div>
 
-<div id="outline-container-org0c1f494" class="outline-3">
-<h3 id="org0c1f494">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org0c1f494">
+<div id="outline-container-org92a204b" class="outline-3">
+<h3 id="org92a204b">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org92a204b">
 <p>
 暴击解法的时间复杂度为 <code>O(n3)</code> , 找出所有子串的时间复杂度为 <code>O(n2)</code> , 判断一个子串的时间复杂度为 <code>O(n)</code> ; 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -1263,9 +1458,9 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf3590d0" class="outline-3">
-<h3 id="orgf3590d0">Approach 2 从中心展开</h3>
-<div class="outline-text-3" id="text-orgf3590d0">
+<div id="outline-container-org75f868f" class="outline-3">
+<h3 id="org75f868f">Approach 2 从中心展开</h3>
+<div class="outline-text-3" id="text-org75f868f">
 <p>
 从中心展开方法的时间复杂度为 <code>O(n2)</code> , 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -1339,9 +1534,9 @@ leetcode上还有一个解法，使用java完成的，它的坐标计算也很�
 </div>
 </div>
 
-<div id="outline-container-org14ee0c0" class="outline-3">
-<h3 id="org14ee0c0">Approach 3 动态规划（dynamic programming）</h3>
-<div class="outline-text-3" id="text-org14ee0c0">
+<div id="outline-container-org24fa6d3" class="outline-3">
+<h3 id="org24fa6d3">Approach 3 动态规划（dynamic programming）</h3>
+<div class="outline-text-3" id="text-org24fa6d3">
 <p>
 leetcode上还给给出了使用DP解决这个问题的方法。<br>
 我在leetcode上的discuss上找了个java写的解法。<br></p>
@@ -1371,9 +1566,9 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
 </div>
 </div>
 
-<div id="outline-container-orgb5a7d53" class="outline-3">
-<h3 id="orgb5a7d53">Approach 4 Manacher算法</h3>
-<div class="outline-text-3" id="text-orgb5a7d53">
+<div id="outline-container-orga4380e8" class="outline-3">
+<h3 id="orga4380e8">Approach 4 Manacher算法</h3>
+<div class="outline-text-3" id="text-orga4380e8">
 <p>
 这个算法思路实在是新奇，感兴趣的同学可以 <a href="https://articles.leetcode.com/longest-palindromic-substring-part-ii/">去看看</a> 。<br></p>
 </div>
@@ -1410,9 +1605,9 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org67ddd29" class="outline-2">
-<h2 id="org67ddd29">Description</h2>
-<div class="outline-text-2" id="text-org67ddd29">
+      <div id="outline-container-org825f55a" class="outline-2">
+<h2 id="org825f55a">Description</h2>
+<div class="outline-text-2" id="text-org825f55a">
 <p>
 Given a string, find the length of the longest substring without repeating characters.<br></p>
 
@@ -1427,16 +1622,16 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 </div>
 
-<div id="outline-container-orgc95cbfa" class="outline-2">
-<h2 id="orgc95cbfa">Solution</h2>
-<div class="outline-text-2" id="text-orgc95cbfa">
+<div id="outline-container-org05c6cf9" class="outline-2">
+<h2 id="org05c6cf9">Solution</h2>
+<div class="outline-text-2" id="text-org05c6cf9">
 <p>
 好久没刷算法题了，手有点生，没有什么思路，下面的答案是看过提示之后才写出来的。<br></p>
 </div>
 
-<div id="outline-container-orgefa6345" class="outline-3">
-<h3 id="orgefa6345">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-orgefa6345">
+<div id="outline-container-org39ebca5" class="outline-3">
+<h3 id="org39ebca5">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org39ebca5">
 <p>
 将所有的子串都穷举出来，并对它们进行判断，就能够得到最长子串的长度。这个算法很显然需要耗费很长时间。<br>
 需要注意的是： C++20中才支持 <code>std::set::contains</code> 这个接口（根据cppreference.com）。<br></p>
@@ -1481,9 +1676,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-org6919cd6" class="outline-3">
-<h3 id="org6919cd6">Approach 2 滑动窗口</h3>
-<div class="outline-text-3" id="text-org6919cd6">
+<div id="outline-container-orgacbfdef" class="outline-3">
+<h3 id="orgacbfdef">Approach 2 滑动窗口</h3>
+<div class="outline-text-3" id="text-orgacbfdef">
 <p>
 滑动窗口的概念在字符串处理问题中十分常用，保持子串的左端点不动，不断拓展右侧端点，就能穷举出所有满足条件的子串。<br>
 需要注意的是这句话： <code>lengthMax = max(lengthMax, int(j-i+1));</code><br></p>
@@ -1526,9 +1721,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-org76a84e5" class="outline-3">
-<h3 id="org76a84e5">Approach 3 优化的滑动窗口</h3>
-<div class="outline-text-3" id="text-org76a84e5">
+<div id="outline-container-org4c750b1" class="outline-3">
+<h3 id="org4c750b1">Approach 3 优化的滑动窗口</h3>
+<div class="outline-text-3" id="text-org4c750b1">
 <p>
 使用 <code>map</code> 对字母出现的位置进行记录，这样在出现相同字母时，就能够从上一次出现的位置向后开始寻找。<br>
 需要注意句话 <code>it-&gt;second+1&gt;=i</code> , 需要对位置加1后再比较，这样才能保证 <code>i</code> 的坐标计算正确。<br></p>
@@ -1593,8 +1788,8 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org050fd1b" class="outline-2">
-<h2 id="org050fd1b">
+      <div id="outline-container-org3519b06" class="outline-2">
+<h2 id="org3519b06">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -1609,8 +1804,8 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-org4a27994" class="outline-2">
-<h2 id="org4a27994">
+<div id="outline-container-org0465f47" class="outline-2">
+<h2 id="org0465f47">
 <span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -1622,13 +1817,13 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-orge0adf0d" class="outline-2">
-<h2 id="orge0adf0d">
+<div id="outline-container-org0dc35da" class="outline-2">
+<h2 id="org0dc35da">
 <span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-org609de59" class="outline-3">
-<h3 id="org609de59">
+<div id="outline-container-orgde30974" class="outline-3">
+<h3 id="orgde30974">
 <span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -1673,8 +1868,8 @@ Point and mark interchanged
 </div>
 </div>
 
-<div id="outline-container-orgc1c5205" class="outline-3">
-<h3 id="orgc1c5205">
+<div id="outline-container-org74db306" class="outline-3">
+<h3 id="org74db306">
 <span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -1712,8 +1907,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org30bffe0" class="outline-3">
-<h3 id="org30bffe0">
+<div id="outline-container-orga317867" class="outline-3">
+<h3 id="orga317867">
 <span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
 </h3>
 <div class="outline-text-3" id="text-3-3">
@@ -1727,16 +1922,16 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org0c106ad" class="outline-2">
-<h2 id="org0c106ad">
+<div id="outline-container-org1735c5a" class="outline-2">
+<h2 id="org1735c5a">
 <span class="section-number-2">4</span> 其他插件支持</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
 </div>
 
-<div id="outline-container-orgf17c6ba" class="outline-3">
-<h3 id="orgf17c6ba">
+<div id="outline-container-org0eb2b71" class="outline-3">
+<h3 id="org0eb2b71">
 <span class="section-number-3">4.1</span> helm swoop</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
@@ -1750,8 +1945,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org596676b" class="outline-3">
-<h3 id="org596676b">
+<div id="outline-container-org3435a78" class="outline-3">
+<h3 id="org3435a78">
 <span class="section-number-3">4.2</span> avy</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
@@ -1767,8 +1962,8 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org0bf715b" class="outline-2">
-<h2 id="org0bf715b">
+<div id="outline-container-org01559e0" class="outline-2">
+<h2 id="org01559e0">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -1815,17 +2010,17 @@ interface FooProps {}
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgb319a0b" class="outline-2">
-<h2 id="orgb319a0b">引言</h2>
-<div class="outline-text-2" id="text-orgb319a0b">
+      <div id="outline-container-org298a05f" class="outline-2">
+<h2 id="org298a05f">引言</h2>
+<div class="outline-text-2" id="text-org298a05f">
 <p>
 在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgcaf698c" class="outline-2">
-<h2 id="orgcaf698c">使用尖括号完成重定向</h2>
-<div class="outline-text-2" id="text-orgcaf698c">
+<div id="outline-container-org53d7ef5" class="outline-2">
+<h2 id="org53d7ef5">使用尖括号完成重定向</h2>
+<div class="outline-text-2" id="text-org53d7ef5">
 <p>
 示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
 <div class="highlight"><pre><span></span>ls . &gt; ls-output.txt
@@ -1834,25 +2029,25 @@ interface FooProps {}
 可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
 </div>
 
-<div id="outline-container-org4dedf25" class="outline-3">
-<h3 id="org4dedf25">重定向 <code>stdout</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org4dedf25">
+<div id="outline-container-org00a8e47" class="outline-3">
+<h3 id="org00a8e47">重定向 <code>stdout</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org00a8e47">
 <div class="highlight"><pre><span></span>ls . <span class="m">1</span>&gt; ls-output.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org03fbd61" class="outline-3">
-<h3 id="org03fbd61">重定向 <code>stderr</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org03fbd61">
+<div id="outline-container-orga563048" class="outline-3">
+<h3 id="orga563048">重定向 <code>stderr</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-orga563048">
 <div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt; ls-error.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgdd016bc" class="outline-3">
-<h3 id="orgdd016bc">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
-<div class="outline-text-3" id="text-orgdd016bc">
+<div id="outline-container-org3782969" class="outline-3">
+<h3 id="org3782969">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
+<div class="outline-text-3" id="text-org3782969">
 <div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> ls-output-and-error.txt
 </pre></div>
 <p>
@@ -1862,9 +2057,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org9f6ca28" class="outline-3">
-<h3 id="org9f6ca28">将程序的输出丢掉</h3>
-<div class="outline-text-3" id="text-org9f6ca28">
+<div id="outline-container-org5bc17af" class="outline-3">
+<h3 id="org5bc17af">将程序的输出丢掉</h3>
+<div class="outline-text-3" id="text-org5bc17af">
 <p>
 可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
 <div class="highlight"><pre><span></span>program &gt; /dev/null
@@ -1872,9 +2067,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org92df553" class="outline-3">
-<h3 id="org92df553">将输出追加到指定文件尾部</h3>
-<div class="outline-text-3" id="text-org92df553">
+<div id="outline-container-org555dba9" class="outline-3">
+<h3 id="org555dba9">将输出追加到指定文件尾部</h3>
+<div class="outline-text-3" id="text-org555dba9">
 <p>
 使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="nb">echo</span> <span class="nb">test</span> &gt;&gt; file-output.txt
@@ -1883,9 +2078,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-orgaa7a940" class="outline-2">
-<h2 id="orgaa7a940">使用管道完成重定向</h2>
-<div class="outline-text-2" id="text-orgaa7a940">
+<div id="outline-container-orgb842940" class="outline-2">
+<h2 id="orgb842940">使用管道完成重定向</h2>
+<div class="outline-text-2" id="text-orgb842940">
 <p>
 使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
 <div class="highlight"><pre><span></span>ls <span class="p">|</span> grep &lt;pattern&gt;
@@ -1924,9 +2119,9 @@ interface FooProps {}
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org7b269ed" class="outline-2">
-<h2 id="org7b269ed">引言</h2>
-<div class="outline-text-2" id="text-org7b269ed">
+      <div id="outline-container-org613685b" class="outline-2">
+<h2 id="org613685b">引言</h2>
+<div class="outline-text-2" id="text-org613685b">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -1951,9 +2146,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org0961273" class="outline-2">
-<h2 id="org0961273">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-org0961273">
+<div id="outline-container-orga749193" class="outline-2">
+<h2 id="orga749193">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-orga749193">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -1997,9 +2192,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org4bf220d" class="outline-2">
-<h2 id="org4bf220d">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-org4bf220d">
+<div id="outline-container-orgb2d2d87" class="outline-2">
+<h2 id="orgb2d2d87">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-orgb2d2d87">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -2008,18 +2203,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org9284048" class="outline-2">
-<h2 id="org9284048">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-org9284048">
+<div id="outline-container-org48ece91" class="outline-2">
+<h2 id="org48ece91">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-org48ece91">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgafd7aa9" class="outline-2">
-<h2 id="orgafd7aa9">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-orgafd7aa9">
+<div id="outline-container-org6e14cd3" class="outline-2">
+<h2 id="org6e14cd3">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org6e14cd3">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -2028,265 +2223,11 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orgbe60b41" class="outline-2">
-<h2 id="orgbe60b41">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-orgbe60b41">
+<div id="outline-container-org4814f80" class="outline-2">
+<h2 id="org4814f80">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-org4814f80">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
-</div>
-</div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/bit-field/" class="u-url">C/C++中的位域</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-07-11T18:03:37+08:00" itemprop="datePublished" title="2018-07-11 18:03">Jul 11 2018  (18:03)
-    </time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/bit-field/#disqus_thread" data-disqus-identifier="cache/posts/bit-field.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgb28cc1c" class="outline-2">
-<h2 id="orgb28cc1c">
-<span class="section-number-2">1</span> 什么是位域</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-<a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">维基百科</a> 给出了以下解释<br></p>
-<blockquote>
-<p>
-位域（或称“位段”，bit field）为一种数据结构，可以把数据以位的形式紧凑的储存，并允许程序员对此结构的位进行操作。<br></p>
-</blockquote>
-
-<p>
-<a href="https://en.cppreference.com/w/cpp/language/bit_field">cppreference</a> 给出了以下定义<br></p>
-<blockquote>
-<p>
-Declares a class data member with explicit size, in bits. Adjacent bit field members may be packed to share and straddle the individual bytes.<br></p>
-</blockquote>
-
-<p>
-这种数据结构的好处：<br></p>
-<ul class="org-ul">
-<li>可以使数据单元节省储存空间，当程序需要成千上万个数据单元时，这种方法就显得尤为重要。<br>
-</li>
-<li>位段可以很方便的访问一个整数值的部分内容从而可以简化程序源代码。<br>
-</li>
-</ul>
-<p>
-而位域这种数据结构的缺点在于，其内存分配与内存对齐的实现方式依赖于具体的机器和系统，在不同的平台可能有不同的结果，这导致了位段在本质上是不可移植的。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org18d30e8" class="outline-2">
-<h2 id="org18d30e8">
-<span class="section-number-2">2</span> 位域的语法</h2>
-<div class="outline-text-2" id="text-2">
-<div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="o">:</span> <span class="n">size</span>
-</pre></div>
-
-<p>
-注意：<br></p>
-<ul class="org-ul">
-<li>size的大小不能超过identifier所包含最大比特位个数。<br>
-</li>
-<li>identifier为空时表示对应的size个数的比特位不使用<br>
-</li>
-<li>size为0时表示根据前类型强制补齐<br>
-</li>
-</ul>
-<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">S1</span> <span class="p">{</span>
-    <span class="c1">// will usually occupy 2 bytes:</span>
-    <span class="c1">// 3 bits: value of b1</span>
-    <span class="c1">// 2 bits: unused</span>
-    <span class="c1">// 6 bits: value of b2</span>
-    <span class="c1">// 2 bits: value of b3</span>
-    <span class="c1">// 3 bits: unused</span>
-    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">b1</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="o">:</span> <span class="mi">2</span><span class="p">,</span> <span class="nl">b2</span> <span class="p">:</span> <span class="mi">6</span><span class="p">,</span> <span class="nl">b3</span> <span class="p">:</span> <span class="mi">2</span><span class="p">;</span>
-<span class="p">};</span>
-
-<span class="k">struct</span> <span class="n">S2</span> <span class="p">{</span>
-    <span class="c1">// will usually occupy 2 bytes:</span>
-    <span class="c1">// 3 bits: value of b1</span>
-    <span class="c1">// 5 bits: unused</span>
-    <span class="c1">// 6 bits: value of b2</span>
-    <span class="c1">// 2 bits: value of b3</span>
-    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">b1</span> <span class="p">:</span> <span class="mi">3</span><span class="p">;</span>
-    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">:</span><span class="mi">0</span><span class="p">;</span> <span class="c1">// start a new byte</span>
-    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">b2</span> <span class="p">:</span> <span class="mi">6</span><span class="p">;</span>
-    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">b3</span> <span class="p">:</span> <span class="mi">2</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-</div>
-
-<div id="outline-container-org134aa13" class="outline-3">
-<h3 id="org134aa13">
-<span class="section-number-3">2.1</span> 在size取0时如何理解</h3>
-<div class="outline-text-3" id="text-2-1">
-<p>
-对于size取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。<br>
-如下所示，定义了如下几种情况。<br></p>
-</div>
-
-<div id="outline-container-org3e55db8" class="outline-4">
-<h4 id="org3e55db8">
-<span class="section-number-4">2.1.1</span> case1</h4>
-<div class="outline-text-4" id="text-2-1-1">
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
-    <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="p">{</span>
-	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">4</span><span class="p">;</span>
-	<span class="kt">int</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
-	<span class="kt">int</span> <span class="nl">nn2</span> <span class="p">:</span> <span class="mi">16</span><span class="p">;</span>
-    <span class="p">}</span> <span class="n">st</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-<p>
-对联合体中的结构体位段进行赋值，并将联合体中的内容打印出来。<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="n">u1</span><span class="p">;</span>
-<span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn2</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="n">printf</span><span class="p">(</span><span class="s">"union u1.n1=0x%08x sizeof(un1)=%zu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">u1</span><span class="p">.</span><span class="n">n1</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">));</span>
-</pre></div>
-<p>
-输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000001</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">8</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgbc61499" class="outline-4">
-<h4 id="orgbc61499">
-<span class="section-number-4">2.1.2</span> case2</h4>
-<div class="outline-text-4" id="text-2-1-2">
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
-    <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="p">{</span>
-	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">4</span><span class="p">;</span>
-	<span class="kt">char</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
-	<span class="kt">int</span> <span class="nl">nn2</span> <span class="p">:</span> <span class="mi">16</span><span class="p">;</span>
-    <span class="p">}</span> <span class="n">st</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-<p>
-输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org58191d8" class="outline-4">
-<h4 id="org58191d8">
-<span class="section-number-4">2.1.3</span> case3</h4>
-<div class="outline-text-4" id="text-2-1-3">
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
-    <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="p">{</span>
-	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">4</span><span class="p">;</span>
-	<span class="kt">short</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
-	<span class="kt">int</span> <span class="nl">nn2</span> <span class="p">:</span> <span class="mi">16</span><span class="p">;</span>
-    <span class="p">}</span> <span class="n">st</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-<p>
-输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00010001</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-orgb342ba3" class="outline-4">
-<h4 id="orgb342ba3">
-<span class="section-number-4">2.1.4</span> case4</h4>
-<div class="outline-text-4" id="text-2-1-4">
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
-    <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="p">{</span>
-	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">8</span><span class="p">;</span>
-	<span class="kt">char</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
-	<span class="kt">int</span> <span class="nl">nn2</span> <span class="p">:</span> <span class="mi">16</span><span class="p">;</span>
-    <span class="p">}</span> <span class="n">st</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-<p>
-输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
-</pre></div>
-</div>
-</div>
-</div>
-
-<div id="outline-container-org204ab82" class="outline-3">
-<h3 id="org204ab82">
-<span class="section-number-3">2.2</span> <code>struct</code> 标识符</h3>
-<div class="outline-text-3" id="text-2-2">
-<p>
-多数例子都是以 <code>struct</code> 作为位域的组织标识，在C++中能否使用 <code>class</code> 作为位域的标识符。<br>
-经过测试，是可以使用 <code>class</code> 的，但是需要注意 <code>class</code> 的默认访问控制属性为 <code>private</code><br></p>
-</div>
-</div>
-</div>
-
-<div id="outline-container-org4f864bd" class="outline-2">
-<h2 id="org4f864bd">
-<span class="section-number-2">3</span> 位域的常见应用场景</h2>
-<div class="outline-text-2" id="text-3">
-<p>
-<b>为什么要使用位域？位域适合那些情况？</b><br>
-位域的主要使用目的是节省对象的内存使用。在存放一些比较小的数据时，使用位域能够使字节中的每个比特位合理地利用起来，避免内存浪费。<br>
-比较典型的应用是描述硬件寄存器。如果有32个一组的寄存器，每个寄存器代表一个比特位，就可以使用位域表示这组寄存器。<br></p>
-</div>
-</div>
-
-<div id="outline-container-orgd27de2c" class="outline-2">
-<h2 id="orgd27de2c">
-<span class="section-number-2">4</span> C++中的位操作接口</h2>
-<div class="outline-text-2" id="text-4">
-<p>
-C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接口提供了指定比特位数据的操作接口。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org6b8be84" class="outline-2">
-<h2 id="org6b8be84">
-<span class="section-number-2">5</span> 参考资料</h2>
-<div class="outline-text-2" id="text-5">
-<ul class="org-ul">
-<li>
-<a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">wikipedia bit-field</a><br>
-</li>
-<li>
-<a href="https://en.cppreference.com/w/cpp/language/bit_field">cppreference bit-field</a><br>
-</li>
-<li>
-<a href="https://msdn.microsoft.com/zh-cn/library/ewwyfdbe.aspx">microsoft msdn</a><br>
-</li>
-<li>
-<a href="https://stackoverflow.com/questions/24933242/when-to-use-bit-fields-in-c">stackoverflow</a><br>
-</li>
-<li>
-<a href="https://en.cppreference.com/w/cpp/utility/bitset">cppreference std::bitset</a><br>
-</li>
-</ul>
 </div>
 </div>
     </div>

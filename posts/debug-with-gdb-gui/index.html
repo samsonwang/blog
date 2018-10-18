@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gdb图形化调试 | Hack Note</title>
+<link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="https://samsonwang.me/posts/debug-with-gdb-gui/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/algorithm-weekly-next-permutation/" title="每周算法：下一个组合" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="https://samsonwang.me/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav mr-auto">
+<li class="nav-item">
+<a href="/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/listings/" class="nav-link">Listings</a>
+                </li>
+<li class="nav-item">
+<a href="/galleries/" class="nav-link">Galleries</a>
+                </li>
+<li class="nav-item">
+<a href="/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">gdb图形化调试</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-10-18T09:45:14+08:00" itemprop="datePublished" title="2018-10-18 09:45">Oct 18 2018  (09:45)
+    </time>
+</div>
+
+      
+    <div class="source blur-1">
+      <a href="/posts/debug-with-gdb-gui/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/emacs/" rel="tag">emacs</a></li>
+        <li><a class="tag p-category" href="/tags/gdb/" rel="tag">gdb</a></li>
+        <li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+gdb是linux下很强大的调试工具，它使用命令行进行交互。相比于windows下visual studio的图形化调试界面，命令行方式操作起来不是很方便，gdb从用户友好度上难以相提并论。不过gdb也有许多配套的前端组件，提供了图形化界面展示调试过程中的信息，这样就比传统命令行方式要高效很多。本文介绍的是通过使用图形化的gdb前端让调试变得便捷高效，建议再阅读本文之前先掌握一些gdb的基础知识。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org268f8e9" class="outline-2">
+<h2 id="org268f8e9">TUI</h2>
+<div class="outline-text-2" id="text-org268f8e9">
+<p>
+gdb内置了TUI作为图形化的调试界面。TUI的全称是Text User Interface，TUI基于 <i>curses</i> 库，这使它能够在命令行中有更生动的展示效果。<br>
+TUI有两个显示区，一个是拥有更直观显示效果的TUI模式，另一个是标准的gdb命令行模式。TUI模式显示区用于展现源码信息，汇编信息，寄存器信息。<br></p>
+
+<p>
+在gdb模式下，可以使用 <code>C-x C-a</code> 进入TUI模式，这个快捷接也可以用来退出TUI模式。我认为TUI模式提供了额外的窗口用于展示源代码，并且在源代码界面提示当前运行的代码位置，这样就不用频繁的使用 <code>list</code> 命令看源代码了。<br></p>
+
+<p>
+在TUI下常用的命令如下<br></p>
+<div class="highlight"><pre><span></span>layout src    # 显示源代码窗口
+layout asm    # 显示反汇编窗口
+layout regs   # 增加寄存器窗口
+layout split  # 显示源代码和反汇编窗口
+ctrl + l      # 刷新窗口
+refresh       # 刷新窗口
+update        # 更新源码窗口和当前的执行点
+focus cmd     # 聚焦到 cmd 窗口
+focus asm     # 聚焦到 asm 窗口
+focus src     # 聚焦到 src 窗口
+focus regs    # 聚焦到 regs 窗口
+tui reg next  # 显示下一组寄存器
+tui reg prev  # 显示上一组寄存器
+</pre></div>
+
+<p>
+更详细的使用方法可以阅读 <a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_chapter/gdb_19.html">TUI官方操作手册</a> 。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org2d640c4" class="outline-2">
+<h2 id="org2d640c4">cgdb</h2>
+<div class="outline-text-2" id="text-org2d640c4">
+<p>
+cgdb是第三方开发的基于 <i>curses</i> 的轻量级gdb前端。与TUI相似，cgdb的展示窗口也有两种模式。cgdb还提供一些额外的特性：源码高亮显示，模仿vi的按键方式。<br></p>
+
+<p>
+cgdb的官方介绍 <a href="https://cgdb.github.io/">https://cgdb.github.io/</a><br></p>
+
+<p>
+下图展示的是cgdb的用户界面 （摘自cgdb官方主页）<br></p>
+
+<p>
+<img src="/assets/images/spinner.svg" data-src="/images/post-debug-with-gdb-gui-cgdb.png" alt="nil"><br></p>
+</div>
+</div>
+
+<div id="outline-container-orga5d7c07" class="outline-2">
+<h2 id="orga5d7c07">EMACS gud mode</h2>
+<div class="outline-text-2" id="text-orga5d7c07">
+<p>
+作为同样属于GNU的emacs，它提供了 <code>gud mode</code> 作为gdb的前端。这也是我目前在使用的工具链。借助emacs的强大可定制性， <code>gud mode</code> 支持对图形化界面进行深度定制。对于一般用户，推荐通过设置 <code>gdb-many-windows</code> 为 <code>t</code> 得到一份默认的多窗口调试界面。<br></p>
+
+<p>
+<img src="/assets/images/spinner.svg" data-src="/images/post-debug-with-gdb-gui-emacs.png" alt="nil"><br></p>
+
+<p>
+上图展示的是默认的多窗口调试界面，从图中可以看到， <code>gud-mode</code> 提供了6个窗口，他们分别展示的是gdb交互界面、本地变量查看、源代码展示、输入输出界面、调用堆栈信息、断点和线程信息。<br></p>
+
+<p>
+与前两种方案相比，emacs gud mode 提供了更好的可定制性，允许用户通过编写elisp代码对调试界面进行修改、对调试过程进行拓展。这也对用户提出了更高的要求，使用这种方案需要学习emacs和elisp的相关知识。<br></p>
+
+<p>
+对于已经在使用emacs的用户，我强烈推荐尝试使用gud mode进行gdb调试，图形界面下emacs的gud mode调试体验格外地好。<br></p>
+
+<p>
+更详细的使用方法可以参考 <a href="https://www.gnu.org/software/emacs/manual/html_node/emacs/GDB-Graphical-Interface.html">官方帮助手册</a> 。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgc8c11c6" class="outline-2">
+<h2 id="orgc8c11c6">参考资料</h2>
+<div class="outline-text-2" id="text-orgc8c11c6">
+<ul class="org-ul">
+<li>
+<a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_chapter/gdb_19.html">gdb tui manual</a><br>
+</li>
+<li>
+<a href="https://cgdb.github.io/">cgdb homepage</a><br>
+</li>
+<li>
+<a href="https://www.gnu.org/software/emacs/manual/html_node/emacs/GDB-Graphical-Interface.html">emacs gud manual</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focus on linux server dev. I use EMACS, and I am learning python.</p>
+        <p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
+</div>
+</div>
+
+       
+<div class="sidebar-module">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+        <ul class="pager hidden-print">
+<li class="previous">
+                <a href="/posts/algorithm-weekly-next-permutation/" rel="prev" title="每周算法：下一个组合">Previous post</a>
+            </li>
+        </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="https://samsonwang.me/posts/debug-with-gdb-gui/",
+        disqus_title="gdb\u56fe\u5f62\u5316\u8c03\u8bd5",
+        disqus_identifier="cache/posts/debug-with-gdb-gui.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2018 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="/assets/js/jquery.min.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/jquery.lazyload.min.js"></script><script src="/assets/js/popper.min.js"></script><script src="/assets/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
