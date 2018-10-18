@@ -1,24 +1,27 @@
 #+BEGIN_COMMENT
 .. title: gdb图形化调试
 .. slug: debug-with-gdb-gui
-.. date: 2018-07-05 16:45:14 UTC+08:00
-.. tags: gdb, linux
+.. date: 2018-10-18 09:45:14 UTC+08:00
+.. tags: gdb, linux, emacs
 .. category: linux
 .. link:
 .. description:
 .. type: text
-.. status: draft
 #+END_COMMENT
 
 #+TITLE: gdb图形化调试
 
-gdb是linux下很强大的调试工具，它使用命令行进行交互，这种方式实际操作起来不是很直观。相比于windows下visual studio的强大图形化调试界面，gdb从用户友好度上确实难以相提并论。不过gdb也有许多配套的前端组件，提供了图形化界面用于展示调试过程中的信息，这样就比命令行方式要方便很多。本文介绍的是通过使用图形化的gdb前端让调试变得便捷高效，建议再阅读本文之前先掌握一些gdb的基础知识。
+gdb是linux下很强大的调试工具，它使用命令行进行交互。相比于windows下visual studio的图形化调试界面，命令行方式操作起来不是很方便，gdb从用户友好度上难以相提并论。不过gdb也有许多配套的前端组件，提供了图形化界面展示调试过程中的信息，这样就比传统命令行方式要高效很多。本文介绍的是通过使用图形化的gdb前端让调试变得便捷高效，建议再阅读本文之前先掌握一些gdb的基础知识。
 
 {{{TEASER_END}}}
 
-** 使用gdb原生的TUI
-gdb内置了TUI作为图形化的调试界面。TUI能够将调试过程中的代码显示出来，将寄存器信息和各种调试变量信息以图形化的方式展现出来。
+** TUI
+gdb内置了TUI作为图形化的调试界面。TUI的全称是Text User Interface，TUI基于 /curses/ 库，这使它能够在命令行中有更生动的展示效果。
+TUI有两个显示区，一个是拥有更直观显示效果的TUI模式，另一个是标准的gdb命令行模式。TUI模式显示区用于展现源码信息，汇编信息，寄存器信息。
 
+在gdb模式下，可以使用 =C-x C-a= 进入TUI模式，这个快捷接也可以用来退出TUI模式。我认为TUI模式提供了额外的窗口用于展示源代码，并且在源代码界面提示当前运行的代码位置，这样就不用频繁的使用 =list= 命令看源代码了。
+
+在TUI下常用的命令如下
 #+BEGIN_SRC shell
 layout src    # 显示源代码窗口
 layout asm    # 显示反汇编窗口
@@ -26,6 +29,7 @@ layout regs   # 增加寄存器窗口
 layout split  # 显示源代码和反汇编窗口
 ctrl + l      # 刷新窗口
 refresh       # 刷新窗口
+update        # 更新源码窗口和当前的执行点
 focus cmd     # 聚焦到 cmd 窗口
 focus asm     # 聚焦到 asm 窗口
 focus src     # 聚焦到 src 窗口
@@ -34,13 +38,32 @@ tui reg next  # 显示下一组寄存器
 tui reg prev  # 显示上一组寄存器
 #+END_SRC
 
+更详细的使用方法可以阅读 [[https://ftp.gnu.org/old-gnu/Manuals/gdb/html_chapter/gdb_19.html][TUI官方操作手册]] 。
 
-参考资料
-https://ylhao.github.io/2018/05/15/gdb%E8%87%AA%E6%9F%A5%E6%89%8B%E5%86%8C/
+** cgdb
+cgdb是第三方开发的基于 /curses/ 的轻量级gdb前端。与TUI相似，cgdb的展示窗口也有两种模式。cgdb还提供一些额外的特性：源码高亮显示，模仿vi的按键方式。
+
+cgdb的官方介绍 https://cgdb.github.io/
+
+下图展示的是cgdb的用户界面 （摘自cgdb官方主页）
+
+[[img-url:/images/post-debug-with-gdb-gui-cgdb.png]]
+
+** EMACS gud mode
+作为同样属于GNU的emacs，它提供了 =gud mode= 作为gdb的前端。这也是我目前在使用的工具链。借助emacs的强大可定制性， =gud mode= 支持对图形化界面进行深度定制。对于一般用户，推荐通过设置 =gdb-many-windows= 为 =t= 得到一份默认的多窗口调试界面。
+
+[[img-url:/images/post-debug-with-gdb-gui-emacs.png]]
+
+上图展示的是默认的多窗口调试界面，从图中可以看到， =gud-mode= 提供了6个窗口，他们分别展示的是gdb交互界面、本地变量查看、源代码展示、输入输出界面、调用堆栈信息、断点和线程信息。
+
+与前两种方案相比，emacs gud mode 提供了更好的可定制性，允许用户通过编写elisp代码对调试界面进行修改、对调试过程进行拓展。这也对用户提出了更高的要求，使用这种方案需要学习emacs和elisp的相关知识。
+
+对于已经在使用emacs的用户，我强烈推荐尝试使用gud mode进行gdb调试，图形界面下emacs的gud mode调试体验格外地好。
+
+更详细的使用方法可以参考 [[https://www.gnu.org/software/emacs/manual/html_node/emacs/GDB-Graphical-Interface.html][官方帮助手册]] 。
 
 
-** 使用第三方的cgdb
-cgdb
-
-
-** 使用EMACS + gud mode
+** 参考资料
+- [[https://ftp.gnu.org/old-gnu/Manuals/gdb/html_chapter/gdb_19.html][gdb tui manual]]
+- [[https://cgdb.github.io/][cgdb homepage]]
+- [[https://www.gnu.org/software/emacs/manual/html_node/emacs/GDB-Graphical-Interface.html][emacs gud manual]]
