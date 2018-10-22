@@ -76,7 +76,109 @@
 
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/linux-command-examples-lsof/" class="u-url">Linux常用命令行指令 - lsof</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/linux-command-examples-nc/" class="u-url">Linux常用命令行指令 - nc</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-03-24T10:01:10+08:00" itemprop="datePublished" title="2018-03-24 10:01">Mar 24 2018  (10:01)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/linux-command-examples-nc/#disqus_thread" data-disqus-identifier="cache/posts/linux-command-examples-nc.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <p>
+<code>nc</code> 命令是 <code>netcat</code> 的缩写，能够使用TCP或UDP协议读写网络连接中的数据，是一个方便可靠的调试工具。<br></p>
+
+<div id="outline-container-orgdf7a8cb" class="outline-2">
+<h2 id="orgdf7a8cb">1. 基本 <code>C/S</code> 模型</h2>
+<div class="outline-text-2" id="text-orgdf7a8cb">
+<p>
+作为服务端建立监听<br></p>
+<div class="highlight"><pre><span></span>nc -l 127.0.0.1 8060
+</pre></div>
+<p>
+作为客户端连接端口<br></p>
+<div class="highlight"><pre><span></span>nc 172.0.0.1 8060
+</pre></div>
+<p>
+但是需要注意的是，该服务端只允许一个客户端连接进来。<br><code>nc</code> 会默认以TCP协议运行，可以增加 <code>-u</code> 参数转换为UDP协议。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org8901c9d" class="outline-2">
+<h2 id="org8901c9d">2. 文件传输</h2>
+<div class="outline-text-2" id="text-org8901c9d">
+<p>
+模拟客户端向服务端传输文件的示例代码如下，同理，也可以模拟服务端向客户端发送文件。<br></p>
+<div class="highlight"><pre><span></span>nc -l 1234  &gt; filename.out
+nc 127.0.0.1 1234 &lt; fielname.in
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org3e4bb23" class="outline-2">
+<h2 id="org3e4bb23">3. 连接远程系统</h2>
+<div class="outline-text-2" id="text-org3e4bb23">
+<p>
+已连接http服务器为例，在作为客户端连接以后，可以向服务器发送 <code>GET /HTTP/1.1</code> 来获取网站的主页。<br>
+示例代码如下<br></p>
+<div class="highlight"><pre><span></span>print "GET /HTTP/1.0 \r\n"| nc host.example.com 80
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org76bdae5" class="outline-2">
+<h2 id="org76bdae5">4. 简易代理</h2>
+<div class="outline-text-2" id="text-org76bdae5">
+<p>
+将nc命令嵌套使用，可以将一个端口中的数据转发到目的ip和端口。<br></p>
+<div class="highlight"><pre><span></span>ncat -l 8080 | ncat 192.168.1.200 80
+</pre></div>
+<p>
+通过上面的命令能够将本机8080端口的数据转发到192.168.1.200的80端口上，但是这样是单向的。可以建立 <code>fifo</code> 实现数据的双向传输。<br></p>
+<div class="highlight"><pre><span></span>mkfifo ./fifo_temp
+ncat -l 8080 0&lt;fifo_temp | ncat 192.168.1.200 80 1&gt;fifo_temp
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org17101a7" class="outline-2">
+<h2 id="org17101a7">5. 参考资料</h2>
+<div class="outline-text-2" id="text-org17101a7">
+<ul class="org-ul">
+<li>
+<a href="https://www.linuxtechi.com/nc-ncat-command-examples-linux-systems/">linuxtech</a><br>
+</li>
+<li>
+<a href="https://www.thegeekstuff.com/2012/04/nc-command-examples/?utm_source=feedburner">thegeekstuff</a><br>
+</li>
+<li>
+<a href="https://www.computerhope.com/unix/nc.htm">computerhope</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/linux-command-examples-lsof/" class="u-url">Linux常用命令行指令 - lsof</a></h1>
       <div class="metadata">
         
 
@@ -111,25 +213,25 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 <p>
 下面就给出了几种常见的用法，需要注意的是有些指令需要root权限执行。<br></p>
 
-<div id="outline-container-org3638cef" class="outline-2">
-<h2 id="org3638cef">1. 查看打开指定文件的进程</h2>
-<div class="outline-text-2" id="text-org3638cef">
+<div id="outline-container-orgd07283b" class="outline-2">
+<h2 id="orgd07283b">1. 查看打开指定文件的进程</h2>
+<div class="outline-text-2" id="text-orgd07283b">
 <div class="highlight"><pre><span></span>lsof /var/syslog.log
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgd4a5152" class="outline-2">
-<h2 id="orgd4a5152">2. 查看指定目录下打开的文件</h2>
-<div class="outline-text-2" id="text-orgd4a5152">
+<div id="outline-container-org4bc7ef1" class="outline-2">
+<h2 id="org4bc7ef1">2. 查看指定目录下打开的文件</h2>
+<div class="outline-text-2" id="text-org4bc7ef1">
 <div class="highlight"><pre><span></span>lsof +D /home/
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org32a70d1" class="outline-2">
-<h2 id="org32a70d1">3. 查看以指定进程名所有打开的文件</h2>
-<div class="outline-text-2" id="text-org32a70d1">
+<div id="outline-container-org6ceb234" class="outline-2">
+<h2 id="org6ceb234">3. 查看以指定进程名所有打开的文件</h2>
+<div class="outline-text-2" id="text-org6ceb234">
 <p>
 使用 <code>-c</code> 命令能够查看指定进程名使用的文件，允许在一个命令行指令中使用多个 <code>-c</code> 参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -c procname
@@ -137,9 +239,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orgfcb6385" class="outline-2">
-<h2 id="orgfcb6385">4. 查看使用指定挂载点的进程</h2>
-<div class="outline-text-2" id="text-orgfcb6385">
+<div id="outline-container-org4bf2e2c" class="outline-2">
+<h2 id="org4bf2e2c">4. 查看使用指定挂载点的进程</h2>
+<div class="outline-text-2" id="text-org4bf2e2c">
 <p>
 在停止挂载某个目录时，系统会告诉我们“设备资源繁忙”，所以我们需要找出使用挂载点的程序，终止这些进程，解除目录的占用状态。<br></p>
 <div class="highlight"><pre><span></span>lsof /home
@@ -151,9 +253,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org5e664f4" class="outline-2">
-<h2 id="org5e664f4">5. 查看指定用户打开的文件</h2>
-<div class="outline-text-2" id="text-org5e664f4">
+<div id="outline-container-org1963115" class="outline-2">
+<h2 id="org1963115">5. 查看指定用户打开的文件</h2>
+<div class="outline-text-2" id="text-org1963115">
 <div class="highlight"><pre><span></span>lsof -u username
 </pre></div>
 <p>
@@ -163,17 +265,17 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orge6508c9" class="outline-2">
-<h2 id="orge6508c9">6. 查看指定进程打开的文件</h2>
-<div class="outline-text-2" id="text-orge6508c9">
+<div id="outline-container-org2bee615" class="outline-2">
+<h2 id="org2bee615">6. 查看指定进程打开的文件</h2>
+<div class="outline-text-2" id="text-org2bee615">
 <div class="highlight"><pre><span></span>lsof -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org07b0dc5" class="outline-2">
-<h2 id="org07b0dc5">7. 终止属于某个用户的所有进程</h2>
-<div class="outline-text-2" id="text-org07b0dc5">
+<div id="outline-container-orga1639cc" class="outline-2">
+<h2 id="orga1639cc">7. 终止属于某个用户的所有进程</h2>
+<div class="outline-text-2" id="text-orga1639cc">
 <div class="highlight"><pre><span></span>kill `lsof -t -u username`
 </pre></div>
 <p>
@@ -183,9 +285,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org887e5b9" class="outline-2">
-<h2 id="org887e5b9">8. 让结果同时满足多个选项</h2>
-<div class="outline-text-2" id="text-org887e5b9">
+<div id="outline-container-org077bfaf" class="outline-2">
+<h2 id="org077bfaf">8. 让结果同时满足多个选项</h2>
+<div class="outline-text-2" id="text-org077bfaf">
 <p>
 默认情况下，多个参数是以或（or）进行操作的，可以使用 <code>-a</code> 选项让结果同时满足多个参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -a -u username -c procname
@@ -193,9 +295,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orga14bc18" class="outline-2">
-<h2 id="orga14bc18">9. 让命令重复执行</h2>
-<div class="outline-text-2" id="text-orga14bc18">
+<div id="outline-container-org4f44e71" class="outline-2">
+<h2 id="org4f44e71">9. 让命令重复执行</h2>
+<div class="outline-text-2" id="text-org4f44e71">
 <p>
 可以使用 <code>-r</code> 参数让命令重复执行。以下命令会每隔5s执行一次，每次的执行结果会用 “====” 分割开。<br></p>
 <div class="highlight"><pre><span></span>lsof -u username -c procname -a -r5
@@ -203,9 +305,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org8489e6c" class="outline-2">
-<h2 id="org8489e6c">10. 列出所有的网络连接</h2>
-<div class="outline-text-2" id="text-org8489e6c">
+<div id="outline-container-org4f97bd6" class="outline-2">
+<h2 id="org4f97bd6">10. 列出所有的网络连接</h2>
+<div class="outline-text-2" id="text-org4f97bd6">
 <div class="highlight"><pre><span></span>lsof -i
 </pre></div>
 <p>
@@ -219,33 +321,33 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org50b897e" class="outline-2">
-<h2 id="org50b897e">11. 列出指定进程使用的网络连接</h2>
-<div class="outline-text-2" id="text-org50b897e">
+<div id="outline-container-org97720a9" class="outline-2">
+<h2 id="org97720a9">11. 列出指定进程使用的网络连接</h2>
+<div class="outline-text-2" id="text-org97720a9">
 <div class="highlight"><pre><span></span>lsof -i -a -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org7f1e798" class="outline-2">
-<h2 id="org7f1e798">12. 查看指定端口上的监听</h2>
-<div class="outline-text-2" id="text-org7f1e798">
+<div id="outline-container-org2220e09" class="outline-2">
+<h2 id="org2220e09">12. 查看指定端口上的监听</h2>
+<div class="outline-text-2" id="text-org2220e09">
 <div class="highlight"><pre><span></span>lsof -i :portid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org1a44a16" class="outline-2">
-<h2 id="org1a44a16">13. 列出所有tcp和udp连接</h2>
-<div class="outline-text-2" id="text-org1a44a16">
+<div id="outline-container-org353c5e3" class="outline-2">
+<h2 id="org353c5e3">13. 列出所有tcp和udp连接</h2>
+<div class="outline-text-2" id="text-org353c5e3">
 <div class="highlight"><pre><span></span>lsof -i tcp; lsof -i udp
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org16ca480" class="outline-2">
-<h2 id="org16ca480">14. 列出所有的网络文件系统</h2>
-<div class="outline-text-2" id="text-org16ca480">
+<div id="outline-container-org55ae841" class="outline-2">
+<h2 id="org55ae841">14. 列出所有的网络文件系统</h2>
+<div class="outline-text-2" id="text-org55ae841">
 <p>
 网络文件系统（network file system）<br></p>
 <div class="highlight"><pre><span></span>lsof -N -u username
@@ -578,27 +680,27 @@ git config --global https.proxy 'socks5://127.0.0.1:1080'
       <p>
 在开发windows应用程序时，经常会遇到win32、mfc、atl的函数。下面就对三种API（或者说是开发框架）进行了总结。<br></p>
 
-<div id="outline-container-org43e8b03" class="outline-2">
-<h2 id="org43e8b03">Win32开发框架</h2>
-<div class="outline-text-2" id="text-org43e8b03">
+<div id="outline-container-orgf2801db" class="outline-2">
+<h2 id="orgf2801db">Win32开发框架</h2>
+<div class="outline-text-2" id="text-orgf2801db">
 <p>
 win32开发框架是最基础的函数接口，更接近操作系统底层。<br>
 使用Win32接口的优点是程序的依赖最小，生成的可执行文件的体积也最小。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org37231cf" class="outline-2">
-<h2 id="org37231cf">MFC开发框架</h2>
-<div class="outline-text-2" id="text-org37231cf">
+<div id="outline-container-org68f01b9" class="outline-2">
+<h2 id="org68f01b9">MFC开发框架</h2>
+<div class="outline-text-2" id="text-org68f01b9">
 <p>
 MFC是Microsoft Foundation Class的缩写，将win32的相关接口按照OOP的思想封装了起来，目的是提供一个快速开发原生应用的框架。<br>
 使用MFC开发的程序体型略显臃肿，而且MFC也比较陈旧了，并不推荐使用MFC进行开发。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org41d04f7" class="outline-2">
-<h2 id="org41d04f7">ATL开发框架</h2>
-<div class="outline-text-2" id="text-org41d04f7">
+<div id="outline-container-org4942e69" class="outline-2">
+<h2 id="org4942e69">ATL开发框架</h2>
+<div class="outline-text-2" id="text-org4942e69">
 <p>
 ATL是Active Template Library的缩写，是针对COM组件的开发实现的一套开发框架。ATL简化了ActiveX COM组件的开发。<br></p>
 </div>
@@ -688,9 +790,9 @@ tips： 对于安装了 <code>git bash</code> 的同学，直接将其中的 <co
 租一个服务器自己搭建梯子是科学上网方便稳定快捷的好方法。<br>
 本文主要是自己部署vpn服务端的笔记，作为备忘留存下来。<br></p>
 
-<div id="outline-container-org2490b26" class="outline-2">
-<h2 id="org2490b26">安装ss服务程序</h2>
-<div class="outline-text-2" id="text-org2490b26">
+<div id="outline-container-orgb7d8b34" class="outline-2">
+<h2 id="orgb7d8b34">安装ss服务程序</h2>
+<div class="outline-text-2" id="text-orgb7d8b34">
 <p>
 安装环境为CentOS7, 需要使用python的包管理工具pip完成对ss-server的安装。<br></p>
 <div class="highlight"><pre><span></span>sudo yum install m2crypto python-setuptools
@@ -700,9 +802,9 @@ sudo pip install shadowsocks
 </div>
 </div>
 
-<div id="outline-container-orga8b5da2" class="outline-2">
-<h2 id="orga8b5da2">配置ss服务器</h2>
-<div class="outline-text-2" id="text-orga8b5da2">
+<div id="outline-container-orgfaac036" class="outline-2">
+<h2 id="orgfaac036">配置ss服务器</h2>
+<div class="outline-text-2" id="text-orgfaac036">
 <p>
 <b>配置文件示例</b> : <a href="/listings/shadowsocks.json.html">shadowsocks.json</a><br>
 这份配置中使用了多个端口作供ss-server使用<br></p>
@@ -793,50 +895,50 @@ update: 2018-02-15<br></p>
 
 <p>
 对常用指令进行总结，方便以后遇到相同情况时查阅。<br></p>
-<div id="outline-container-org7da0b90" class="outline-2">
-<h2 id="org7da0b90">1 撤销与回退相关</h2>
-<div class="outline-text-2" id="text-org7da0b90">
+<div id="outline-container-orgdd2711e" class="outline-2">
+<h2 id="orgdd2711e">1 撤销与回退相关</h2>
+<div class="outline-text-2" id="text-orgdd2711e">
 </div>
-<div id="outline-container-org39644f9" class="outline-3">
-<h3 id="org39644f9">1.1 修正最近的提交消息</h3>
-<div class="outline-text-3" id="text-org39644f9">
+<div id="outline-container-org0aa2995" class="outline-3">
+<h3 id="org0aa2995">1.1 修正最近的提交消息</h3>
+<div class="outline-text-3" id="text-org0aa2995">
 <p>
 <b>情景</b> ：在最近的一次提交（ <code>git commit</code> ）中输入的信息有误，并且这次提交没有被推送（ <code>git push</code> ）到远程仓库。<br><b>方法</b> ： <code>git commit --amend</code> 或 <code>git commit --amend -m "correct_message"</code><br><b>说明</b> ： <code>git commit --amend</code> 会使用一个新的提交更新并替换最近的一次提交，如果有在临时区域（staged）的修改，也会合并提交；如果有新的提交信息，则会一并提交。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org1fa12c5" class="outline-3">
-<h3 id="org1fa12c5">1.2 撤销本地变更</h3>
-<div class="outline-text-3" id="text-org1fa12c5">
+<div id="outline-container-org8f30ac5" class="outline-3">
+<h3 id="org8f30ac5">1.2 撤销本地变更</h3>
+<div class="outline-text-3" id="text-org8f30ac5">
 <p>
 <b>情景</b> ：当无意中修改了一个文件，想要回退这个文件的修改时。<br><b>方法</b> ： <code>git checkout -- &lt;filename&gt;</code><br><b>说明</b> ：这条指令会把该文件回退到某个git记录中的版本，git默认会回退到 <code>HEAD</code> 版本。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org7f908c4" class="outline-3">
-<h3 id="org7f908c4">1.3 重置本地修改</h3>
-<div class="outline-text-3" id="text-org7f908c4">
+<div id="outline-container-org9607f5f" class="outline-3">
+<h3 id="org9607f5f">1.3 重置本地修改</h3>
+<div class="outline-text-3" id="text-org9607f5f">
 <p>
 <b>情景</b> ：已经进行了多次提交，但是没有推送到版本库中，希望撤销这些提交。<br><b>方法</b> ： <code>git reset &lt;last good SHA&gt;</code> 或 <code>git reset --hard &lt;last good SHA&gt;</code><br><b>说明</b> ： <code>git reset</code> 会把本地代码恢复到没有提交（ <code>git commit</code> ）的状态，做出的修改会保留。 <code>git reset --hard</code> 会把这些修改丢弃掉。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org90a92f6" class="outline-3">
-<h3 id="org90a92f6">1.4 恢复被重置的本地修改</h3>
-<div class="outline-text-3" id="text-org90a92f6">
+<div id="outline-container-org03ce4f7" class="outline-3">
+<h3 id="org03ce4f7">1.4 恢复被重置的本地修改</h3>
+<div class="outline-text-3" id="text-org03ce4f7">
 <p>
 <b>情景</b> ：在按照1.3中操作后，想恢复重置以前的状态。<br><b>方法</b> ： <code>git reflog</code> 后执行 <code>git reset</code> 或 <code>git checkout</code><br><b>说明</b> ： <code>git reflog</code> 会呈现所有提交过的历史，是一个十分实用的功能。<br></p>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org81c7234" class="outline-2">
-<h2 id="org81c7234">2 分支操作相关</h2>
-<div class="outline-text-2" id="text-org81c7234">
+<div id="outline-container-orgfe853d3" class="outline-2">
+<h2 id="orgfe853d3">2 分支操作相关</h2>
+<div class="outline-text-2" id="text-orgfe853d3">
 </div>
-<div id="outline-container-orga201695" class="outline-3">
-<h3 id="orga201695">2.1 创建一个本地分支并推送到远端</h3>
-<div class="outline-text-3" id="text-orga201695">
+<div id="outline-container-org4b91de8" class="outline-3">
+<h3 id="org4b91de8">2.1 创建一个本地分支并推送到远端</h3>
+<div class="outline-text-3" id="text-org4b91de8">
 <p>
 <b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git branch branch_name
@@ -845,9 +947,9 @@ git push origin branch_name
 </div>
 </div>
 
-<div id="outline-container-orgf95503c" class="outline-3">
-<h3 id="orgf95503c">2.2 在本地创建一个远程分支</h3>
-<div class="outline-text-3" id="text-orgf95503c">
+<div id="outline-container-org5c88723" class="outline-3">
+<h3 id="org5c88723">2.2 在本地创建一个远程分支</h3>
+<div class="outline-text-3" id="text-org5c88723">
 <p>
 <b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git fetch origin
@@ -856,9 +958,9 @@ git checkout -b  branch_name origin/branch_name
 </div>
 </div>
 
-<div id="outline-container-org3c294b7" class="outline-3">
-<h3 id="org3c294b7">2.3 在分支上进行进度迁移</h3>
-<div class="outline-text-3" id="text-org3c294b7">
+<div id="outline-container-org0789566" class="outline-3">
+<h3 id="org0789566">2.3 在分支上进行进度迁移</h3>
+<div class="outline-text-3" id="text-org0789566">
 <p>
 <b>情景</b> ： 进行了几次提交后，发现自己正在错误的分支上干活。<br><b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git branch feature
@@ -872,21 +974,21 @@ git checkout feature
 </div>
 
 
-<div id="outline-container-orgb9ab74c" class="outline-2">
-<h2 id="orgb9ab74c">3 git submodule 相关操作</h2>
-<div class="outline-text-2" id="text-orgb9ab74c">
+<div id="outline-container-org04e7145" class="outline-2">
+<h2 id="org04e7145">3 git submodule 相关操作</h2>
+<div class="outline-text-2" id="text-org04e7145">
 </div>
-<div id="outline-container-org20e675e" class="outline-3">
-<h3 id="org20e675e">3.1 向当前repo中增加一个submodule</h3>
-<div class="outline-text-3" id="text-org20e675e">
+<div id="outline-container-orgd217fca" class="outline-3">
+<h3 id="orgd217fca">3.1 向当前repo中增加一个submodule</h3>
+<div class="outline-text-3" id="text-orgd217fca">
 <div class="highlight"><pre><span></span>git submoudle add &lt;module url&gt; &lt;local path&gt;
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org86364ce" class="outline-3">
-<h3 id="org86364ce">3.2 初始化submodule</h3>
-<div class="outline-text-3" id="text-org86364ce">
+<div id="outline-container-orgbef4655" class="outline-3">
+<h3 id="orgbef4655">3.2 初始化submodule</h3>
+<div class="outline-text-3" id="text-orgbef4655">
 <p>
 在将一个具有submodule的repo拉取到本地以后需要对submodule进行初始化<br></p>
 <div class="highlight"><pre><span></span>git submodule init
@@ -894,9 +996,9 @@ git checkout feature
 </div>
 </div>
 
-<div id="outline-container-org6f05c32" class="outline-3">
-<h3 id="org6f05c32">3.3 更新submodule</h3>
-<div class="outline-text-3" id="text-org6f05c32">
+<div id="outline-container-org2a6cf62" class="outline-3">
+<h3 id="org2a6cf62">3.3 更新submodule</h3>
+<div class="outline-text-3" id="text-org2a6cf62">
 <p>
 在开发中可以直接进入submodule的目录对每一个submodule执行更新操作，也可以使用命令统一完成submodule的更新操作。<br></p>
 <div class="highlight"><pre><span></span>git submodule update
@@ -904,9 +1006,9 @@ git checkout feature
 </div>
 </div>
 
-<div id="outline-container-org0da80e8" class="outline-3">
-<h3 id="org0da80e8">3.4 删掉submodule</h3>
-<div class="outline-text-3" id="text-org0da80e8">
+<div id="outline-container-org4e6b645" class="outline-3">
+<h3 id="org4e6b645">3.4 删掉submodule</h3>
+<div class="outline-text-3" id="text-org4e6b645">
 <p>
 对于不需要的submodule，可以将其删掉。<br></p>
 <div class="highlight"><pre><span></span>git submodule rm &lt;local/path&gt;
@@ -915,9 +1017,9 @@ git checkout feature
 </div>
 </div>
 
-<div id="outline-container-org2efb191" class="outline-2">
-<h2 id="org2efb191">终端配置</h2>
-<div class="outline-text-2" id="text-org2efb191">
+<div id="outline-container-org8066de6" class="outline-2">
+<h2 id="org8066de6">终端配置</h2>
+<div class="outline-text-2" id="text-org8066de6">
 <p>
 使用命令简称方便操作<br></p>
 <div class="highlight"><pre><span></span># git related
@@ -965,9 +1067,9 @@ alias gpl='git pull'
     </header><div class="p-summary entry-summary">
       <p>
 本文主要介绍在emacs中对一个目录中的很多文件进行字符串查找和替换操作的方法。参考了 <a href="http://ergoemacs.org/emacs/blog.html">XahLee</a> 的教程后，在此记录做个备份。<br></p>
-<div id="outline-container-orgf7a8a62" class="outline-2">
-<h2 id="orgf7a8a62">操作步骤</h2>
-<div class="outline-text-2" id="text-orgf7a8a62">
+<div id="outline-container-orgd047c68" class="outline-2">
+<h2 id="orgd047c68">操作步骤</h2>
+<div class="outline-text-2" id="text-orgd047c68">
 <p>
 <b>进入dired模式</b> ： 我的快捷键配置为 <code>C-x d</code>, 也可以使用 <code>M-x &lt;dired&gt;</code> .<br><b>标记需要查找的文件</b> ： 在进入dired模式后，对需要操作的文件或目录进行操作。<br></p>
 <ul class="org-ul">
@@ -1006,9 +1108,9 @@ alias gpl='git pull'
 </div>
 </div>
 
-<div id="outline-container-org987c31b" class="outline-2">
-<h2 id="org987c31b">相关技巧</h2>
-<div class="outline-text-2" id="text-org987c31b">
+<div id="outline-container-org4e0fa2a" class="outline-2">
+<h2 id="org4e0fa2a">相关技巧</h2>
+<div class="outline-text-2" id="text-org4e0fa2a">
 <p>
 如果需要批量查找(不进行替换)，可以在dired模式中 <code>M-x &lt;dired-do-search&gt;</code> 进行查找，对于查找结果使用 <code>M-x tags-loop-continue</code> 进行逐条浏览。<br></p>
 </div>
@@ -1045,9 +1147,9 @@ alias gpl='git pull'
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org87e0561" class="outline-2">
-<h2 id="org87e0561">1 引言</h2>
-<div class="outline-text-2" id="text-org87e0561">
+      <div id="outline-container-orgc94cae2" class="outline-2">
+<h2 id="orgc94cae2">1 引言</h2>
+<div class="outline-text-2" id="text-orgc94cae2">
 <p>
 常见的STL容器都能使用迭代器访问容器内元素，迭代器相同于一个指向容器内元素的指针，可以通过移动迭代器实现遍历容器。<br>
 但是在使用迭代器时需要考虑STL容器的失效问题；迭代器失效主要出现在对容器进行了增删操作之后，迭代器不再指向原本的元素。<br>
@@ -1055,17 +1157,17 @@ alias gpl='git pull'
 </div>
 </div>
 
-<div id="outline-container-org77c477c" class="outline-2">
-<h2 id="org77c477c">2 map容器</h2>
-<div class="outline-text-2" id="text-org77c477c">
+<div id="outline-container-orge9f7388" class="outline-2">
+<h2 id="orge9f7388">2 map容器</h2>
+<div class="outline-text-2" id="text-orge9f7388">
 <p>
 <b>内部数据结构</b> ：红黑树<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入都红黑树中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org41c162f" class="outline-2">
-<h2 id="org41c162f">3 vector容器</h2>
-<div class="outline-text-2" id="text-org41c162f">
+<div id="outline-container-org488fbd2" class="outline-2">
+<h2 id="org488fbd2">3 vector容器</h2>
+<div class="outline-text-2" id="text-org488fbd2">
 <p>
 <b>内部数据结构</b> ：数组(一段连续内存空间)<br><b>插入操作</b> ：由于vector使用的是一段有长度限制的连续空间，插入( <code>push_back</code> / <code>insert</code> )操作在vector中加入新的元素时需要分情况考虑。<br></p>
 <ul class="org-ul">
@@ -1080,17 +1182,17 @@ alias gpl='git pull'
 </div>
 </div>
 
-<div id="outline-container-orgca9e742" class="outline-2">
-<h2 id="orgca9e742">4 list容器</h2>
-<div class="outline-text-2" id="text-orgca9e742">
+<div id="outline-container-orga03e4b5" class="outline-2">
+<h2 id="orga03e4b5">4 list容器</h2>
+<div class="outline-text-2" id="text-orga03e4b5">
 <p>
 <b>内部数据结构</b> ：双向环状链表<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入到链表中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3f02a9f" class="outline-2">
-<h2 id="org3f02a9f">5 小结</h2>
-<div class="outline-text-2" id="text-org3f02a9f">
+<div id="outline-container-org2471309" class="outline-2">
+<h2 id="org2471309">5 小结</h2>
+<div class="outline-text-2" id="text-org2471309">
 <p>
 在操作STL容器时，对容器增删（ <code>erase</code> / <code>insert</code> ）之后应该注意接收返回值，这样可以有效避免迭代器失效的产生。<br>
 对容器进行遍历删除操作时，另一种语法技巧是在 <code>erase</code> 接口中对迭代器进行后自增（it++），这种写法也能够保证遍历正常进行。理解这种写法需要参考运算符重载的相关知识，后自增操作会产生一个临时变量用于函数返回。<br></p>
@@ -1127,42 +1229,42 @@ alias gpl='git pull'
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org96643fd" class="outline-2">
-<h2 id="org96643fd">1 引言</h2>
-<div class="outline-text-2" id="text-org96643fd">
+      <div id="outline-container-org4babbe7" class="outline-2">
+<h2 id="org4babbe7">1 引言</h2>
+<div class="outline-text-2" id="text-org4babbe7">
 <p>
 编程中常见的表示两种大小的类型标识符有 <code>size_t</code> 和 <code>size_type</code> ，这两种类型十分相似，非常容易混淆。本文对他们的使用场景进行了比较，并提供了示例代码。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf5a9499" class="outline-2">
-<h2 id="orgf5a9499">2 <code>size_t</code> 类型</h2>
-<div class="outline-text-2" id="text-orgf5a9499">
+<div id="outline-container-org7ab8648" class="outline-2">
+<h2 id="org7ab8648">2 <code>size_t</code> 类型</h2>
+<div class="outline-text-2" id="text-org7ab8648">
 <p>
 当需要描述某个对象的大小（size）时都应该使用 <code>size_t</code> ，其大小被限制为 0 到 <code>SIZE_MAX</code> 之间。<br><code>size_t</code> 的定义在 <code>&lt;cstddef&gt;</code> 中， <code>SIZE_MAX</code> 的定义在 <code>&lt;climits&gt;</code> 中。<br><code>size_t</code> 一般会作为 <code>sizeof</code> 运算符的返回结果，可以理解为在给定的平台中是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga0bebd4" class="outline-2">
-<h2 id="orga0bebd4">3 <code>size_type</code> 类型</h2>
-<div class="outline-text-2" id="text-orga0bebd4">
+<div id="outline-container-org790dc95" class="outline-2">
+<h2 id="org790dc95">3 <code>size_type</code> 类型</h2>
+<div class="outline-text-2" id="text-org790dc95">
 <p>
 在 <code>STL</code> 中定义了 <code>size_type</code> 是与 <code>Allocator::size_tpye</code> 相对应的。而 <code>Allocator</code> 是模板的一个参数。<br><code>size_type</code> 可以理解为在给定容器范围内是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0e8bc51" class="outline-2">
-<h2 id="org0e8bc51">4 二者之间的比较</h2>
-<div class="outline-text-2" id="text-org0e8bc51">
+<div id="outline-container-org6527c02" class="outline-2">
+<h2 id="org6527c02">4 二者之间的比较</h2>
+<div class="outline-text-2" id="text-org6527c02">
 <p>
 这两种类型主要是为了提高代码的可移植性。一般情况来说，这两种类型是没有区别的，因为使用标准库默认的 <code>Allocator</code> 所对应的 <code>size_type</code> 就是 <code>size_t</code> 。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgd1046b0" class="outline-2">
-<h2 id="orgd1046b0">5 示例代码</h2>
-<div class="outline-text-2" id="text-orgd1046b0">
+<div id="outline-container-org039f709" class="outline-2">
+<h2 id="org039f709">5 示例代码</h2>
+<div class="outline-text-2" id="text-org039f709">
 <p>
 注意 <code>size_type</code> 在使用时需要加上容器类型限定。<br></p>
 <div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">n1</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
@@ -1176,9 +1278,9 @@ alias gpl='git pull'
 </div>
 </div>
 
-<div id="outline-container-org0d19c5d" class="outline-2">
-<h2 id="org0d19c5d">6 参考资料</h2>
-<div class="outline-text-2" id="text-org0d19c5d">
+<div id="outline-container-org845c307" class="outline-2">
+<h2 id="org845c307">6 参考资料</h2>
+<div class="outline-text-2" id="text-org845c307">
 <ul class="org-ul">
 <li>
 <a href="http://en.cppreference.com/w/cpp/types/size_t">http://en.cppreference.com/w/cpp/types/size_t</a><br>
@@ -1187,47 +1289,6 @@ alias gpl='git pull'
 <a href="https://stackoverflow.com/questions/918567/size-t-vs-containersize-type">https://stackoverflow.com/questions/918567/size-t-vs-containersize-type</a><br>
 </li>
 </ul>
-</div>
-</div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/frequent-improper-syntax-warning-on-compile/" class="u-url">常见的由于语法不当引起的编译警告</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-01-04T00:45:52+08:00" itemprop="datePublished" title="2018-01-04 00:45">Jan 04 2018  (00:45)
-    </time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/frequent-improper-syntax-warning-on-compile/#disqus_thread" data-disqus-identifier="cache/posts/frequent-syntax-compile-warning.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
-        <li><a class="tag p-category" href="/tags/gcc/" rel="tag">gcc</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div id="outline-container-org266c5e5" class="outline-2">
-<h2 id="org266c5e5">1 引言</h2>
-<div class="outline-text-2" id="text-org266c5e5">
-<p>
-本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。<br>
-这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
-
-<p class="more"><a href="/posts/frequent-improper-syntax-warning-on-compile/">Read more…</a></p>
 </div>
 </div>
     </div>
