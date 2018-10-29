@@ -76,7 +76,191 @@
 
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/navigation-and-selection-effectively-in-emacs/" class="u-url">提高emacs中浏览和选择操作效率的技巧</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/algorithm-weekly-longest-substring-without-repeating-characters/" class="u-url">每周算法：最长不含重复字符的子串</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-08-02T11:43:14+08:00" itemprop="datePublished" title="2018-08-02 11:43">Aug 02 2018  (11:43)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/algorithm-weekly-longest-substring-without-repeating-characters/#disqus_thread" data-disqus-identifier="cache/posts/algorithm-weekly-longest-substring-without-repeating-characters.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/algorithm/" rel="tag">algorithm</a></li>
+        <li><a class="tag p-category" href="/tags/leetcode/" rel="tag">leetcode</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-org0bb92e7" class="outline-2">
+<h2 id="org0bb92e7">Description</h2>
+<div class="outline-text-2" id="text-org0bb92e7">
+<p>
+Given a string, find the length of the longest substring without repeating characters.<br></p>
+
+<p>
+<b>Examples:</b><br>
+Given "abcabcbb", the answer is "abc", which the length is 3.<br>
+Given "bbbbb", the answer is "b", with the length of 1.<br>
+Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer must be a substring, "pwke" is a subsequence and not a substring.<br></p>
+
+<p>
+来源：<a href="https://leetcode.com/problems/longest-substring-without-repeating-characters/description/">LeetCode 03 Longest Substring Without Repeating Characters</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org2169574" class="outline-2">
+<h2 id="org2169574">Solution</h2>
+<div class="outline-text-2" id="text-org2169574">
+<p>
+好久没刷算法题了，手有点生，没有什么思路，下面的答案是看过提示之后才写出来的。<br></p>
+</div>
+
+<div id="outline-container-org4fbc37a" class="outline-3">
+<h3 id="org4fbc37a">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org4fbc37a">
+<p>
+将所有的子串都穷举出来，并对它们进行判断，就能够得到最长子串的长度。这个算法很显然需要耗费很长时间。<br>
+需要注意的是： C++20中才支持 <code>std::set::contains</code> 这个接口（根据cppreference.com）。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">bool</span> <span class="nf">isStringWithUniqueString</span><span class="p">(</span><span class="k">const</span> <span class="n">string</span><span class="o">&amp;</span> <span class="n">str</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// 用于判断字符串是否是具有唯一字符的</span>
+    <span class="n">set</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">setChar</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">setChar</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">!=</span> <span class="n">setChar</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
+	<span class="p">{</span>
+	    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="n">setChar</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;=</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
+	<span class="p">{</span>
+	    <span class="c1">// get sub-string</span>
+	    <span class="n">string</span> <span class="n">strTemp</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="o">-</span><span class="n">i</span><span class="p">);</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">isStringWithUniqueString</span><span class="p">(</span><span class="n">strTemp</span><span class="p">))</span>
+	    <span class="p">{</span>
+		<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">strTemp</span><span class="p">.</span><span class="n">length</span><span class="p">());</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org0f63290" class="outline-3">
+<h3 id="org0f63290">Approach 2 滑动窗口</h3>
+<div class="outline-text-3" id="text-org0f63290">
+<p>
+滑动窗口的概念在字符串处理问题中十分常用，保持子串的左端点不动，不断拓展右侧端点，就能穷举出所有满足条件的子串。<br>
+需要注意的是这句话： <code>lengthMax = max(lengthMax, int(j-i+1));</code><br></p>
+<ol class="org-ol">
+<li>
+<code>std::max</code> 并不能同时匹配 <code>int</code> 和 <code>size_t</code> ，所以需要进行强制类型转换。<br>
+</li>
+<li>在完成第 <code>j</code> 个字母的验证后，说明包含该字母的子串也满足条件，所以要进行 <code>+1</code> 操作，这个主要是针对只有一个字母的字符串。<br>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+	<span class="c1">// 这个循环目的是，验证从i到j的字符串是否满足条件</span>
+	<span class="n">set</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">setChar</span><span class="p">;</span>
+
+	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
+	<span class="p">{</span>
+	    <span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">setChar</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="o">!=</span> <span class="n">setChar</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
+	    <span class="p">{</span>
+		<span class="k">break</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span>
+	    <span class="p">{</span>
+		<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span>
+	    <span class="p">}</span>
+
+	    <span class="n">setChar</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org318c953" class="outline-3">
+<h3 id="org318c953">Approach 3 优化的滑动窗口</h3>
+<div class="outline-text-3" id="text-org318c953">
+<p>
+使用 <code>map</code> 对字母出现的位置进行记录，这样在出现相同字母时，就能够从上一次出现的位置向后开始寻找。<br>
+需要注意句话 <code>it-&gt;second+1&gt;=i</code> , 需要对位置加1后再比较，这样才能保证 <code>i</code> 的坐标计算正确。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">size_t</span><span class="o">&gt;</span> <span class="n">mapPos</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
+    <span class="p">{</span>
+	<span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+	<span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">size_t</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">it</span> <span class="o">=</span> <span class="n">mapPos</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">it</span> <span class="o">!=</span> <span class="n">mapPos</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
+	<span class="p">{</span>
+	    <span class="c1">// 这里说明找到了字符上一次出现的位置</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">+</span> <span class="mi">1</span><span class="o">&gt;=</span> <span class="n">i</span><span class="p">)</span>
+	    <span class="p">{</span>
+		<span class="n">i</span> <span class="o">=</span> <span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+
+	<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span>
+
+	<span class="n">mapPos</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/navigation-and-selection-effectively-in-emacs/" class="u-url">提高emacs中浏览和选择操作效率的技巧</a></h1>
       <div class="metadata">
         
 
@@ -104,8 +288,8 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org3cba6b9" class="outline-2">
-<h2 id="org3cba6b9">
+      <div id="outline-container-orga7887c4" class="outline-2">
+<h2 id="orga7887c4">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -120,8 +304,8 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-org0670d8e" class="outline-2">
-<h2 id="org0670d8e">
+<div id="outline-container-org9b20beb" class="outline-2">
+<h2 id="org9b20beb">
 <span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -133,13 +317,13 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-org6928f1f" class="outline-2">
-<h2 id="org6928f1f">
+<div id="outline-container-org68076ff" class="outline-2">
+<h2 id="org68076ff">
 <span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-org22c709f" class="outline-3">
-<h3 id="org22c709f">
+<div id="outline-container-org537ba46" class="outline-3">
+<h3 id="org537ba46">
 <span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -184,8 +368,8 @@ Point and mark interchanged
 </div>
 </div>
 
-<div id="outline-container-org10dafc0" class="outline-3">
-<h3 id="org10dafc0">
+<div id="outline-container-orgb66950c" class="outline-3">
+<h3 id="orgb66950c">
 <span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -223,8 +407,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org0ed0e9b" class="outline-3">
-<h3 id="org0ed0e9b">
+<div id="outline-container-org02cc16b" class="outline-3">
+<h3 id="org02cc16b">
 <span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
 </h3>
 <div class="outline-text-3" id="text-3-3">
@@ -238,16 +422,16 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org101730a" class="outline-2">
-<h2 id="org101730a">
+<div id="outline-container-orgcc48170" class="outline-2">
+<h2 id="orgcc48170">
 <span class="section-number-2">4</span> 其他插件支持</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
 </div>
 
-<div id="outline-container-org8051ebc" class="outline-3">
-<h3 id="org8051ebc">
+<div id="outline-container-org74800c6" class="outline-3">
+<h3 id="org74800c6">
 <span class="section-number-3">4.1</span> helm swoop</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
@@ -261,8 +445,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org85c6be4" class="outline-3">
-<h3 id="org85c6be4">
+<div id="outline-container-orge1a70b5" class="outline-3">
+<h3 id="orge1a70b5">
 <span class="section-number-3">4.2</span> avy</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
@@ -278,8 +462,8 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org24b3c3e" class="outline-2">
-<h2 id="org24b3c3e">
+<div id="outline-container-orgd8cde30" class="outline-2">
+<h2 id="orgd8cde30">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -326,17 +510,17 @@ interface FooProps {}
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orga0d8869" class="outline-2">
-<h2 id="orga0d8869">引言</h2>
-<div class="outline-text-2" id="text-orga0d8869">
+      <div id="outline-container-orgb9ab60f" class="outline-2">
+<h2 id="orgb9ab60f">引言</h2>
+<div class="outline-text-2" id="text-orgb9ab60f">
 <p>
 在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org657ac0e" class="outline-2">
-<h2 id="org657ac0e">使用尖括号完成重定向</h2>
-<div class="outline-text-2" id="text-org657ac0e">
+<div id="outline-container-org5771cd8" class="outline-2">
+<h2 id="org5771cd8">使用尖括号完成重定向</h2>
+<div class="outline-text-2" id="text-org5771cd8">
 <p>
 示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
 <div class="highlight"><pre><span></span>ls . &gt; ls-output.txt
@@ -345,25 +529,25 @@ interface FooProps {}
 可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
 </div>
 
-<div id="outline-container-orgf8d3d4c" class="outline-3">
-<h3 id="orgf8d3d4c">重定向 <code>stdout</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-orgf8d3d4c">
+<div id="outline-container-org06f935e" class="outline-3">
+<h3 id="org06f935e">重定向 <code>stdout</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org06f935e">
 <div class="highlight"><pre><span></span>ls . <span class="m">1</span>&gt; ls-output.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgde2a2f1" class="outline-3">
-<h3 id="orgde2a2f1">重定向 <code>stderr</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-orgde2a2f1">
+<div id="outline-container-org57e32a0" class="outline-3">
+<h3 id="org57e32a0">重定向 <code>stderr</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org57e32a0">
 <div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt; ls-error.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgc7b1914" class="outline-3">
-<h3 id="orgc7b1914">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
-<div class="outline-text-3" id="text-orgc7b1914">
+<div id="outline-container-org31a0ad8" class="outline-3">
+<h3 id="org31a0ad8">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
+<div class="outline-text-3" id="text-org31a0ad8">
 <div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> ls-output-and-error.txt
 </pre></div>
 <p>
@@ -373,9 +557,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-orga7119e4" class="outline-3">
-<h3 id="orga7119e4">将程序的输出丢掉</h3>
-<div class="outline-text-3" id="text-orga7119e4">
+<div id="outline-container-org40ba57a" class="outline-3">
+<h3 id="org40ba57a">将程序的输出丢掉</h3>
+<div class="outline-text-3" id="text-org40ba57a">
 <p>
 可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
 <div class="highlight"><pre><span></span>program &gt; /dev/null
@@ -383,9 +567,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org6f7afea" class="outline-3">
-<h3 id="org6f7afea">将输出追加到指定文件尾部</h3>
-<div class="outline-text-3" id="text-org6f7afea">
+<div id="outline-container-orge99bc06" class="outline-3">
+<h3 id="orge99bc06">将输出追加到指定文件尾部</h3>
+<div class="outline-text-3" id="text-orge99bc06">
 <p>
 使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="nb">echo</span> <span class="nb">test</span> &gt;&gt; file-output.txt
@@ -394,9 +578,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-orgbd66530" class="outline-2">
-<h2 id="orgbd66530">使用管道完成重定向</h2>
-<div class="outline-text-2" id="text-orgbd66530">
+<div id="outline-container-orgd99fb0f" class="outline-2">
+<h2 id="orgd99fb0f">使用管道完成重定向</h2>
+<div class="outline-text-2" id="text-orgd99fb0f">
 <p>
 使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
 <div class="highlight"><pre><span></span>ls <span class="p">|</span> grep &lt;pattern&gt;
@@ -435,9 +619,9 @@ interface FooProps {}
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org9a8e1fe" class="outline-2">
-<h2 id="org9a8e1fe">引言</h2>
-<div class="outline-text-2" id="text-org9a8e1fe">
+      <div id="outline-container-org4f240c4" class="outline-2">
+<h2 id="org4f240c4">引言</h2>
+<div class="outline-text-2" id="text-org4f240c4">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -462,9 +646,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-orgfc00ea6" class="outline-2">
-<h2 id="orgfc00ea6">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-orgfc00ea6">
+<div id="outline-container-org821ab66" class="outline-2">
+<h2 id="org821ab66">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-org821ab66">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -508,9 +692,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org5eaf665" class="outline-2">
-<h2 id="org5eaf665">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-org5eaf665">
+<div id="outline-container-orga74d6b2" class="outline-2">
+<h2 id="orga74d6b2">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-orga74d6b2">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -519,18 +703,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org72ec4fa" class="outline-2">
-<h2 id="org72ec4fa">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-org72ec4fa">
+<div id="outline-container-org235ee13" class="outline-2">
+<h2 id="org235ee13">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-org235ee13">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org1e7d39b" class="outline-2">
-<h2 id="org1e7d39b">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-org1e7d39b">
+<div id="outline-container-org31cd472" class="outline-2">
+<h2 id="org31cd472">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org31cd472">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -539,9 +723,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org310d91f" class="outline-2">
-<h2 id="org310d91f">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-org310d91f">
+<div id="outline-container-orga2be3b2" class="outline-2">
+<h2 id="orga2be3b2">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-orga2be3b2">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
@@ -576,8 +760,8 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgb7d279c" class="outline-2">
-<h2 id="orgb7d279c">
+      <div id="outline-container-orga1ce1bb" class="outline-2">
+<h2 id="orga1ce1bb">
 <span class="section-number-2">1</span> 什么是位域</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -607,8 +791,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org4f01d37" class="outline-2">
-<h2 id="org4f01d37">
+<div id="outline-container-org02c66aa" class="outline-2">
+<h2 id="org02c66aa">
 <span class="section-number-2">2</span> 位域的语法</h2>
 <div class="outline-text-2" id="text-2">
 <div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="o">:</span> <span class="n">size</span>
@@ -648,8 +832,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </pre></div>
 </div>
 
-<div id="outline-container-org4726b57" class="outline-3">
-<h3 id="org4726b57">
+<div id="outline-container-org87ae37c" class="outline-3">
+<h3 id="org87ae37c">
 <span class="section-number-3">2.1</span> 在size取0时如何理解</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -657,8 +841,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 如下所示，定义了如下几种情况。<br></p>
 </div>
 
-<div id="outline-container-org45feec8" class="outline-4">
-<h4 id="org45feec8">
+<div id="outline-container-org8d96f0b" class="outline-4">
+<h4 id="org8d96f0b">
 <span class="section-number-4">2.1.1</span> case1</h4>
 <div class="outline-text-4" id="text-2-1-1">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -684,8 +868,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-orgcce3d3d" class="outline-4">
-<h4 id="orgcce3d3d">
+<div id="outline-container-orgaf41628" class="outline-4">
+<h4 id="orgaf41628">
 <span class="section-number-4">2.1.2</span> case2</h4>
 <div class="outline-text-4" id="text-2-1-2">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -704,8 +888,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org67def41" class="outline-4">
-<h4 id="org67def41">
+<div id="outline-container-org2072b15" class="outline-4">
+<h4 id="org2072b15">
 <span class="section-number-4">2.1.3</span> case3</h4>
 <div class="outline-text-4" id="text-2-1-3">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -725,8 +909,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgb89a5b3" class="outline-4">
-<h4 id="orgb89a5b3">
+<div id="outline-container-org3d3eded" class="outline-4">
+<h4 id="org3d3eded">
 <span class="section-number-4">2.1.4</span> case4</h4>
 <div class="outline-text-4" id="text-2-1-4">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -746,8 +930,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org2c4e668" class="outline-3">
-<h3 id="org2c4e668">
+<div id="outline-container-org4ee9ac5" class="outline-3">
+<h3 id="org4ee9ac5">
 <span class="section-number-3">2.2</span> <code>struct</code> 标识符</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -757,8 +941,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-orge47b55a" class="outline-2">
-<h2 id="orge47b55a">
+<div id="outline-container-org49dd701" class="outline-2">
+<h2 id="org49dd701">
 <span class="section-number-2">3</span> 位域的常见应用场景</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -768,8 +952,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-orga8b3697" class="outline-2">
-<h2 id="orga8b3697">
+<div id="outline-container-org3540546" class="outline-2">
+<h2 id="org3540546">
 <span class="section-number-2">4</span> C++中的位操作接口</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -777,8 +961,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-org95959c7" class="outline-2">
-<h2 id="org95959c7">
+<div id="outline-container-orgd6a2798" class="outline-2">
+<h2 id="orgd6a2798">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -831,8 +1015,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org180fe36" class="outline-2">
-<h2 id="org180fe36">
+      <div id="outline-container-orgfa5d739" class="outline-2">
+<h2 id="orgfa5d739">
 <span class="section-number-2">1</span> 原子化操作</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -843,8 +1027,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-org05cbaa5" class="outline-2">
-<h2 id="org05cbaa5">
+<div id="outline-container-orgd7d10de" class="outline-2">
+<h2 id="orgd7d10de">
 <span class="section-number-2">2</span> 函数接口</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -899,8 +1083,8 @@ In most cases, these builtins are considered a full barrier. That is, no memory 
 </div>
 </div>
 
-<div id="outline-container-orgf3f6134" class="outline-2">
-<h2 id="orgf3f6134">
+<div id="outline-container-org479dc66" class="outline-2">
+<h2 id="org479dc66">
 <span class="section-number-2">3</span> 内存栅栏（Memory Barrier）</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -940,8 +1124,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 
 
-<div id="outline-container-org121cfa7" class="outline-2">
-<h2 id="org121cfa7">
+<div id="outline-container-orgcdd9159" class="outline-2">
+<h2 id="orgcdd9159">
 <span class="section-number-2">4</span> 操作原子化能够解决多进程访问共享内存的问题吗？</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -950,8 +1134,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 
 
-<div id="outline-container-orga006d5d" class="outline-2">
-<h2 id="orga006d5d">
+<div id="outline-container-org49c302f" class="outline-2">
+<h2 id="org49c302f">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -1006,8 +1190,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org5d855dd" class="outline-2">
-<h2 id="org5d855dd">
+      <div id="outline-container-org0a4fce5" class="outline-2">
+<h2 id="org0a4fce5">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -1015,8 +1199,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 </div>
 
-<div id="outline-container-org905ce8a" class="outline-2">
-<h2 id="org905ce8a">
+<div id="outline-container-org58847c7" class="outline-2">
+<h2 id="org58847c7">
 <span class="section-number-2">2</span> 指令语法</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -1043,8 +1227,8 @@ g 表示八字节(giant word)<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3f62c9c" class="outline-2">
-<h2 id="org3f62c9c">
+<div id="outline-container-org60e5b4a" class="outline-2">
+<h2 id="org60e5b4a">
 <span class="section-number-2">3</span> 示例</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -1054,8 +1238,8 @@ g 表示八字节(giant word)<br></p>
 </div>
 </div>
 
-<div id="outline-container-org995bc16" class="outline-2">
-<h2 id="org995bc16">
+<div id="outline-container-org2517e1a" class="outline-2">
+<h2 id="org2517e1a">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
@@ -1098,8 +1282,8 @@ g 表示八字节(giant word)<br></p>
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org7c4c639" class="outline-2">
-<h2 id="org7c4c639">
+      <div id="outline-container-org5effb79" class="outline-2">
+<h2 id="org5effb79">
 <span class="section-number-2">1</span> 同步和异步</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -1115,8 +1299,8 @@ g 表示八字节(giant word)<br></p>
 异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
 </div>
 
-<div id="outline-container-org6815c55" class="outline-3">
-<h3 id="org6815c55">
+<div id="outline-container-org35e6b64" class="outline-3">
+<h3 id="org35e6b64">
 <span class="section-number-3">1.1</span> POSIX AIO</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -1148,8 +1332,8 @@ g 表示八字节(giant word)<br></p>
 </div>
 </div>
 
-<div id="outline-container-org2914f05" class="outline-3">
-<h3 id="org2914f05">
+<div id="outline-container-org1c55ef4" class="outline-3">
+<h3 id="org1c55ef4">
 <span class="section-number-3">1.2</span> Linux AIO</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -1188,8 +1372,8 @@ g 表示八字节(giant word)<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4489b8a" class="outline-3">
-<h3 id="org4489b8a">
+<div id="outline-container-orgce479e7" class="outline-3">
+<h3 id="orgce479e7">
 <span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -1219,8 +1403,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 </div>
 
-<div id="outline-container-orga14f8a7" class="outline-2">
-<h2 id="orga14f8a7">
+<div id="outline-container-org89411dd" class="outline-2">
+<h2 id="org89411dd">
 <span class="section-number-2">2</span> 阻塞和非阻塞</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -1231,8 +1415,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org713b454" class="outline-2">
-<h2 id="org713b454">
+<div id="outline-container-org9937209" class="outline-2">
+<h2 id="org9937209">
 <span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -1242,8 +1426,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org9364c5d" class="outline-2">
-<h2 id="org9364c5d">
+<div id="outline-container-org9e0dbd1" class="outline-2">
+<h2 id="org9e0dbd1">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
@@ -1292,9 +1476,9 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
       <p>
 查看Linux系统相关信息有助于排查和解决软件和硬件的兼容性问题。系统信息包括硬件信息和软件信息，硬件信息主要有CPU信息、内存信息、PCI信息、USB信息、硬盘信息等等。软件信息主要有系统版本、分区使用状态等等。本文主要介绍了获取当前Linux系统信息的命令。<br></p>
 
-<div id="outline-container-org6c150dd" class="outline-2">
-<h2 id="org6c150dd">查看系统相关信息</h2>
-<div class="outline-text-2" id="text-org6c150dd">
+<div id="outline-container-org513d91d" class="outline-2">
+<h2 id="org513d91d">查看系统相关信息</h2>
+<div class="outline-text-2" id="text-org513d91d">
 <p>
 <code>uname</code> 指令提供了查询系统信息的功能，使用该命令能够快速获取操作系统信息概览。<br></p>
 
@@ -1333,25 +1517,25 @@ hostnamectl
 </div>
 </div>
 
-<div id="outline-container-org23348cb" class="outline-2">
-<h2 id="org23348cb">查看CPU相关信息</h2>
-<div class="outline-text-2" id="text-org23348cb">
+<div id="outline-container-org0c1c1ea" class="outline-2">
+<h2 id="org0c1c1ea">查看CPU相关信息</h2>
+<div class="outline-text-2" id="text-org0c1c1ea">
 <p>
 <code>lscpu</code> 指令能够查看当前系统中CPU的详细信息，包括型号、主频、构架、大小端等信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org83794e2" class="outline-2">
-<h2 id="org83794e2">查看硬盘相关信息</h2>
-<div class="outline-text-2" id="text-org83794e2">
+<div id="outline-container-orgee48d67" class="outline-2">
+<h2 id="orgee48d67">查看硬盘相关信息</h2>
+<div class="outline-text-2" id="text-orgee48d67">
 <p>
 <code>lsblk</code> 指令能够查看块设备（block device）的详细信息，块设备主要指系统中的存储设备如硬盘和闪存。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0d4add1" class="outline-2">
-<h2 id="org0d4add1">查看PCI设备的相关信息</h2>
-<div class="outline-text-2" id="text-org0d4add1">
+<div id="outline-container-org4ed12a6" class="outline-2">
+<h2 id="org4ed12a6">查看PCI设备的相关信息</h2>
+<div class="outline-text-2" id="text-org4ed12a6">
 <p>
 <code>lspci</code> 指令能够查看PCI设备的信息，PCI设备包括USB、显卡、串口、网卡等其他外围设备。<br></p>
 
@@ -1368,17 +1552,17 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-org072b369" class="outline-2">
-<h2 id="org072b369">查看USB设备的相关信息</h2>
-<div class="outline-text-2" id="text-org072b369">
+<div id="outline-container-org24ee1e1" class="outline-2">
+<h2 id="org24ee1e1">查看USB设备的相关信息</h2>
+<div class="outline-text-2" id="text-org24ee1e1">
 <p>
 <code>lsusb</code> 指令能够查看USBS设备的信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org34a5f2d" class="outline-2">
-<h2 id="org34a5f2d">查看文件系统相关信息</h2>
-<div class="outline-text-2" id="text-org34a5f2d">
+<div id="outline-container-orge867953" class="outline-2">
+<h2 id="orge867953">查看文件系统相关信息</h2>
+<div class="outline-text-2" id="text-orge867953">
 <p>
 <code>fdisk</code> 命令能够查看和操作linux系统的分区表。<br></p>
 
@@ -1397,9 +1581,9 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-orge8b8c1d" class="outline-2">
-<h2 id="orge8b8c1d">参考资料</h2>
-<div class="outline-text-2" id="text-orge8b8c1d">
+<div id="outline-container-org9ce21cb" class="outline-2">
+<h2 id="org9ce21cb">参考资料</h2>
+<div class="outline-text-2" id="text-org9ce21cb">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/commands-to-collect-system-and-hardware-information-in-linux/">tecmint.com</a><br>
@@ -1443,15 +1627,15 @@ lspci -vv
       <p>
 linux的top命令能够动态显示当前系统的运行状态。它能够显示操作系统的汇总信息和当前系统上的正在运行的进程列表。<br></p>
 
-<div id="outline-container-org4de8270" class="outline-2">
-<h2 id="org4de8270">
+<div id="outline-container-org8607888" class="outline-2">
+<h2 id="org8607888">
 <span class="section-number-2">1</span> 统计信息说明</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 (可以通过配置文件修改通计信息区的显示格式，下文所描述的都是在默认配置下的显示内容)<br></p>
 </div>
-<div id="outline-container-org3645fe2" class="outline-3">
-<h3 id="org3645fe2">
+<div id="outline-container-org51aabdd" class="outline-3">
+<h3 id="org51aabdd">
 <span class="section-number-3">1.1</span> 第1行</h3>
 <div class="outline-text-3" id="text-1-1">
 <ul class="org-ul">
@@ -1468,8 +1652,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 这一行信息也可以通过 <code>uptime</code> 和 <code>w</code> 指令获得<br></p>
 </div>
 </div>
-<div id="outline-container-org8bf288d" class="outline-3">
-<h3 id="org8bf288d">
+<div id="outline-container-orge7b99dd" class="outline-3">
+<h3 id="orge7b99dd">
 <span class="section-number-3">1.2</span> 第2行</h3>
 <div class="outline-text-3" id="text-1-2">
 <ul class="org-ul">
@@ -1486,8 +1670,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </ul>
 </div>
 </div>
-<div id="outline-container-org7719443" class="outline-3">
-<h3 id="org7719443">
+<div id="outline-container-org20c8ea0" class="outline-3">
+<h3 id="org20c8ea0">
 <span class="section-number-3">1.3</span> 第3行</h3>
 <div class="outline-text-3" id="text-1-3">
 <ul class="org-ul">
@@ -1511,8 +1695,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orgf48977b" class="outline-3">
-<h3 id="orgf48977b">
+<div id="outline-container-org6521b30" class="outline-3">
+<h3 id="org6521b30">
 <span class="section-number-3">1.4</span> 第4行</h3>
 <div class="outline-text-3" id="text-1-4">
 <ul class="org-ul">
@@ -1528,8 +1712,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org2d2bd0c" class="outline-3">
-<h3 id="org2d2bd0c">
+<div id="outline-container-org523e9af" class="outline-3">
+<h3 id="org523e9af">
 <span class="section-number-3">1.5</span> 第5行</h3>
 <div class="outline-text-3" id="text-1-5">
 <ul class="org-ul">
@@ -1546,8 +1730,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org0b82fc3" class="outline-2">
-<h2 id="org0b82fc3">
+<div id="outline-container-org1bf95dc" class="outline-2">
+<h2 id="org1bf95dc">
 <span class="section-number-2">2</span> 进程信息</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -1584,8 +1768,8 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-orgf70d66e" class="outline-2">
-<h2 id="orgf70d66e">
+<div id="outline-container-org4cb3f88" class="outline-2">
+<h2 id="org4cb3f88">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
@@ -1631,9 +1815,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
       <p>
 我所租用的云服务器操作系统为CentOS Linux，在使用云服务器的过程中为了保证服务器的安全，进行了一些简单的配置，这样能够增加服务器被破解的难度。<br></p>
 
-<div id="outline-container-orgd5e5053" class="outline-2">
-<h2 id="orgd5e5053">使用denyhosts防止暴力破解登录密码</h2>
-<div class="outline-text-2" id="text-orgd5e5053">
+<div id="outline-container-orgddecf82" class="outline-2">
+<h2 id="orgddecf82">使用denyhosts防止暴力破解登录密码</h2>
+<div class="outline-text-2" id="text-orgddecf82">
 <p>
 登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，屏蔽该登录ip，限制密码的尝试次数。<br></p>
 
@@ -1665,9 +1849,9 @@ service denyhosts status
 </div>
 </div>
 
-<div id="outline-container-orgec673a6" class="outline-2">
-<h2 id="orgec673a6">更改sshd的端口号</h2>
-<div class="outline-text-2" id="text-orgec673a6">
+<div id="outline-container-org1314ba2" class="outline-2">
+<h2 id="org1314ba2">更改sshd的端口号</h2>
+<div class="outline-text-2" id="text-org1314ba2">
 <p>
 sshd的默认端口号为22，很多暴力破解程序会直接对该端口进行登录尝试，通过修改默认的sshd的端口号，可以增加破解难度。需要注意的是，在修改sshd端口号之后，自己使用shell工具登录服务器也需要端口号进行修改。<br></p>
 
@@ -1683,9 +1867,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
 </div>
 </div>
 
-<div id="outline-container-org6777003" class="outline-2">
-<h2 id="org6777003">使用 <code>last</code> 和 <code>lastb</code> 查看系统登录记录</h2>
-<div class="outline-text-2" id="text-org6777003">
+<div id="outline-container-orgce81503" class="outline-2">
+<h2 id="orgce81503">使用 <code>last</code> 和 <code>lastb</code> 查看系统登录记录</h2>
+<div class="outline-text-2" id="text-orgce81503">
 <p>
 <code>last</code> 指令能够查看登录成功的记录，而 <code>lastb</code> 指令能够查看登录失败的记录。通过查看登录失败的记录，能够判断出服务器是否有被暴力破解的记录。需要注意的是这两个命令均需要管理员权限才能够执行。<br></p>
 </div>
@@ -1724,9 +1908,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
       <p>
 由于C++是兼容C的，所以使用C++进行文件操作时，会发现有两套库函数可以使用，它们分别是C风格的和C++风格的。<br></p>
 
-<div id="outline-container-org6229719" class="outline-2">
-<h2 id="org6229719">C风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-org6229719">
+<div id="outline-container-orgad588c6" class="outline-2">
+<h2 id="orgad588c6">C风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-orgad588c6">
 <p>
 <b>打开文件，关闭文件</b><br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
@@ -1755,9 +1939,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
 </div>
 
 
-<div id="outline-container-orgaaf34e8" class="outline-2">
-<h2 id="orgaaf34e8">C++风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-orgaaf34e8">
+<div id="outline-container-org41ce89b" class="outline-2">
+<h2 id="org41ce89b">C++风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-org41ce89b">
 <p>
 C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件实际上就会对应一个 <code>fstream</code> 对象，一下函数都是 <code>fstream</code> 的成员函数。<br>
 文件打开和关闭<br></p>
@@ -1775,90 +1959,11 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 </div>
 
 
-<div id="outline-container-org76fba25" class="outline-2">
-<h2 id="org76fba25">题外话</h2>
-<div class="outline-text-2" id="text-org76fba25">
+<div id="outline-container-org61f442a" class="outline-2">
+<h2 id="org61f442a">题外话</h2>
+<div class="outline-text-2" id="text-org61f442a">
 <p>
 在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。<br></p>
-</div>
-</div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/endianness-and-union-type/" class="u-url">字节序与union类型</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-05-11T09:55:34+08:00" itemprop="datePublished" title="2018-05-11 09:55">May 11 2018  (09:55)
-    </time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/endianness-and-union-type/#disqus_thread" data-disqus-identifier="cache/posts/endianness-and-union-type.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/computer-science/" rel="tag">computer science</a></li>
-        <li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div id="outline-container-org2fd5113" class="outline-2">
-<h2 id="org2fd5113">字节序</h2>
-<div class="outline-text-2" id="text-org2fd5113">
-<p>
-字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。<br>
-字节序分为大端字节序和小端字节序，两种字节序不能混用。<br><b>大端字节序</b> ：高位字节保存在较低位地址的内存中<br><b>小端字节序</b> ：高位字节保存在较高位地址的内存中<br></p>
-
-<p>
-以 <code>int n = 0x12345678</code> 为例，大端字节序内存中的存储的顺序为 <code>0x12 0x34 0x56 0x78</code> ，小端字节序内存中的存储顺序为 <code>0x78 0x56 0x34 0x12</code> 。<br>
-很明显可以看出大端字节序更符合人类的阅读习惯。<br></p>
-
-<p>
-常见的大端系统CPU：IBM z/Atchitecture<br>
-常见的小端系统CPU：intel x86 处理器<br></p>
-
-<p>
-网络字节序使用的大端字节序，常用网络协议如IPv4、IPv6、TCP和UDP协议都是使用大端字节序完成数据传输的。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-orgf62ac8a" class="outline-2">
-<h2 id="orgf62ac8a">union类型</h2>
-<div class="outline-text-2" id="text-orgf62ac8a">
-<p>
-可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。<br></p>
-
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
-
-<span class="k">typedef</span> <span class="k">union</span> <span class="n">un</span>
-<span class="p">{</span>
-    <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>
-    <span class="kt">char</span> <span class="n">ch</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
-<span class="p">}</span><span class="n">un</span><span class="p">;</span>
-
-<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
-<span class="p">{</span>
-    <span class="n">un</span> <span class="n">u</span><span class="p">;</span>
-    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
-    <span class="n">printf</span><span class="p">(</span><span class="s">"u.x=0x%x</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">u</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
-    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
 </div>
 </div>
     </div>

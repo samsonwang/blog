@@ -76,7 +76,147 @@
 
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/non-blocking-socket-connect-tips/" class="u-url">客户端使用非阻塞socket进行connect的流程</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/static-member-initialization-and-private-member-function/" class="u-url">静态成员变量初始化相关问题</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-09-04T23:37:37+08:00" itemprop="datePublished" title="2018-09-04 23:37">Sep 04 2018  (23:37)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/static-member-initialization-and-private-member-function/#disqus_thread" data-disqus-identifier="cache/posts/static-member-initialization-and-private-member-function.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
+        <li><a class="tag p-category" href="/tags/syntax/" rel="tag">syntax</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-org1b909ea" class="outline-2">
+<h2 id="org1b909ea">引言</h2>
+<div class="outline-text-2" id="text-org1b909ea">
+<p>
+这篇文章的起因是出于对于 <code>C++</code> 饿汉单例模式代码的一些疑问，查阅了一些资料。在仔细研究后，我发现在一些基础概念的理解还是存在偏差。<br>
+下面请看这样的一段代码，能看出其中有那些不太“正常”的语句么。<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Singleton</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="k">static</span> <span class="n">Singleton</span><span class="o">*</span> <span class="n">getInstance</span><span class="p">();</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="n">Singleton</span><span class="p">()</span> <span class="p">{}</span>
+    <span class="k">static</span> <span class="n">Singleton</span><span class="o">*</span> <span class="n">instance</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">Singleton</span><span class="o">*</span> <span class="n">Singleton</span><span class="o">::</span><span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Singleton</span><span class="p">();</span>
+<span class="n">Singleton</span><span class="o">*</span> <span class="n">Singleton</span><span class="o">::</span><span class="n">getInstance</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">instance</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org8fef6db" class="outline-2">
+<h2 id="org8fef6db">私有静态成员的初始化</h2>
+<div class="outline-text-2" id="text-org8fef6db">
+<p>
+上面的代码是饿汉单例模式的 <code>C++</code> 的实现，在没有查阅资料之前，我对其中私有静态成员变量的初始化存疑。主要有以下两点：<br></p>
+<ul class="org-ul">
+<li>为什么私有变量能够在类外被修改<br>
+</li>
+<li>为什么私有构造函数能够在类外被调用<br>
+</li>
+</ul>
+<p>
+在我之前的知识积累中， <b>私有的成员变量或成员函数是不能够在类外被访问的</b> 。那么为什么以上代码没有问题呢？<br></p>
+
+<p>
+在C++标准中找到了下面的一段话(可以在 <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">C++11 standard</a> 的 9.4.2节 或  <a href="http://eel.is/c++draft/class.static.data#2">C++ standard working draft</a> 的 10.3.9.2节 中找到)<br></p>
+<blockquote>
+<p>
+The initializer expression in the definition of a static data member is in the scope of its class.<br></p>
+</blockquote>
+<p>
+这句话的意思是：静态成员变量的初始化是被看做为它自身的类域中的（ <del>翻译的可能不是很准</del> ）。这样就不难理解为什么私有的静态成员变量能够在其类外被初始化了，由其私有构造函数进行构造也能说的通了。<br></p>
+
+
+<p>
+<b>同样</b> ,在C++标准中给出了下面这样的示例代码：<br></p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">process</span> <span class="p">{</span>
+  <span class="k">static</span> <span class="n">process</span><span class="o">*</span> <span class="n">run_chain</span><span class="p">;</span>
+  <span class="k">static</span> <span class="n">process</span><span class="o">*</span> <span class="n">running</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">process</span><span class="o">*</span> <span class="n">process</span><span class="o">::</span><span class="n">running</span> <span class="o">=</span> <span class="n">get_main</span><span class="p">();</span>
+<span class="n">process</span><span class="o">*</span> <span class="n">process</span><span class="o">::</span><span class="n">run_chain</span> <span class="o">=</span> <span class="n">running</span><span class="p">;</span>
+</pre></div>
+
+<p>
+给出的说明如下：<br></p>
+<blockquote>
+<p>
+The static data member <code>run_chain</code> of class process is defined in global scope; the notation <code>process​::​run_chain</code> specifies that the member <code>run_chain</code> is a member of class <code>process</code> and in the scope of class <code>process</code>. In the static data member definition, the initializer expression refers to the static data member running of class <code>process</code>.<br></p>
+</blockquote>
+<p>
+静态成员 <code>run_chain</code> 定义在全局域；而 <code>process::run_chain</code> 则表示 <code>run_chain</code> 是 <code>process</code> 类的成员变量，从而处在 <code>process</code> 类的作用域中。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgd760c03" class="outline-2">
+<h2 id="orgd760c03">私有构造函数</h2>
+<div class="outline-text-2" id="text-orgd760c03">
+<p>
+在查阅资料时，我发现 Peter 的 <a href="https://stackoverflow.com/a/41361967">描述</a> 纠正了我对私有构造函数的一些看法。<br></p>
+<blockquote>
+<p>
+The point of a <code>private</code> constructor is not preventing object construction. It is about controlling which code can access the constructor, and therefore limiting which code to create an object that is an instance of that class. A <code>private</code> constructor is accessible to all member functions ( <code>static</code> or otherwise) of the class, and to all declared <code>friend</code> s of the class (which may be individual functions, or other classes) - so any of those can create an instance of the class using a <code>private</code> constructor (assuming the constructor is defined).<br></p>
+</blockquote>
+<p>
+私有构造函数的目的并不是禁止对象构造，其目的在于控制哪些代码能够调用这个构造函数，进而限制类对象的创建。私有的构造函数可以被该类的所有成员函数（静态或非静态的）调用，该类的友元类或友元方法也能访问该类的私有函数，所以在上述情况中都可以通过私有的构造函数实例化出类对象。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org0569501" class="outline-2">
+<h2 id="org0569501">参考资料</h2>
+<div class="outline-text-2" id="text-org0569501">
+<ul class="org-ul">
+<li>
+<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">ISO C++11 standard</a><br>
+</li>
+<li>
+<a href="http://eel.is/c++draft/class.static.data#2">ISO C++ standard working draft</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/38583989/access-to-private-static-function-during-static-member-initialization">stackoverflow.com - access to private static function…</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/41361223/why-private-constructor-prevents-object-creation-c">stackoverflow.com - private constructor</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/7857989/static-member-variable-when-declared-private">stackoverflow.com - static member variable when declared private</a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/language/static#Static_data_members">cppreference.com - static data members</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/non-blocking-socket-connect-tips/" class="u-url">客户端使用非阻塞socket进行connect的流程</a></h1>
       <div class="metadata">
         
 
@@ -107,17 +247,17 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org8049d70" class="outline-2">
-<h2 id="org8049d70">问题</h2>
-<div class="outline-text-2" id="text-org8049d70">
+      <div id="outline-container-org2f8ba64" class="outline-2">
+<h2 id="org2f8ba64">问题</h2>
+<div class="outline-text-2" id="text-org2f8ba64">
 <p>
 使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga21fc99" class="outline-2">
-<h2 id="orga21fc99">解答</h2>
-<div class="outline-text-2" id="text-orga21fc99">
+<div id="outline-container-org25f5834" class="outline-2">
+<h2 id="org25f5834">解答</h2>
+<div class="outline-text-2" id="text-org25f5834">
 <p>
 客户端建立连接的示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">...);</span>
@@ -167,9 +307,9 @@
 </div>
 </div>
 
-<div id="outline-container-org5245203" class="outline-2">
-<h2 id="org5245203">参考资料</h2>
-<div class="outline-text-2" id="text-org5245203">
+<div id="outline-container-orgabbb676" class="outline-2">
+<h2 id="orgabbb676">参考资料</h2>
+<div class="outline-text-2" id="text-orgabbb676">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
@@ -208,9 +348,9 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org914dd59" class="outline-2">
-<h2 id="org914dd59">Description</h2>
-<div class="outline-text-2" id="text-org914dd59">
+      <div id="outline-container-orgf6e93c9" class="outline-2">
+<h2 id="orgf6e93c9">Description</h2>
+<div class="outline-text-2" id="text-orgf6e93c9">
 <p>
 Given n non-negative integers a1, a2, …, an , where each represents a point at coordinate (i, ai). n vertical lines are drawn such that the two endpoints of line i is at (i, ai) and (i, 0). Find two lines, which together with x-axis forms a container, such that the container contains the most water.<br></p>
 
@@ -227,13 +367,13 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-org2ddc4c1" class="outline-2">
-<h2 id="org2ddc4c1">Solution</h2>
-<div class="outline-text-2" id="text-org2ddc4c1">
+<div id="outline-container-org24d00f8" class="outline-2">
+<h2 id="org24d00f8">Solution</h2>
+<div class="outline-text-2" id="text-org24d00f8">
 </div>
-<div id="outline-container-orgaf9092e" class="outline-3">
-<h3 id="orgaf9092e">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-orgaf9092e">
+<div id="outline-container-org66c5d2c" class="outline-3">
+<h3 id="org66c5d2c">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org66c5d2c">
 <p>
 暴力解法是最容易想到的解法了，然而暴力解法肯定不是本题的意图。<br></p>
 
@@ -259,9 +399,9 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-org28f48e6" class="outline-3">
-<h3 id="org28f48e6">Approach 2</h3>
-<div class="outline-text-3" id="text-org28f48e6">
+<div id="outline-container-orgcecfd53" class="outline-3">
+<h3 id="orgcecfd53">Approach 2</h3>
+<div class="outline-text-3" id="text-orgcecfd53">
 <p>
 我在leetcode上看到这样一种解法，这种解法从逻辑和形式上看上不复杂，但是我的疑问在是否有严密的数学推导和论证。<br></p>
 
@@ -304,9 +444,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 </div>
 </div>
 
-<div id="outline-container-org15e1b5e" class="outline-2">
-<h2 id="org15e1b5e">Reference</h2>
-<div class="outline-text-2" id="text-org15e1b5e">
+<div id="outline-container-org6fb5e99" class="outline-2">
+<h2 id="org6fb5e99">Reference</h2>
+<div class="outline-text-2" id="text-org6fb5e99">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/container-with-most-water/solution/">leetcode problem solution</a><br>
@@ -353,9 +493,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org544cc68" class="outline-2">
-<h2 id="org544cc68">引言</h2>
-<div class="outline-text-2" id="text-org544cc68">
+      <div id="outline-container-org716d036" class="outline-2">
+<h2 id="org716d036">引言</h2>
+<div class="outline-text-2" id="text-org716d036">
 <p>
 在学习前端的过程中，我开始接触到许多开发框架或开发工具，这些工具让我开始眼花缭乱。使用常规的html/css/js就已经能够开发出这种网页了，所以我问自己，为什么要学习这些框架或工具，这些库是用来解决什么问题的。想明白这个问题，我学习的目的就更加明确，在遇到一些开发情景时，也能够快速准确地挑选出应该使用的框架。<br></p>
 
@@ -364,9 +504,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 </div>
 </div>
 
-<div id="outline-container-org063fc6d" class="outline-2">
-<h2 id="org063fc6d">为什么要使用jQuery</h2>
-<div class="outline-text-2" id="text-org063fc6d">
+<div id="outline-container-org3abd89b" class="outline-2">
+<h2 id="org3abd89b">为什么要使用jQuery</h2>
+<div class="outline-text-2" id="text-org3abd89b">
 <p>
 jQuery是一个轻量级js库，它有如下特性：<br></p>
 <ul class="org-ul">
@@ -386,9 +526,9 @@ jQuery是一个轻量级js库，它有如下特性：<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf11f91f" class="outline-2">
-<h2 id="orgf11f91f">为什么要使用SASS</h2>
-<div class="outline-text-2" id="text-orgf11f91f">
+<div id="outline-container-orge728115" class="outline-2">
+<h2 id="orge728115">为什么要使用SASS</h2>
+<div class="outline-text-2" id="text-orge728115">
 <p>
 SASS是一种CSS预编译格式，它最终会编译成CSS。<br>
 SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操作，函数操作，样式模板（mixin）等强大的特性。它能够让开发人员更方便地编写CSS。SASS支持 <code>import</code> 关键字，这样就能够很方便地对样式进行模块化设计。<br></p>
@@ -401,9 +541,9 @@ SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操�
 </div>
 </div>
 
-<div id="outline-container-org689b905" class="outline-2">
-<h2 id="org689b905">为什么要使用Bootstrap</h2>
-<div class="outline-text-2" id="text-org689b905">
+<div id="outline-container-orgeb4bebd" class="outline-2">
+<h2 id="orgeb4bebd">为什么要使用Bootstrap</h2>
+<div class="outline-text-2" id="text-orgeb4bebd">
 <p>
 Bootstrap是一个用于快速开发网页的前端框架。以我目前的理解来看，它更像是一个网页样式框架。<br></p>
 <ul class="org-ul">
@@ -419,9 +559,9 @@ Bootstrap是一个用于快速开发网页的前端框架。以我目前的理�
 </div>
 </div>
 
-<div id="outline-container-org8b641e3" class="outline-2">
-<h2 id="org8b641e3">为什么要使用React</h2>
-<div class="outline-text-2" id="text-org8b641e3">
+<div id="outline-container-orge050161" class="outline-2">
+<h2 id="orge050161">为什么要使用React</h2>
+<div class="outline-text-2" id="text-orge050161">
 <p>
 DOM操作对性能的影响很大，频繁的DOM操作会使网页渲染的速度变慢，React主要解决了这个问题。<br>
 React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新渲染。<br></p>
@@ -461,9 +601,9 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 </div>
 
 
-<div id="outline-container-org9f99c2f" class="outline-2">
-<h2 id="org9f99c2f">参考资料</h2>
-<div class="outline-text-2" id="text-org9f99c2f">
+<div id="outline-container-org17ec45b" class="outline-2">
+<h2 id="org17ec45b">参考资料</h2>
+<div class="outline-text-2" id="text-org17ec45b">
 <ol class="org-ol">
 <li>
 <a href="https://www.w3schools.com/jquery/jquery_intro.asp">w3schools jQuery intro</a><br>
@@ -515,8 +655,8 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgbfe088f" class="outline-2">
-<h2 id="orgbfe088f">
+      <div id="outline-container-orgb0d534b" class="outline-2">
+<h2 id="orgb0d534b">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -525,13 +665,13 @@ js也是具有OOP（object oriented programming）特性的，OOP在构建一些
 </div>
 </div>
 
-<div id="outline-container-org446c719" class="outline-2">
-<h2 id="org446c719">
+<div id="outline-container-org3adbcff" class="outline-2">
+<h2 id="org3adbcff">
 <span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-org2e3a4e3" class="outline-3">
-<h3 id="org2e3a4e3">
+<div id="outline-container-orga796ed8" class="outline-3">
+<h3 id="orga796ed8">
 <span class="section-number-3">2.1</span> 创建对象（object）</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -551,8 +691,8 @@ js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关�
 </div>
 </div>
 
-<div id="outline-container-orgae09efc" class="outline-3">
-<h3 id="orgae09efc">
+<div id="outline-container-orgfaa0808" class="outline-3">
+<h3 id="orgfaa0808">
 <span class="section-number-3">2.2</span> 类（class）的声明</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -573,8 +713,8 @@ crow instanceof Bird; // =&gt; true
 </div>
 </div>
 
-<div id="outline-container-org53c497a" class="outline-3">
-<h3 id="org53c497a">
+<div id="outline-container-orgf7a9f43" class="outline-3">
+<h3 id="orgf7a9f43">
 <span class="section-number-3">2.3</span> 类的共有成员</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
@@ -602,8 +742,8 @@ js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还
 </div>
 </div>
 
-<div id="outline-container-org554c33b" class="outline-3">
-<h3 id="org554c33b">
+<div id="outline-container-orgd66ca33" class="outline-3">
+<h3 id="orgd66ca33">
 <span class="section-number-3">2.4</span> 类的私有成员</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
@@ -624,8 +764,8 @@ ducky.getHatchedEggCount(); // returns 10
 </div>
 </div>
 
-<div id="outline-container-org896ea2c" class="outline-3">
-<h3 id="org896ea2c">
+<div id="outline-container-orga7740ea" class="outline-3">
+<h3 id="orga7740ea">
 <span class="section-number-3">2.5</span> 类的继承和派生</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
@@ -636,8 +776,8 @@ Bird.prototype.constructor = Bird;
 </div>
 </div>
 
-<div id="outline-container-org5e6dfcb" class="outline-3">
-<h3 id="org5e6dfcb">
+<div id="outline-container-org39bad1a" class="outline-3">
+<h3 id="org39bad1a">
 <span class="section-number-3">2.6</span> 类的覆盖</h3>
 <div class="outline-text-3" id="text-2-6">
 <p>
@@ -667,8 +807,8 @@ Bird.prototype.fly = function() {
 </div>
 
 
-<div id="outline-container-orgbab3084" class="outline-2">
-<h2 id="orgbab3084">
+<div id="outline-container-orgb4c2e8f" class="outline-2">
+<h2 id="orgb4c2e8f">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
@@ -711,9 +851,9 @@ Bird.prototype.fly = function() {
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org4e6cc42" class="outline-2">
-<h2 id="org4e6cc42">引言</h2>
-<div class="outline-text-2" id="text-org4e6cc42">
+      <div id="outline-container-org44308a5" class="outline-2">
+<h2 id="org44308a5">引言</h2>
+<div class="outline-text-2" id="text-org44308a5">
 <p>
 近在FreeCodeCamp(FCC)学习前端的课程，其中有一节就是讲的 <code>regexp</code> ，也就是正则表达式，之前我零星地了解过一些正则表达式的相关知识，不足以对正则表达式得出一个完整的认识。FCC的教程循序渐进，由简到繁，在教学中结合练习，非常适合初学者的学习过程。如何你的英文能够达到阅读技术类文献的水平，又正好想学习一下正则表达式，我推荐你试一下FCC的正则表达式教程，花3~4个小时就能够对正则表达式有个完整的理解。<br></p>
 
@@ -722,9 +862,9 @@ Bird.prototype.fly = function() {
 </div>
 </div>
 
-<div id="outline-container-org33bcc27" class="outline-2">
-<h2 id="org33bcc27">要点总结（js版）</h2>
-<div class="outline-text-2" id="text-org33bcc27">
+<div id="outline-container-org8436239" class="outline-2">
+<h2 id="org8436239">要点总结（js版）</h2>
+<div class="outline-text-2" id="text-org8436239">
 <p>
 FCC的教程使用javascript作为开发语言，本节所有的代码都是js代码。<br></p>
 
@@ -966,9 +1106,9 @@ lookahead 的概念， <code>(?=...)</code> 与 <code>(?!...)</code><br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb17eb13" class="outline-2">
-<h2 id="orgb17eb13">elisp和python中的正则表达式</h2>
-<div class="outline-text-2" id="text-orgb17eb13">
+<div id="outline-container-orge074e75" class="outline-2">
+<h2 id="orge074e75">elisp和python中的正则表达式</h2>
+<div class="outline-text-2" id="text-orge074e75">
 <p>
 在emacs中内置了 <code>string-match</code> 函数进行正则表达式匹配，其函数原型为 <code>(string-match REGEXP STRING &amp;optional START)</code> ，下面就是在emacs中使用regexp的示例。<br></p>
 <div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span> <span class="nv">str-regexp</span> <span class="s">"\.[h|cpp]$"</span><span class="p">)</span>
@@ -990,9 +1130,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 </div>
 
 
-<div id="outline-container-orgc2a227b" class="outline-2">
-<h2 id="orgc2a227b">参考资料</h2>
-<div class="outline-text-2" id="text-orgc2a227b">
+<div id="outline-container-org2a56616" class="outline-2">
+<h2 id="org2a56616">参考资料</h2>
+<div class="outline-text-2" id="text-org2a56616">
 <ul class="org-ul">
 <li>
 <a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/regular-expressions">FCC regular-expression tutorial</a><br>
@@ -1037,9 +1177,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org5898ae3" class="outline-2">
-<h2 id="org5898ae3">Description</h2>
-<div class="outline-text-2" id="text-org5898ae3">
+      <div id="outline-container-orgfabae55" class="outline-2">
+<h2 id="orgfabae55">Description</h2>
+<div class="outline-text-2" id="text-orgfabae55">
 <p>
 Implement <code>atoi</code> which converts a string to an integer.<br></p>
 
@@ -1097,13 +1237,13 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgcaf86f8" class="outline-2">
-<h2 id="orgcaf86f8">Solution</h2>
-<div class="outline-text-2" id="text-orgcaf86f8">
+<div id="outline-container-org1cf8dbd" class="outline-2">
+<h2 id="org1cf8dbd">Solution</h2>
+<div class="outline-text-2" id="text-org1cf8dbd">
 </div>
-<div id="outline-container-org2c221dc" class="outline-3">
-<h3 id="org2c221dc">Approach 1</h3>
-<div class="outline-text-3" id="text-org2c221dc">
+<div id="outline-container-org3fbb3ed" class="outline-3">
+<h3 id="org3fbb3ed">Approach 1</h3>
+<div class="outline-text-3" id="text-org3fbb3ed">
 <p>
 这道题并不难，思路也比较容易想出来，下面就是我想到的解法。<br>
 可能需要注意的问题是：<br></p>
@@ -1175,9 +1315,9 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge8a7c39" class="outline-3">
-<h3 id="orge8a7c39">Approach 2</h3>
-<div class="outline-text-3" id="text-orge8a7c39">
+<div id="outline-container-orgb60b4cd" class="outline-3">
+<h3 id="orgb60b4cd">Approach 2</h3>
+<div class="outline-text-3" id="text-orgb60b4cd">
 <p>
 下面这段代码目前是leetcode上运行速度最快的solution sample，仅仅耗时了4ms。作者使用了很多让程序跑得更快的方法，其中的技巧值得我学习。<br></p>
 <div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span> <span class="n">fast</span> <span class="o">=</span> <span class="p">[]()</span> <span class="p">{</span>
@@ -1246,9 +1386,9 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga7724d0" class="outline-2">
-<h2 id="orga7724d0">Reference</h2>
-<div class="outline-text-2" id="text-orga7724d0">
+<div id="outline-container-org3aae0fe" class="outline-2">
+<h2 id="org3aae0fe">Reference</h2>
+<div class="outline-text-2" id="text-org3aae0fe">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/31162367/significance-of-ios-basesync-with-stdiofalse-cin-tienull">stackoverflow.com sync with stdio</a><br>
@@ -1289,17 +1429,17 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org0a6220a" class="outline-2">
-<h2 id="org0a6220a">序言</h2>
-<div class="outline-text-2" id="text-org0a6220a">
+      <div id="outline-container-org4a962b8" class="outline-2">
+<h2 id="org4a962b8">序言</h2>
+<div class="outline-text-2" id="text-org4a962b8">
 <p>
 对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org55995d7" class="outline-2">
-<h2 id="org55995d7">什么是MapReduce</h2>
-<div class="outline-text-2" id="text-org55995d7">
+<div id="outline-container-orgb9d7545" class="outline-2">
+<h2 id="orgb9d7545">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-orgb9d7545">
 <p>
 MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
 
@@ -1315,9 +1455,9 @@ MapReduce是面向大数据并行处理的计算模型、框架和平台，它�
 </div>
 </div>
 
-<div id="outline-container-orge15b247" class="outline-2">
-<h2 id="orge15b247">map和reduce</h2>
-<div class="outline-text-2" id="text-orge15b247">
+<div id="outline-container-org5949179" class="outline-2">
+<h2 id="org5949179">map和reduce</h2>
+<div class="outline-text-2" id="text-org5949179">
 <p>
 <b>从编程语言的角度上来说</b><br>
 map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
@@ -1336,9 +1476,9 @@ reduce操作也会接收到两个参数，一个列表和一个变换过程，�
 </div>
 </div>
 
-<div id="outline-container-org82edab7" class="outline-2">
-<h2 id="org82edab7">并行计算与大数据</h2>
-<div class="outline-text-2" id="text-org82edab7">
+<div id="outline-container-org9ae8de6" class="outline-2">
+<h2 id="org9ae8de6">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-org9ae8de6">
 <p>
 mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
 
@@ -1369,9 +1509,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-org570ad5e" class="outline-2">
-<h2 id="org570ad5e">参考资料</h2>
-<div class="outline-text-2" id="text-org570ad5e">
+<div id="outline-container-org0322b9a" class="outline-2">
+<h2 id="org0322b9a">参考资料</h2>
+<div class="outline-text-2" id="text-org0322b9a">
 <ul class="org-ul">
 <li>
 <a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
@@ -1416,9 +1556,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org3d663d4" class="outline-2">
-<h2 id="org3d663d4">Description</h2>
-<div class="outline-text-2" id="text-org3d663d4">
+      <div id="outline-container-org1090f7f" class="outline-2">
+<h2 id="org1090f7f">Description</h2>
+<div class="outline-text-2" id="text-org1090f7f">
 <p>
 The string "PAYPALISHIRING" is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)<br></p>
 
@@ -1453,13 +1593,13 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-org75978be" class="outline-2">
-<h2 id="org75978be">Solution</h2>
-<div class="outline-text-2" id="text-org75978be">
+<div id="outline-container-org7391b91" class="outline-2">
+<h2 id="org7391b91">Solution</h2>
+<div class="outline-text-2" id="text-org7391b91">
 </div>
-<div id="outline-container-orgd304ee4" class="outline-3">
-<h3 id="orgd304ee4">Approach 1 找规律</h3>
-<div class="outline-text-3" id="text-orgd304ee4">
+<div id="outline-container-org13e2b8f" class="outline-3">
+<h3 id="org13e2b8f">Approach 1 找规律</h3>
+<div class="outline-text-3" id="text-org13e2b8f">
 <p>
 我想到的第一个方法就是找规律，通过寻找每一行的变化规律，编写相应的计算逻辑。<br>
 需要注意:<br></p>
@@ -1521,9 +1661,9 @@ P     I
 </div>
 
 
-<div id="outline-container-org5375a0a" class="outline-3">
-<h3 id="org5375a0a">Approach 2 Sort by Row</h3>
-<div class="outline-text-3" id="text-org5375a0a">
+<div id="outline-container-org70f8e19" class="outline-3">
+<h3 id="org70f8e19">Approach 2 Sort by Row</h3>
+<div class="outline-text-3" id="text-org70f8e19">
 <p>
 这个方法是leetcode提供的一个方法，主要思路是使用一个二维矩阵将字符串按照顺序存储起来，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(n)</code> 。<br></p>
 
@@ -1551,9 +1691,9 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-orgb1d0b91" class="outline-3">
-<h3 id="orgb1d0b91">Approach 3 Visit by Row</h3>
-<div class="outline-text-3" id="text-orgb1d0b91">
+<div id="outline-container-org8a78da1" class="outline-3">
+<h3 id="org8a78da1">Approach 3 Visit by Row</h3>
+<div class="outline-text-3" id="text-org8a78da1">
 <p>
 这个方法是leetcode提供的另一个方法，通过计算下标完成字符串的转换，实际上也是对转换的规律进行了总结，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(1)</code> 。<br>
 对于空间复杂度，实际上需要额外的空间存储结果字符串，如果忽略函数所返回的结果字符串，则空间复杂度为 <code>O(1)</code> 。<br></p>
@@ -1609,17 +1749,17 @@ P     I
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgff3f342" class="outline-2">
-<h2 id="orgff3f342">引言</h2>
-<div class="outline-text-2" id="text-orgff3f342">
+      <div id="outline-container-org81dab46" class="outline-2">
+<h2 id="org81dab46">引言</h2>
+<div class="outline-text-2" id="text-org81dab46">
 <p>
 本文主要对css flexbox的关键点了总结，方便以后在以后的查阅。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge7a438e" class="outline-2">
-<h2 id="orge7a438e">容器的属性</h2>
-<div class="outline-text-2" id="text-orge7a438e">
+<div id="outline-container-org58c509e" class="outline-2">
+<h2 id="org58c509e">容器的属性</h2>
+<div class="outline-text-2" id="text-org58c509e">
 <p>
 对于容器需要指定其显示方式为flexbox<br></p>
 <div class="highlight"><pre><span></span><span class="nt">display</span><span class="o">:</span> <span class="nt">flex</span><span class="o">;</span>
@@ -1651,9 +1791,9 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-org04c90e8" class="outline-2">
-<h2 id="org04c90e8">条目的属性</h2>
-<div class="outline-text-2" id="text-org04c90e8">
+<div id="outline-container-org96b622b" class="outline-2">
+<h2 id="org96b622b">条目的属性</h2>
+<div class="outline-text-2" id="text-org96b622b">
 <p>
 用于调整顺序<br></p>
 <div class="highlight"><pre><span></span><span class="nt">order</span><span class="o">:</span> <span class="o">&lt;</span><span class="nt">integer</span><span class="o">&gt;;</span> <span class="c">/* default 0 */</span>
@@ -1687,9 +1827,9 @@ P     I
 </div>
 
 
-<div id="outline-container-orgbc18acb" class="outline-2">
-<h2 id="orgbc18acb">参考资料</h2>
-<div class="outline-text-2" id="text-orgbc18acb">
+<div id="outline-container-orga9fe0b1" class="outline-2">
+<h2 id="orga9fe0b1">参考资料</h2>
+<div class="outline-text-2" id="text-orga9fe0b1">
 <ul class="org-ul">
 <li>
 <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">css-tricks.com</a><br>
@@ -1781,9 +1921,9 @@ P     I
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org4d84fcd" class="outline-2">
-<h2 id="org4d84fcd">Description</h2>
-<div class="outline-text-2" id="text-org4d84fcd">
+      <div id="outline-container-org426b44a" class="outline-2">
+<h2 id="org426b44a">Description</h2>
+<div class="outline-text-2" id="text-org426b44a">
 <p>
 Given a string s, find the longest palindromic substring in s. You may assume that the maximum length of s is 1000.<br></p>
 
@@ -1803,16 +1943,16 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgebed92d" class="outline-2">
-<h2 id="orgebed92d">Solution</h2>
-<div class="outline-text-2" id="text-orgebed92d">
+<div id="outline-container-orgd480a22" class="outline-2">
+<h2 id="orgd480a22">Solution</h2>
+<div class="outline-text-2" id="text-orgd480a22">
 <p>
 我想到了两种方法：暴力解法、从中心展开<br></p>
 </div>
 
-<div id="outline-container-org0dfcb83" class="outline-3">
-<h3 id="org0dfcb83">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org0dfcb83">
+<div id="outline-container-orgfc89b6c" class="outline-3">
+<h3 id="orgfc89b6c">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-orgfc89b6c">
 <p>
 暴击解法的时间复杂度为 <code>O(n3)</code> , 找出所有子串的时间复杂度为 <code>O(n2)</code> , 判断一个子串的时间复杂度为 <code>O(n)</code> ; 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -1867,9 +2007,9 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0ee8d26" class="outline-3">
-<h3 id="org0ee8d26">Approach 2 从中心展开</h3>
-<div class="outline-text-3" id="text-org0ee8d26">
+<div id="outline-container-org5d386d9" class="outline-3">
+<h3 id="org5d386d9">Approach 2 从中心展开</h3>
+<div class="outline-text-3" id="text-org5d386d9">
 <p>
 从中心展开方法的时间复杂度为 <code>O(n2)</code> , 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -1943,9 +2083,9 @@ leetcode上还有一个解法，使用java完成的，它的坐标计算也很�
 </div>
 </div>
 
-<div id="outline-container-org39754ac" class="outline-3">
-<h3 id="org39754ac">Approach 3 动态规划（dynamic programming）</h3>
-<div class="outline-text-3" id="text-org39754ac">
+<div id="outline-container-org533fc07" class="outline-3">
+<h3 id="org533fc07">Approach 3 动态规划（dynamic programming）</h3>
+<div class="outline-text-3" id="text-org533fc07">
 <p>
 leetcode上还给给出了使用DP解决这个问题的方法。<br>
 我在leetcode上的discuss上找了个java写的解法。<br></p>
@@ -1975,195 +2115,11 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
 </div>
 </div>
 
-<div id="outline-container-org8c3e74f" class="outline-3">
-<h3 id="org8c3e74f">Approach 4 Manacher算法</h3>
-<div class="outline-text-3" id="text-org8c3e74f">
+<div id="outline-container-orgc7089e7" class="outline-3">
+<h3 id="orgc7089e7">Approach 4 Manacher算法</h3>
+<div class="outline-text-3" id="text-orgc7089e7">
 <p>
 这个算法思路实在是新奇，感兴趣的同学可以 <a href="https://articles.leetcode.com/longest-palindromic-substring-part-ii/">去看看</a> 。<br></p>
-</div>
-</div>
-</div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/algorithm-weekly-longest-substring-without-repeating-characters/" class="u-url">每周算法：最长不含重复字符的子串</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-08-02T11:43:14+08:00" itemprop="datePublished" title="2018-08-02 11:43">Aug 02 2018  (11:43)
-    </time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/algorithm-weekly-longest-substring-without-repeating-characters/#disqus_thread" data-disqus-identifier="cache/posts/algorithm-weekly-longest-substring-without-repeating-characters.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/algorithm/" rel="tag">algorithm</a></li>
-        <li><a class="tag p-category" href="/tags/leetcode/" rel="tag">leetcode</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div id="outline-container-org2df5818" class="outline-2">
-<h2 id="org2df5818">Description</h2>
-<div class="outline-text-2" id="text-org2df5818">
-<p>
-Given a string, find the length of the longest substring without repeating characters.<br></p>
-
-<p>
-<b>Examples:</b><br>
-Given "abcabcbb", the answer is "abc", which the length is 3.<br>
-Given "bbbbb", the answer is "b", with the length of 1.<br>
-Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer must be a substring, "pwke" is a subsequence and not a substring.<br></p>
-
-<p>
-来源：<a href="https://leetcode.com/problems/longest-substring-without-repeating-characters/description/">LeetCode 03 Longest Substring Without Repeating Characters</a><br></p>
-</div>
-</div>
-
-<div id="outline-container-orge0fd692" class="outline-2">
-<h2 id="orge0fd692">Solution</h2>
-<div class="outline-text-2" id="text-orge0fd692">
-<p>
-好久没刷算法题了，手有点生，没有什么思路，下面的答案是看过提示之后才写出来的。<br></p>
-</div>
-
-<div id="outline-container-org7b3810f" class="outline-3">
-<h3 id="org7b3810f">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org7b3810f">
-<p>
-将所有的子串都穷举出来，并对它们进行判断，就能够得到最长子串的长度。这个算法很显然需要耗费很长时间。<br>
-需要注意的是： C++20中才支持 <code>std::set::contains</code> 这个接口（根据cppreference.com）。<br></p>
-
-<div class="highlight"><pre><span></span><span class="kt">bool</span> <span class="nf">isStringWithUniqueString</span><span class="p">(</span><span class="k">const</span> <span class="n">string</span><span class="o">&amp;</span> <span class="n">str</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="c1">// 用于判断字符串是否是具有唯一字符的</span>
-    <span class="n">set</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">setChar</span><span class="p">;</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">setChar</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">!=</span> <span class="n">setChar</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-	<span class="p">{</span>
-	    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
-	<span class="p">}</span>
-
-	<span class="n">setChar</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;=</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
-	<span class="p">{</span>
-	    <span class="c1">// get sub-string</span>
-	    <span class="n">string</span> <span class="n">strTemp</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="o">-</span><span class="n">i</span><span class="p">);</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">isStringWithUniqueString</span><span class="p">(</span><span class="n">strTemp</span><span class="p">))</span>
-	    <span class="p">{</span>
-		<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">strTemp</span><span class="p">.</span><span class="n">length</span><span class="p">());</span>
-	    <span class="p">}</span>
-	<span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-orgfac4088" class="outline-3">
-<h3 id="orgfac4088">Approach 2 滑动窗口</h3>
-<div class="outline-text-3" id="text-orgfac4088">
-<p>
-滑动窗口的概念在字符串处理问题中十分常用，保持子串的左端点不动，不断拓展右侧端点，就能穷举出所有满足条件的子串。<br>
-需要注意的是这句话： <code>lengthMax = max(lengthMax, int(j-i+1));</code><br></p>
-<ol class="org-ol">
-<li>
-<code>std::max</code> 并不能同时匹配 <code>int</code> 和 <code>size_t</code> ，所以需要进行强制类型转换。<br>
-</li>
-<li>在完成第 <code>j</code> 个字母的验证后，说明包含该字母的子串也满足条件，所以要进行 <code>+1</code> 操作，这个主要是针对只有一个字母的字符串。<br>
-</li>
-</ol>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="c1">// 这个循环目的是，验证从i到j的字符串是否满足条件</span>
-	<span class="n">set</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">setChar</span><span class="p">;</span>
-
-	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
-	<span class="p">{</span>
-	    <span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">setChar</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="o">!=</span> <span class="n">setChar</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-	    <span class="p">{</span>
-		<span class="k">break</span><span class="p">;</span>
-	    <span class="p">}</span>
-	    <span class="k">else</span>
-	    <span class="p">{</span>
-		<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span>
-	    <span class="p">}</span>
-
-	    <span class="n">setChar</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
-	<span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-org028e50c" class="outline-3">
-<h3 id="org028e50c">Approach 3 优化的滑动窗口</h3>
-<div class="outline-text-3" id="text-org028e50c">
-<p>
-使用 <code>map</code> 对字母出现的位置进行记录，这样在出现相同字母时，就能够从上一次出现的位置向后开始寻找。<br>
-需要注意句话 <code>it-&gt;second+1&gt;=i</code> , 需要对位置加1后再比较，这样才能保证 <code>i</code> 的坐标计算正确。<br></p>
-
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-
-    <span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">size_t</span><span class="o">&gt;</span> <span class="n">mapPos</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
-	<span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">size_t</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">it</span> <span class="o">=</span> <span class="n">mapPos</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">it</span> <span class="o">!=</span> <span class="n">mapPos</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-	<span class="p">{</span>
-	    <span class="c1">// 这里说明找到了字符上一次出现的位置</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">+</span> <span class="mi">1</span><span class="o">&gt;=</span> <span class="n">i</span><span class="p">)</span>
-	    <span class="p">{</span>
-		<span class="n">i</span> <span class="o">=</span> <span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
-	    <span class="p">}</span>
-	<span class="p">}</span>
-
-	<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span>
-
-	<span class="n">mapPos</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
 </div>
 </div>
 </div>
