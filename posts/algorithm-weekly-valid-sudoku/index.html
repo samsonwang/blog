@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>每周算法：验证数独有效性 | Hack Note</title>
+<link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="https://samsonwang.me/posts/algorithm-weekly-valid-sudoku/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/transmission-control-protocol-1/" title="TCP协议（RFC793）-1-" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="https://samsonwang.me/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav mr-auto">
+<li class="nav-item">
+<a href="/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/listings/" class="nav-link">Listings</a>
+                </li>
+<li class="nav-item">
+<a href="/galleries/" class="nav-link">Galleries</a>
+                </li>
+<li class="nav-item">
+<a href="/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">每周算法：验证数独有效性</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-11-02T10:09:34+08:00" itemprop="datePublished" title="2018-11-02 10:09">Nov 02 2018  (10:09)
+    </time>
+</div>
+
+      
+    <div class="source blur-1">
+      <a href="/posts/algorithm-weekly-valid-sudoku/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+     <div class="link blur-1">
+       <a href="https://leetcode.com/problems/valid-sudoku/description/">Original site</a>
+     </div>
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/algorithm/" rel="tag">algorithm</a></li>
+        <li><a class="tag p-category" href="/tags/leetcode/" rel="tag">leetcode</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+leetcode第36题，难度为medium，我感觉这道题应该归到easy的那一档，因为这道题的解法是那么的简单粗暴。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org927cb98" class="outline-2">
+<h2 id="org927cb98">Description</h2>
+<div class="outline-text-2" id="text-org927cb98">
+<p>
+Determine if a 9x9 Sudoku board is valid. Only the filled cells need to be validated according to the following rules:<br></p>
+
+<ol class="org-ol">
+<li>Each row must contain the digits 1-9 without repetition.<br>
+</li>
+<li>Each column must contain the digits 1-9 without repetition.<br>
+</li>
+<li>Each of the 9 3x3 sub-boxes of the grid must contain the digits 1-9 without repetition.<br>
+</li>
+</ol>
+<p>
+The Sudoku board could be partially filled, where empty cells are filled with the character <code>'.'</code> .<br></p>
+
+<p>
+<b>Example 1:</b><br></p>
+<pre class="example">
+Input:
+[
+  ["5","3",".",".","7",".",".",".","."],
+  ["6",".",".","1","9","5",".",".","."],
+  [".","9","8",".",".",".",".","6","."],
+  ["8",".",".",".","6",".",".",".","3"],
+  ["4",".",".","8",".","3",".",".","1"],
+  ["7",".",".",".","2",".",".",".","6"],
+  [".","6",".",".",".",".","2","8","."],
+  [".",".",".","4","1","9",".",".","5"],
+  [".",".",".",".","8",".",".","7","9"]
+]
+Output: true
+</pre>
+
+<p>
+<b>Example 2:</b><br></p>
+<pre class="example">
+Input:
+[
+  ["8","3",".",".","7",".",".",".","."],
+  ["6",".",".","1","9","5",".",".","."],
+  [".","9","8",".",".",".",".","6","."],
+  ["8",".",".",".","6",".",".",".","3"],
+  ["4",".",".","8",".","3",".",".","1"],
+  ["7",".",".",".","2",".",".",".","6"],
+  [".","6",".",".",".",".","2","8","."],
+  [".",".",".","4","1","9",".",".","5"],
+  [".",".",".",".","8",".",".","7","9"]
+]
+Output: false
+Explanation: Same as Example 1, except with the 5 in the top left corner being
+    modified to 8. Since there are two 8's in the top left 3x3 sub-box, it is invalid.
+</pre>
+
+<p>
+<b>Note:</b><br></p>
+<ul class="org-ul">
+<li>A Sudoku board (partially filled) could be valid but is not necessarily solvable.<br>
+</li>
+<li>Only the filled cells need to be validated according to the mentioned rules.<br>
+</li>
+<li>The given board contain only digits <code>1-9</code> and the character <code>'.'</code> .<br>
+</li>
+<li>The given board size is always <code>9x9</code> .<br>
+</li>
+</ul>
+<p>
+来源： <a href="https://leetcode.com/problems/valid-sudoku/description/">leetcode 36 valid sudoku</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org995b2fb" class="outline-2">
+<h2 id="org995b2fb">Solution</h2>
+<div class="outline-text-2" id="text-org995b2fb">
+<p>
+这道题的题目中已经非常明确了解法思路，所以需要做的就是用编程语言将题目要求的验证步骤翻译过来。<br></p>
+
+<p>
+下面就是我的解法代码：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// brute force</span>
+<span class="kt">bool</span> <span class="nf">isValidSudoku</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;&gt;&amp;</span> <span class="n">board</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">exist</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+    <span class="c1">// row</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="mi">9</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">memset</span><span class="p">(</span><span class="n">exist</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">exist</span><span class="p">));</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="mi">9</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">board</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">ch</span> <span class="o">==</span> <span class="sc">'.'</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">continue</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">ch</span> <span class="o">-</span> <span class="sc">'0'</span><span class="p">;</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">exist</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="n">exist</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="c1">// column</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="mi">9</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">memset</span><span class="p">(</span><span class="n">exist</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">exist</span><span class="p">));</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="mi">9</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">board</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">];</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">ch</span> <span class="o">==</span> <span class="sc">'.'</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">continue</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">ch</span> <span class="o">-</span> <span class="sc">'0'</span><span class="p">;</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">exist</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="n">exist</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="c1">// sub-box</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span> <span class="n">index</span><span class="p">{</span>
+	<span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">},</span>
+	<span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">},</span>
+	<span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">},</span>
+	<span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">},</span>
+	<span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">},</span>
+	<span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">},</span>
+	<span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">},</span>
+	<span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">},</span>
+	<span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">}};</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">m</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">m</span><span class="o">&lt;</span><span class="mi">9</span><span class="p">;</span> <span class="n">m</span><span class="o">=</span><span class="n">m</span><span class="o">+</span><span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">n</span><span class="o">&lt;</span><span class="mi">9</span><span class="p">;</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="o">+</span><span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">memset</span><span class="p">(</span><span class="n">exist</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">exist</span><span class="p">));</span>
+	    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">index</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kt">size_t</span> <span class="n">x</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">m</span><span class="p">;</span>
+		<span class="kt">size_t</span> <span class="n">y</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span>
+		<span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">board</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">];</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">ch</span> <span class="o">==</span> <span class="sc">'.'</span><span class="p">)</span> <span class="p">{</span>
+		    <span class="k">continue</span><span class="p">;</span>
+		<span class="p">}</span>
+		<span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">ch</span> <span class="o">-</span> <span class="sc">'0'</span><span class="p">;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">exist</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+		    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+		<span class="p">}</span>
+		<span class="n">exist</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+在我的解法AC之后，我深知这种解法只能算是暴力解法，我怀着好奇心想看看其他人的优雅解法，最终却失望而归。下面的解法只能说让代码看起来更加整洁，而并没有提高算法的速度（也就是时间复杂度）。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">bool</span> <span class="nf">isValidSudoku</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;&gt;&amp;</span> <span class="n">board</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">9</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">bitset</span><span class="o">&lt;</span><span class="mi">9</span><span class="o">&gt;</span> <span class="n">col</span><span class="p">;</span>
+	<span class="n">bitset</span><span class="o">&lt;</span><span class="mi">9</span><span class="o">&gt;</span> <span class="n">row</span><span class="p">;</span>
+	<span class="n">bitset</span><span class="o">&lt;</span><span class="mi">9</span><span class="o">&gt;</span> <span class="n">rect</span><span class="p">;</span>
+	<span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mi">9</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="c1">//check row</span>
+	    <span class="k">if</span><span class="p">(</span><span class="n">board</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="sc">'.'</span> <span class="o">&amp;&amp;</span> <span class="n">row</span><span class="p">[</span><span class="n">board</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]]</span> <span class="o">==</span> <span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="p">{</span>
+		<span class="n">row</span><span class="p">[</span><span class="n">board</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="c1">//check col</span>
+	    <span class="k">if</span><span class="p">(</span><span class="n">board</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="sc">'.'</span> <span class="o">&amp;&amp;</span> <span class="n">col</span><span class="p">[</span><span class="n">board</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]]</span> <span class="o">==</span> <span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="p">{</span>
+		<span class="n">col</span><span class="p">[</span><span class="n">board</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="c1">//check 3x3</span>
+	    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">3</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">j</span> <span class="o">%</span> <span class="mi">3</span><span class="p">);</span>
+	    <span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="mi">3</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">j</span> <span class="o">/</span> <span class="mi">3</span><span class="p">);</span>
+	    <span class="c1">//check rect</span>
+	    <span class="k">if</span><span class="p">(</span><span class="n">board</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="n">x</span><span class="p">]</span> <span class="o">!=</span> <span class="sc">'.'</span> <span class="o">&amp;&amp;</span> <span class="n">rect</span><span class="p">[</span><span class="n">board</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="n">x</span><span class="p">]]</span> <span class="o">==</span> <span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="p">{</span>
+		<span class="n">rect</span><span class="p">[</span><span class="n">board</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="n">x</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focus on linux server dev. I use EMACS, and I am learning python.</p>
+        <p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
+</div>
+</div>
+
+       
+<div class="sidebar-module">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+        <ul class="pager hidden-print">
+<li class="previous">
+                <a href="/posts/transmission-control-protocol-1/" rel="prev" title="TCP协议（RFC793）-1-">Previous post</a>
+            </li>
+        </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="https://samsonwang.me/posts/algorithm-weekly-valid-sudoku/",
+        disqus_title="\u6bcf\u5468\u7b97\u6cd5\uff1a\u9a8c\u8bc1\u6570\u72ec\u6709\u6548\u6027",
+        disqus_identifier="cache/posts/algorithm-weekly-valid-sudoku.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2018 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="/assets/js/jquery.min.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/jquery.lazyload.min.js"></script><script src="/assets/js/popper.min.js"></script><script src="/assets/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
