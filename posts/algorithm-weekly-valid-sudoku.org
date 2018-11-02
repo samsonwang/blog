@@ -1,0 +1,181 @@
+#+BEGIN_COMMENT
+.. title: 每周算法：验证数独有效性
+.. slug: algorithm-weekly-valid-sudoku
+.. date: 2018-11-02 10:09:34 UTC+08:00
+.. tags: leetcode, algorithm
+.. category: algorithm
+.. link: https://leetcode.com/problems/valid-sudoku/description/
+.. description:
+.. type: text
+#+END_COMMENT
+
+#+TITLE: 每周算法：验证数独有效性
+
+leetcode第36题，难度为medium，我感觉这道题应该归到easy的那一档，因为这道题的解法是那么的简单粗暴。
+
+{{{TEASER_END}}}
+
+** Description
+Determine if a 9x9 Sudoku board is valid. Only the filled cells need to be validated according to the following rules:
+
+1. Each row must contain the digits 1-9 without repetition.
+2. Each column must contain the digits 1-9 without repetition.
+3. Each of the 9 3x3 sub-boxes of the grid must contain the digits 1-9 without repetition.
+
+The Sudoku board could be partially filled, where empty cells are filled with the character ='.'= .
+
+*Example 1:*
+#+BEGIN_EXAMPLE
+Input:
+[
+  ["5","3",".",".","7",".",".",".","."],
+  ["6",".",".","1","9","5",".",".","."],
+  [".","9","8",".",".",".",".","6","."],
+  ["8",".",".",".","6",".",".",".","3"],
+  ["4",".",".","8",".","3",".",".","1"],
+  ["7",".",".",".","2",".",".",".","6"],
+  [".","6",".",".",".",".","2","8","."],
+  [".",".",".","4","1","9",".",".","5"],
+  [".",".",".",".","8",".",".","7","9"]
+]
+Output: true
+#+END_EXAMPLE
+
+*Example 2:*
+#+BEGIN_EXAMPLE
+Input:
+[
+  ["8","3",".",".","7",".",".",".","."],
+  ["6",".",".","1","9","5",".",".","."],
+  [".","9","8",".",".",".",".","6","."],
+  ["8",".",".",".","6",".",".",".","3"],
+  ["4",".",".","8",".","3",".",".","1"],
+  ["7",".",".",".","2",".",".",".","6"],
+  [".","6",".",".",".",".","2","8","."],
+  [".",".",".","4","1","9",".",".","5"],
+  [".",".",".",".","8",".",".","7","9"]
+]
+Output: false
+Explanation: Same as Example 1, except with the 5 in the top left corner being
+    modified to 8. Since there are two 8's in the top left 3x3 sub-box, it is invalid.
+#+END_EXAMPLE
+
+*Note:*
+- A Sudoku board (partially filled) could be valid but is not necessarily solvable.
+- Only the filled cells need to be validated according to the mentioned rules.
+- The given board contain only digits =1-9= and the character ='.'= .
+- The given board size is always =9x9= .
+
+来源： [[https://leetcode.com/problems/valid-sudoku/description/][leetcode 36 valid sudoku]]
+
+** Solution
+这道题的题目中已经非常明确了解法思路，所以需要做的就是用编程语言将题目要求的验证步骤翻译过来。
+
+下面就是我的解法代码：
+#+BEGIN_SRC cpp
+// brute force
+bool isValidSudoku(vector<vector<char>>& board) {
+    int exist[10];
+    // row
+    for (size_t i=0; i<9; ++i) {
+        memset(exist, 0, sizeof(exist));
+        for (size_t j=0; j<9; ++j) {
+            char ch = board[i][j];
+            if (ch == '.') {
+                continue;
+            }
+            int n = ch - '0';
+            if (exist[n] == 1) {
+                return false;
+            }
+            exist[n] = 1;
+        }
+    }
+    // column
+    for (size_t i=0; i<9; ++i) {
+        memset(exist, 0, sizeof(exist));
+        for (size_t j=0; j<9; ++j) {
+            char ch = board[j][i];
+            if (ch == '.') {
+                continue;
+            }
+            int n = ch - '0';
+            if (exist[n] == 1) {
+                return false;
+            }
+            exist[n] = 1;
+        }
+    }
+    // sub-box
+    vector<vector<int>> index{
+        {0,0},
+        {0,1},
+        {0,2},
+        {1,0},
+        {1,1},
+        {1,2},
+        {2,0},
+        {2,1},
+        {2,2}};
+    for (size_t m=0; m<9; m=m+3) {
+        for (size_t n=0; n<9; n=n+3) {
+            memset(exist, 0, sizeof(exist));
+            for (size_t i=0; i<index.size(); ++i) {
+                size_t x = index[i][0] + m;
+                size_t y = index[i][1] + n;
+                char ch = board[x][y];
+                if (ch == '.') {
+                    continue;
+                }
+                int n = ch - '0';
+                if (exist[n] == 1) {
+                    return false;
+                }
+                exist[n] = 1;
+            }
+        }
+    }
+    return true;
+}
+#+END_SRC
+
+在我的解法AC之后，我深知这种解法只能算是暴力解法，我怀着好奇心想看看其他人的优雅解法，最终却失望而归。下面的解法只能说让代码看起来更加整洁，而并没有提高算法的速度（也就是时间复杂度）。
+
+#+BEGIN_SRC cpp
+bool isValidSudoku(vector<vector<char>>& board) {
+    for(int i = 0; i < 9; i++) {
+        bitset<9> col;
+        bitset<9> row;
+        bitset<9> rect;
+        for(int j = 0; j < 9; j++) {
+            //check row
+            if(board[i][j] != '.' && row[board[i][j]] == true) {
+                return false;
+            }
+            else {
+                row[board[i][j]] = true;
+            }
+            //check col
+            if(board[j][i] != '.' && col[board[j][i]] == true) {
+                return false;
+            }
+            else {
+                col[board[j][i]] = true;
+            }
+            //check 3x3
+            int x = (3 * (i % 3)) + (j % 3);
+            int y = (3 * (i / 3)) + (j / 3);
+            //check rect
+            if(board[y][x] != '.' && rect[board[y][x]] == true) {
+                return false;
+            }
+            else {
+                rect[board[y][x]] = true;
+            }
+        }
+    }
+    return true;
+}
+#+END_SRC
+
+（全文完）
