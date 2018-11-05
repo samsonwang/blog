@@ -1,19 +1,19 @@
 #+BEGIN_COMMENT
 .. title: TCP协议（RFC793）-2-
 .. slug: transmission-control-protocol-2
-.. date: 2018-11-01 10:30:31 UTC+08:00
+.. date: 2018-11-05 10:30:31 UTC+08:00
 .. tags: network, tcp, ip
 .. category: network
 .. link:
 .. description:
 .. type: text
-.. status: draft
+、.. status: draft
 #+END_COMMENT
 
 
 #+TITLE: TCP协议（RFC793）-2-
 
-本文主要内容是TCP协议的规格描述，包括具体的协议格式、连接的建立和断开。
+本文主要内容是TCP协议的规格描述，包括具体的协议格式、相关术语解释、协议实现指导等。
 
 {{{TEASER_END}}}
 
@@ -64,7 +64,6 @@ Options may occupy space at the end of the TCP header and are a multiple of 8 bi
 
 *Padding:* variable
 The TCP header padding is used to ensure that the TCP header ends and data begins on a 32 bit boundary. The padding is composed of zeros.
-
 
 *** 相关术语
 The maintenance of a TCP connection requires the remembering of several variables. We conceive of these variables being stored in a connection record called a Transmission Control Block or TCB. Among the variables stored in the TCB are the local and remote socket numbers, the security and precedence of the connection, pointers to the user’s send and receive buffers, pointers to the retransmit queue and to the current segment. In addition several variables relating to the send and receive sequence numbers are stored in the TCB.
@@ -145,7 +144,6 @@ There are three groups of states:
 2. If the connection is in any non-synchronized state (LISTEN, SYN-SENT, SYN-RECEIVED), and the incoming segment acknowledges something not yet sent (the segment carries an unacceptable ACK), or if an incoming segment has a security level or compartment which does not exactly match the level and compartment requested for the connection, a reset is sent.
 3. If the connection is in a synchronized state (ESTABLISHED, FIN-WAIT-1, FIN-WAIT-2, CLOSE-WAIT, CLOSING, LAST-ACK, TIME-WAIT), any unacceptable segment (out of window sequence number or unacceptible acknowledgment number) must elicit only an empty acknowledgment segment containing the current send-sequence number and an acknowledgment indicating the next sequence number expected to be received, and the connection remains in the same state.
 
-
 *** 连接的断开
 关闭的含义是没有更多的数据需要发送。
 CLOSE is an operation meaning "I have no more data to send."
@@ -188,7 +186,46 @@ There are essentially three cases:
    CLOSED                                              CLOSED
 #+END_EXAMPLE
 
+*** 优先权和安全性
+安全性要求必须完全相同，优先权取最高的。
+The intent is that connection be allowed only between ports operating with exactly the same security and compartment values and at the higher of the precedence level requested by the two ports.
 
+优先权和安全性使用的是在IP协议中定义的字段。
+The precedence and security parameters used in TCP are exactly those defined in the Internet Protocol (IP).
+
+A connection attempt with mismatched security/compartment values or a lower precedence value must be rejected by sending a reset. Rejecting a connection due to too low a precedence only occurs after an acknowledgment of the SYN has been received.
+
+*** 数据传输
+Once the connection is established data is communicated by the exchange of segments. Because segments may be lost due to errors (checksum test failure), or network congestion, TCP uses retransmission (after a timeout) to ensure delivery of every segment. Duplicate segments may arrive due to network or TCP retransmission.
+
+重发的时间间隔是动态变化的
+Because of the variability of the networks that compose an internetwork system and the wide range of uses of TCP connections the retransmission timeout must be dynamically determined.
+
+紧急数据的发送
+The objective of the TCP urgent mechanism is to allow the sending user to stimulate the receiving user to accept some urgent data and to permit the receiving TCP to indicate to the receiving user when all the currently known urgent data has been received by the user.
+
+发送窗口的管理
+The window sent in each segment indicates the range of sequence numbers the sender of the window (the data receiver) is currently prepared to accept.
+
+窗口过大或窗口过小的效果
+Indicating a large window encourages transmissions. If more data arrives than can be accepted, it will be discarded. This will result in excessive retransmissions, adding unnecessarily to the load on the network and the TCPs. Indicating a small window may restrict the transmission of data to the point of introducing a round trip delay between each new segment transmitted.
+
+*** 接口
+讨论到接口，就有两种TCP接口可谈，它们分别是向上的和向下的两种。向上的接口负责与用户进行对接的接口，向下的接口是与更底层进行交互的接口。
+There are of course two interfaces of concern: the user/TCP interface and the TCP/lower-level interface. We have a fairly elaborate model of the user/TCP interface, but the interface to the lower level protocol module is left unspecified here, since it will be specified in detail by the specification of the lowel level protocol.
+
+协议中给出了很详细的关于接口实现的指导性描述，在本文中就暂时略过了，日后有需要的再去查。
+
+*** 事件的处理
+本节主要给出了一种协议的实现方式。
+The processing depicted in this section is an example of one possible implementation. Other implementations may have slightly different processing sequences, but they should differ from those in this section only in detail, not in substance.
+
+TCP的活动可以描述为对事件的响应。
+The activity of the TCP can be characterized as responding to events. The events that occur can be cast into three categories: user calls, arriving segments, and timeouts. This section describes the processing the TCP does in response to each of the events. In many cases the processing required depends on the state of the connection.
+
+后续的内容主要是各个事件的具体响应，在这里不做记录了。
 
 ** 参考资料
-- https://tools.ietf.org/html/rfc793
+- [[https://tools.ietf.org/html/rfc793][ietf.com - rfc793]]
+
+（全文完）
