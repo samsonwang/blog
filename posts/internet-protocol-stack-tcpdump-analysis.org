@@ -1,13 +1,13 @@
 #+BEGIN_COMMENT
 .. title: 网络协议的抓包分析
 .. slug: internet-protocol-stack-tcpdump-analysis
-.. date: 2018-09-28 17:19:19 UTC+08:00
+.. date: 2018-11-5 22:19:19 UTC+08:00
 .. tags: tcp, ip, network, tcpdump
 .. category: network
 .. link:
 .. description:
 .. type: text
-.. status: draft
+、.. status: draft
 #+END_COMMENT
 
 #+TITLE: 网络协议的抓包分析
@@ -17,22 +17,23 @@
 {{{TEASER_END}}}
 
 阅读本文需要了解tcp、ip、tcpdump的相关知识，可以参考我之前的文章：
-- tcp：
-- ip：[[link:/posts/internet-protocol/][ IP协议(RFC791)]]
+- tcp：[[link:/posts/transmission-control-protocol-2/][TCP协议（RFC798）]]
+- ip：[[link:/posts/internet-protocol/][IP协议（RFC791）]]
 - tcpdump：[[link:/posts/linux-command-examples-tcpdump/][Linux常用命令行指令 - tcpdump]]
 
 ** 抓包
-
+这是在实验室环境下的局域网进行抓包，抓包的命令如下。
 #+BEGIN_SRC shell
 tcpdump -i any 'dst host 169.10.36.66 port 20014' -XX -nn -vv
 #+END_SRC
 
-抓包的结果，
-
+*抓包的结果*
 数据包的基础信息
 #+BEGIN_EXAMPLE
 15:39:13.865699 IP (tos 0x0, ttl 64, id 36429, offset 0, flags [DF], proto TCP (6), length 57)
-   169.10.10.10.47912 > 169.10.36.66.20014: Flags [P.], cksum 0x808c (incorrect -> 0x5ebe), seq 1353274499:1353274504, ack 2930227654, win 9444, options [nop,nop,TS val 2177524110 ecr 229721019], length 5
+   169.10.10.10.47912 > 169.10.36.66.20014:
+       Flags [P.], cksum 0x808c (incorrect -> 0x5ebe), seq 1353274499:1353274504, ack 2930227654,
+       win 9444, options [nop,nop,TS val 2177524110 ecr 229721019], length 5
 #+END_EXAMPLE
 
 数据包的具体内容：使用16进制表示
@@ -45,13 +46,24 @@ tcpdump -i any 'dst host 169.10.36.66 port 20014' -XX -nn -vv
 0x0050:  0000 0000 0000 0000 00
 #+END_EXAMPLE
 
-** 链路协议
+** 链路协议分析
+最开始的部分是链路层协议
+#+BEGIN_EXAMPLE
 0004 0001 0006
 000c 29a7 fe3b      本机mac地址
 0000 0800
+#+END_EXAMPLE
+其中有6个字节能够看到，存放的是本机的mac地址。
 
 ** IP协议分析
+接下来的部分是IP协议内容，16进程格式表示如下。IP协议部分共有20字节。
+#+BEGIN_EXAMPLE
+4500 0039 8e4d 4000 4006 2c11 a90a 0a0a
+a90a 2442
+#+END_EXAMPLE
 
+详细的协议分析
+#+BEGIN_EXAMPLE
 4             ver
 5             ihl
 00            tos
@@ -63,17 +75,35 @@ tcpdump -i any 'dst host 169.10.36.66 port 20014' -XX -nn -vv
 2c11          header cksum
 a90a 0a0a     src addr
 a90a 2442     dst addr
+#+END_EXAMPLE
 
-
+可以从协议中读到：ip协议的版本（ver， version）IPv4。ip协议头长度（ihl， internet header length）为5*32bit，即20字节。服务类型（tos， type of service）中可以读到内容，优先权（precedence）为 =000= 表示常规（routine），延迟为（delay）为0，吞吐量（throughput）为0，可靠性（reliability）为0。总长度（total length）为0x39字节（57字节），这个长度包括IP协议头和IP中包含的数据。标识flag，按字节 =010= ，第二字节为 =1= 表示 =DF= 不要分包（don't fragment）。最大生存期（TTL，time to live）为64（0x40）秒。协议为6，这是个枚举值，表示IP协议中包含的数据所使用的协议为TCP协议。校验码（cksum，checksum）为0x2c11。源地址（source address）为169.10.10.10。目的地址（destination address）为169.10.36.66。
 
 ** TCP协议分析
-total 37d data，tcp data
-
+接下来是TCP协议，除去IP协议包头长，则TCP协议的数据为37字节。
+#+BEGIN_EXAMPLE
 bb28 4e2e 50a9 5483 aea7 b9c6
 8018 24e4 808c 0000 0101 080a 81ca 618e
 0db1 43bb 107b 007b 16
+#+END_EXAMPLE
 
-尾部16字节的全空
+协议的详细分析
+#+BEGIN_EXAMPLE
+bb28           src port
+4e2e           dst port
+50a9 5483      seq
+aea7 b9c6      ack
+8              data offset
+18             ack=1 psh=1
+24e4           wnd
+808c           chk sum
+0000           urg ptr
+0101 ... 43bb  opt
+107b 007b 16   data
+#+END_EXAMPLE
 
+从协议中可以读到：源端口号为47912。目的端口号为20014。序列号为0x50a9 5483。应答码为0xaea7 b9c6。数据偏移量为8*32bit，即32字节，这也表示TCP协议头为32字节，所以能够计算出TCP协议中所包含的数据长度为5字节。应答标识（ACK）为 =1= 。PSH标识为 =1= 。窗口大小为0x24e4 。校验码为0x808C。选项（options）有很长的一部分。
 
-（EOF）
+需要注意的是尾部16字节的全空。
+
+（全文完）
