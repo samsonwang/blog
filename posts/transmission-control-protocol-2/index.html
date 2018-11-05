@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TCP协议（RFC793）-2- | Hack Note</title>
+<link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="https://samsonwang.me/posts/transmission-control-protocol-2/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/algorithm-weekly-valid-sudoku/" title="每周算法：验证数独有效性" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="https://samsonwang.me/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav mr-auto">
+<li class="nav-item">
+<a href="/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/listings/" class="nav-link">Listings</a>
+                </li>
+<li class="nav-item">
+<a href="/galleries/" class="nav-link">Galleries</a>
+                </li>
+<li class="nav-item">
+<a href="/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">TCP协议（RFC793）-2-</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-11-05T10:30:31+08:00" itemprop="datePublished" title="2018-11-05 10:30">Nov 05 2018  (10:30)
+    </time>
+</div>
+
+      
+    <div class="source blur-1">
+      <a href="/posts/transmission-control-protocol-2/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/ip/" rel="tag">ip</a></li>
+        <li><a class="tag p-category" href="/tags/network/" rel="tag">network</a></li>
+        <li><a class="tag p-category" href="/tags/tcp/" rel="tag">tcp</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+本文主要内容是TCP协议的规格描述，包括具体的协议格式、相关术语解释、协议实现指导等。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org3131e15" class="outline-2">
+<h2 id="org3131e15">协议规格</h2>
+<div class="outline-text-2" id="text-org3131e15">
+<p>
+本节介绍TCP协议的具体格式，详细描述了TCP协议数据包的构成。<br></p>
+
+<p>
+<img src="/assets/images/spinner.svg" data-src="/images/post-transmission-control-protocol-2-1.png" alt="tcp header format"><br></p>
+
+<p>
+<b>Source Port:</b> 16 bits<br>
+The source port number.<br></p>
+
+<p>
+<b>Destination Port:</b> 16 bits<br>
+The destination port number.<br></p>
+
+<p>
+<b>Sequence Number:</b> 32 bits<br>
+The sequence number of the first data octet in this segment (except when SYN is present). If SYN is present the sequence number is the initial sequence number (ISN) and the first data octet is ISN+1.<br></p>
+
+<p>
+<b>Acknowledgment Number:</b> 32 bits<br>
+If the ACK control bit is set this field contains the value of the next sequence number the sender of the segment is expecting to receive. Once a connection is established this is always sent.<br></p>
+
+<p>
+<b>Data Offset:</b> 4 bits<br>
+The number of 32 bit words in the TCP Header. This indicates where the data begins. The TCP header (even one including options) is an integral number of 32 bits long.<br></p>
+
+<p>
+<b>Reserved:</b> 6 bits<br>
+Reserved for future use. Must be zero.<br></p>
+
+<p>
+<b>Control Bits:</b> 6 bits (from left to right):<br>
+URG: Urgent Pointer field significant<br>
+ACK: Acknowledgment field significant<br>
+PSH: Push Function<br>
+RST: Reset the connection<br>
+SYN: Synchronize sequence numbers<br>
+FIN: No more data from sender<br></p>
+
+<p>
+<b>Window:</b> 16 bits<br>
+The number of data octets beginning with the one indicated in the acknowledgment field which the sender of this segment is willing to accept.<br></p>
+
+<p>
+<b>Checksum:</b> 16 bits<br>
+The checksum field is the 16 bit one’s complement of the one’s complement sum of all 16 bit words in the header and text. If a segment contains an odd number of header and text octets to be checksummed, the last octet is padded on the right with zeros to form a 16 bit word for checksum purposes. The pad is not transmitted as part of the segment. While computing the checksum, the checksum field itself is replaced with zeros.<br></p>
+
+<p>
+The checksum also covers a 96 bit pseudo header conceptually<br></p>
+
+<p>
+<b>Urgent Pointer:</b> 16 bits<br>
+This field communicates the current value of the urgent pointer as a positive offset from the sequence number in this segment. The urgent pointer points to the sequence number of the octet following the urgent data. This field is only be interpreted in segments with the URG control bit set.<br></p>
+
+<p>
+<b>Options:</b> variable<br>
+Options may occupy space at the end of the TCP header and are a multiple of 8 bits in length. All options are included in the checksum.<br></p>
+
+<p>
+<b>Padding:</b> variable<br>
+The TCP header padding is used to ensure that the TCP header ends and data begins on a 32 bit boundary. The padding is composed of zeros.<br></p>
+</div>
+
+<div id="outline-container-org1f87bcd" class="outline-3">
+<h3 id="org1f87bcd">相关术语</h3>
+<div class="outline-text-3" id="text-org1f87bcd">
+<p>
+The maintenance of a TCP connection requires the remembering of several variables. We conceive of these variables being stored in a connection record called a Transmission Control Block or TCB. Among the variables stored in the TCB are the local and remote socket numbers, the security and precedence of the connection, pointers to the user’s send and receive buffers, pointers to the retransmit queue and to the current segment. In addition several variables relating to the send and receive sequence numbers are stored in the TCB.<br></p>
+
+<p>
+<b>Send Sequence Variables</b><br>
+ SND.UNA - send unacknowledged<br>
+ SND.NXT - send next<br>
+ SND.WND - send window<br>
+ SND.UP - send urgent pointer<br>
+ SND.WL1 - segment sequence number used for last window update<br>
+ SND.WL2 - segment acknowledgment number used for last window update<br>
+ ISS - initial send sequence number<br></p>
+
+<p>
+<b>Receive Sequence Variables</b><br>
+ RCV.NXT - receive next<br>
+ RCV.WND - receive window<br>
+ RCV.UP - receive urgent pointer<br>
+ IRS - initial receive sequence number<br></p>
+
+<p>
+<b>Current Segment Variables</b><br>
+ SEG.SEQ - segment sequence number<br>
+ SEG.ACK - segment acknowledgment number<br>
+ SEG.LEN - segment length<br>
+ SEG.WND - segment window<br>
+ SEG.UP - segment urgent pointer<br>
+ SEG.PRC - segment precedence value<br></p>
+
+<p>
+<b>A connection progresses through a series of states during its lifetime.</b><br>
+LISTEN - represents waiting for a connection request from any remote TCP and port.<br>
+SYN-SENT - represents waiting for a matching connection request after having sent a connection request.<br>
+SYN-RECEIVED - represents waiting for a confirming connection request acknowledgment after having both received and sent a connection request.<br>
+ESTABLISHED - represents an open connection, data received can be delivered to the user. The normal state for the data transfer phase of the connection.<br>
+FIN-WAIT-1 - represents waiting for a connection termination request from the remote TCP, or an acknowledgment of the connection termination request previously sent.<br>
+FIN-WAIT-2 - represents waiting for a connection termination request from the remote TCP.<br>
+CLOSE-WAIT - represents waiting for a connection termination request from the local user.<br>
+CLOSING - represents waiting for a connection termination request acknowledgment from the remote TCP.<br>
+LAST-ACK - represents waiting for an acknowledgment of the connection termination request previously sent to the remote TCP (which includes an acknowledgment of its connection termination request).<br>
+TIME-WAIT - represents waiting for enough time to pass to be sure the remote TCP received the acknowledgment of its connection termination request.<br>
+CLOSED - represents no connection state at all.<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgdb1e120" class="outline-3">
+<h3 id="orgdb1e120">序列号</h3>
+<div class="outline-text-3" id="text-orgdb1e120">
+<p>
+在启动连接时，实际上是对序列号进行同步。<br></p>
+
+<p>
+应答机制具有累加性，这样能够体现指定序列号的数据收到了多少。<br>
+The acknowledgment mechanism employed is cumulative so that an acknowledgment of sequence number X indicates that all octets up to but not including X have been received.<br></p>
+
+<p>
+The typical kinds of sequence number comparisons which the TCP must perform include:<br>
+(a) Determining that an acknowledgment refers to some sequence number sent but not yet acknowledged.<br>
+(b) Determining that all sequence numbers occupied by a segment have been acknowledged (e.g., to remove the segment from a retransmission queue).<br>
+(c) Determining that an incoming segment contains sequence numbers which are expected (i.e., that the segment "overlaps" the receive window).<br></p>
+
+<p>
+<b>关于ISN（initial sequence number）选择的问题</b><br>
+how does the TCP identify duplicate segments from previous incarnations of the connection? This problem becomes apparent if the connection is being opened and closed in quick succession, or if the connection breaks with loss of memory and is then reestablished.<br>
+To avoid confusion we must prevent segments from one incarnation of a connection from being used while the same sequence numbers may still be present in the network from an earlier incarnation. We want to assure this, even if a TCP crashes and loses all knowledge of the sequence numbers it has been using. When new connections are created, an initial sequence number (ISN) generator is employed which selects a new 32 bit ISN. The generator is bound to a (possibly fictitious) 32 bit clock whose low order bit is incremented roughly every 4 microseconds. Thus, the ISN cycles approximately every 4.55 hours. Since we assume that segments will stay in the network no more than the Maximum Segment Lifetime (MSL) and that the MSL is less than 4.55 hours we can reasonably assume that ISN’s will be unique.<br></p>
+
+<p>
+<b>TCP安静时间（quite time）的概念</b><br>
+every segment emitted occupies one or more sequence numbers in the sequence space, the numbers occupied by a segment are "busy" or "in use" until MSL seconds have passed, upon crashing a block of space-time is occupied by the octets of the last emitted segment, if a new connection is started too soon and uses any of the sequence numbers in the space-time footprint of the last segment of the previous connection incarnation, there is a potential sequence number overlap area which could cause confusion at the receiver.<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgcd66b60" class="outline-3">
+<h3 id="orgcd66b60">连接的建立</h3>
+<div class="outline-text-3" id="text-orgcd66b60">
+<p>
+在RFC793的原文中，给出了许多种连接建立的方式，包括一些异常情况下建立连接的流程，不过最常用的还是三次握手方式。<br></p>
+
+<p>
+TCP三次握手建立连接方式的过程示意图。<br></p>
+<pre class="example">
+   TCP A                                                 TCP B
+1. CLOSED                                                LISTEN
+2. SYN-SENT    --&gt; &lt;SEQ=100&gt;&lt;CTL=SYN&gt;                --&gt; SYN-RECEIVED
+3. ESTABLISHED &lt;-- &lt;SEQ=300&gt;&lt;ACK=101&gt;&lt;CTL=SYN,ACK&gt;   &lt;-- SYN-RECEIVED
+4. ESTABLISHED --&gt; &lt;SEQ=101&gt;&lt;ACK=301&gt;&lt;CTL=ACK&gt;       --&gt; ESTABLISHED
+5. ESTABLISHED --&gt; &lt;SEQ=101&gt;&lt;ACK=301&gt;&lt;CTL=ACK&gt;&lt;DATA&gt; --&gt; ESTABLISHED
+</pre>
+
+<p>
+<b>关于RST（reset）</b><br>
+As a general rule, reset (RST) must be sent whenever a segment arrives which apparently is not intended for the current connection. A reset must not be sent if it is not clear that this is the case.<br></p>
+
+<p>
+<b>连接中的状态以及各种异常情况</b><br>
+There are three groups of states:<br></p>
+<ol class="org-ol">
+<li>If the connection does not exist (CLOSED) then a reset is sent in response to any incoming segment except another reset.<br>
+</li>
+<li>If the connection is in any non-synchronized state (LISTEN, SYN-SENT, SYN-RECEIVED), and the incoming segment acknowledges something not yet sent (the segment carries an unacceptable ACK), or if an incoming segment has a security level or compartment which does not exactly match the level and compartment requested for the connection, a reset is sent.<br>
+</li>
+<li>If the connection is in a synchronized state (ESTABLISHED, FIN-WAIT-1, FIN-WAIT-2, CLOSE-WAIT, CLOSING, LAST-ACK, TIME-WAIT), any unacceptable segment (out of window sequence number or unacceptible acknowledgment number) must elicit only an empty acknowledgment segment containing the current send-sequence number and an acknowledgment indicating the next sequence number expected to be received, and the connection remains in the same state.<br>
+</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-org92d4b64" class="outline-3">
+<h3 id="org92d4b64">连接的断开</h3>
+<div class="outline-text-3" id="text-org92d4b64">
+<p>
+关闭的含义是没有更多的数据需要发送。<br>
+CLOSE is an operation meaning "I have no more data to send."<br></p>
+
+<p>
+由于连接是双工的，所以在关闭时需要考虑的情况更复杂。<br>
+The notion of closing a full-duplex connection is subject to ambiguous interpretation, of course, since it may not be obvious how to treat the receiving side of the connection.<br></p>
+
+<p>
+There are essentially three cases:<br></p>
+<ol class="org-ol">
+<li>The user initiates by telling the TCP to CLOSE the connection<br>
+</li>
+<li>The remote TCP initiates by sending a FIN control signal<br>
+</li>
+<li>Both users CLOSE simultaneously<br>
+</li>
+</ol>
+<p>
+一般情况下关闭（四次挥手）<br></p>
+<pre class="example">
+   TCP A                                                TCP B
+1. ESTABLISHED                                          ESTABLISHED
+2. (Close)
+   FIN-WAIT-1 --&gt; &lt;SEQ=100&gt;&lt;ACK=300&gt;&lt;CTL=FIN,ACK&gt;   --&gt; CLOSE-WAIT
+3. FIN-WAIT-2 &lt;-- &lt;SEQ=300&gt;&lt;ACK=101&gt;&lt;CTL=ACK&gt;       &lt;-- CLOSE-WAIT
+4.                                                      (Close)
+   TIME-WAIT  &lt;-- &lt;SEQ=300&gt;&lt;ACK=101&gt;&lt;CTL=FIN,ACK&gt;   &lt;-- LAST-ACK
+5. TIME-WAIT  --&gt; &lt;SEQ=101&gt;&lt;ACK=301&gt;&lt;CTL=ACK&gt;       --&gt; CLOSED
+6. (2 MSL)
+   CLOSED
+</pre>
+
+<p>
+两端同时关闭的情况<br></p>
+<pre class="example">
+   TCP A                                               TCP B
+1. ESTABLISHED                                         ESTABLISHED
+2. (Close)                                             (Close)
+   FIN-WAIT-1 --&gt; &lt;SEQ=100&gt;&lt;ACK=300&gt;&lt;CTL=FIN,ACK&gt; ...  FIN-WAIT-1
+              &lt;-- &lt;SEQ=300&gt;&lt;ACK=100&gt;&lt;CTL=FIN,ACK&gt; &lt;--
+              ... &lt;SEQ=100&gt;&lt;ACK=300&gt;&lt;CTL=FIN,ACK&gt; --&gt;
+3. CLOSING    --&gt; &lt;SEQ=101&gt;&lt;ACK=301&gt;&lt;CTL=ACK&gt;     ...  CLOSING
+              &lt;-- &lt;SEQ=301&gt;&lt;ACK=101&gt;&lt;CTL=ACK&gt;     &lt;--
+              ... &lt;SEQ=101&gt;&lt;ACK=301&gt;&lt;CTL=ACK&gt;     --&gt;
+4. TIME-WAIT                                           TIME-WAIT
+   (2 MSL)                                             (2 MSL)
+   CLOSED                                              CLOSED
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org40aa493" class="outline-3">
+<h3 id="org40aa493">优先权和安全性</h3>
+<div class="outline-text-3" id="text-org40aa493">
+<p>
+安全性要求必须完全相同，优先权取最高的。<br>
+The intent is that connection be allowed only between ports operating with exactly the same security and compartment values and at the higher of the precedence level requested by the two ports.<br></p>
+
+<p>
+优先权和安全性使用的是在IP协议中定义的字段。<br>
+The precedence and security parameters used in TCP are exactly those defined in the Internet Protocol (IP).<br></p>
+
+<p>
+A connection attempt with mismatched security/compartment values or a lower precedence value must be rejected by sending a reset. Rejecting a connection due to too low a precedence only occurs after an acknowledgment of the SYN has been received.<br></p>
+</div>
+</div>
+
+<div id="outline-container-org404ad5b" class="outline-3">
+<h3 id="org404ad5b">数据传输</h3>
+<div class="outline-text-3" id="text-org404ad5b">
+<p>
+Once the connection is established data is communicated by the exchange of segments. Because segments may be lost due to errors (checksum test failure), or network congestion, TCP uses retransmission (after a timeout) to ensure delivery of every segment. Duplicate segments may arrive due to network or TCP retransmission.<br></p>
+
+<p>
+重发的时间间隔是动态变化的<br>
+Because of the variability of the networks that compose an internetwork system and the wide range of uses of TCP connections the retransmission timeout must be dynamically determined.<br></p>
+
+<p>
+紧急数据的发送<br>
+The objective of the TCP urgent mechanism is to allow the sending user to stimulate the receiving user to accept some urgent data and to permit the receiving TCP to indicate to the receiving user when all the currently known urgent data has been received by the user.<br></p>
+
+<p>
+发送窗口的管理<br>
+The window sent in each segment indicates the range of sequence numbers the sender of the window (the data receiver) is currently prepared to accept.<br></p>
+
+<p>
+窗口过大或窗口过小的效果<br>
+Indicating a large window encourages transmissions. If more data arrives than can be accepted, it will be discarded. This will result in excessive retransmissions, adding unnecessarily to the load on the network and the TCPs. Indicating a small window may restrict the transmission of data to the point of introducing a round trip delay between each new segment transmitted.<br></p>
+</div>
+</div>
+
+<div id="outline-container-org28c0906" class="outline-3">
+<h3 id="org28c0906">接口</h3>
+<div class="outline-text-3" id="text-org28c0906">
+<p>
+讨论到接口，就有两种TCP接口可谈，它们分别是向上的和向下的两种。向上的接口负责与用户进行对接的接口，向下的接口是与更底层进行交互的接口。<br>
+There are of course two interfaces of concern: the user/TCP interface and the TCP/lower-level interface. We have a fairly elaborate model of the user/TCP interface, but the interface to the lower level protocol module is left unspecified here, since it will be specified in detail by the specification of the lowel level protocol.<br></p>
+
+<p>
+协议中给出了很详细的关于接口实现的指导性描述，在本文中就暂时略过了，日后有需要的再去查。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org9067392" class="outline-3">
+<h3 id="org9067392">事件的处理</h3>
+<div class="outline-text-3" id="text-org9067392">
+<p>
+本节主要给出了一种协议的实现方式。<br>
+The processing depicted in this section is an example of one possible implementation. Other implementations may have slightly different processing sequences, but they should differ from those in this section only in detail, not in substance.<br></p>
+
+<p>
+TCP的活动可以描述为对事件的响应。<br>
+The activity of the TCP can be characterized as responding to events. The events that occur can be cast into three categories: user calls, arriving segments, and timeouts. This section describes the processing the TCP does in response to each of the events. In many cases the processing required depends on the state of the connection.<br></p>
+
+<p>
+后续的内容主要是各个事件的具体响应，在这里不做记录了。<br></p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org1edf647" class="outline-2">
+<h2 id="org1edf647">参考资料</h2>
+<div class="outline-text-2" id="text-org1edf647">
+<ul class="org-ul">
+<li>
+<a href="https://tools.ietf.org/html/rfc793">ietf.com - rfc793</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focus on linux server dev. I use EMACS, and I am learning python.</p>
+        <p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
+</div>
+</div>
+
+       
+<div class="sidebar-module">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+        <ul class="pager hidden-print">
+<li class="previous">
+                <a href="/posts/algorithm-weekly-valid-sudoku/" rel="prev" title="每周算法：验证数独有效性">Previous post</a>
+            </li>
+        </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="https://samsonwang.me/posts/transmission-control-protocol-2/",
+        disqus_title="TCP\u534f\u8bae\uff08RFC793\uff09-2-",
+        disqus_identifier="cache/posts/transmission-control-protocol-2.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2018 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="/assets/js/jquery.min.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/jquery.lazyload.min.js"></script><script src="/assets/js/popper.min.js"></script><script src="/assets/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

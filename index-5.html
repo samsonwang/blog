@@ -76,7 +76,137 @@
 
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/debug-with-gdb-on-linux-2/" class="u-url">Linux下使用gdb的调试技巧（2）</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/fifo-pipe-unix-domain-socket/" class="u-url">Linux下的FIFO、pipe、unix domain socket漫谈</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-04-11T13:03:25+08:00" itemprop="datePublished" title="2018-04-11 13:03">Apr 11 2018  (13:03)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/fifo-pipe-unix-domain-socket/#disqus_thread" data-disqus-identifier="cache/posts/fifo-pipe-unix-domain-socket.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/fifo/" rel="tag">fifo</a></li>
+        <li><a class="tag p-category" href="/tags/ipc/" rel="tag">ipc</a></li>
+        <li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
+        <li><a class="tag p-category" href="/tags/pipe/" rel="tag">pipe</a></li>
+        <li><a class="tag p-category" href="/tags/socket/" rel="tag">socket</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <p>
+在做Linux开发时，经常会接触 <code>管道</code> 、 <code>AF_UNIX</code> 等相关词汇，为了弄清他们之间的关系，查阅了一些资料，将结果整理并记录下来。<br></p>
+
+<div id="outline-container-orgb06952f" class="outline-2">
+<h2 id="orgb06952f">1. <code>FIFO</code> 与 <code>pipe</code> 的比较</h2>
+<div class="outline-text-2" id="text-orgb06952f">
+<p>
+FIFO可以通过 <code>mkfifo fifo_file</code> 在本地创建一个文件用来表示一个管道，数据的交换是在操作系统内核完成的，所以在文件中没有内容。<br>
+FIFO可以看做是一个带有名字的管道，我们在命令行中使用的管道是匿名管道。<br></p>
+
+<blockquote>
+<p>
+A FIFO special file (a named pipe) is similar to a pipe, except that it is accessed as part of the file system. It can be opened by multiple processes for reading or writing. When processes are exchanging data via the FIFO, the kernel passes all data internally without writing it to the file system. Thus, the FIFO special file has no contents on the file system; the file system entry merely serves as a reference point so that processes can access the pipe using a name in the file system.<br></p>
+</blockquote>
+<p>
+以上内容截取自Linux的帮助文档（ <code>man fifo</code> ）<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgf242a96" class="outline-2">
+<h2 id="orgf242a96">2. <code>FIFO</code> 与 <code>unix domain socket</code> 的比较</h2>
+<div class="outline-text-2" id="text-orgf242a96">
+<p>
+FIFO与unix domain socket在他们的实现方式上有相似之处，但是他们是完全不同的两个概念。<br>
+FIFO是更底层的进程间通信方式，允许一端写入数据，另外一端读取数据；unix domain socket与 <code>TCP/IP</code> 的套接字很相似。<br>
+socket是双工的，支持多个进程同时访问。进程可以一个socket上同时允许多个客户端进程接入。在每次有新的 <code>connect</code> 或 <code>accept</code> 时， 操作系统内核会分配一个新的文件描述符，通信数据包会送达正确的进程。<br>
+FIFO并不支持以上特性。需要两个FIFO才能完成双工通信。对于每个客户端都需要一对FIFO才能完成通信交互。<br></p>
+
+<blockquote>
+<p>
+UNIX domain sockets and FIFO may share some part of their implementation but they are conceptually very different. FIFO functions at a very low level. One process writes bytes into the pipe and another one reads from it. A UNIX domain socket has the same behaviour as a TCP/IP socket.<br></p>
+
+<p>
+A socket is bidirectional and can be used by a lot of processes simultaneously. A process can accept many connections on the same socket and attend several clients simultaneously. The kernel delivers a new file descriptor each time connect(2) or accept(2) is called on the socket. The packets will always go to the right process.<br>
+On a FIFO, this would be impossible. For bidirectional comunication, you need two FIFOs, and you need a pair of FIFOs for each of your clients. There is no way of writing or reading in a selective way, because they are a much more primitive way to communicate.<br></p>
+
+<p>
+Anonymous pipes and FIFOs are very similar. The difference is that anonymous pipes don't exist as files on the filesystem so no process can open(2) it. They are used by processes that share them by another method. If a process opens a FIFOs and then performs, for example, a fork(2), its child will inherit its file descriptors and, among them, the pipe.<br></p>
+
+<p>
+The UNIX domain sockets, anonymous pipes and FIFOs are similar in the fact they use shared memory segments. The details of implementation may vary from one system to another but the idea is always the same: attach the same portion of memory in two distinct processes memory mapping to have them sharing data<br>
+(edit: that would one obvious way to implement it but that is not how it is actually done in Linux, which simply uses the kernel memory for the buffers, see answer by @tjb63 below).<br>
+The kernel then handles the system calls and abstracts the mechanism.<br></p>
+</blockquote>
+<p>
+以上内容截取自 <a href="https://unix.stackexchange.com/questions/75904/are-fifo-pipe-unix-domain-socket-the-same-thing-in-linux-kernel">unix stackexchange</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org23f65a3" class="outline-2">
+<h2 id="org23f65a3">3. <code>unix-domain-socket</code> 与 <code>ip socket</code> 的比较</h2>
+<div class="outline-text-2" id="text-org23f65a3">
+<p>
+unix domain socket是一种进程间通信方式，支持跑在同一个机器上的两个进程的双向数据交互。<br>
+ip socket是一种网络通信方式，能够让两个进程通过网络完成数据交互。<br>
+unix domain socket是针对于文件系统限制访问权限，而ip socket只能在过滤包的级别完成访问控制。<br>
+unix domain socket比ip socket的效率更高，因为省去了校验检查、路由等操作步骤。<br></p>
+
+<p>
+以下内容摘抄自 freebsd list:<br></p>
+<blockquote>
+<p>
+There are a few differences that might be of interest, in addition to the already pointed out difference that if you start out using IP sockets, you don't have to migrate to them later when you want inter-machine connectivity:<br></p>
+
+<ul class="org-ul">
+<li>UNIX domain sockets use the file system as the address name space.  This means you can use UNIX file permissions to control access to communicate with them.  I.e., you can limit what other processes can connect to the daemon – maybe one user can, but the web server can't, or the like. With IP sockets, the ability to connect to your daemon is exposed off the current system, so additional steps may have to be taken for security.  On the other hand, you get network transparency.  With UNIX domain sockets, you can actually retrieve the credential of the process that created the remote socket, and use that for access control also, which can be quite convenient on multi-user systems.<br>
+</li>
+
+<li>IP sockets over localhost are basically looped back network on-the-wire IP. There is intentionally "no special knowledge" of the fact that the connection is to the same system, so no effort is made to bypass the normal IP stack mechanisms for performance reasons. For example, transmission over TCP will always involve two context switches to get to the remote socket, as you have to switch through the netisr, which occurs following the "loopback" of the packet through the synthetic loopback interface. Likewise, you get all the overhead of ACKs, TCP flow control, encapsulation/decapsulation, etc. Routing will be performed in order to decide if the packets go to the localhost. Large sends will have to be broken down into MTU-size datagrams, which also adds overhead for large writes.  It's really TCP, it just goes over a loopback interface by virtue of a special address, or discovering that the address requested is served locally rather than over an ethernet (etc).<br>
+</li>
+
+<li>UNIX domain sockets have explicit knowledge that they're executing on the same system. They avoid the extra context switch through the netisr, and a sending thread will write the stream or datagrams directly into the receiving socket buffer. No checksums are calculated, no headers are inserted, no routing is performed, etc. Because they have access to the remote socket buffer, they can also directly provide feedback to the sender when it is filling, or more importantly, emptying, rather than having the added overhead of explicit acknowledgement and window changes. The one piece of functionality that UNIX domain sockets don't provide that TCP does is out-of-band data. In practice, this is an issue for almost noone.<br>
+</li>
+</ul>
+<p>
+In general, the argument for implementing over TCP is that it gives you location independence and immediate portability – you can move the client or the daemon, update an address, and it will "just work".  The sockets layer provides a reasonable abstraction of communications services, so it's not hard to write an application so that the connection/binding portion knows about TCP and UNIX domain sockets, and all the rest just uses the socket it's given.  So if you're looking for performance locally, I think UNIX domain sockets probably best meet your need.  Many people will code to TCP anyway because performance is often less critical, and the network portability benefit is substantial.<br></p>
+
+<p>
+Right now, the UNIX domain socket code is covered by a subsystem lock; I have a version that used more fine-grain locking, but have not yet evaluated the performance impact of those changes.  I've you're running in an SMP environment with four processors, it could be that those changes might positively impact performance, so if you'd like the patches, let me know.  Right now they're on my schedule to start testing, but not on the path for inclusion in FreeBSD 5.4.  The primary benefit of greater granularity would be if you had many pairs of threads/processes communicating across processors using UNIX domain sockets, and as a result there was substantial contention on the UNIX domain socket subsystem lock. The patches don't increase the cost of normal send/receive operations, but due add extra mutex operations in the listen/accept/connect/bind paths.<br></p>
+
+<p>
+Robert N M Watson<br></p>
+</blockquote>
+
+<p>
+参考资料如下：<br></p>
+<ul class="org-ul">
+<li>
+<a href="https://unix.stackexchange.com/questions/236983/differences-between-unix-domain-sockets-and-network-sockets?utm_medium=organic&amp;utm_source=google_rich_qa&amp;utm_campaign=google_rich_qa">unix stackexchange</a><br>
+</li>
+<li>
+<a href="https://lists.freebsd.org/pipermail/freebsd-performance/2005-February/001143.html">lists freebsd</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/debug-with-gdb-on-linux-2/" class="u-url">Linux下使用gdb的调试技巧（2）</a></h1>
       <div class="metadata">
         
 
@@ -314,41 +444,41 @@ ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
       <p>
 tcpdump常用于网络抓包，能够将抓取的包保存下来，这样就能进一步深入分析。抓包保存的文件可以使用tcpdump进行查看，也可以借助第三方软件（如wireshark）进行辅助分析。<br></p>
 
-<div id="outline-container-org143beed" class="outline-2">
-<h2 id="org143beed">1. 抓取指定网络设备上的包</h2>
-<div class="outline-text-2" id="text-org143beed">
+<div id="outline-container-orge2a097f" class="outline-2">
+<h2 id="orge2a097f">1. 抓取指定网络设备上的包</h2>
+<div class="outline-text-2" id="text-orge2a097f">
 <p>
 抓取网卡eth0上的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org5d73ae2" class="outline-2">
-<h2 id="org5d73ae2">2. 限制抓包的数量</h2>
-<div class="outline-text-2" id="text-org5d73ae2">
+<div id="outline-container-orge760c5a" class="outline-2">
+<h2 id="orge760c5a">2. 限制抓包的数量</h2>
+<div class="outline-text-2" id="text-orge760c5a">
 <p>
 只抓取5个包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -c 5 -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org0855edd" class="outline-2">
-<h2 id="org0855edd">3. 将抓取的包以ASCII的方式打印出来</h2>
-<div class="outline-text-2" id="text-org0855edd">
+<div id="outline-container-org508b55a" class="outline-2">
+<h2 id="org508b55a">3. 将抓取的包以ASCII的方式打印出来</h2>
+<div class="outline-text-2" id="text-org508b55a">
 <div class="highlight"><pre><span></span>tcpdump -A -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org5d497a0" class="outline-2">
-<h2 id="org5d497a0">4. 将抓取的包以十六进制的方式打印出来</h2>
-<div class="outline-text-2" id="text-org5d497a0">
+<div id="outline-container-orgc07733e" class="outline-2">
+<h2 id="orgc07733e">4. 将抓取的包以十六进制的方式打印出来</h2>
+<div class="outline-text-2" id="text-orgc07733e">
 <div class="highlight"><pre><span></span>tcpdump -XX -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org07e7f08" class="outline-2">
-<h2 id="org07e7f08">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
-<div class="outline-text-2" id="text-org07e7f08">
+<div id="outline-container-org5165e40" class="outline-2">
+<h2 id="org5165e40">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
+<div class="outline-text-2" id="text-org5165e40">
 <p>
 增加 <code>-t</code> 参数能够将抓取到的包中的时间以方便阅读的形式打印出来，使用 <code>-tttt</code> 参数能够将包中的时间戳以更详细的方式打印出来。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -t -i eth0
@@ -356,23 +486,23 @@ tcpdump -tttt -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orga769e48" class="outline-2">
-<h2 id="orga769e48">6. 将抓取的包写入到文件中</h2>
-<div class="outline-text-2" id="text-orga769e48">
+<div id="outline-container-orgb2bf31e" class="outline-2">
+<h2 id="orgb2bf31e">6. 将抓取的包写入到文件中</h2>
+<div class="outline-text-2" id="text-orgb2bf31e">
 <div class="highlight"><pre><span></span>tcpdump -w netdump.pcap -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org31bd5ce" class="outline-2">
-<h2 id="org31bd5ce">7. 读取抓到的包</h2>
-<div class="outline-text-2" id="text-org31bd5ce">
+<div id="outline-container-org97e8153" class="outline-2">
+<h2 id="org97e8153">7. 读取抓到的包</h2>
+<div class="outline-text-2" id="text-org97e8153">
 <div class="highlight"><pre><span></span>tcpdump -r netdump.pcap
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgc5d99f7" class="outline-2">
-<h2 id="orgc5d99f7">8. 在抓到的包中显示ip地址</h2>
-<div class="outline-text-2" id="text-orgc5d99f7">
+<div id="outline-container-orge05167a" class="outline-2">
+<h2 id="orge05167a">8. 在抓到的包中显示ip地址</h2>
+<div class="outline-text-2" id="text-orge05167a">
 <p>
 增加 <code>-n</code> 参数不会解析主机名，增加 <code>-nn</code> 参数不会解析主机名和端口名<br></p>
 <div class="highlight"><pre><span></span>tcpdump -n -i eth0
@@ -380,16 +510,16 @@ tcpdump -nn -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org120a9b2" class="outline-2">
-<h2 id="org120a9b2">9. 以绝对值显示包的ISN号</h2>
-<div class="outline-text-2" id="text-org120a9b2">
+<div id="outline-container-org8259edc" class="outline-2">
+<h2 id="org8259edc">9. 以绝对值显示包的ISN号</h2>
+<div class="outline-text-2" id="text-org8259edc">
 <div class="highlight"><pre><span></span>tcpdump -S -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org0e44831" class="outline-2">
-<h2 id="org0e44831">10. 对抓取到的包显示更详细的信息</h2>
-<div class="outline-text-2" id="text-org0e44831">
+<div id="outline-container-org82bb20f" class="outline-2">
+<h2 id="org82bb20f">10. 对抓取到的包显示更详细的信息</h2>
+<div class="outline-text-2" id="text-org82bb20f">
 <p>
 参数 <code>-v</code> 是verbose的缩写，以下命令表示对抓取到的包显示更详细的信息。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -v -i eth0
@@ -398,9 +528,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgcf6cc86" class="outline-2">
-<h2 id="orgcf6cc86">11. 对抓到的包进行协议类型过滤</h2>
-<div class="outline-text-2" id="text-orgcf6cc86">
+<div id="outline-container-org3d6e814" class="outline-2">
+<h2 id="org3d6e814">11. 对抓到的包进行协议类型过滤</h2>
+<div class="outline-text-2" id="text-org3d6e814">
 <p>
 支持的协议类型有：fddi, tr, wlan, ip, ip6, arp, rarp, decnet, tcp, udp<br>
 以下命令只会抓取网卡eth0上的arp包<br></p>
@@ -408,9 +538,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org279c8d1" class="outline-2">
-<h2 id="org279c8d1">12. 在抓包时对包进行大小过滤</h2>
-<div class="outline-text-2" id="text-org279c8d1">
+<div id="outline-container-orgef3c0dd" class="outline-2">
+<h2 id="orgef3c0dd">12. 在抓包时对包进行大小过滤</h2>
+<div class="outline-text-2" id="text-orgef3c0dd">
 <p>
 下面的命令会分别抓取大于1024字节和小于1024字节的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0 greater 1024
@@ -418,16 +548,16 @@ tcpdump -i eth0 less 1024
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org845e062" class="outline-2">
-<h2 id="org845e062">13. 抓取指定端口上的包</h2>
-<div class="outline-text-2" id="text-org845e062">
+<div id="outline-container-org58d4fda" class="outline-2">
+<h2 id="org58d4fda">13. 抓取指定端口上的包</h2>
+<div class="outline-text-2" id="text-org58d4fda">
 <div class="highlight"><pre><span></span>tcpdump -i eth0 port 22
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org70d4c28" class="outline-2">
-<h2 id="org70d4c28">14. 抓取发往指定目的和端口上包</h2>
-<div class="outline-text-2" id="text-org70d4c28">
+<div id="outline-container-org25e75b6" class="outline-2">
+<h2 id="org25e75b6">14. 抓取发往指定目的和端口上包</h2>
+<div class="outline-text-2" id="text-org25e75b6">
 <p>
 可以使用 <code>and</code> 和 <code>or</code> 对过滤条件进行组合以实现精确的抓包。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -w net_dump.pcap -i eth0 dst 10.181.140.216 and port 22
@@ -435,9 +565,9 @@ tcpdump -i eth0 less 1024
 </div>
 </div>
 
-<div id="outline-container-orgfdd9202" class="outline-2">
-<h2 id="orgfdd9202">常用tcpdump命令示例</h2>
-<div class="outline-text-2" id="text-orgfdd9202">
+<div id="outline-container-orgb51697e" class="outline-2">
+<h2 id="orgb51697e">常用tcpdump命令示例</h2>
+<div class="outline-text-2" id="text-orgb51697e">
 <div class="highlight"><pre><span></span>tcpdump –i any 'port 8888'
 tcpdump –i any 'tcp port 8888'
 tcpdump –i any 'tcp src port 8888'
@@ -447,9 +577,9 @@ tcpdump -i any 'src host 127.0.0.1 and tcp src port 12345' -XX -nn -vv
 </div>
 </div>
 
-<div id="outline-container-org5ba0d16" class="outline-2">
-<h2 id="org5ba0d16">参考资料</h2>
-<div class="outline-text-2" id="text-org5ba0d16">
+<div id="outline-container-org8932635" class="outline-2">
+<h2 id="org8932635">参考资料</h2>
+<div class="outline-text-2" id="text-org8932635">
 <ul class="org-ul">
 <li>
 <a href="https://danielmiessler.com/study/tcpdump/">danielmiessler.com tcpdump</a><br>
@@ -493,9 +623,9 @@ tcpdump -i any 'src host 127.0.0.1 and tcp src port 12345' -XX -nn -vv
       <p>
 <code>nc</code> 命令是 <code>netcat</code> 的缩写，能够使用TCP或UDP协议读写网络连接中的数据，是一个方便可靠的调试工具。<br></p>
 
-<div id="outline-container-org5b2fed8" class="outline-2">
-<h2 id="org5b2fed8">1. 基本 <code>C/S</code> 模型</h2>
-<div class="outline-text-2" id="text-org5b2fed8">
+<div id="outline-container-orgc879f59" class="outline-2">
+<h2 id="orgc879f59">1. 基本 <code>C/S</code> 模型</h2>
+<div class="outline-text-2" id="text-orgc879f59">
 <p>
 作为服务端建立监听<br></p>
 <div class="highlight"><pre><span></span>nc -l 127.0.0.1 8060
@@ -509,9 +639,9 @@ tcpdump -i any 'src host 127.0.0.1 and tcp src port 12345' -XX -nn -vv
 </div>
 </div>
 
-<div id="outline-container-orgc603603" class="outline-2">
-<h2 id="orgc603603">2. 文件传输</h2>
-<div class="outline-text-2" id="text-orgc603603">
+<div id="outline-container-orgb1fe0ed" class="outline-2">
+<h2 id="orgb1fe0ed">2. 文件传输</h2>
+<div class="outline-text-2" id="text-orgb1fe0ed">
 <p>
 模拟客户端向服务端传输文件的示例代码如下，同理，也可以模拟服务端向客户端发送文件。<br></p>
 <div class="highlight"><pre><span></span>nc -l 1234  &gt; filename.out
@@ -520,9 +650,9 @@ nc 127.0.0.1 1234 &lt; fielname.in
 </div>
 </div>
 
-<div id="outline-container-orgaef505a" class="outline-2">
-<h2 id="orgaef505a">3. 连接远程系统</h2>
-<div class="outline-text-2" id="text-orgaef505a">
+<div id="outline-container-org9fa42f1" class="outline-2">
+<h2 id="org9fa42f1">3. 连接远程系统</h2>
+<div class="outline-text-2" id="text-org9fa42f1">
 <p>
 已连接http服务器为例，在作为客户端连接以后，可以向服务器发送 <code>GET /HTTP/1.1</code> 来获取网站的主页。<br>
 示例代码如下<br></p>
@@ -531,9 +661,9 @@ nc 127.0.0.1 1234 &lt; fielname.in
 </div>
 </div>
 
-<div id="outline-container-org594778e" class="outline-2">
-<h2 id="org594778e">4. 简易代理</h2>
-<div class="outline-text-2" id="text-org594778e">
+<div id="outline-container-orga36e5bf" class="outline-2">
+<h2 id="orga36e5bf">4. 简易代理</h2>
+<div class="outline-text-2" id="text-orga36e5bf">
 <p>
 将nc命令嵌套使用，可以将一个端口中的数据转发到目的ip和端口。<br></p>
 <div class="highlight"><pre><span></span>ncat -l 8080 | ncat 192.168.1.200 80
@@ -546,9 +676,9 @@ ncat -l 8080 0&lt;fifo_temp | ncat 192.168.1.200 80 1&gt;fifo_temp
 </div>
 </div>
 
-<div id="outline-container-org8af2490" class="outline-2">
-<h2 id="org8af2490">5. 参考资料</h2>
-<div class="outline-text-2" id="text-org8af2490">
+<div id="outline-container-orgba4c60f" class="outline-2">
+<h2 id="orgba4c60f">5. 参考资料</h2>
+<div class="outline-text-2" id="text-orgba4c60f">
 <ul class="org-ul">
 <li>
 <a href="https://www.linuxtechi.com/nc-ncat-command-examples-linux-systems/">linuxtech</a><br>
@@ -599,25 +729,25 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 <p>
 下面就给出了几种常见的用法，需要注意的是有些指令需要root权限执行。<br></p>
 
-<div id="outline-container-org31610b9" class="outline-2">
-<h2 id="org31610b9">1. 查看打开指定文件的进程</h2>
-<div class="outline-text-2" id="text-org31610b9">
+<div id="outline-container-org673d853" class="outline-2">
+<h2 id="org673d853">1. 查看打开指定文件的进程</h2>
+<div class="outline-text-2" id="text-org673d853">
 <div class="highlight"><pre><span></span>lsof /var/syslog.log
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgae066b2" class="outline-2">
-<h2 id="orgae066b2">2. 查看指定目录下打开的文件</h2>
-<div class="outline-text-2" id="text-orgae066b2">
+<div id="outline-container-orgce21cb2" class="outline-2">
+<h2 id="orgce21cb2">2. 查看指定目录下打开的文件</h2>
+<div class="outline-text-2" id="text-orgce21cb2">
 <div class="highlight"><pre><span></span>lsof +D /home/
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org2b824d7" class="outline-2">
-<h2 id="org2b824d7">3. 查看以指定进程名所有打开的文件</h2>
-<div class="outline-text-2" id="text-org2b824d7">
+<div id="outline-container-org62ffdbc" class="outline-2">
+<h2 id="org62ffdbc">3. 查看以指定进程名所有打开的文件</h2>
+<div class="outline-text-2" id="text-org62ffdbc">
 <p>
 使用 <code>-c</code> 命令能够查看指定进程名使用的文件，允许在一个命令行指令中使用多个 <code>-c</code> 参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -c procname
@@ -625,9 +755,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orge77fadb" class="outline-2">
-<h2 id="orge77fadb">4. 查看使用指定挂载点的进程</h2>
-<div class="outline-text-2" id="text-orge77fadb">
+<div id="outline-container-org29c2327" class="outline-2">
+<h2 id="org29c2327">4. 查看使用指定挂载点的进程</h2>
+<div class="outline-text-2" id="text-org29c2327">
 <p>
 在停止挂载某个目录时，系统会告诉我们“设备资源繁忙”，所以我们需要找出使用挂载点的程序，终止这些进程，解除目录的占用状态。<br></p>
 <div class="highlight"><pre><span></span>lsof /home
@@ -639,9 +769,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org06e1cf8" class="outline-2">
-<h2 id="org06e1cf8">5. 查看指定用户打开的文件</h2>
-<div class="outline-text-2" id="text-org06e1cf8">
+<div id="outline-container-org89a8438" class="outline-2">
+<h2 id="org89a8438">5. 查看指定用户打开的文件</h2>
+<div class="outline-text-2" id="text-org89a8438">
 <div class="highlight"><pre><span></span>lsof -u username
 </pre></div>
 <p>
@@ -651,17 +781,17 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org90e1bb9" class="outline-2">
-<h2 id="org90e1bb9">6. 查看指定进程打开的文件</h2>
-<div class="outline-text-2" id="text-org90e1bb9">
+<div id="outline-container-org1864a62" class="outline-2">
+<h2 id="org1864a62">6. 查看指定进程打开的文件</h2>
+<div class="outline-text-2" id="text-org1864a62">
 <div class="highlight"><pre><span></span>lsof -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org8c19c10" class="outline-2">
-<h2 id="org8c19c10">7. 终止属于某个用户的所有进程</h2>
-<div class="outline-text-2" id="text-org8c19c10">
+<div id="outline-container-orgd6fd38b" class="outline-2">
+<h2 id="orgd6fd38b">7. 终止属于某个用户的所有进程</h2>
+<div class="outline-text-2" id="text-orgd6fd38b">
 <div class="highlight"><pre><span></span>kill `lsof -t -u username`
 </pre></div>
 <p>
@@ -671,9 +801,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org5f6dc7f" class="outline-2">
-<h2 id="org5f6dc7f">8. 让结果同时满足多个选项</h2>
-<div class="outline-text-2" id="text-org5f6dc7f">
+<div id="outline-container-orge70d644" class="outline-2">
+<h2 id="orge70d644">8. 让结果同时满足多个选项</h2>
+<div class="outline-text-2" id="text-orge70d644">
 <p>
 默认情况下，多个参数是以或（or）进行操作的，可以使用 <code>-a</code> 选项让结果同时满足多个参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -a -u username -c procname
@@ -681,9 +811,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org87a656c" class="outline-2">
-<h2 id="org87a656c">9. 让命令重复执行</h2>
-<div class="outline-text-2" id="text-org87a656c">
+<div id="outline-container-org3da1d8a" class="outline-2">
+<h2 id="org3da1d8a">9. 让命令重复执行</h2>
+<div class="outline-text-2" id="text-org3da1d8a">
 <p>
 可以使用 <code>-r</code> 参数让命令重复执行。以下命令会每隔5s执行一次，每次的执行结果会用 “====” 分割开。<br></p>
 <div class="highlight"><pre><span></span>lsof -u username -c procname -a -r5
@@ -691,9 +821,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orgbe0966a" class="outline-2">
-<h2 id="orgbe0966a">10. 列出所有的网络连接</h2>
-<div class="outline-text-2" id="text-orgbe0966a">
+<div id="outline-container-org91a7840" class="outline-2">
+<h2 id="org91a7840">10. 列出所有的网络连接</h2>
+<div class="outline-text-2" id="text-org91a7840">
 <div class="highlight"><pre><span></span>lsof -i
 </pre></div>
 <p>
@@ -707,33 +837,33 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orgc2e0407" class="outline-2">
-<h2 id="orgc2e0407">11. 列出指定进程使用的网络连接</h2>
-<div class="outline-text-2" id="text-orgc2e0407">
+<div id="outline-container-orgefa2612" class="outline-2">
+<h2 id="orgefa2612">11. 列出指定进程使用的网络连接</h2>
+<div class="outline-text-2" id="text-orgefa2612">
 <div class="highlight"><pre><span></span>lsof -i -a -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org7433c9f" class="outline-2">
-<h2 id="org7433c9f">12. 查看指定端口上的监听</h2>
-<div class="outline-text-2" id="text-org7433c9f">
+<div id="outline-container-org515e5cc" class="outline-2">
+<h2 id="org515e5cc">12. 查看指定端口上的监听</h2>
+<div class="outline-text-2" id="text-org515e5cc">
 <div class="highlight"><pre><span></span>lsof -i :portid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgeb747f9" class="outline-2">
-<h2 id="orgeb747f9">13. 列出所有tcp和udp连接</h2>
-<div class="outline-text-2" id="text-orgeb747f9">
+<div id="outline-container-org20794eb" class="outline-2">
+<h2 id="org20794eb">13. 列出所有tcp和udp连接</h2>
+<div class="outline-text-2" id="text-org20794eb">
 <div class="highlight"><pre><span></span>lsof -i tcp; lsof -i udp
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org8268e0f" class="outline-2">
-<h2 id="org8268e0f">14. 列出所有的网络文件系统</h2>
-<div class="outline-text-2" id="text-org8268e0f">
+<div id="outline-container-orgb12c9ca" class="outline-2">
+<h2 id="orgb12c9ca">14. 列出所有的网络文件系统</h2>
+<div class="outline-text-2" id="text-orgb12c9ca">
 <p>
 网络文件系统（network file system）<br></p>
 <div class="highlight"><pre><span></span>lsof -N -u username
@@ -1066,27 +1196,27 @@ git config --global https.proxy 'socks5://127.0.0.1:1080'
       <p>
 在开发windows应用程序时，经常会遇到win32、mfc、atl的函数。下面就对三种API（或者说是开发框架）进行了总结。<br></p>
 
-<div id="outline-container-org3a1ad4e" class="outline-2">
-<h2 id="org3a1ad4e">Win32开发框架</h2>
-<div class="outline-text-2" id="text-org3a1ad4e">
+<div id="outline-container-orgc01f949" class="outline-2">
+<h2 id="orgc01f949">Win32开发框架</h2>
+<div class="outline-text-2" id="text-orgc01f949">
 <p>
 win32开发框架是最基础的函数接口，更接近操作系统底层。<br>
 使用Win32接口的优点是程序的依赖最小，生成的可执行文件的体积也最小。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf7a1a10" class="outline-2">
-<h2 id="orgf7a1a10">MFC开发框架</h2>
-<div class="outline-text-2" id="text-orgf7a1a10">
+<div id="outline-container-org3ae5bc7" class="outline-2">
+<h2 id="org3ae5bc7">MFC开发框架</h2>
+<div class="outline-text-2" id="text-org3ae5bc7">
 <p>
 MFC是Microsoft Foundation Class的缩写，将win32的相关接口按照OOP的思想封装了起来，目的是提供一个快速开发原生应用的框架。<br>
 使用MFC开发的程序体型略显臃肿，而且MFC也比较陈旧了，并不推荐使用MFC进行开发。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf7b9a23" class="outline-2">
-<h2 id="orgf7b9a23">ATL开发框架</h2>
-<div class="outline-text-2" id="text-orgf7b9a23">
+<div id="outline-container-org5a77d5d" class="outline-2">
+<h2 id="org5a77d5d">ATL开发框架</h2>
+<div class="outline-text-2" id="text-org5a77d5d">
 <p>
 ATL是Active Template Library的缩写，是针对COM组件的开发实现的一套开发框架。ATL简化了ActiveX COM组件的开发。<br></p>
 </div>
@@ -1140,111 +1270,6 @@ ATL是Active Template Library的缩写，是针对COM组件的开发实现的一
 在windows平台上使用grep和find指令时，需要借助仿linux环境中的程序完成，如cygwin中的程序。<br>
 需要将程序的路径添加到系统环境变量path中，并且为了覆盖windows系统自带的find命令，需要将该路径放在系统find路径之前。<br>
 tips： 对于安装了 <code>git bash</code> 的同学，直接将其中的 <code>mingw64\bin</code> 的绝对路径加入系统path中即可。<br></p>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/shadowsock-server-setup-guide/" class="u-url">ss服务器的配置指南</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-02-05T22:57:35+08:00" itemprop="datePublished" title="2018-02-05 22:57">Feb 05 2018  (22:57)
-    </time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/shadowsock-server-setup-guide/#disqus_thread" data-disqus-identifier="cache/posts/shadowsock-server-setup-guide.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
-        <li><a class="tag p-category" href="/tags/shadowsocks/" rel="tag">shadowsocks</a></li>
-        <li><a class="tag p-category" href="/tags/vpn/" rel="tag">vpn</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <p>
-租一个服务器自己搭建梯子是科学上网方便稳定快捷的好方法。<br>
-本文主要是自己部署vpn服务端的笔记，作为备忘留存下来。<br></p>
-
-<div id="outline-container-orgcff2def" class="outline-2">
-<h2 id="orgcff2def">安装ss服务程序</h2>
-<div class="outline-text-2" id="text-orgcff2def">
-<p>
-安装环境为CentOS7, 需要使用python的包管理工具pip完成对ss-server的安装。<br></p>
-<div class="highlight"><pre><span></span>sudo yum install m2crypto python-setuptools
-sudo easy_install pip
-sudo pip install shadowsocks
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org3cd89d5" class="outline-2">
-<h2 id="org3cd89d5">配置ss服务器</h2>
-<div class="outline-text-2" id="text-org3cd89d5">
-<p>
-<b>配置文件示例</b> : <a href="/listings/shadowsocks.json.html">shadowsocks.json</a><br>
-这份配置中使用了多个端口作供ss-server使用<br></p>
-<div class="highlight"><pre><span></span>{
-    "server":"your-server-ip",
-    "local_address":"127.0.0.1",
-    "local_port":1080,
-    "port_password":
-    {
-	"32366":"shadowsocks",
-	"32367":"shadowsocks",
-	"32368":"shadowsocks",
-	"32369":"shadowsocks",
-	"52369":"shadowsocks"
-    },
-    "timeout":300,
-    "method":"aes-256-cfb",
-    "fast_open": false
-}
-</pre></div>
-
-
-<p>
-<b>启动脚本示例</b> : <a href="/listings/ss.sh.html">ss.sh</a><br>
-直接在命令行直接输入指令也能够完成ss服务的启动和停止，使用脚本只是为了方便一些。<br></p>
-<div class="highlight"><pre><span></span>#!/bin/bash
-ss_start()
-{
-  ssserver -c /root/shadowsocks/shadowsocks.json -d start
-}
-ss_stop()
-{
-  ssserver -c /root/shadowsocks/shadowsocks.json -d stop
-}
-# shell script main
-if [ "$#" -eq "0" ]; then
-  ss_start
-else
-  case "$1" in
-  start)
-    ss_start
-    exit;;
-  stop)
-    ss_stop
-    exit;;
-  esac
-fi
-</pre></div>
-
-<p>
-<b>增加系统启动项</b><br>
-可以将启动脚本加入系统启动项，这样就能够保证在每次reboot后，服务都能自动开启。<br></p>
-</div>
-</div>
     </div>
 
   </article>
