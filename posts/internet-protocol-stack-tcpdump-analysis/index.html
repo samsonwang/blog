@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>路由、调制解调器和交换机 | Hack Note</title>
+<title>网络协议的抓包分析 | Hack Note</title>
 <link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
 <link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 <link href="/assets/css/code.css" rel="stylesheet" type="text/css">
@@ -13,11 +13,10 @@
 <meta name="theme-color" content="#5670d4">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
-<link rel="canonical" href="https://samsonwang.me/posts/router-modem-and-switch/">
+<link rel="canonical" href="https://samsonwang.me/posts/internet-protocol-stack-tcpdump-analysis/">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
 <!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
-<link rel="prev" href="/posts/algorithm-weekly-remove-nth-node-from-end-of-list/" title="每周算法：删去单向链表倒数第n个节点" type="text/html">
-<link rel="next" href="/posts/algorithm-weekly-generate-parentheses/" title="每周算法：生成有效的括号组合" type="text/html">
+<link rel="prev" href="/posts/transmission-control-protocol-2/" title="TCP协议（RFC793）-2-" type="text/html">
 </head>
 <body class="preload">
 <a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
@@ -65,20 +64,20 @@
       <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
         
         
-<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">路由、调制解调器和交换机</h1>
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">网络协议的抓包分析</h1>
 
     <div class="metadata">
       
 
       
   <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-09-27T18:34:54+08:00" itemprop="datePublished" title="2018-09-27 18:34">Sep 27 2018  (18:34)
+    <time class="published dt-published" datetime="2018-11-05T22:19:19+08:00" itemprop="datePublished" title="2018-11-05 22:19">Nov 05 2018  (22:19)
     </time>
 </div>
 
       
     <div class="source blur-1">
-      <a href="/posts/router-modem-and-switch/index.org" class="sourcelink">Source</a>
+      <a href="/posts/internet-protocol-stack-tcpdump-analysis/index.org" class="sourcelink">Source</a>
     </div>
 
       
@@ -86,10 +85,10 @@
       
     <div class="tags blur-2">
     <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/moderm/" rel="tag">moderm</a></li>
+<li><a class="tag p-category" href="/tags/ip/" rel="tag">ip</a></li>
         <li><a class="tag p-category" href="/tags/network/" rel="tag">network</a></li>
-        <li><a class="tag p-category" href="/tags/router/" rel="tag">router</a></li>
-        <li><a class="tag p-category" href="/tags/switch/" rel="tag">switch</a></li>
+        <li><a class="tag p-category" href="/tags/tcp/" rel="tag">tcp</a></li>
+        <li><a class="tag p-category" href="/tags/tcpdump/" rel="tag">tcpdump</a></li>
     </ul>
 </div>
 
@@ -98,63 +97,133 @@
     </div>
   </header><div class="e-content entry-content" itemprop="articleBody text">
     <p>
-路由、调制解调器和交换机，这三个是我们经常使用的网络设备。它们在网络中的作用是什么？它们工作在网络模型的哪一层？本篇文章将带你了解他们的原理与和区别。<br></p>
+本文主要内容是对tcpdump所抓取的数据包进行分析，按照网络协议解出每个字节所代表的含义。<br>
+通过前面几篇博客的学习和总结，我对网络协议有了一定的了解，这时需要理论结合实际，使学到的知识记忆更加深刻。<br></p>
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgba030bd" class="outline-2">
-<h2 id="orgba030bd">路由</h2>
-<div class="outline-text-2" id="text-orgba030bd">
 <p>
-路由器（router）的作用是连接多个逻辑上分开的网络，逻辑网络是代表一个单独的网络或者一个子网。当数据从一个子网传输到另一个子网时，可通过路由器的路由功能来完成。路由器工作在OSI参考模型第三层网络层。路由器通过动态维护路由表来反映当前的网络拓扑，并通过网络上其他路由器交换路由和链路信息来维护路由表。<br></p>
-
-<p>
-路由器具有判断网络地址和选择IP路径的功能，它能在多网络互连环境中，建立灵活的连接。路由器根据收到数据包中的网络层地址以及路由器内部维护的路由表决定输出端口以及下一跳地址，并且重写链路层数据包头实现转发数据包。<br></p>
-
-<p>
-以家用路由器为例，路由连接了因特网和本地网络。路由器使多个设备用同一个物理网络连接接入因特网。连接到同一个路由器的设备可以借助本地网络进行通信。对于互联网而言，所有家中的设备产生的网络流量好像是来源于一个设备，也就是路由器。另外，路由器还会对连接它的设备起到一定的保护作用，这些设备就不会直接暴露在互连网中。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org1ce29e8" class="outline-2">
-<h2 id="org1ce29e8">调制解调器</h2>
-<div class="outline-text-2" id="text-org1ce29e8">
-<p>
-调制解调器（modem）的作用是将计算机的数字信号转换为可沿对电话线传送的模拟信号，而这些模拟信号又可被线路另一端的另一个调制解调器接收，并译成计算机可懂的语言。modem这个名字是modulator（调制器）与demodulator（解调器）的简称。这是一个比较老的概念了，以前的网络提供商通过电话线传输数据，现在大多数直接光线入户，也就省去了调制解调器了。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org6dda5d8" class="outline-2">
-<h2 id="org6dda5d8">交换机</h2>
-<div class="outline-text-2" id="text-org6dda5d8">
-<p>
-交换机工作在OSI参考模型的链路层。交换机内部会在每个端口成功连接时，通过将MAC地址和端口对应，形成一张MAC表。在今后的通讯中，发往该MAC地址的数据包将仅送往其对应的端口，而不是所有的端口。因此，交换机可用于划分数据链路层广播，即冲突域；但它不能划分网络层广播，即广播域。<br></p>
-
-<p>
-交换机拥有一条很高带宽的背部总线和内部交换矩阵。交换机的所有的端口都挂接在这条背部总线上，控制电路收到数据包以后，处理端口会查找内存中的地址对照表以确定目的MAC（网卡的硬件地址）的NIC（网卡）挂接在哪个端口上，通过内部交换矩阵迅速将数据包传送到目的端口，目的MAC若不存在，广播到所有的端口，接收端口回应后交换机会“学习”新的MAC地址，并把它添加入内部MAC地址表中，通过在数据帧的始发者和目标接收者之间建立临时的交换路径，使数据帧直接由源地址到达目的地址。。<br></p>
-
-<p>
-交换机在同一时刻可进行多个端口对之间的数据传输。每一端口都可视为独立的物理网段（注：非IP网段），连接在其上的网络设备独自享有全部的带宽，无须同其他设备竞争使用。当节点A向节点D发送数据时，节点B可同时向节点C发送数据，而且这两个传输都享有网络的全部带宽，都有着自己的虚拟连接。假使这里使用的是10Mbps的以太网交换机，那么该交换机这时的总流通量就等于2×10Mbps=20Mbps，而使用10Mbps的共享式HUB时，一个HUB的总流通量也不会超出10Mbps。总之，交换机是一种基于MAC地址识别，能完成封装转发数据帧功能的网络设备。<br></p>
-</div>
-</div>
-
-<div id="outline-container-orga359bb4" class="outline-2">
-<h2 id="orga359bb4">参考资料</h2>
-<div class="outline-text-2" id="text-orga359bb4">
+阅读本文需要了解tcp、ip、tcpdump的相关知识，可以参考我之前的文章：<br></p>
 <ul class="org-ul">
-<li>
-<a href="https://www.howtogeek.com/234233/whats-the-difference-between-a-modem-and-a-router/">howtogeek.com - difference between modem and router</a><br>
+<li>tcp：<a href="/posts/transmission-control-protocol-2/">TCP协议（RFC798）</a><br>
 </li>
-<li>
-<a href="https://baike.baidu.com/item/%E8%B7%AF%E7%94%B1%E5%99%A8">百度百科 - 路由器</a><br>
+<li>ip：<a href="/posts/internet-protocol/">IP协议（RFC791）</a><br>
 </li>
-<li>
-<a href="https://baike.baidu.com/item/%E8%B0%83%E5%88%B6%E8%A7%A3%E8%B0%83%E5%99%A8">百度百科 - 调制解调器</a><br>
-</li>
-<li>
-<a href="https://baike.baidu.com/item/%E4%BA%A4%E6%8D%A2%E6%9C%BA/">百度百科 - 交换机</a><br>
+<li>tcpdump：<a href="/posts/linux-command-examples-tcpdump/">Linux常用命令行指令 - tcpdump</a><br>
 </li>
 </ul>
+<div id="outline-container-org3643f1c" class="outline-2">
+<h2 id="org3643f1c">抓包</h2>
+<div class="outline-text-2" id="text-org3643f1c">
+<p>
+这是在实验室环境下的局域网进行抓包，抓包的命令如下。<br></p>
+<div class="highlight"><pre><span></span>tcpdump -i any 'dst host 169.10.36.66 port 20014' -XX -nn -vv
+</pre></div>
+
+<p>
+<b>抓包的结果</b><br>
+数据包的基础信息<br></p>
+<pre class="example">
+15:39:13.865699 IP (tos 0x0, ttl 64, id 36429, offset 0, flags [DF], proto TCP (6), length 57)
+   169.10.10.10.47912 &gt; 169.10.36.66.20014:
+       Flags [P.], cksum 0x808c (incorrect -&gt; 0x5ebe), seq 1353274499:1353274504, ack 2930227654,
+       win 9444, options [nop,nop,TS val 2177524110 ecr 229721019], length 5
+</pre>
+
+<p>
+数据包的具体内容：使用16进制表示<br></p>
+<pre class="example">
+0x0000:  0004 0001 0006 000c 29a7 fe3b 0000 0800
+0x0010:  4500 0039 8e4d 4000 4006 2c11 a90a 0a0a
+0x0020:  a90a 2442 bb28 4e2e 50a9 5483 aea7 b9c6
+0x0030:  8018 24e4 808c 0000 0101 080a 81ca 618e
+0x0040:  0db1 43bb 107b 007b 1600 0000 0000 0000
+0x0050:  0000 0000 0000 0000 00
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org30bf81d" class="outline-2">
+<h2 id="org30bf81d">链路协议分析</h2>
+<div class="outline-text-2" id="text-org30bf81d">
+<p>
+最开始的部分是链路层协议<br></p>
+<pre class="example">
+0004 0001 0006
+000c 29a7 fe3b      本机mac地址
+0000 0800
+</pre>
+<p>
+其中有6个字节能够看到，存放的是本机的mac地址。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org1fc3cfa" class="outline-2">
+<h2 id="org1fc3cfa">IP协议分析</h2>
+<div class="outline-text-2" id="text-org1fc3cfa">
+<p>
+接下来的部分是IP协议内容，16进程格式表示如下。IP协议部分共有20字节。<br></p>
+<pre class="example">
+4500 0039 8e4d 4000 4006 2c11 a90a 0a0a
+a90a 2442
+</pre>
+
+<p>
+详细的协议分析<br></p>
+<pre class="example">
+4             ver
+5             ihl
+00            tos
+0039          totoal length
+8e4d          id
+4000          flags [0:3] frag offset[4:15]
+40            ttl
+06            protocol （6-tcp）
+2c11          header cksum
+a90a 0a0a     src addr
+a90a 2442     dst addr
+</pre>
+
+<p>
+可以从协议中读到：ip协议的版本（ver， version）IPv4。ip协议头长度（ihl， internet header length）为5*32bit，即20字节。服务类型（tos， type of service）中可以读到内容，优先权（precedence）为 <code>000</code> 表示常规（routine），延迟为（delay）为0，吞吐量（throughput）为0，可靠性（reliability）为0。总长度（total length）为0x39字节（57字节），这个长度包括IP协议头和IP中包含的数据。标识flag，按字节 <code>010</code> ，第二字节为 <code>1</code> 表示 <code>DF</code> 不要分包（don't fragment）。最大生存期（TTL，time to live）为64（0x40）秒。协议为6，这是个枚举值，表示IP协议中包含的数据所使用的协议为TCP协议。校验码（cksum，checksum）为0x2c11。源地址（source address）为169.10.10.10。目的地址（destination address）为169.10.36.66。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgdd33915" class="outline-2">
+<h2 id="orgdd33915">TCP协议分析</h2>
+<div class="outline-text-2" id="text-orgdd33915">
+<p>
+接下来是TCP协议，除去IP协议包头长，则TCP协议的数据为37字节。<br></p>
+<pre class="example">
+bb28 4e2e 50a9 5483 aea7 b9c6
+8018 24e4 808c 0000 0101 080a 81ca 618e
+0db1 43bb 107b 007b 16
+</pre>
+
+<p>
+协议的详细分析<br></p>
+<pre class="example">
+bb28           src port
+4e2e           dst port
+50a9 5483      seq
+aea7 b9c6      ack
+8              data offset
+18             ack=1 psh=1
+24e4           wnd
+808c           chk sum
+0000           urg ptr
+0101 ... 43bb  opt
+107b 007b 16   data
+</pre>
+
+<p>
+从协议中可以读到：源端口号为47912。目的端口号为20014。序列号为0x50a9 5483。应答码为0xaea7 b9c6。数据偏移量为8*32bit，即32字节，这也表示TCP协议头为32字节，所以能够计算出TCP协议中所包含的数据长度为5字节。应答标识（ACK）为 <code>1</code> 。PSH标识为 <code>1</code> 。窗口大小为0x24e4 。校验码为0x808C。选项（options）有很长的一部分。<br></p>
+
+<p>
+需要注意的是尾部16字节的全空。<br></p>
+
+<p>
+（全文完）<br></p>
 </div>
 </div>
   </div>
@@ -203,10 +272,7 @@
 
         <ul class="pager hidden-print">
 <li class="previous">
-                <a href="/posts/algorithm-weekly-remove-nth-node-from-end-of-list/" rel="prev" title="每周算法：删去单向链表倒数第n个节点">Previous post</a>
-            </li>
-            <li class="next">
-                <a href="/posts/algorithm-weekly-generate-parentheses/" rel="next" title="每周算法：生成有效的括号组合">Next post</a>
+                <a href="/posts/transmission-control-protocol-2/" rel="prev" title="TCP协议（RFC793）-2-">Previous post</a>
             </li>
         </ul>
 <section class="comments hidden-print"><h2>Comments</h2>
@@ -215,9 +281,9 @@
         <div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-me",
-            disqus_url="https://samsonwang.me/posts/router-modem-and-switch/",
-        disqus_title="\u8def\u7531\u3001\u8c03\u5236\u89e3\u8c03\u5668\u548c\u4ea4\u6362\u673a",
-        disqus_identifier="cache/posts/router-modem-and-switch.html",
+            disqus_url="https://samsonwang.me/posts/internet-protocol-stack-tcpdump-analysis/",
+        disqus_title="\u7f51\u7edc\u534f\u8bae\u7684\u6293\u5305\u5206\u6790",
+        disqus_identifier="cache/posts/internet-protocol-stack-tcpdump-analysis.html",
         disqus_config = function () {
             this.language = "en";
         };
