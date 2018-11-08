@@ -135,8 +135,8 @@ NAVIGATION_LINKS = {
     DEFAULT_LANG: (
         ("/archive/", "Archives"),
         ("/tags/", "Tags"),
-        ("/listings/", "Listings"),
-        ("/galleries/", "Galleries"),
+        #        ("/listings/", "Listings"),
+        #        ("/galleries/", "Galleries"),
         ("/rss.xml", "RSS Feed"),
     ),
 }
