@@ -7,12 +7,14 @@
 .. link: https://leetcode.com/problems/combination-sum/
 .. description:
 .. type: text
-.. status: draft
+/.. status: draft
 #+END_COMMENT
 
 #+TITLE: 每周算法：找出指定求和的组合
 
-leetcode第39题，难度为medium，考察（traceback）回溯算法的使用。
+leetcode第39题，难度为medium，考察回溯算法（backtracking）的使用。
+
+{{{TEASER_END}}}
 
 ** Description
 Given a set of candidate numbers (candidates) (without duplicates) and a target number (target), find all unique combinations in candidates where the candidate numbers sums to target.
@@ -44,10 +46,119 @@ A solution set is:
 ]
 #+END_EXAMPLE
 
-
+来源：[[https://leetcode.com/problems/combination-sum/][leetcode 39 combination sum]]
 
 ** Solution
+*** Approach 1 brute force
+使用暴力解法求解。
+#+BEGIN_SRC cpp
+bool sumEqual(vector<int>& nums, int target) {
+    for (int n : nums) {
+        target -= n;
+        if (target < 0) {
+            return false;
+        }
+    }
+    return target == 0;
+}
 
-使用了回溯算法（traceback）
+vector<vector<int>> combinationSum(vector<int>& candidates, int target) {
+    set<vector<int>> ans;
+    sort(candidates.begin(), candidates.end());
+
+    // 将所有可能的组合都列举出来
+    bool f = target%candidates.front() == 0;
+    int lenMax = target/candidates.front() + (f ? 0 : 1); // 可能的最大长度
+
+    list<vector<int>> bfs;
+    bfs.push_back(vector<int>());
+    while(!bfs.empty()) {
+        vector<int> temp = bfs.front();
+        bfs.pop_front();
+        if (temp.size() >= size_t(lenMax)) {
+            if (sumEqual(temp, target)) {
+                ans.insert(temp);
+            }
+            continue;
+        }
+        for (int n : candidates) {
+            if (!temp.empty() && temp.back() > n) {
+                if (sumEqual(temp, target)) {
+                    ans.insert(temp);
+                }
+                continue;
+            }
+            temp.push_back(n);
+            bfs.push_back(temp);
+            temp.pop_back();
+        }
+    }
+    return vector<vector<int>>(ans.begin(), ans.end());
+}
+#+END_SRC
+
+
+*** Approach 2 traceback
+这道题使用回溯算法（backtraking）求解比较合适。
+
+#+BEGIN_SRC cpp
+static void helper(const std::vector<int>& cand,
+                   int target,
+                   std::vector<std::vector<int>>& ans,
+                   std::vector<int>& combi,
+                   int sum,
+                   int pos) {
+    if (sum > target) {
+        return;
+    }
+    else if (sum == target) {
+        ans.push_back(combi);
+        return;
+    }
+
+    for (size_t i=pos; i<cand.size(); ++i) {
+        combi.push_back(cand[i]);
+        helper(cand, target, ans, combi, sum+cand[i], i);
+        combi.pop_back();
+    }
+}
+
+std::vector<std::vector<int>> combinationSum(std::vector<int>& cand, int target) {
+    std::sort(cand.begin(), cand.end());
+    std::vector<std::vector<int>> ans;
+    std::vector<int> combi;
+    helper(cand, target, ans, combi, 0, 0);
+    return ans;
+}
+#+END_SRC
+
+
+** N-Queen problem
+回溯算法的最典型的应用是八皇后问题，下面就是八皇后问题的解法代码。使用回溯算法求解N皇后问题的时间复杂度为 =O(N!)= 。
+#+BEGIN_SRC c
+bool solveNQUtil(int board[N][N], int col) {
+    /* base case: If all queens are placed then return true */
+    if (col >= N)
+        return true;
+
+    /* Consider this column and try placing this queen in all rows one by one */
+    for (int i = 0; i < N; i++) {
+        /* Check if queen can be placed on board[i][col] */
+        if ( isSafe(board, i, col) ) {
+            /* Place this queen in board[i][col] */
+            board[i][col] = 1;
+
+            /* recur to place rest of the queens */
+            if ( solveNQUtil(board, col + 1) == true )
+                return true;
+
+            /* If placing queen in board[i][col] doesn't lead to a solution then remove queen from board[i][col] */
+            board[i][col] = 0; // BACKTRACK
+        }
+    }
+}
+#+END_SRC
 
 ** Reference
+- [[https://en.wikipedia.org/wiki/Backtracking][wikipedia - backtracking]]
+- [[https://stackoverflow.com/questions/20049829/how-to-calculate-time-complexity-of-backtracking-algorithm][stackoverflow - time complexity of backtracing]]
