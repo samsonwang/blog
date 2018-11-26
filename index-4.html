@@ -70,7 +70,183 @@
 
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/gdb-display-contents-of-memory-address/" class="u-url">在gdb中查看指定内存地址的内容</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/gcc-built-in-functions-for-atomic-memory-access/" class="u-url">GCC的内存原子化操作函数接口</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-07-02T17:54:08+08:00" itemprop="datePublished" title="2018-07-02 17:54">Jul 02 2018  (17:54)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/gcc-built-in-functions-for-atomic-memory-access/#disqus_thread" data-disqus-identifier="cache/posts/gcc-built-in-functions-for-atomic-memory-access.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/gcc/" rel="tag">gcc</a></li>
+        <li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-org67bd2ee" class="outline-2">
+<h2 id="org67bd2ee">
+<span class="section-number-2">1</span> 原子化操作</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+在并发编程中，一个操作或一组操作是原子操作、可线性化操作、不可分操作或不可中断操作（atomic, linearizable, indivisible, uniterruptible），表示该操作执行时不可被中断的。操作的原子性能够保证操作在执行时免受中断、信号、并发进程线程的影响。另外，原子操作大多只有两种结果，要么成功并改变系统中对应的状态，要么没有相关效果。<br></p>
+
+<p>
+原子化经常由互斥来保证，可以在硬件层面建立一个缓存一致性协议，也可以在软件层面使用信号量或加锁。因此，一个原子操作不是必须实际上马上生效，而操作系统让这个操作看起来是直接发生的，这能够让操作系统保持一致。正是如此，只要不影响性能，用户可以忽略较底层的实现细节。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org7306606" class="outline-2">
+<h2 id="org7306606">
+<span class="section-number-2">2</span> 函数接口</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+GCC提供了原子化的操作接口，能够支持长度为1、2、4、8字节的整形变量或指针。<br></p>
+
+<blockquote>
+<p>
+In most cases, these builtins are considered a full barrier. That is, no memory operand will be moved across the operation, either forward or backward. Further, instructions will be issued as necessary to prevent the processor from speculating loads across the operation and from queuing stores after the operation.<br></p>
+</blockquote>
+<p>
+在大多数情况下，这些内建函数是完全内存栅栏（full barrier）的，以上摘自 GCC Manual。<br></p>
+
+<p>
+<b>取值并进行对应操作的接口</b> 如下所示：<br></p>
+<div class="highlight"><pre><span></span><span class="n">type</span> <span class="n">__sync_fetch_and_add</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+<span class="n">type</span> <span class="n">__sync_fetch_and_sub</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+<span class="n">type</span> <span class="n">__sync_fetch_and_or</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+<span class="n">type</span> <span class="n">__sync_fetch_and_and</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+<span class="n">type</span> <span class="n">__sync_fetch_and_xor</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+<span class="n">type</span> <span class="n">__sync_fetch_and_nand</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+</pre></div>
+<p>
+这些函数接口的执行逻辑如下：会执行名称相对应的运算，并将内存中之前存放的值取出并返回。<br></p>
+<div class="highlight"><pre><span></span><span class="p">{</span> <span class="n">tmp</span> <span class="o">=</span> <span class="o">*</span><span class="n">ptr</span><span class="p">;</span> <span class="o">*</span><span class="n">ptr</span> <span class="n">op</span><span class="o">=</span> <span class="n">value</span><span class="p">;</span> <span class="k">return</span> <span class="n">tmp</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">{</span> <span class="n">tmp</span> <span class="o">=</span> <span class="o">*</span><span class="n">ptr</span><span class="p">;</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">tmp</span> <span class="o">&amp;</span> <span class="n">value</span><span class="p">);</span> <span class="k">return</span> <span class="n">tmp</span><span class="p">;</span> <span class="p">}</span>   <span class="c1">// nand</span>
+</pre></div>
+<p>
+<b>需要注意的是</b> ：从GCC 4.4开始 <code>__sync_fetch_and_nand</code> 是按照 <code>*ptr = ~(*ptr &amp; value)</code> 实现的，而不是 <code>*ptr = ~*ptr &amp; value</code><br></p>
+
+<p>
+<b>直接操作并返回结果的接口</b> 如下所示：<br></p>
+<div class="highlight"><pre><span></span><span class="n">type</span> <span class="n">__sync_add_and_fetch</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+<span class="n">type</span> <span class="n">__sync_sub_and_fetch</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+<span class="n">type</span> <span class="n">__sync_or_and_fetch</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+<span class="n">type</span> <span class="n">__sync_and_and_fetch</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+<span class="n">type</span> <span class="n">__sync_xor_and_fetch</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+<span class="n">type</span> <span class="n">__sync_nand_and_fetch</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">value</span><span class="p">,</span> <span class="p">...)</span>
+</pre></div>
+<p>
+这些函数接口的执行逻辑如下：<br></p>
+<div class="highlight"><pre><span></span><span class="p">{</span> <span class="o">*</span><span class="n">ptr</span> <span class="n">op</span><span class="o">=</span> <span class="n">value</span><span class="p">;</span> <span class="k">return</span> <span class="o">*</span><span class="n">ptr</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">{</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="o">*</span><span class="n">ptr</span> <span class="o">&amp;</span> <span class="n">value</span><span class="p">);</span> <span class="k">return</span> <span class="o">*</span><span class="n">ptr</span><span class="p">;</span> <span class="p">}</span>   <span class="c1">// nand</span>
+</pre></div>
+<p>
+<b>需要注意的是</b> ：从GCC 4.4开始 <code>__sync_nand_and_fetch</code> 是按照 <code>*ptr = ~(*ptr &amp; value)</code> 实现的，而不是 <code>*ptr = ~*ptr &amp; value</code><br></p>
+
+<p>
+比较并交换的函数接口<br></p>
+<div class="highlight"><pre><span></span><span class="kt">bool</span> <span class="n">__sync_bool_compare_and_swap</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">oldval</span> <span class="n">type</span> <span class="n">newval</span><span class="p">,</span> <span class="p">...)</span>
+<span class="n">type</span> <span class="n">__sync_val_compare_and_swap</span> <span class="p">(</span><span class="n">type</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="n">type</span> <span class="n">oldval</span> <span class="n">type</span> <span class="n">newval</span><span class="p">,</span> <span class="p">...)</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orge69be6f" class="outline-2">
+<h2 id="orge69be6f">
+<span class="section-number-2">3</span> 内存栅栏（Memory Barrier）</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+在上面的说明中提到了memory barrier的概念，这个概念是CPU指令的一个术语。<br></p>
+
+<p>
+内存栅栏又叫内存屏障，是一种能够让CPU或编译器约束内存操作指令执行顺序的屏蔽指令。这表示在内存栅栏前的指令能够保证执行时先于内存栅栏后的指令。由于大多数现代CPU采用性能优化会导致指令执行变序时，所以内存栅栏是十分必要的。这样的指令变序对于单线程程序一般不会有很大影响，但是在并发编程情况下如果不加以控制就会导致不可预知的结果。<br></p>
+
+<p>
+内存栅栏的典型应用场景就是用于实现多设备之间的共享内存的底层机器码。这些代码包括原始同步机制、多核系统上的无锁数据结构、与计算机硬件交互的设备驱动。<br></p>
+
+<p>
+内存栅栏对于无锁编程来说十分重要的。<br></p>
+
+<p>
+<b>内存栅栏与volatile关键字</b><br>
+内存栅栏分为读栅栏（read barrier）、写栅栏（write barrier）、获取栅栏（acquire barrier）、释放栅栏（release barrier）等。内存栅栏并不能保证数值的是“最新的”或“新鲜的”，它只能控制内存访问的相对顺序。<br></p>
+
+<p>
+“写栅栏”用于控制写操作的顺序。由于相对于CPU的执行速度来说，向内存中写入顺序是比较慢的，通常会有一个写入请求队列，所以实际的写入操作发生在指令发起之后，队列中指令的顺序可能会被重新排序。写栅栏能够防止指令变序。<br></p>
+
+<p>
+“读栅栏”用于控制读操作的顺序。由于预先执行（CPU会提前将内存中的数据读回来），并且CPU有缓存区（CPU会从缓存中而不是内存中读取数据），读操作可能会出现变序。<br></p>
+
+<p>
+volatile关键字值能通知编译器生成的输出码从内存中重新读取数据，但是不会告诉CPU在如何读取数据、在哪里读取数据。<br></p>
+
+<p>
+“获取栅栏”能够保证特定指令块之前的执行顺序。例如获取读，在向读队列中加入读操作，“获取栅栏”意味着在这条操作之后可以出现指令变序，而这条操作之前不会出现指令变序。<br></p>
+
+<p>
+“释放栅栏”能够保证特定指令块之后的执行顺序。例如释放写，在向写队列中加入写操作，“释放栅栏”意味着在这条写操作之前的指令不会变序到该指令之后，而这条该操作的之后的指令可能会变序到该指令之前。<br></p>
+
+<p>
+获取栅栏和释放栅栏是又叫半栅栏（half barrier），这是因为它们只能防止单方向的指令变序。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orga6b152f" class="outline-2">
+<h2 id="orga6b152f">
+<span class="section-number-2">4</span> 操作原子化能够解决多进程访问共享内存的问题吗？</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+原子化操作是对于CPU而言的指令操作，它不关心线程还是进程，它只关心这一系列的指令是不可分割的。所以，进程间可以使用原子操作完成内存的操作同步。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgd7f6b1d" class="outline-2">
+<h2 id="orgd7f6b1d">
+<span class="section-number-2">5</span> 参考资料</h2>
+<div class="outline-text-2" id="text-5">
+<ul class="org-ul">
+<li>
+<a href="https://en.wikipedia.org/wiki/Linearizability">Wikipedia - Linearizability</a><br>
+</li>
+<li>
+<a href="https://gcc.gnu.org/onlinedocs/gcc-4.4.3/gcc/Atomic-Builtins.html">GNU GCC online docs</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Memory_barrier">Wikipedia - Memory Barrier</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/1787450/how-do-i-understand-read-memory-barriers-and-volatile">stackoverflow - memory barrier and volatile</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/8160348/lock-freedom-atomic-operations-across-2-processes-instead-of-threads">stackoverflow - atomic operation in multi process</a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/atomic">cppreference - atomic</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/gdb-display-contents-of-memory-address/" class="u-url">在gdb中查看指定内存地址的内容</a></h1>
       <div class="metadata">
         
 
@@ -98,8 +274,8 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org1e46719" class="outline-2">
-<h2 id="org1e46719">
+      <div id="outline-container-orgea8cc66" class="outline-2">
+<h2 id="orgea8cc66">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -107,8 +283,8 @@
 </div>
 </div>
 
-<div id="outline-container-orga51c26d" class="outline-2">
-<h2 id="orga51c26d">
+<div id="outline-container-org0d8c060" class="outline-2">
+<h2 id="org0d8c060">
 <span class="section-number-2">2</span> 指令语法</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -135,8 +311,8 @@ g 表示八字节(giant word)<br></p>
 </div>
 </div>
 
-<div id="outline-container-org7e44318" class="outline-2">
-<h2 id="org7e44318">
+<div id="outline-container-orgedc3ea3" class="outline-2">
+<h2 id="orgedc3ea3">
 <span class="section-number-2">3</span> 示例</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -146,8 +322,8 @@ g 表示八字节(giant word)<br></p>
 </div>
 </div>
 
-<div id="outline-container-org5a69a53" class="outline-2">
-<h2 id="org5a69a53">
+<div id="outline-container-org69d76bc" class="outline-2">
+<h2 id="org69d76bc">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
@@ -190,8 +366,8 @@ g 表示八字节(giant word)<br></p>
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org3bbf872" class="outline-2">
-<h2 id="org3bbf872">
+      <div id="outline-container-orgaa8eb29" class="outline-2">
+<h2 id="orgaa8eb29">
 <span class="section-number-2">1</span> 同步和异步</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -207,8 +383,8 @@ g 表示八字节(giant word)<br></p>
 异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
 </div>
 
-<div id="outline-container-org4446d4b" class="outline-3">
-<h3 id="org4446d4b">
+<div id="outline-container-org405af45" class="outline-3">
+<h3 id="org405af45">
 <span class="section-number-3">1.1</span> POSIX AIO</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -240,8 +416,8 @@ g 表示八字节(giant word)<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgc8704de" class="outline-3">
-<h3 id="orgc8704de">
+<div id="outline-container-org7dc259a" class="outline-3">
+<h3 id="org7dc259a">
 <span class="section-number-3">1.2</span> Linux AIO</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -280,8 +456,8 @@ g 表示八字节(giant word)<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd6f0e94" class="outline-3">
-<h3 id="orgd6f0e94">
+<div id="outline-container-orgf1804a7" class="outline-3">
+<h3 id="orgf1804a7">
 <span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -311,8 +487,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 </div>
 
-<div id="outline-container-org0559812" class="outline-2">
-<h2 id="org0559812">
+<div id="outline-container-org1c359ad" class="outline-2">
+<h2 id="org1c359ad">
 <span class="section-number-2">2</span> 阻塞和非阻塞</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -323,8 +499,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org3051ae0" class="outline-2">
-<h2 id="org3051ae0">
+<div id="outline-container-orgd27abd8" class="outline-2">
+<h2 id="orgd27abd8">
 <span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -334,8 +510,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-orga578d94" class="outline-2">
-<h2 id="orga578d94">
+<div id="outline-container-orgaa1ac47" class="outline-2">
+<h2 id="orgaa1ac47">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
@@ -384,9 +560,9 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
       <p>
 查看Linux系统相关信息有助于排查和解决软件和硬件的兼容性问题。系统信息包括硬件信息和软件信息，硬件信息主要有CPU信息、内存信息、PCI信息、USB信息、硬盘信息等等。软件信息主要有系统版本、分区使用状态等等。本文主要介绍了获取当前Linux系统信息的命令。<br></p>
 
-<div id="outline-container-orgc61f844" class="outline-2">
-<h2 id="orgc61f844">查看系统相关信息</h2>
-<div class="outline-text-2" id="text-orgc61f844">
+<div id="outline-container-org092df6d" class="outline-2">
+<h2 id="org092df6d">查看系统相关信息</h2>
+<div class="outline-text-2" id="text-org092df6d">
 <p>
 <code>uname</code> 指令提供了查询系统信息的功能，使用该命令能够快速获取操作系统信息概览。<br></p>
 
@@ -425,25 +601,25 @@ hostnamectl
 </div>
 </div>
 
-<div id="outline-container-org82c4692" class="outline-2">
-<h2 id="org82c4692">查看CPU相关信息</h2>
-<div class="outline-text-2" id="text-org82c4692">
+<div id="outline-container-org392f71f" class="outline-2">
+<h2 id="org392f71f">查看CPU相关信息</h2>
+<div class="outline-text-2" id="text-org392f71f">
 <p>
 <code>lscpu</code> 指令能够查看当前系统中CPU的详细信息，包括型号、主频、构架、大小端等信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb6986db" class="outline-2">
-<h2 id="orgb6986db">查看硬盘相关信息</h2>
-<div class="outline-text-2" id="text-orgb6986db">
+<div id="outline-container-orge5d7cbb" class="outline-2">
+<h2 id="orge5d7cbb">查看硬盘相关信息</h2>
+<div class="outline-text-2" id="text-orge5d7cbb">
 <p>
 <code>lsblk</code> 指令能够查看块设备（block device）的详细信息，块设备主要指系统中的存储设备如硬盘和闪存。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge4b2a2c" class="outline-2">
-<h2 id="orge4b2a2c">查看PCI设备的相关信息</h2>
-<div class="outline-text-2" id="text-orge4b2a2c">
+<div id="outline-container-orgb3267c8" class="outline-2">
+<h2 id="orgb3267c8">查看PCI设备的相关信息</h2>
+<div class="outline-text-2" id="text-orgb3267c8">
 <p>
 <code>lspci</code> 指令能够查看PCI设备的信息，PCI设备包括USB、显卡、串口、网卡等其他外围设备。<br></p>
 
@@ -460,17 +636,17 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-orge9abb6f" class="outline-2">
-<h2 id="orge9abb6f">查看USB设备的相关信息</h2>
-<div class="outline-text-2" id="text-orge9abb6f">
+<div id="outline-container-org6391351" class="outline-2">
+<h2 id="org6391351">查看USB设备的相关信息</h2>
+<div class="outline-text-2" id="text-org6391351">
 <p>
 <code>lsusb</code> 指令能够查看USBS设备的信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org15edf89" class="outline-2">
-<h2 id="org15edf89">查看文件系统相关信息</h2>
-<div class="outline-text-2" id="text-org15edf89">
+<div id="outline-container-org630f08d" class="outline-2">
+<h2 id="org630f08d">查看文件系统相关信息</h2>
+<div class="outline-text-2" id="text-org630f08d">
 <p>
 <code>fdisk</code> 命令能够查看和操作linux系统的分区表。<br></p>
 
@@ -489,9 +665,9 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-orga3624ae" class="outline-2">
-<h2 id="orga3624ae">参考资料</h2>
-<div class="outline-text-2" id="text-orga3624ae">
+<div id="outline-container-orgb66aa23" class="outline-2">
+<h2 id="orgb66aa23">参考资料</h2>
+<div class="outline-text-2" id="text-orgb66aa23">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/commands-to-collect-system-and-hardware-information-in-linux/">tecmint.com</a><br>
@@ -535,15 +711,15 @@ lspci -vv
       <p>
 linux的top命令能够动态显示当前系统的运行状态。它能够显示操作系统的汇总信息和当前系统上的正在运行的进程列表。<br></p>
 
-<div id="outline-container-orgeb79bf9" class="outline-2">
-<h2 id="orgeb79bf9">
+<div id="outline-container-orgd3e08bf" class="outline-2">
+<h2 id="orgd3e08bf">
 <span class="section-number-2">1</span> 统计信息说明</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 (可以通过配置文件修改通计信息区的显示格式，下文所描述的都是在默认配置下的显示内容)<br></p>
 </div>
-<div id="outline-container-orga17e03d" class="outline-3">
-<h3 id="orga17e03d">
+<div id="outline-container-org52fd281" class="outline-3">
+<h3 id="org52fd281">
 <span class="section-number-3">1.1</span> 第1行</h3>
 <div class="outline-text-3" id="text-1-1">
 <ul class="org-ul">
@@ -560,8 +736,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 这一行信息也可以通过 <code>uptime</code> 和 <code>w</code> 指令获得<br></p>
 </div>
 </div>
-<div id="outline-container-org1430eb9" class="outline-3">
-<h3 id="org1430eb9">
+<div id="outline-container-orgfb34627" class="outline-3">
+<h3 id="orgfb34627">
 <span class="section-number-3">1.2</span> 第2行</h3>
 <div class="outline-text-3" id="text-1-2">
 <ul class="org-ul">
@@ -578,8 +754,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </ul>
 </div>
 </div>
-<div id="outline-container-org35281b3" class="outline-3">
-<h3 id="org35281b3">
+<div id="outline-container-orge15d6e4" class="outline-3">
+<h3 id="orge15d6e4">
 <span class="section-number-3">1.3</span> 第3行</h3>
 <div class="outline-text-3" id="text-1-3">
 <ul class="org-ul">
@@ -603,8 +779,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orgf6751b9" class="outline-3">
-<h3 id="orgf6751b9">
+<div id="outline-container-org7b0dd0e" class="outline-3">
+<h3 id="org7b0dd0e">
 <span class="section-number-3">1.4</span> 第4行</h3>
 <div class="outline-text-3" id="text-1-4">
 <ul class="org-ul">
@@ -620,8 +796,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org4b54486" class="outline-3">
-<h3 id="org4b54486">
+<div id="outline-container-orgfff49ea" class="outline-3">
+<h3 id="orgfff49ea">
 <span class="section-number-3">1.5</span> 第5行</h3>
 <div class="outline-text-3" id="text-1-5">
 <ul class="org-ul">
@@ -638,8 +814,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org9bb4799" class="outline-2">
-<h2 id="org9bb4799">
+<div id="outline-container-orgc29f585" class="outline-2">
+<h2 id="orgc29f585">
 <span class="section-number-2">2</span> 进程信息</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -676,8 +852,8 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-org28356af" class="outline-2">
-<h2 id="org28356af">
+<div id="outline-container-org9b1e9a4" class="outline-2">
+<h2 id="org9b1e9a4">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
@@ -723,9 +899,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
       <p>
 我所租用的云服务器操作系统为CentOS Linux，在使用云服务器的过程中为了保证服务器的安全，进行了一些简单的配置，这样能够增加服务器被破解的难度。<br></p>
 
-<div id="outline-container-org1f0a281" class="outline-2">
-<h2 id="org1f0a281">使用denyhosts防止暴力破解登录密码</h2>
-<div class="outline-text-2" id="text-org1f0a281">
+<div id="outline-container-org90d5038" class="outline-2">
+<h2 id="org90d5038">使用denyhosts防止暴力破解登录密码</h2>
+<div class="outline-text-2" id="text-org90d5038">
 <p>
 登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，屏蔽该登录ip，限制密码的尝试次数。<br></p>
 
@@ -757,9 +933,9 @@ service denyhosts status
 </div>
 </div>
 
-<div id="outline-container-org96d1994" class="outline-2">
-<h2 id="org96d1994">更改sshd的端口号</h2>
-<div class="outline-text-2" id="text-org96d1994">
+<div id="outline-container-orgfd9137d" class="outline-2">
+<h2 id="orgfd9137d">更改sshd的端口号</h2>
+<div class="outline-text-2" id="text-orgfd9137d">
 <p>
 sshd的默认端口号为22，很多暴力破解程序会直接对该端口进行登录尝试，通过修改默认的sshd的端口号，可以增加破解难度。需要注意的是，在修改sshd端口号之后，自己使用shell工具登录服务器也需要端口号进行修改。<br></p>
 
@@ -775,9 +951,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
 </div>
 </div>
 
-<div id="outline-container-org1e60d4a" class="outline-2">
-<h2 id="org1e60d4a">使用 <code>last</code> 和 <code>lastb</code> 查看系统登录记录</h2>
-<div class="outline-text-2" id="text-org1e60d4a">
+<div id="outline-container-org1a4f223" class="outline-2">
+<h2 id="org1a4f223">使用 <code>last</code> 和 <code>lastb</code> 查看系统登录记录</h2>
+<div class="outline-text-2" id="text-org1a4f223">
 <p>
 <code>last</code> 指令能够查看登录成功的记录，而 <code>lastb</code> 指令能够查看登录失败的记录。通过查看登录失败的记录，能够判断出服务器是否有被暴力破解的记录。需要注意的是这两个命令均需要管理员权限才能够执行。<br></p>
 </div>
@@ -816,9 +992,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
       <p>
 由于C++是兼容C的，所以使用C++进行文件操作时，会发现有两套库函数可以使用，它们分别是C风格的和C++风格的。<br></p>
 
-<div id="outline-container-org222adbe" class="outline-2">
-<h2 id="org222adbe">C风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-org222adbe">
+<div id="outline-container-org3c84637" class="outline-2">
+<h2 id="org3c84637">C风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-org3c84637">
 <p>
 <b>打开文件，关闭文件</b><br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
@@ -847,9 +1023,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
 </div>
 
 
-<div id="outline-container-org7568d90" class="outline-2">
-<h2 id="org7568d90">C++风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-org7568d90">
+<div id="outline-container-orgf9fa392" class="outline-2">
+<h2 id="orgf9fa392">C++风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-orgf9fa392">
 <p>
 C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件实际上就会对应一个 <code>fstream</code> 对象，一下函数都是 <code>fstream</code> 的成员函数。<br>
 文件打开和关闭<br></p>
@@ -867,9 +1043,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 </div>
 
 
-<div id="outline-container-org1f7d1ce" class="outline-2">
-<h2 id="org1f7d1ce">题外话</h2>
-<div class="outline-text-2" id="text-org1f7d1ce">
+<div id="outline-container-org03dce79" class="outline-2">
+<h2 id="org03dce79">题外话</h2>
+<div class="outline-text-2" id="text-org03dce79">
 <p>
 在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。<br></p>
 </div>
@@ -905,9 +1081,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org391a303" class="outline-2">
-<h2 id="org391a303">字节序</h2>
-<div class="outline-text-2" id="text-org391a303">
+      <div id="outline-container-org8283343" class="outline-2">
+<h2 id="org8283343">字节序</h2>
+<div class="outline-text-2" id="text-org8283343">
 <p>
 字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。<br>
 字节序分为大端字节序和小端字节序，两种字节序不能混用。<br><b>大端字节序</b> ：高位字节保存在较低位地址的内存中<br><b>小端字节序</b> ：高位字节保存在较高位地址的内存中<br></p>
@@ -926,9 +1102,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 </div>
 
 
-<div id="outline-container-org60315b5" class="outline-2">
-<h2 id="org60315b5">union类型</h2>
-<div class="outline-text-2" id="text-org60315b5">
+<div id="outline-container-orgd487526" class="outline-2">
+<h2 id="orgd487526">union类型</h2>
+<div class="outline-text-2" id="text-orgd487526">
 <p>
 可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。<br></p>
 
@@ -1025,9 +1201,9 @@ Python内置了日志模块，在默认情况下输出的日志是不带文件�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgf48e001" class="outline-2">
-<h2 id="orgf48e001">基础用法</h2>
-<div class="outline-text-2" id="text-orgf48e001">
+      <div id="outline-container-org724ab26" class="outline-2">
+<h2 id="org724ab26">基础用法</h2>
+<div class="outline-text-2" id="text-org724ab26">
 <p>
 <code>xargs</code> 指令默认情况下从 <code>stdin</code> 中读取信息，按照空格分或换行区分开，并且执行输入的命令（默认的命令是 <code>/bin/echo</code> ）。命令可以通过 <code>xargs</code> 的参数指定执行一次或多次，命令的执行参数为自身初始参数追加上由 <code>stdin</code> 读到的内容，命令在执行时会忽略空行。<br></p>
 
@@ -1048,10 +1224,10 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org218fa12" class="outline-2">
-<h2 id="org218fa12">
+<div id="outline-container-org38c6d6d" class="outline-2">
+<h2 id="org38c6d6d">
 <code>xargs</code> 与 <code>find</code> 组合使用</h2>
-<div class="outline-text-2" id="text-org218fa12">
+<div class="outline-text-2" id="text-org38c6d6d">
 <p>
 常见的使用方法是使用 <code>find</code> 指令找到指定的文件，组合以 <code>xargs</code> 指令实现对指定文件的操作。<br></p>
 <div class="highlight"><pre><span></span>find . -name "demo_" | xargs file -i
@@ -1063,10 +1239,10 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org6953be7" class="outline-2">
-<h2 id="org6953be7">
+<div id="outline-container-orgfef38e5" class="outline-2">
+<h2 id="orgfef38e5">
 <code>xargs</code> 与 <code>grep</code> 组合使用</h2>
-<div class="outline-text-2" id="text-org6953be7">
+<div class="outline-text-2" id="text-orgfef38e5">
 <p>
 常用命令如下，能够实现对指定规则文件的搜索匹配。<br></p>
 <div class="highlight"><pre><span></span>find . -name "*.log" | xargs grep error
@@ -1074,9 +1250,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orgd8cdde2" class="outline-2">
-<h2 id="orgd8cdde2">使用 <code>-n</code> 参数让 <code>xargs</code> 的命令重复执行</h2>
-<div class="outline-text-2" id="text-orgd8cdde2">
+<div id="outline-container-org8b4437a" class="outline-2">
+<h2 id="org8b4437a">使用 <code>-n</code> 参数让 <code>xargs</code> 的命令重复执行</h2>
+<div class="outline-text-2" id="text-org8b4437a">
 <p>
 如果想用 <code>find</code> 指令完成多个匹配规则的搜索，则可以使用 <code>-n</code> 参数将 <code>xargs</code> 的内容分割成多个。<br>
 下面的命令会执行3次 <code>find</code> 命令， <code>xargs</code> 会将接收的到的内容按照单词数为“1”分割，分3次传送给 <code>find</code> 指令。<br></p>
@@ -1085,9 +1261,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orgf497e51" class="outline-2">
-<h2 id="orgf497e51">使用 <code>-t</code> 参数让 <code>xargs</code> 打印将要执行的命令</h2>
-<div class="outline-text-2" id="text-orgf497e51">
+<div id="outline-container-org0b533d1" class="outline-2">
+<h2 id="org0b533d1">使用 <code>-t</code> 参数让 <code>xargs</code> 打印将要执行的命令</h2>
+<div class="outline-text-2" id="text-org0b533d1">
 <p>
 让 <code>xargs</code> 将指令的命令打印出来主要是方便查看命令执行情况，也方便在出现错误时进行调试。<br></p>
 <div class="highlight"><pre><span></span>find . -name *.log | xargs -t rm -f
@@ -1095,9 +1271,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org2a809b1" class="outline-2">
-<h2 id="org2a809b1">使用 <code>-p</code> 参数让 <code>xargs</code> 在执行命令前询问用户</h2>
-<div class="outline-text-2" id="text-org2a809b1">
+<div id="outline-container-orgb738ee3" class="outline-2">
+<h2 id="orgb738ee3">使用 <code>-p</code> 参数让 <code>xargs</code> 在执行命令前询问用户</h2>
+<div class="outline-text-2" id="text-orgb738ee3">
 <p>
 增加 <code>-p</code> 参数后， <code>xargs</code> 在每次执行命令前会将指令打印出来并询问用户，只有用户输入 “y” 时才会真正执行该条命令。<br></p>
 <div class="highlight"><pre><span></span>echo "*.c" "*.cpp" "*.h" | xargs -n 1 -p find . -name
@@ -1105,9 +1281,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orga9cf0d8" class="outline-2">
-<h2 id="orga9cf0d8">使用 <code>-I</code> 参数让 <code>xargs</code> 进行参数替换</h2>
-<div class="outline-text-2" id="text-orga9cf0d8">
+<div id="outline-container-orgfc9a02a" class="outline-2">
+<h2 id="orgfc9a02a">使用 <code>-I</code> 参数让 <code>xargs</code> 进行参数替换</h2>
+<div class="outline-text-2" id="text-orgfc9a02a">
 <p>
 <code>xargs</code> 默认会将读取到的内容追加在指令命令后面作为参数，使用 <code>-I</code> 参数能够控制命令参数的组合方式。<br>
 以下命令会将当前目录中的可执行文件移动到bin文件夹下。<br></p>
@@ -1116,9 +1292,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org4397f0b" class="outline-2">
-<h2 id="org4397f0b">参考资料</h2>
-<div class="outline-text-2" id="text-org4397f0b">
+<div id="outline-container-org382e4d3" class="outline-2">
+<h2 id="org382e4d3">参考资料</h2>
+<div class="outline-text-2" id="text-org382e4d3">
 <ol class="org-ol">
 <li>
 <a href="http://man7.org/linux/man-pages/man1/xargs.1.html">http://man7.org/linux/man-pages/man1/xargs.1.html</a><br>
@@ -1168,9 +1344,9 @@ a b c d
 Q：每个进程都有自己的地址空间和独立的用户空间，那么进程间是如何通信的呢？<br>
 A：内核，也就是操作系统的心脏，它能够访问整个操作系统的内存。我们可以要求内核分配一块用于进程间交互的空间。<br></p>
 
-<div id="outline-container-orgcc832f1" class="outline-2">
-<h2 id="orgcc832f1">几种进程间通信的方法</h2>
-<div class="outline-text-2" id="text-orgcc832f1">
+<div id="outline-container-org48e6dcc" class="outline-2">
+<h2 id="org48e6dcc">几种进程间通信的方法</h2>
+<div class="outline-text-2" id="text-org48e6dcc">
 <p>
 进程间通信的方法有很多，有些支持同机器上进程的信息交互，有些支持跨机器的进程交互。<br></p>
 <ul class="org-ul">
@@ -1190,9 +1366,9 @@ A：内核，也就是操作系统的心脏，它能够访问整个操作系统�
 </div>
 </div>
 
-<div id="outline-container-orgba0f682" class="outline-2">
-<h2 id="orgba0f682">常用ipcs指令</h2>
-<div class="outline-text-2" id="text-orgba0f682">
+<div id="outline-container-org1d6a882" class="outline-2">
+<h2 id="org1d6a882">常用ipcs指令</h2>
+<div class="outline-text-2" id="text-org1d6a882">
 <p>
 <b>列出所有的IPC设备</b><br></p>
 <div class="highlight"><pre><span></span>ipcs -a
@@ -1275,9 +1451,9 @@ A：内核，也就是操作系统的心脏，它能够访问整个操作系统�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgaf739c9" class="outline-2">
-<h2 id="orgaf739c9">查看当前线程信息</h2>
-<div class="outline-text-2" id="text-orgaf739c9">
+      <div id="outline-container-org75b2777" class="outline-2">
+<h2 id="org75b2777">查看当前线程信息</h2>
+<div class="outline-text-2" id="text-org75b2777">
 <p>
 <b>将进程中的各个线程信息显示出来</b><br></p>
 <div class="highlight"><pre><span></span>(gdb) info threads
@@ -1305,9 +1481,9 @@ A：内核，也就是操作系统的心脏，它能够访问整个操作系统�
 </div>
 </div>
 
-<div id="outline-container-org5608036" class="outline-2">
-<h2 id="org5608036">为指定的线程设置断点</h2>
-<div class="outline-text-2" id="text-org5608036">
+<div id="outline-container-org820ef3e" class="outline-2">
+<h2 id="org820ef3e">为指定的线程设置断点</h2>
+<div class="outline-text-2" id="text-org820ef3e">
 <p>
 含有多线程的程序，可以为单独的线程设置断点<br></p>
 <div class="highlight"><pre><span></span>(gdb) break linespec thread tid
@@ -1322,9 +1498,9 @@ Whenever your program stops under GDB for any reason, all threads of execution s
 </div>
 </div>
 
-<div id="outline-container-org6efd3b5" class="outline-2">
-<h2 id="org6efd3b5">防止gdb自动切换线程</h2>
-<div class="outline-text-2" id="text-org6efd3b5">
+<div id="outline-container-org5b13e20" class="outline-2">
+<h2 id="org5b13e20">防止gdb自动切换线程</h2>
+<div class="outline-text-2" id="text-org5b13e20">
 <p>
 在调试gdb程序时，在单步执行时，会出现线程间跳转切换，这样对跟踪代码执行状态十分不方便。<br>
 可以通过设置 <code>scheduler-locking</code> 让gdb在所调试的线程中运行，防止线程的自动切换。<br></p>
@@ -1355,9 +1531,9 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 </div>
 
 
-<div id="outline-container-orgcef9b09" class="outline-2">
-<h2 id="orgcef9b09">参考资料</h2>
-<div class="outline-text-2" id="text-orgcef9b09">
+<div id="outline-container-org339d431" class="outline-2">
+<h2 id="org339d431">参考资料</h2>
+<div class="outline-text-2" id="text-org339d431">
 <ol class="org-ol">
 <li>
 <a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_39.html">gnu manual 1</a><br>
@@ -1374,50 +1550,6 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 </ol>
 </div>
 </div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/gdb-ignore-received-signal/" class="u-url">在gdb调试时忽略系统信号（signal）</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-04-19T16:00:47+08:00" itemprop="datePublished" title="2018-04-19 16:00">Apr 19 2018  (16:00)
-    </time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/gdb-ignore-received-signal/#disqus_thread" data-disqus-identifier="cache/posts/gdb-ignore-received-signal.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/gdb/" rel="tag">gdb</a></li>
-        <li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <p>
-在gdb调试程序时，默认情况下gdb在收到信号时会中断程序的运行，并将收到的信号显示出来。这时，可以选择输入 <code>c</code> ( <code>continue</code> )让程序继续运行。如果程序会重复收到这信号，会非常影响调试效率。可以通过配置忽略指定的系统信号。<br>
-查看当前系统信号的处理信息的指令<br></p>
-<div class="highlight"><pre><span></span>(gdb) info signal
-</pre></div>
-
-<p>
-以调试网络程序为例，进程会经常收到 <code>SIGPIPE</code> 消息，对于网络进程的 <code>SIGPIPE</code> 消息在程序中会由自身处理，可以使用以下指令让gdb不再提示 <code>SIGPIPE</code> 信号。<br></p>
-<div class="highlight"><pre><span></span>(gdb) handle SIGPIPE nostop noprint
-</pre></div>
-
-<p>
-参考资料： <a href="ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_38.html">gnu gdb manual</a><br></p>
     </div>
 
   </article>

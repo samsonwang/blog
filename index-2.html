@@ -70,7 +70,265 @@
 
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/algorithm-weekly-three-sum-closest/" class="u-url">每周算法：最接近的三数之和</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/algorithm-weekly-letter-combinations-of-a-phone-number/" class="u-url">每周算法：拨号键盘上的字符组合</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-09-18T15:46:00+08:00" itemprop="datePublished" title="2018-09-18 15:46">Sep 18 2018  (15:46)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/algorithm-weekly-letter-combinations-of-a-phone-number/#disqus_thread" data-disqus-identifier="cache/posts/algorithm-weekly-letter-combinations-of-a-phone-number.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/algorithm/" rel="tag">algorithm</a></li>
+        <li><a class="tag p-category" href="/tags/bfs/" rel="tag">bfs</a></li>
+        <li><a class="tag p-category" href="/tags/leetcode/" rel="tag">leetcode</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-orge02cefc" class="outline-2">
+<h2 id="orge02cefc">Description</h2>
+<div class="outline-text-2" id="text-orge02cefc">
+<p>
+Given a string containing digits from <code>2-9</code> inclusive, return all possible letter combinations that the number could represent.<br></p>
+
+<p>
+A mapping of digit to letters (just like on the telephone buttons) is given below. Note that 1 does not map to any letters.<br></p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<colgroup>
+<col class="org-left">
+<col class="org-left">
+<col class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">1</td>
+<td class="org-left">2abc</td>
+<td class="org-left">3def</td>
+</tr>
+<tr>
+<td class="org-left">4ghi</td>
+<td class="org-left">5jkl</td>
+<td class="org-left">6mno</td>
+</tr>
+<tr>
+<td class="org-left">7pqrs</td>
+<td class="org-left">8tuv</td>
+<td class="org-left">9wxyz</td>
+</tr>
+</tbody>
+</table>
+<p>
+<b>Example:</b><br></p>
+<pre class="example">
+Input: "23"
+Output: ["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"].
+</pre>
+
+<p>
+<b>Note:</b><br>
+Although the above answer is in lexicographical order, your answer could be in any order you want.<br></p>
+
+<p>
+来源：<a href="https://leetcode.com/problems/letter-combinations-of-a-phone-number/description/">leetcode 17 letter combinations of a phone number</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org4af679b" class="outline-2">
+<h2 id="org4af679b">Solution</h2>
+<div class="outline-text-2" id="text-org4af679b">
+</div>
+<div id="outline-container-org99e8cb8" class="outline-3">
+<h3 id="org99e8cb8">Approach 1</h3>
+<div class="outline-text-3" id="text-org99e8cb8">
+<p>
+借助加法计算进位的思想，下面是我的解法。我首次提交时并没有注意输入字符串为空的情况，对于输入参数的检查还是太容易忽略了。<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">letterCombinations</span><span class="p">(</span><span class="n">string</span> <span class="n">digits</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">ans</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">digits</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">letters</span> <span class="p">{</span><span class="s">""</span><span class="p">,</span>  <span class="s">""</span><span class="p">,</span> <span class="s">"abc"</span><span class="p">,</span> <span class="s">"def"</span><span class="p">,</span> <span class="s">"ghi"</span><span class="p">,</span>
+	    <span class="s">"jkl"</span><span class="p">,</span> <span class="s">"mno"</span><span class="p">,</span> <span class="s">"pqrs"</span><span class="p">,</span> <span class="s">"tuv"</span><span class="p">,</span> <span class="s">"wxyz"</span><span class="p">};</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">carry</span><span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">nums</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">char</span> <span class="nl">ch</span> <span class="p">:</span> <span class="n">digits</span><span class="p">)</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">ch</span> <span class="o">-</span> <span class="sc">'0'</span><span class="p">;</span>
+	<span class="n">nums</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">do</span><span class="p">{</span>
+	<span class="n">string</span> <span class="n">str</span><span class="p">;</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">carry</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">str</span> <span class="o">+=</span> <span class="n">letters</span><span class="p">[</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="p">[</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]];</span>
+	<span class="p">}</span>
+	<span class="n">ans</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">str</span><span class="p">);</span>
+
+	<span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="n">carry</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="o">--</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="kt">int</span> <span class="n">d</span> <span class="o">=</span> <span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">;</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">d</span> <span class="o">&gt;=</span> <span class="n">letters</span><span class="p">[</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]].</span><span class="n">size</span><span class="p">())</span> <span class="p">{</span>
+		<span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+		<span class="n">c</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="p">{</span>
+		<span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">;</span>
+		<span class="n">c</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+		<span class="k">break</span><span class="p">;</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+
+	<span class="k">if</span> <span class="p">(</span> <span class="mi">1</span> <span class="o">==</span> <span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="k">break</span><span class="p">;</span>
+	<span class="p">}</span>
+
+    <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+我在想的是这个算法的时间复杂度是多少，感觉它的时间复杂度应该是O(n<sup>2</sup>)。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org7b88c6e" class="outline-3">
+<h3 id="org7b88c6e">Approach 2 recursive</h3>
+<div class="outline-text-3" id="text-org7b88c6e">
+<p>
+使用递归完成字符串的拼接，在每次递归，都会增加一个字符。终止递归的条件是字符串长度达到输入参数的长度。递归方法符合生活中的使用场景，还是比较容易理解的。<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">mMap</span><span class="p">[</span><span class="mi">8</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="p">{</span><span class="sc">'a'</span><span class="p">,</span> <span class="sc">'b'</span><span class="p">,</span> <span class="sc">'c'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'d'</span><span class="p">,</span> <span class="sc">'e'</span><span class="p">,</span> <span class="sc">'f'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'g'</span><span class="p">,</span> <span class="sc">'h'</span><span class="p">,</span> <span class="sc">'i'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'j'</span><span class="p">,</span> <span class="sc">'k'</span><span class="p">,</span> <span class="sc">'l'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'m'</span><span class="p">,</span> <span class="sc">'n'</span><span class="p">,</span> <span class="sc">'o'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'p'</span><span class="p">,</span> <span class="sc">'q'</span><span class="p">,</span> <span class="sc">'r'</span><span class="p">,</span> <span class="sc">'s'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'t'</span><span class="p">,</span> <span class="sc">'u'</span><span class="p">,</span> <span class="sc">'v'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'w'</span><span class="p">,</span> <span class="sc">'x'</span><span class="p">,</span> <span class="sc">'y'</span><span class="p">,</span> <span class="sc">'z'</span><span class="p">},</span>
+    <span class="p">};</span>
+
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">letterCombinations</span><span class="p">(</span><span class="n">string</span> <span class="n">digits</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">result</span><span class="p">;</span>
+	<span class="n">backTrack</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="s">""</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+	<span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">backTrack</span><span class="p">(</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">digits</span><span class="p">,</span> <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">result</span><span class="p">,</span> <span class="n">string</span> <span class="n">combination</span><span class="p">,</span> <span class="kt">int</span> <span class="n">index</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">digits</span><span class="p">.</span><span class="n">length</span><span class="p">())</span> <span class="p">{</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">combination</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+		<span class="k">return</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">combination</span><span class="p">);</span>
+	    <span class="k">return</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">char</span> <span class="nl">c</span> <span class="p">:</span> <span class="n">mMap</span><span class="p">[</span><span class="n">digits</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">-</span> <span class="sc">'2'</span><span class="p">])</span> <span class="p">{</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">c</span> <span class="o">==</span> <span class="sc">'#'</span><span class="p">)</span>
+		<span class="k">continue</span><span class="p">;</span>
+
+	    <span class="n">combination</span> <span class="o">+=</span> <span class="n">c</span><span class="p">;</span>
+	    <span class="n">backTrack</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">combination</span><span class="p">,</span> <span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+
+	    <span class="c1">// 这里为什么要删去最后一个呢？</span>
+	    <span class="c1">// 因为之前在尾部追加了一个c</span>
+	    <span class="n">combination</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">combination</span><span class="p">.</span><span class="n">end</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+<del>如何评估递归算法的时间复杂度和空间复杂度呢？</del><br></p>
+</div>
+</div>
+
+<div id="outline-container-org74ba1a7" class="outline-3">
+<h3 id="org74ba1a7">Approach 3 BFS</h3>
+<div class="outline-text-3" id="text-org74ba1a7">
+<p>
+宽度优先搜索，breadth-first search（BFS）,是一种对树（tree）或图（graph）的遍历算法，下面就是这种算法的解法，代码使用java编写。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">letterCombinations</span><span class="o">(</span><span class="n">String</span> <span class="n">digits</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">ans</span> <span class="o">=</span> <span class="k">new</span> <span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;();</span>
+    <span class="k">if</span><span class="o">(</span><span class="n">digits</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">())</span> <span class="o">{</span>
+	<span class="k">return</span> <span class="n">ans</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="n">String</span><span class="o">[]</span> <span class="n">mapping</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">[]</span> <span class="o">{</span><span class="s">"0"</span><span class="o">,</span> <span class="s">"1"</span><span class="o">,</span> <span class="s">"abc"</span><span class="o">,</span> <span class="s">"def"</span><span class="o">,</span>
+				     <span class="s">"ghi"</span><span class="o">,</span> <span class="s">"jkl"</span><span class="o">,</span> <span class="s">"mno"</span><span class="o">,</span> <span class="s">"pqrs"</span><span class="o">,</span> <span class="s">"tuv"</span><span class="o">,</span> <span class="s">"wxyz"</span><span class="o">};</span>
+
+    <span class="n">ans</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">""</span><span class="o">);</span>
+    <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digits</span><span class="o">.</span><span class="na">length</span><span class="o">();</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+	<span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n">Character</span><span class="o">.</span><span class="na">getNumericValue</span><span class="o">(</span><span class="n">digits</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+
+	<span class="k">while</span><span class="o">(</span><span class="n">ans</span><span class="o">.</span><span class="na">peek</span><span class="o">().</span><span class="na">length</span><span class="o">()</span> <span class="o">==</span> <span class="n">i</span><span class="o">)</span> <span class="o">{</span>
+	    <span class="n">String</span> <span class="n">t</span> <span class="o">=</span> <span class="n">ans</span><span class="o">.</span><span class="na">remove</span><span class="o">();</span> <span class="c1">// remove是从头部删去一个元素</span>
+	    <span class="k">for</span><span class="o">(</span><span class="kt">char</span> <span class="n">s</span> <span class="o">:</span> <span class="n">mapping</span><span class="o">[</span><span class="n">x</span><span class="o">].</span><span class="na">toCharArray</span><span class="o">())</span> <span class="o">{</span>
+		<span class="n">ans</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">t</span><span class="o">+</span><span class="n">s</span><span class="o">);</span> <span class="c1">// add是向尾部添加一个元素</span>
+	    <span class="o">}</span>
+	<span class="o">}</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">ans</span><span class="o">;</span>
+<span class="o">}</span>
+</pre></div>
+
+<p>
+下面是另外一种使用BFS算法实现的解法<br></p>
+<div class="highlight"><pre><span></span><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">letterCombinations</span><span class="o">(</span><span class="n">String</span> <span class="n">digits</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">ans</span> <span class="o">=</span> <span class="k">new</span> <span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;();</span>
+    <span class="k">if</span><span class="o">(</span><span class="n">digits</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">())</span> <span class="o">{</span>
+	<span class="k">return</span> <span class="n">ans</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="n">String</span><span class="o">[]</span> <span class="n">mapping</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">[]</span> <span class="o">{</span><span class="s">"0"</span><span class="o">,</span> <span class="s">"1"</span><span class="o">,</span> <span class="s">"abc"</span><span class="o">,</span> <span class="s">"def"</span><span class="o">,</span>
+				     <span class="s">"ghi"</span><span class="o">,</span> <span class="s">"jkl"</span><span class="o">,</span> <span class="s">"mno"</span><span class="o">,</span> <span class="s">"pqrs"</span><span class="o">,</span> <span class="s">"tuv"</span><span class="o">,</span> <span class="s">"wxyz"</span><span class="o">};</span>
+    <span class="n">ans</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">""</span><span class="o">);</span>
+    <span class="k">while</span><span class="o">(</span><span class="n">ans</span><span class="o">.</span><span class="na">peek</span><span class="o">().</span><span class="na">length</span><span class="o">()</span> <span class="o">!=</span> <span class="n">digits</span><span class="o">.</span><span class="na">length</span><span class="o">()){</span>
+	<span class="n">String</span> <span class="n">remove</span> <span class="o">=</span> <span class="n">ans</span><span class="o">.</span><span class="na">remove</span><span class="o">();</span>
+	<span class="n">String</span> <span class="n">map</span> <span class="o">=</span> <span class="n">mapping</span><span class="o">[</span><span class="n">digits</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">remove</span><span class="o">.</span><span class="na">length</span><span class="o">())-</span><span class="sc">'0'</span><span class="o">];</span>
+	<span class="k">for</span><span class="o">(</span><span class="kt">char</span> <span class="n">c</span><span class="o">:</span> <span class="n">map</span><span class="o">.</span><span class="na">toCharArray</span><span class="o">()){</span>
+	    <span class="n">ans</span><span class="o">.</span><span class="na">addLast</span><span class="o">(</span><span class="n">remove</span><span class="o">+</span><span class="n">c</span><span class="o">);</span>
+	<span class="o">}</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">ans</span><span class="o">;</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc2467f8" class="outline-2">
+<h2 id="orgc2467f8">Reference</h2>
+<div class="outline-text-2" id="text-orgc2467f8">
+<ul class="org-ul">
+<li>
+<a href="https://en.wikipedia.org/wiki/Breadth-first_search">wikipedia - breadth-first search</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/algorithm-weekly-three-sum-closest/" class="u-url">每周算法：最接近的三数之和</a></h1>
       <div class="metadata">
         
 
@@ -99,9 +357,9 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgd3c920a" class="outline-2">
-<h2 id="orgd3c920a">Description</h2>
-<div class="outline-text-2" id="text-orgd3c920a">
+      <div id="outline-container-orga1fc455" class="outline-2">
+<h2 id="orga1fc455">Description</h2>
+<div class="outline-text-2" id="text-orga1fc455">
 <p>
 Given an array nums of n integers and an integer target, find three integers in nums such that the sum is closest to target. Return the sum of the three integers. You may assume that each input would have exactly one solution.<br></p>
 
@@ -117,13 +375,13 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 </div>
 </div>
 
-<div id="outline-container-orgcee464b" class="outline-2">
-<h2 id="orgcee464b">Solution</h2>
-<div class="outline-text-2" id="text-orgcee464b">
+<div id="outline-container-org663d705" class="outline-2">
+<h2 id="org663d705">Solution</h2>
+<div class="outline-text-2" id="text-org663d705">
 </div>
-<div id="outline-container-org1d59750" class="outline-3">
-<h3 id="org1d59750">Approach 1</h3>
-<div class="outline-text-3" id="text-org1d59750">
+<div id="outline-container-org44e717d" class="outline-3">
+<h3 id="org44e717d">Approach 1</h3>
+<div class="outline-text-3" id="text-org44e717d">
 <p>
 这道题与之前的“3Sum”十分类似，做起来思路是非常相似的，最容易想到的就是暴力解法，穷举出所有的组合，进而找出最接近的。<br></p>
 
@@ -157,9 +415,9 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 </div>
 </div>
 
-<div id="outline-container-org1d12aa4" class="outline-3">
-<h3 id="org1d12aa4">Approach 2</h3>
-<div class="outline-text-3" id="text-org1d12aa4">
+<div id="outline-container-orgf4f54fa" class="outline-3">
+<h3 id="orgf4f54fa">Approach 2</h3>
+<div class="outline-text-3" id="text-orgf4f54fa">
 <p>
 套用之前“3Sum”的O(n<sup>2</sup>)解法，下面的解法也是很容易想到的。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">threeSumClosest</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
@@ -207,9 +465,9 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 </div>
 </div>
 
-<div id="outline-container-orga56a631" class="outline-2">
-<h2 id="orga56a631">Reference</h2>
-<div class="outline-text-2" id="text-orga56a631">
+<div id="outline-container-orge6a8260" class="outline-2">
+<h2 id="orge6a8260">Reference</h2>
+<div class="outline-text-2" id="text-orge6a8260">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/3sum/description/">leetcode 3 Sum</a><br>
@@ -253,18 +511,18 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org2fe8192" class="outline-2">
-<h2 id="org2fe8192">引言</h2>
-<div class="outline-text-2" id="text-org2fe8192">
+      <div id="outline-container-org1e83a9a" class="outline-2">
+<h2 id="org1e83a9a">引言</h2>
+<div class="outline-text-2" id="text-org1e83a9a">
 <p>
 本篇文章主要是针对shell中的 <code>grep</code> 和 <code>egrep</code> 的讲解，对于正则表达式的规则本身并没有太多的内容。在阅读本篇文章之前，读者应该对正则表达式有个大致的了解。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf449f26" class="outline-2">
-<h2 id="orgf449f26">
+<div id="outline-container-org499f634" class="outline-2">
+<h2 id="org499f634">
 <code>grep</code> 命令</h2>
-<div class="outline-text-2" id="text-orgf449f26">
+<div class="outline-text-2" id="text-org499f634">
 <p>
 <code>grep</code> 命令是linux终端中最常用的命令之一，它的全称是“global regular expression print”，从字面上理解， <code>grep</code> 可以用来进行正则表达式匹配。<br></p>
 
@@ -311,10 +569,10 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 </div>
 </div>
 
-<div id="outline-container-org95d9698" class="outline-2">
-<h2 id="org95d9698">
+<div id="outline-container-orgfb09b9f" class="outline-2">
+<h2 id="orgfb09b9f">
 <code>egrep</code> 命令</h2>
-<div class="outline-text-2" id="text-org95d9698">
+<div class="outline-text-2" id="text-orgfb09b9f">
 <p>
 <code>egrep</code> 的含义为“extended grep”，相对于 <code>grep</code> 有更多的正则表达式特性。同样，可以在使用 <code>grep</code> 时增加 <code>-E</code> 参数获得相同的效果。<br></p>
 
@@ -344,9 +602,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 
 
-<div id="outline-container-orgc6c75e4" class="outline-2">
-<h2 id="orgc6c75e4">参考资料</h2>
-<div class="outline-text-2" id="text-orgc6c75e4">
+<div id="outline-container-orgd19af71" class="outline-2">
+<h2 id="orgd19af71">参考资料</h2>
+<div class="outline-text-2" id="text-orgd19af71">
 <ul class="org-ul">
 <li>
 <a href="https://www.digitalocean.com/community/tutorials/using-grep-regular-expressions-to-search-for-text-patterns-in-linux">digital ocean - grep tutorial</a><br>
@@ -389,9 +647,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org04c36ad" class="outline-2">
-<h2 id="org04c36ad">进程与线程之间有什么区别</h2>
-<div class="outline-text-2" id="text-org04c36ad">
+      <div id="outline-container-org28ab021" class="outline-2">
+<h2 id="org28ab021">进程与线程之间有什么区别</h2>
+<div class="outline-text-2" id="text-org28ab021">
 <p>
 进程（process）是指在系统中正在运行的一个应用程序，是系统资源分配的基本单位，在内存中有其完备的数据空间和代码空间，拥有完整的虚拟空间地址。一个进程所拥有的数据和变量只属于它自己。<br></p>
 
@@ -425,9 +683,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 
 
-<div id="outline-container-orgd16133e" class="outline-2">
-<h2 id="orgd16133e">什么情况下适合使用线程</h2>
-<div class="outline-text-2" id="text-orgd16133e">
+<div id="outline-container-orgb96ab50" class="outline-2">
+<h2 id="orgb96ab50">什么情况下适合使用线程</h2>
+<div class="outline-text-2" id="text-orgb96ab50">
 <p>
 线程相对于进程的优势：<br></p>
 <ul class="org-ul">
@@ -451,9 +709,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 </div>
 
-<div id="outline-container-org6f4bbfd" class="outline-2">
-<h2 id="org6f4bbfd">什么情况下适合使用进程</h2>
-<div class="outline-text-2" id="text-org6f4bbfd">
+<div id="outline-container-orge2609cb" class="outline-2">
+<h2 id="orge2609cb">什么情况下适合使用进程</h2>
+<div class="outline-text-2" id="text-orge2609cb">
 <p>
 进程相对于线程的优势：<br></p>
 <ul class="org-ul">
@@ -470,9 +728,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 
 
-<div id="outline-container-org8640bb1" class="outline-2">
-<h2 id="org8640bb1">参考资料</h2>
-<div class="outline-text-2" id="text-org8640bb1">
+<div id="outline-container-orgfc12598" class="outline-2">
+<h2 id="orgfc12598">参考资料</h2>
+<div class="outline-text-2" id="text-orgfc12598">
 <ul class="org-ul">
 <li>
 <a href="https://www.backblaze.com/blog/whats-the-diff-programs-processes-and-threads/">backblaze.com - difference between process and thread</a><br>
@@ -523,9 +781,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org48c2cb0" class="outline-2">
-<h2 id="org48c2cb0">Description</h2>
-<div class="outline-text-2" id="text-org48c2cb0">
+      <div id="outline-container-orgcc94d06" class="outline-2">
+<h2 id="orgcc94d06">Description</h2>
+<div class="outline-text-2" id="text-orgcc94d06">
 <p>
 Given an array nums of n integers, are there elements a, b, c in nums such that a + b + c = 0? Find all unique triplets in the array which gives the sum of zero.<br></p>
 
@@ -550,13 +808,13 @@ A solution set is:
 </div>
 </div>
 
-<div id="outline-container-org5845900" class="outline-2">
-<h2 id="org5845900">Solution</h2>
-<div class="outline-text-2" id="text-org5845900">
+<div id="outline-container-orgea497e6" class="outline-2">
+<h2 id="orgea497e6">Solution</h2>
+<div class="outline-text-2" id="text-orgea497e6">
 </div>
-<div id="outline-container-orgf0ed5a3" class="outline-3">
-<h3 id="orgf0ed5a3">Approach 1</h3>
-<div class="outline-text-3" id="text-orgf0ed5a3">
+<div id="outline-container-org03d5c36" class="outline-3">
+<h3 id="org03d5c36">Approach 1</h3>
+<div class="outline-text-3" id="text-org03d5c36">
 <p>
 这道题有点难度，第一时间没有什么思路。我想到的主要问题是如何保证返回结果中不包含重复的一组数。如果使用暴力解法，将所有满足条件的组合取到后进行重复性清洗，应该是一种可行的解法，只是这样做时间复杂度有点高。<br></p>
 
@@ -621,9 +879,9 @@ A solution set is:
 </div>
 </div>
 
-<div id="outline-container-orgd9f40c3" class="outline-3">
-<h3 id="orgd9f40c3">Approach 2</h3>
-<div class="outline-text-3" id="text-orgd9f40c3">
+<div id="outline-container-org59a1f4e" class="outline-3">
+<h3 id="org59a1f4e">Approach 2</h3>
+<div class="outline-text-3" id="text-org59a1f4e">
 <p>
 我认为这到题的主要难点啊主要是在去除重复的问题上。下面的解法来自 <a href="https://leetcode.com/problems/3sum/discuss/7402/Share-my-AC-C++-solution-around-50ms-O(N*N)-with-explanation-and-comments">leetcode</a> ，在处理重复性问题时，在匹配答案时将重复的数字跳过，这样就不用在后续的结果中进行剔除重复元素的步骤了。<br></p>
 
@@ -676,9 +934,9 @@ A solution set is:
 </div>
 
 
-<div id="outline-container-org25e0b2b" class="outline-2">
-<h2 id="org25e0b2b">Reference</h2>
-<div class="outline-text-2" id="text-org25e0b2b">
+<div id="outline-container-orga3dfafd" class="outline-2">
+<h2 id="orga3dfafd">Reference</h2>
+<div class="outline-text-2" id="text-orga3dfafd">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/3sum/discuss/7402/Share-my-AC-C++-solution-around-50ms-O(N*N)-with-explanation-and-comments">leetcode.com discuss</a><br>
@@ -717,9 +975,9 @@ A solution set is:
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org33d2c27" class="outline-2">
-<h2 id="org33d2c27">Description</h2>
-<div class="outline-text-2" id="text-org33d2c27">
+      <div id="outline-container-orgeb6f4f7" class="outline-2">
+<h2 id="orgeb6f4f7">Description</h2>
+<div class="outline-text-2" id="text-orgeb6f4f7">
 <p>
 Roman numerals are represented by seven different symbols: I, V, X, L, C, D and M.<br></p>
 
@@ -786,13 +1044,13 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-org7cb8346" class="outline-2">
-<h2 id="org7cb8346">Solution</h2>
-<div class="outline-text-2" id="text-org7cb8346">
+<div id="outline-container-orgf10e573" class="outline-2">
+<h2 id="orgf10e573">Solution</h2>
+<div class="outline-text-2" id="text-orgf10e573">
 </div>
-<div id="outline-container-org90724ce" class="outline-3">
-<h3 id="org90724ce">Approach 1</h3>
-<div class="outline-text-3" id="text-org90724ce">
+<div id="outline-container-org4f2aa2c" class="outline-3">
+<h3 id="org4f2aa2c">Approach 1</h3>
+<div class="outline-text-3" id="text-org4f2aa2c">
 <p>
 这道题不是很难，很容易就能想到解法，需要注意好边界条件问题，下面就是我的解法。<br></p>
 <div class="highlight"><pre><span></span><span class="n">pint</span> <span class="nf">romanToInt</span><span class="p">(</span><span class="n">string</span> <span class="n">str</span><span class="p">)</span> <span class="p">{</span>
@@ -926,9 +1184,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgb1e591c" class="outline-3">
-<h3 id="orgb1e591c">Approach 2</h3>
-<div class="outline-text-3" id="text-orgb1e591c">
+<div id="outline-container-org35928fb" class="outline-3">
+<h3 id="org35928fb">Approach 2</h3>
+<div class="outline-text-3" id="text-org35928fb">
 <p>
 这个解法是leetcode上最快的解法之一，只使用一个循环就完成了计算，代码整体上很简洁，也比较好理解。只需要针对6种特殊情况做特殊处理就好。<br></p>
 
@@ -992,9 +1250,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-org3b667e7" class="outline-3">
-<h3 id="org3b667e7">Approach 3</h3>
-<div class="outline-text-3" id="text-org3b667e7">
+<div id="outline-container-org6ff9880" class="outline-3">
+<h3 id="org6ff9880">Approach 3</h3>
+<div class="outline-text-3" id="text-org6ff9880">
 <p>
 下面这个是我在看该问题的discuss板块的时候发现的。不得不说，结题思路实在新奇，这点是值得学习的。不过我比较担心它的时间复杂度。该方法使用Java编写。<br></p>
 <div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kt">int</span> <span class="nf">romanToInt</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">)</span> <span class="o">{</span>
@@ -1056,9 +1314,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org3231d70" class="outline-2">
-<h2 id="org3231d70">Description</h2>
-<div class="outline-text-2" id="text-org3231d70">
+      <div id="outline-container-org111e743" class="outline-2">
+<h2 id="org111e743">Description</h2>
+<div class="outline-text-2" id="text-org111e743">
 <p>
 Roman numerals are represented by seven different symbols: <code>I</code> , <code>V</code> , <code>X</code> , <code>L</code> , <code>C</code> , <code>D</code> and <code>M</code>.<br></p>
 <pre class="example">
@@ -1134,13 +1392,13 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-org0a5431d" class="outline-2">
-<h2 id="org0a5431d">Solution</h2>
-<div class="outline-text-2" id="text-org0a5431d">
+<div id="outline-container-org94e39cf" class="outline-2">
+<h2 id="org94e39cf">Solution</h2>
+<div class="outline-text-2" id="text-org94e39cf">
 </div>
-<div id="outline-container-orgdd374ce" class="outline-3">
-<h3 id="orgdd374ce">Approach 1</h3>
-<div class="outline-text-3" id="text-orgdd374ce">
+<div id="outline-container-orgc07ac00" class="outline-3">
+<h3 id="orgc07ac00">Approach 1</h3>
+<div class="outline-text-3" id="text-orgc07ac00">
 <p>
 这道题并不难，方法也很容易想到，这道题被归为 <code>medium</code> 难度反而让我感到有些奇怪，下面的代码就是我的解法。<br></p>
 <div class="highlight"><pre><span></span><span class="n">string</span> <span class="nf">intToRoman</span><span class="p">(</span><span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
@@ -1261,9 +1519,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgc470038" class="outline-3">
-<h3 id="orgc470038">Approach 2</h3>
-<div class="outline-text-3" id="text-orgc470038">
+<div id="outline-container-org388a2c8" class="outline-3">
+<h3 id="org388a2c8">Approach 2</h3>
+<div class="outline-text-3" id="text-org388a2c8">
 <p>
 下面代码是从leetcode上找的，这样的打表法，看起来至少从形式上会更加美观，而且也非常好理解。<br></p>
 <div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
@@ -1290,9 +1548,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgb1acbbc" class="outline-3">
-<h3 id="orgb1acbbc">Approach 3</h3>
-<div class="outline-text-3" id="text-orgb1acbbc">
+<div id="outline-container-org508bc5c" class="outline-3">
+<h3 id="org508bc5c">Approach 3</h3>
+<div class="outline-text-3" id="text-org508bc5c">
 <p>
 下面这段代码也是leetcode上的答案，这个答案的通用性要好一些，最起码找到了规律，这有助于算法的后续拓展。<br></p>
 <div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
@@ -1365,9 +1623,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgdaf55a4" class="outline-2">
-<h2 id="orgdaf55a4">引言</h2>
-<div class="outline-text-2" id="text-orgdaf55a4">
+      <div id="outline-container-orge938b72" class="outline-2">
+<h2 id="orge938b72">引言</h2>
+<div class="outline-text-2" id="text-orge938b72">
 <p>
 这篇文章的起因是出于对于 <code>C++</code> 饿汉单例模式代码的一些疑问，查阅了一些资料。在仔细研究后，我发现在一些基础概念的理解还是存在偏差。<br>
 下面请看这样的一段代码，能看出其中有那些不太“正常”的语句么。<br></p>
@@ -1389,9 +1647,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgc2b204c" class="outline-2">
-<h2 id="orgc2b204c">私有静态成员的初始化</h2>
-<div class="outline-text-2" id="text-orgc2b204c">
+<div id="outline-container-orge1504f2" class="outline-2">
+<h2 id="orge1504f2">私有静态成员的初始化</h2>
+<div class="outline-text-2" id="text-orge1504f2">
 <p>
 上面的代码是饿汉单例模式的 <code>C++</code> 的实现，在没有查阅资料之前，我对其中私有静态成员变量的初始化存疑。主要有以下两点：<br></p>
 <ul class="org-ul">
@@ -1435,9 +1693,9 @@ The static data member <code>run_chain</code> of class process is defined in glo
 </div>
 </div>
 
-<div id="outline-container-org19acb56" class="outline-2">
-<h2 id="org19acb56">私有构造函数</h2>
-<div class="outline-text-2" id="text-org19acb56">
+<div id="outline-container-org3a92efc" class="outline-2">
+<h2 id="org3a92efc">私有构造函数</h2>
+<div class="outline-text-2" id="text-org3a92efc">
 <p>
 在查阅资料时，我发现 Peter 的 <a href="https://stackoverflow.com/a/41361967">描述</a> 纠正了我对私有构造函数的一些看法。<br></p>
 <blockquote>
@@ -1449,9 +1707,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 </div>
 
-<div id="outline-container-orgde6004d" class="outline-2">
-<h2 id="orgde6004d">参考资料</h2>
-<div class="outline-text-2" id="text-orgde6004d">
+<div id="outline-container-org33c2a15" class="outline-2">
+<h2 id="org33c2a15">参考资料</h2>
+<div class="outline-text-2" id="text-org33c2a15">
 <ul class="org-ul">
 <li>
 <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">ISO C++11 standard</a><br>
@@ -1507,17 +1765,17 @@ The point of a <code>private</code> constructor is not preventing object constru
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org7626edb" class="outline-2">
-<h2 id="org7626edb">问题</h2>
-<div class="outline-text-2" id="text-org7626edb">
+      <div id="outline-container-orgff69443" class="outline-2">
+<h2 id="orgff69443">问题</h2>
+<div class="outline-text-2" id="text-orgff69443">
 <p>
 使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
 </div>
 </div>
 
-<div id="outline-container-org65c1dbb" class="outline-2">
-<h2 id="org65c1dbb">解答</h2>
-<div class="outline-text-2" id="text-org65c1dbb">
+<div id="outline-container-org1a05772" class="outline-2">
+<h2 id="org1a05772">解答</h2>
+<div class="outline-text-2" id="text-org1a05772">
 <p>
 客户端建立连接的示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">...);</span>
@@ -1567,9 +1825,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 </div>
 
-<div id="outline-container-org7ef53f1" class="outline-2">
-<h2 id="org7ef53f1">参考资料</h2>
-<div class="outline-text-2" id="text-org7ef53f1">
+<div id="outline-container-orge090e19" class="outline-2">
+<h2 id="orge090e19">参考资料</h2>
+<div class="outline-text-2" id="text-orge090e19">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
@@ -1608,9 +1866,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org88b6a7a" class="outline-2">
-<h2 id="org88b6a7a">Description</h2>
-<div class="outline-text-2" id="text-org88b6a7a">
+      <div id="outline-container-org40156a7" class="outline-2">
+<h2 id="org40156a7">Description</h2>
+<div class="outline-text-2" id="text-org40156a7">
 <p>
 Given n non-negative integers a1, a2, …, an , where each represents a point at coordinate (i, ai). n vertical lines are drawn such that the two endpoints of line i is at (i, ai) and (i, 0). Find two lines, which together with x-axis forms a container, such that the container contains the most water.<br></p>
 
@@ -1627,13 +1885,13 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga49a056" class="outline-2">
-<h2 id="orga49a056">Solution</h2>
-<div class="outline-text-2" id="text-orga49a056">
+<div id="outline-container-org86decc6" class="outline-2">
+<h2 id="org86decc6">Solution</h2>
+<div class="outline-text-2" id="text-org86decc6">
 </div>
-<div id="outline-container-org44585f1" class="outline-3">
-<h3 id="org44585f1">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org44585f1">
+<div id="outline-container-org7fae907" class="outline-3">
+<h3 id="org7fae907">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org7fae907">
 <p>
 暴力解法是最容易想到的解法了，然而暴力解法肯定不是本题的意图。<br></p>
 
@@ -1659,9 +1917,9 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0b94c32" class="outline-3">
-<h3 id="org0b94c32">Approach 2</h3>
-<div class="outline-text-3" id="text-org0b94c32">
+<div id="outline-container-org31caa6a" class="outline-3">
+<h3 id="org31caa6a">Approach 2</h3>
+<div class="outline-text-3" id="text-org31caa6a">
 <p>
 我在leetcode上看到这样一种解法，这种解法从逻辑和形式上看上不复杂，但是我的疑问在是否有严密的数学推导和论证。<br></p>
 
@@ -1704,9 +1962,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 </div>
 </div>
 
-<div id="outline-container-orgba89913" class="outline-2">
-<h2 id="orgba89913">Reference</h2>
-<div class="outline-text-2" id="text-orgba89913">
+<div id="outline-container-orgcc37819" class="outline-2">
+<h2 id="orgcc37819">Reference</h2>
+<div class="outline-text-2" id="text-orgcc37819">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/container-with-most-water/solution/">leetcode problem solution</a><br>
@@ -1753,9 +2011,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org9dd709b" class="outline-2">
-<h2 id="org9dd709b">引言</h2>
-<div class="outline-text-2" id="text-org9dd709b">
+      <div id="outline-container-orgca9e3ff" class="outline-2">
+<h2 id="orgca9e3ff">引言</h2>
+<div class="outline-text-2" id="text-orgca9e3ff">
 <p>
 在学习前端的过程中，我开始接触到许多开发框架或开发工具，这些工具让我开始眼花缭乱。使用常规的html/css/js就已经能够开发出这种网页了，所以我问自己，为什么要学习这些框架或工具，这些库是用来解决什么问题的。想明白这个问题，我学习的目的就更加明确，在遇到一些开发情景时，也能够快速准确地挑选出应该使用的框架。<br></p>
 
@@ -1764,9 +2022,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 </div>
 </div>
 
-<div id="outline-container-org2333ed2" class="outline-2">
-<h2 id="org2333ed2">为什么要使用jQuery</h2>
-<div class="outline-text-2" id="text-org2333ed2">
+<div id="outline-container-org8eb6951" class="outline-2">
+<h2 id="org8eb6951">为什么要使用jQuery</h2>
+<div class="outline-text-2" id="text-org8eb6951">
 <p>
 jQuery是一个轻量级js库，它有如下特性：<br></p>
 <ul class="org-ul">
@@ -1786,9 +2044,9 @@ jQuery是一个轻量级js库，它有如下特性：<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgbdb48eb" class="outline-2">
-<h2 id="orgbdb48eb">为什么要使用SASS</h2>
-<div class="outline-text-2" id="text-orgbdb48eb">
+<div id="outline-container-org44178ba" class="outline-2">
+<h2 id="org44178ba">为什么要使用SASS</h2>
+<div class="outline-text-2" id="text-org44178ba">
 <p>
 SASS是一种CSS预编译格式，它最终会编译成CSS。<br>
 SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操作，函数操作，样式模板（mixin）等强大的特性。它能够让开发人员更方便地编写CSS。SASS支持 <code>import</code> 关键字，这样就能够很方便地对样式进行模块化设计。<br></p>
@@ -1801,9 +2059,9 @@ SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操�
 </div>
 </div>
 
-<div id="outline-container-orgf3f51a8" class="outline-2">
-<h2 id="orgf3f51a8">为什么要使用Bootstrap</h2>
-<div class="outline-text-2" id="text-orgf3f51a8">
+<div id="outline-container-org4362ea4" class="outline-2">
+<h2 id="org4362ea4">为什么要使用Bootstrap</h2>
+<div class="outline-text-2" id="text-org4362ea4">
 <p>
 Bootstrap是一个用于快速开发网页的前端框架。以我目前的理解来看，它更像是一个网页样式框架。<br></p>
 <ul class="org-ul">
@@ -1819,9 +2077,9 @@ Bootstrap是一个用于快速开发网页的前端框架。以我目前的理�
 </div>
 </div>
 
-<div id="outline-container-org266f6ef" class="outline-2">
-<h2 id="org266f6ef">为什么要使用React</h2>
-<div class="outline-text-2" id="text-org266f6ef">
+<div id="outline-container-org0c864fb" class="outline-2">
+<h2 id="org0c864fb">为什么要使用React</h2>
+<div class="outline-text-2" id="text-org0c864fb">
 <p>
 DOM操作对性能的影响很大，频繁的DOM操作会使网页渲染的速度变慢，React主要解决了这个问题。<br>
 React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新渲染。<br></p>
@@ -1861,9 +2119,9 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 </div>
 
 
-<div id="outline-container-orgf6bd083" class="outline-2">
-<h2 id="orgf6bd083">参考资料</h2>
-<div class="outline-text-2" id="text-orgf6bd083">
+<div id="outline-container-orgc206f5b" class="outline-2">
+<h2 id="orgc206f5b">参考资料</h2>
+<div class="outline-text-2" id="text-orgc206f5b">
 <ol class="org-ol">
 <li>
 <a href="https://www.w3schools.com/jquery/jquery_intro.asp">w3schools jQuery intro</a><br>
@@ -1915,8 +2173,8 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgdbbf956" class="outline-2">
-<h2 id="orgdbbf956">
+      <div id="outline-container-org70909f0" class="outline-2">
+<h2 id="org70909f0">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -1925,13 +2183,13 @@ js也是具有OOP（object oriented programming）特性的，OOP在构建一些
 </div>
 </div>
 
-<div id="outline-container-orga229e8b" class="outline-2">
-<h2 id="orga229e8b">
+<div id="outline-container-org7a6c76f" class="outline-2">
+<h2 id="org7a6c76f">
 <span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-org48a00bb" class="outline-3">
-<h3 id="org48a00bb">
+<div id="outline-container-orgd6d68c1" class="outline-3">
+<h3 id="orgd6d68c1">
 <span class="section-number-3">2.1</span> 创建对象（object）</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -1951,8 +2209,8 @@ js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关�
 </div>
 </div>
 
-<div id="outline-container-org76f7a91" class="outline-3">
-<h3 id="org76f7a91">
+<div id="outline-container-org95200db" class="outline-3">
+<h3 id="org95200db">
 <span class="section-number-3">2.2</span> 类（class）的声明</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -1973,8 +2231,8 @@ crow instanceof Bird; // =&gt; true
 </div>
 </div>
 
-<div id="outline-container-org9040ab0" class="outline-3">
-<h3 id="org9040ab0">
+<div id="outline-container-org1d12bad" class="outline-3">
+<h3 id="org1d12bad">
 <span class="section-number-3">2.3</span> 类的共有成员</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
@@ -2002,8 +2260,8 @@ js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还
 </div>
 </div>
 
-<div id="outline-container-org50edf8c" class="outline-3">
-<h3 id="org50edf8c">
+<div id="outline-container-orgdaedb96" class="outline-3">
+<h3 id="orgdaedb96">
 <span class="section-number-3">2.4</span> 类的私有成员</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
@@ -2024,8 +2282,8 @@ ducky.getHatchedEggCount(); // returns 10
 </div>
 </div>
 
-<div id="outline-container-org4a4a4de" class="outline-3">
-<h3 id="org4a4a4de">
+<div id="outline-container-org614b661" class="outline-3">
+<h3 id="org614b661">
 <span class="section-number-3">2.5</span> 类的继承和派生</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
@@ -2036,8 +2294,8 @@ Bird.prototype.constructor = Bird;
 </div>
 </div>
 
-<div id="outline-container-org833ec39" class="outline-3">
-<h3 id="org833ec39">
+<div id="outline-container-orgfacab38" class="outline-3">
+<h3 id="orgfacab38">
 <span class="section-number-3">2.6</span> 类的覆盖</h3>
 <div class="outline-text-3" id="text-2-6">
 <p>
@@ -2067,341 +2325,13 @@ Bird.prototype.fly = function() {
 </div>
 
 
-<div id="outline-container-orgfcc832c" class="outline-2">
-<h2 id="orgfcc832c">
+<div id="outline-container-org1af478b" class="outline-2">
+<h2 id="org1af478b">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
 <li>
 <a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/object-oriented-programming/">FCC javascript oop tutorial</a><br>
-</li>
-</ul>
-</div>
-</div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/regexp-cheetsheet/" class="u-url">正则表达式备忘</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-08-23T11:55:36+08:00" itemprop="datePublished" title="2018-08-23 11:55">Aug 23 2018  (11:55)
-    </time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/regexp-cheetsheet/#disqus_thread" data-disqus-identifier="cache/posts/regexp-cheetsheet.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/js/" rel="tag">js</a></li>
-        <li><a class="tag p-category" href="/tags/lisp/" rel="tag">lisp</a></li>
-        <li><a class="tag p-category" href="/tags/python/" rel="tag">python</a></li>
-        <li><a class="tag p-category" href="/tags/regexp/" rel="tag">regexp</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div id="outline-container-orged28d49" class="outline-2">
-<h2 id="orged28d49">引言</h2>
-<div class="outline-text-2" id="text-orged28d49">
-<p>
-近在FreeCodeCamp(FCC)学习前端的课程，其中有一节就是讲的 <code>regexp</code> ，也就是正则表达式，之前我零星地了解过一些正则表达式的相关知识，不足以对正则表达式得出一个完整的认识。FCC的教程循序渐进，由简到繁，在教学中结合练习，非常适合初学者的学习过程。如何你的英文能够达到阅读技术类文献的水平，又正好想学习一下正则表达式，我推荐你试一下FCC的正则表达式教程，花3~4个小时就能够对正则表达式有个完整的理解。<br></p>
-
-<p>
-本篇文章主要是对学习过程中的知识点进行总结，方便以后进行查阅。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org8d327cb" class="outline-2">
-<h2 id="org8d327cb">要点总结（js版）</h2>
-<div class="outline-text-2" id="text-org8d327cb">
-<p>
-FCC的教程使用javascript作为开发语言，本节所有的代码都是js代码。<br></p>
-
-<p>
-js中内置了正则表达式模块，下面是正则表达式在js中的使用示例<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">myString</span> <span class="o">=</span> <span class="s2">"Hello World"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">myRegex</span> <span class="o">=</span> <span class="sr">/Hello/</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">myRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">myString</span><span class="p">);</span>
-</pre></div>
-
-<p>
-使用 <code>|</code> 进行or匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">regex2</span> <span class="o">=</span> <span class="sr">/cat|bird/</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用 <code>i</code> 标识符在匹配时忽略大小写<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">regex3</span> <span class="o">=</span> <span class="sr">/case/i</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用正则表达式进行字符串过滤，使用 <code>match</code> 方法<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">extractStr</span> <span class="o">=</span> <span class="s2">"Extract the word 'coding' from this string."</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">codingRegex</span> <span class="o">=</span> <span class="sr">/coding/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">extractStr</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">codingRegex</span><span class="p">);</span> <span class="c1">// Change this line</span>
-</pre></div>
-
-
-<p>
-使用 <code>g</code> 进行返回满足规则的多次结果， <code>g</code> 为global的缩写<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">twinkleStar</span> <span class="o">=</span> <span class="s2">"Twinkle, twinkle, little star"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">starRegex</span> <span class="o">=</span> <span class="sr">/twinkle/gi</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">twinkleStar</span><span class="p">;</span> <span class="c1">// Change this line</span>
-</pre></div>
-
-
-<p>
-使用 <code>.</code> 匹配所有的字符，使用 <code>[]</code> 匹配指定的字符<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">quoteSample</span> <span class="o">=</span> <span class="s2">"Beware of bugs in the above code; I have only proved it correct, not tried it."</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">vowelRegex</span> <span class="o">=</span> <span class="sr">/[aeiou]/gi</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">quoteSample</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">vowelRegex</span><span class="p">);</span> <span class="c1">// Change this line</span>
-</pre></div>
-
-<p>
-在 <code>[]</code> 中可以使用 <code>-</code> 代表一个范围<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">quoteSample2</span> <span class="o">=</span> <span class="s2">"The quick brown fox jumps over the lazy dog."</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">alphabetRegex</span> <span class="o">=</span> <span class="sr">/[a-z]/gi</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">quoteSample2</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">alphabetRegex</span><span class="p">);</span> <span class="c1">// Change this line</span>
-</pre></div>
-
-
-<p>
-这个范围还可以是多个，并且允许包含数字<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">quoteSample3</span> <span class="o">=</span> <span class="s2">"Blueberry 3.141592653s are delicious."</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">myRegex</span> <span class="o">=</span> <span class="sr">/[h-s2-6]/gi</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">quoteSample3</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">myRegex</span><span class="p">);</span> <span class="c1">// Change this line</span>
-</pre></div>
-
-
-<p>
-使用 <code>^</code> 符号能够匹配不包含某些字符<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">quoteSample4</span> <span class="o">=</span> <span class="s2">"3 blind mice."</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">myRegex2</span> <span class="o">=</span> <span class="sr">/[^0-9aeiou]/gi</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span>  <span class="nx">result</span> <span class="o">=</span> <span class="nx">quoteSample4</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">myRegex2</span><span class="p">);</span> <span class="c1">// Change this line</span>
-</pre></div>
-
-
-<p>
-使用 <code>+</code> 对出现连续出现的字符进行匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">difficultSpelling</span> <span class="o">=</span> <span class="s2">"Mississippi"</span><span class="p">;</span>
-<span class="kd">let</span>  <span class="nx">myRegex3</span> <span class="o">=</span> <span class="sr">/s+/g</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">difficultSpelling</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">myRegex3</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>*</code> 星号匹配可能没有出现的次数（出现次数为 0~n 次）<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">chewieQuote</span> <span class="o">=</span> <span class="s2">"Aaaaaaaaaaaaaaaarrrgh!"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">chewieRegex</span> <span class="o">=</span> <span class="sr">/Aa*/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">chewieQuote</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">chewieRegex</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>?</code> 进行较短匹配 （lazy match, 与greedy match 对应）<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">text</span> <span class="o">=</span> <span class="s2">"&lt;h1&gt;Winter is coming&lt;/h1&gt;"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">myRegex</span> <span class="o">=</span> <span class="sr">/&lt;.*?&gt;/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">text</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">myRegex</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>^</code> 对出现在字符串开始位置进行匹配<br>
-注意上边也用到这个符号表示取反，是在 <code>[]</code> 中表示取反<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">rickyAndCal</span> <span class="o">=</span> <span class="s2">"Cal and Ricky both like racing."</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">calRegex</span> <span class="o">=</span> <span class="sr">/^Cal/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">calRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">rickyAndCal</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>$</code> 对出现在字符串结束位置进行匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">caboose</span> <span class="o">=</span> <span class="s2">"The last car on a train is the caboose"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">lastRegex</span> <span class="o">=</span> <span class="sr">/caboose$/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">lastRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">caboose</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>\w</code> 代替 <code>[A-Za-z0-9_]</code> ，包含所有的数字、字母和下划线<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">quoteSample</span> <span class="o">=</span> <span class="s2">"The five boxing wizards jump quickly."</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">alphabetRegexV2</span> <span class="o">=</span> <span class="sr">/\w/g</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">quoteSample</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">alphabetRegexV2</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用 <code>\W</code> 代替 <code>[^A-Za-z0-9_]</code> ，相当于上边的逆向匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">quoteSample</span> <span class="o">=</span> <span class="s2">"The five boxing wizards jump quickly."</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">nonAlphabetRegex</span> <span class="o">=</span> <span class="sr">/\W/g</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">quoteSample</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">nonAlphabetRegex</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用 <code>\d</code> 代替 <code>[0-9]</code> ，所有数字匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">numString</span> <span class="o">=</span> <span class="s2">"Your sandwich will be $5.00"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">numRegex</span> <span class="o">=</span> <span class="sr">/\d/g</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">numString</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">numRegex</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用 <code>\D</code> 代替 <code>[^0-9]</code> ，所有非数字匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">numString</span> <span class="o">=</span> <span class="s2">"Your sandwich will be $5.00"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">noNumRegex</span> <span class="o">=</span> <span class="sr">/\D/g</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">numString</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">noNumRegex</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用 <code>\s</code> 代替 <code>[ \r\t\f\n\v]</code> ，与空格和换行相关<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">sample</span> <span class="o">=</span> <span class="s2">"Whitespace is important in separating words"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">countWhiteSpace</span> <span class="o">=</span> <span class="sr">/\s/g</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">sample</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">countWhiteSpace</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>\S=，代替 =[^ \r\t\f\n\v]</code> ，不包含空格和换行<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">sample</span> <span class="o">=</span> <span class="s2">"Whitespace is important in separating words"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">countNonWhiteSpace</span> <span class="o">=</span> <span class="sr">/\S/g</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">sample</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">countNonWhiteSpace</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>{min, max}</code> 对字符出现的次数进行限定<br>
-回想起使用 <code>+</code> 限制次数为 <code>{0,}</code> ，使用 <code>-</code> 限制次数为 <code>{1,}</code><br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">ohStr</span> <span class="o">=</span> <span class="s2">"Ohhh no"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">ohRegex</span> <span class="o">=</span> <span class="sr">/Oh{3,6} no/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">ohRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">ohStr</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-仅限制出现次数的下限 <code>{min,}</code><br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">haStr</span> <span class="o">=</span> <span class="s2">"Hazzzzah"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">haRegex</span> <span class="o">=</span> <span class="sr">/Haz{4,}ah/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">haRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">haStr</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-指定出现的次数 <code>{count}</code><br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">timStr</span> <span class="o">=</span> <span class="s2">"Timmmmber"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">timRegex</span> <span class="o">=</span> <span class="sr">/Tim{4}ber/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">timRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">timStr</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>?</code> 匹配可能出现的字母<br>
-问号用于声明lazy match，如何判断是lazy match还是匹配可能出现的东西呢<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">favWord</span> <span class="o">=</span> <span class="s2">"favorite"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">favRegex</span> <span class="o">=</span> <span class="sr">/favou?rite/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">favRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">favWord</span><span class="p">);</span>
-</pre></div>
-
-
-
-<p>
-lookahead 的概念， <code>(?=...)</code> 与 <code>(?!...)</code><br></p>
-
-<p>
-下面的正则表达式用于检查密码，由3~6个字母和至少1个数字组成<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">password</span> <span class="o">=</span> <span class="s2">"abc123"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">checkPass</span> <span class="o">=</span> <span class="sr">/(?=\w{3,6})(?=\D*\d)/</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">checkPass</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">password</span><span class="p">);</span> <span class="c1">// Returns true</span>
-</pre></div>
-
-<p>
-下面的正则表达式用于检查密码，有5个以上的字符和至少2个数字组成<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">sampleWord</span> <span class="o">=</span> <span class="s2">"astronaut"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">pwRegex</span> <span class="o">=</span> <span class="sr">/(?=\w{5,})(?=\D*\d{2,})/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">pwRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">sampleWord</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-截取字符串中的重复部分，使用括号 () 对内容进行补充，是用 \1 表示第一个捕捉到的字符<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">repeatNum</span> <span class="o">=</span> <span class="s2">"42 42 42"</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">reRegex</span> <span class="o">=</span> <span class="sr">/^(\d*)\s\1\s\1$/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">reRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">repeatNum</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-通过截取字符串，可以对截取的字符串进行修改或替换操作，需要使用 <code>replace</code> 方法<br></p>
-<div class="highlight"><pre><span></span><span class="s2">"Code Camp"</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/(\w+)\s(\w+)/</span><span class="p">,</span> <span class="s1">'$2 $1'</span><span class="p">);</span> <span class="c1">// Returns "Camp Code"</span>
-</pre></div>
-
-<p>
-下面的正则表达式就是用于将 <code>good</code> 替换为 <code>okey-dokey</code><br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">huhText</span> <span class="o">=</span> <span class="s2">"This sandwich is good."</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">fixRegex</span> <span class="o">=</span> <span class="sr">/good/</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">replaceText</span> <span class="o">=</span> <span class="s2">"okey-dokey"</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">huhText</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">fixRegex</span><span class="p">,</span> <span class="nx">replaceText</span><span class="p">);</span>
-</pre></div>
-
-<p>
-使用正则表达式实现类似 <code>.trim()</code> 的功能<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">hello</span> <span class="o">=</span> <span class="s2">"   Hello, World!  "</span><span class="p">;</span>
-<span class="kd">let</span> <span class="nx">wsRegex</span> <span class="o">=</span> <span class="sr">/^\s+|\s+$/g</span><span class="p">;</span> <span class="c1">// Change this line</span>
-<span class="kd">let</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">hello</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">wsRegex</span><span class="p">,</span> <span class="s1">''</span><span class="p">);</span> <span class="c1">// Change this line</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org4c48b5d" class="outline-2">
-<h2 id="org4c48b5d">elisp和python中的正则表达式</h2>
-<div class="outline-text-2" id="text-org4c48b5d">
-<p>
-在emacs中内置了 <code>string-match</code> 函数进行正则表达式匹配，其函数原型为 <code>(string-match REGEXP STRING &amp;optional START)</code> ，下面就是在emacs中使用regexp的示例。<br></p>
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span> <span class="nv">str-regexp</span> <span class="s">"\.[h|cpp]$"</span><span class="p">)</span>
-<span class="p">(</span><span class="nf">setq</span> <span class="nv">str-sample-1</span> <span class="s">"sample1.h"</span><span class="p">)</span>
-<span class="p">(</span><span class="nf">string-match</span> <span class="nv">str-regexp</span> <span class="nv">str-sample-1</span><span class="p">)</span>
-</pre></div>
-
-<p>
-python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就是在python中的regexp示例。<br></p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
-<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"Cookie"</span>
-<span class="n">sequence</span> <span class="o">=</span> <span class="s2">"Cookie"</span>
-<span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">sequence</span><span class="p">):</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">"Match!"</span><span class="p">)</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">"Not a match!"</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-org3d2486a" class="outline-2">
-<h2 id="org3d2486a">参考资料</h2>
-<div class="outline-text-2" id="text-org3d2486a">
-<ul class="org-ul">
-<li>
-<a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/regular-expressions">FCC regular-expression tutorial</a><br>
-</li>
-<li>
-<a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Simple-Match-Data.html">emacs string-match manual</a><br>
-</li>
-<li>
-<a href="https://docs.python.org/3/library/re.html">python re module</a><br>
 </li>
 </ul>
 </div>

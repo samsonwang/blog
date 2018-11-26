@@ -70,7 +70,84 @@
 
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/use-git-with-socks5-proxy/" class="u-url">为git设置socks5代理</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/qt-chinese-encoding/" class="u-url">关于Qt中使用中文编码的一些问题</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-02-28T09:34:08+08:00" itemprop="datePublished" title="2018-02-28 09:34">Feb 28 2018  (09:34)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/qt-chinese-encoding/#disqus_thread" data-disqus-identifier="cache/posts/qt-chinese-encoding.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/qt/" rel="tag">qt</a></li>
+        <li><a class="tag p-category" href="/tags/visual-studio/" rel="tag">visual studio</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <p>
+Qt库作为一个开源库，并且支持多语言。在开发时需要考虑字符编码问题。<br>
+我现在的使用Qt开发环境为VS2012+Qt5.1.1，所以一下所讨论的也是基于这个版本而言的。目前Qt5已经将 <code>tr()</code> 删掉了。<br></p>
+
+<p>
+<b>在windows下使用Qt库进行开发</b><br>
+有两种主流开发环境:<br></p>
+<ol class="org-ol">
+<li>使用Qt Creator作为开发环境<br>
+</li>
+<li>使用Visual Studio + Visual Assist + Qt Visual Studio Addon作为开发环境<br>
+</li>
+</ol>
+<p>
+目前我使用的就是第二种开发环境，鉴于在Windows平台下没有哪个开发环境能与Visual Studio相媲美。<br></p>
+
+<p>
+<b>使用VS开发Qt程序时需要注意源文件的编码格式</b><br>
+Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式就是UTF-8，使用QtCreator创建的源文件的编码格式也是UTF-8 without BOM。<br>
+但是VS在中文操作系统上，如果不进行特殊的设置，默认创建的含有中文的源文件编码格式为gb3212。这样的原始字符串就是gb2312格式的，在使用时需要进行特殊转换，这样显示在界面上才不会乱码。<br>
+推荐使用一下两种方法解决gb2312编码问题：<br></p>
+<ul class="org-ul">
+<li>
+<code>QString::fromLocale8Bit()</code> 会将gb2312编码的字符串转换为UTF-8格式以便存放在QString中。<br>
+</li>
+<li>
+<code>QStringLiteral()</code> 是一个宏定义，会在编译期将字符串实例化，对静态字符串使用这个字符串也是一个提高效率的方法(因为减少了运行时的内存申请开销)。<br>
+</li>
+</ul>
+<p>
+<b>在VS中使用utf-8 with BOM的源文件格式</b><br>
+如果使用了utf-8 with BOM的源文件格式，VS会将其中的字符串转换为gb2312编码的中文，这样是为了兼容旧版本的编译器。<br>
+可以使用编译选项让VS编译器不进行这项转换，这样就可以直接使用字符串 <code>char*</code> 初始化QString了。<br></p>
+<ul class="org-ul">
+<li>微软在VS2010中提供了 <code>#pragma execution_character_set("utf-8")</code> 这样的编译选项，能够防止编译器进行文件编码转换，保证字符串保留utf-8格式。<br>
+</li>
+<li>VS2012 并不支持以上编译选项，VS2012将这个特性取消了<br>
+</li>
+<li>VS2015 可以使用 <code>/utf-8</code> 让编译器能够识别 utf-8 without BOM格式的文件，并保留utf-8的字符串编码。<br>
+</li>
+</ul>
+<p>
+<b>C++11的编码格式支持</b><br>
+对于支持C++11标准的编译器，可以采用如下的写法产生utf-8格式的字符串。<br></p>
+<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">szMsg</span> <span class="o">=</span> <span class="sa">u8</span><span class="s">"字符串"</span><span class="p">;</span>
+</pre></div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/use-git-with-socks5-proxy/" class="u-url">为git设置socks5代理</a></h1>
       <div class="metadata">
         
 
@@ -171,27 +248,27 @@ git config --global https.proxy 'socks5://127.0.0.1:1080'
       <p>
 在开发windows应用程序时，经常会遇到win32、mfc、atl的函数。下面就对三种API（或者说是开发框架）进行了总结。<br></p>
 
-<div id="outline-container-orge767d8b" class="outline-2">
-<h2 id="orge767d8b">Win32开发框架</h2>
-<div class="outline-text-2" id="text-orge767d8b">
+<div id="outline-container-org6213527" class="outline-2">
+<h2 id="org6213527">Win32开发框架</h2>
+<div class="outline-text-2" id="text-org6213527">
 <p>
 win32开发框架是最基础的函数接口，更接近操作系统底层。<br>
 使用Win32接口的优点是程序的依赖最小，生成的可执行文件的体积也最小。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org8dacc1e" class="outline-2">
-<h2 id="org8dacc1e">MFC开发框架</h2>
-<div class="outline-text-2" id="text-org8dacc1e">
+<div id="outline-container-org9bd7c51" class="outline-2">
+<h2 id="org9bd7c51">MFC开发框架</h2>
+<div class="outline-text-2" id="text-org9bd7c51">
 <p>
 MFC是Microsoft Foundation Class的缩写，将win32的相关接口按照OOP的思想封装了起来，目的是提供一个快速开发原生应用的框架。<br>
 使用MFC开发的程序体型略显臃肿，而且MFC也比较陈旧了，并不推荐使用MFC进行开发。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd5ebb28" class="outline-2">
-<h2 id="orgd5ebb28">ATL开发框架</h2>
-<div class="outline-text-2" id="text-orgd5ebb28">
+<div id="outline-container-org012d886" class="outline-2">
+<h2 id="org012d886">ATL开发框架</h2>
+<div class="outline-text-2" id="text-org012d886">
 <p>
 ATL是Active Template Library的缩写，是针对COM组件的开发实现的一套开发框架。ATL简化了ActiveX COM组件的开发。<br></p>
 </div>
@@ -281,9 +358,9 @@ tips： 对于安装了 <code>git bash</code> 的同学，直接将其中的 <co
 租一个服务器自己搭建梯子是科学上网方便稳定快捷的好方法。<br>
 本文主要是自己部署vpn服务端的笔记，作为备忘留存下来。<br></p>
 
-<div id="outline-container-org0ce70bf" class="outline-2">
-<h2 id="org0ce70bf">安装ss服务程序</h2>
-<div class="outline-text-2" id="text-org0ce70bf">
+<div id="outline-container-org8e3fe07" class="outline-2">
+<h2 id="org8e3fe07">安装ss服务程序</h2>
+<div class="outline-text-2" id="text-org8e3fe07">
 <p>
 安装环境为CentOS7, 需要使用python的包管理工具pip完成对ss-server的安装。<br></p>
 <div class="highlight"><pre><span></span>sudo yum install m2crypto python-setuptools
@@ -293,9 +370,9 @@ sudo pip install shadowsocks
 </div>
 </div>
 
-<div id="outline-container-orgb4e2d51" class="outline-2">
-<h2 id="orgb4e2d51">配置ss服务器</h2>
-<div class="outline-text-2" id="text-orgb4e2d51">
+<div id="outline-container-orga673108" class="outline-2">
+<h2 id="orga673108">配置ss服务器</h2>
+<div class="outline-text-2" id="text-orga673108">
 <p>
 <b>配置文件示例</b> : <a href="/listings/shadowsocks.json.html">shadowsocks.json</a><br>
 这份配置中使用了多个端口作供ss-server使用<br></p>
@@ -386,50 +463,50 @@ update: 2018-02-15<br></p>
 
 <p>
 对常用指令进行总结，方便以后遇到相同情况时查阅。<br></p>
-<div id="outline-container-org4fb605a" class="outline-2">
-<h2 id="org4fb605a">1 撤销与回退相关</h2>
-<div class="outline-text-2" id="text-org4fb605a">
+<div id="outline-container-org3b33bb2" class="outline-2">
+<h2 id="org3b33bb2">1 撤销与回退相关</h2>
+<div class="outline-text-2" id="text-org3b33bb2">
 </div>
-<div id="outline-container-orgae41308" class="outline-3">
-<h3 id="orgae41308">1.1 修正最近的提交消息</h3>
-<div class="outline-text-3" id="text-orgae41308">
+<div id="outline-container-org3511ea5" class="outline-3">
+<h3 id="org3511ea5">1.1 修正最近的提交消息</h3>
+<div class="outline-text-3" id="text-org3511ea5">
 <p>
 <b>情景</b> ：在最近的一次提交（ <code>git commit</code> ）中输入的信息有误，并且这次提交没有被推送（ <code>git push</code> ）到远程仓库。<br><b>方法</b> ： <code>git commit --amend</code> 或 <code>git commit --amend -m "correct_message"</code><br><b>说明</b> ： <code>git commit --amend</code> 会使用一个新的提交更新并替换最近的一次提交，如果有在临时区域（staged）的修改，也会合并提交；如果有新的提交信息，则会一并提交。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgaadf93a" class="outline-3">
-<h3 id="orgaadf93a">1.2 撤销本地变更</h3>
-<div class="outline-text-3" id="text-orgaadf93a">
+<div id="outline-container-orgee4c437" class="outline-3">
+<h3 id="orgee4c437">1.2 撤销本地变更</h3>
+<div class="outline-text-3" id="text-orgee4c437">
 <p>
 <b>情景</b> ：当无意中修改了一个文件，想要回退这个文件的修改时。<br><b>方法</b> ： <code>git checkout -- &lt;filename&gt;</code><br><b>说明</b> ：这条指令会把该文件回退到某个git记录中的版本，git默认会回退到 <code>HEAD</code> 版本。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga8a0393" class="outline-3">
-<h3 id="orga8a0393">1.3 重置本地修改</h3>
-<div class="outline-text-3" id="text-orga8a0393">
+<div id="outline-container-orgce124bb" class="outline-3">
+<h3 id="orgce124bb">1.3 重置本地修改</h3>
+<div class="outline-text-3" id="text-orgce124bb">
 <p>
 <b>情景</b> ：已经进行了多次提交，但是没有推送到版本库中，希望撤销这些提交。<br><b>方法</b> ： <code>git reset &lt;last good SHA&gt;</code> 或 <code>git reset --hard &lt;last good SHA&gt;</code><br><b>说明</b> ： <code>git reset</code> 会把本地代码恢复到没有提交（ <code>git commit</code> ）的状态，做出的修改会保留。 <code>git reset --hard</code> 会把这些修改丢弃掉。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org239436d" class="outline-3">
-<h3 id="org239436d">1.4 恢复被重置的本地修改</h3>
-<div class="outline-text-3" id="text-org239436d">
+<div id="outline-container-org5b2b116" class="outline-3">
+<h3 id="org5b2b116">1.4 恢复被重置的本地修改</h3>
+<div class="outline-text-3" id="text-org5b2b116">
 <p>
 <b>情景</b> ：在按照1.3中操作后，想恢复重置以前的状态。<br><b>方法</b> ： <code>git reflog</code> 后执行 <code>git reset</code> 或 <code>git checkout</code><br><b>说明</b> ： <code>git reflog</code> 会呈现所有提交过的历史，是一个十分实用的功能。<br></p>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org05a4242" class="outline-2">
-<h2 id="org05a4242">2 分支操作相关</h2>
-<div class="outline-text-2" id="text-org05a4242">
+<div id="outline-container-org1151ffa" class="outline-2">
+<h2 id="org1151ffa">2 分支操作相关</h2>
+<div class="outline-text-2" id="text-org1151ffa">
 </div>
-<div id="outline-container-orgf993bae" class="outline-3">
-<h3 id="orgf993bae">2.1 创建一个本地分支并推送到远端</h3>
-<div class="outline-text-3" id="text-orgf993bae">
+<div id="outline-container-org6b24b56" class="outline-3">
+<h3 id="org6b24b56">2.1 创建一个本地分支并推送到远端</h3>
+<div class="outline-text-3" id="text-org6b24b56">
 <p>
 <b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git branch branch_name
@@ -438,9 +515,9 @@ git push origin branch_name
 </div>
 </div>
 
-<div id="outline-container-orgd29296c" class="outline-3">
-<h3 id="orgd29296c">2.2 在本地创建一个远程分支</h3>
-<div class="outline-text-3" id="text-orgd29296c">
+<div id="outline-container-org0c6b79e" class="outline-3">
+<h3 id="org0c6b79e">2.2 在本地创建一个远程分支</h3>
+<div class="outline-text-3" id="text-org0c6b79e">
 <p>
 <b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git fetch origin
@@ -449,9 +526,9 @@ git checkout -b  branch_name origin/branch_name
 </div>
 </div>
 
-<div id="outline-container-org55eb721" class="outline-3">
-<h3 id="org55eb721">2.3 在分支上进行进度迁移</h3>
-<div class="outline-text-3" id="text-org55eb721">
+<div id="outline-container-org14f12e6" class="outline-3">
+<h3 id="org14f12e6">2.3 在分支上进行进度迁移</h3>
+<div class="outline-text-3" id="text-org14f12e6">
 <p>
 <b>情景</b> ： 进行了几次提交后，发现自己正在错误的分支上干活。<br><b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git branch feature
@@ -465,21 +542,21 @@ git checkout feature
 </div>
 
 
-<div id="outline-container-org1633273" class="outline-2">
-<h2 id="org1633273">3 git submodule 相关操作</h2>
-<div class="outline-text-2" id="text-org1633273">
+<div id="outline-container-org97da6b8" class="outline-2">
+<h2 id="org97da6b8">3 git submodule 相关操作</h2>
+<div class="outline-text-2" id="text-org97da6b8">
 </div>
-<div id="outline-container-org1c32f6d" class="outline-3">
-<h3 id="org1c32f6d">3.1 向当前repo中增加一个submodule</h3>
-<div class="outline-text-3" id="text-org1c32f6d">
+<div id="outline-container-org5dbf74f" class="outline-3">
+<h3 id="org5dbf74f">3.1 向当前repo中增加一个submodule</h3>
+<div class="outline-text-3" id="text-org5dbf74f">
 <div class="highlight"><pre><span></span>git submoudle add &lt;module url&gt; &lt;local path&gt;
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org12a9256" class="outline-3">
-<h3 id="org12a9256">3.2 初始化submodule</h3>
-<div class="outline-text-3" id="text-org12a9256">
+<div id="outline-container-org292bcfd" class="outline-3">
+<h3 id="org292bcfd">3.2 初始化submodule</h3>
+<div class="outline-text-3" id="text-org292bcfd">
 <p>
 在将一个具有submodule的repo拉取到本地以后需要对submodule进行初始化<br></p>
 <div class="highlight"><pre><span></span>git submodule init
@@ -487,9 +564,9 @@ git checkout feature
 </div>
 </div>
 
-<div id="outline-container-org7809da1" class="outline-3">
-<h3 id="org7809da1">3.3 更新submodule</h3>
-<div class="outline-text-3" id="text-org7809da1">
+<div id="outline-container-orgd7aa337" class="outline-3">
+<h3 id="orgd7aa337">3.3 更新submodule</h3>
+<div class="outline-text-3" id="text-orgd7aa337">
 <p>
 在开发中可以直接进入submodule的目录对每一个submodule执行更新操作，也可以使用命令统一完成submodule的更新操作。<br></p>
 <div class="highlight"><pre><span></span>git submodule update
@@ -497,9 +574,9 @@ git checkout feature
 </div>
 </div>
 
-<div id="outline-container-org5b8ee90" class="outline-3">
-<h3 id="org5b8ee90">3.4 删掉submodule</h3>
-<div class="outline-text-3" id="text-org5b8ee90">
+<div id="outline-container-org957e255" class="outline-3">
+<h3 id="org957e255">3.4 删掉submodule</h3>
+<div class="outline-text-3" id="text-org957e255">
 <p>
 对于不需要的submodule，可以将其删掉。<br></p>
 <div class="highlight"><pre><span></span>git submodule rm &lt;local/path&gt;
@@ -508,9 +585,9 @@ git checkout feature
 </div>
 </div>
 
-<div id="outline-container-orgfa49b97" class="outline-2">
-<h2 id="orgfa49b97">终端配置</h2>
-<div class="outline-text-2" id="text-orgfa49b97">
+<div id="outline-container-org4641ab2" class="outline-2">
+<h2 id="org4641ab2">终端配置</h2>
+<div class="outline-text-2" id="text-org4641ab2">
 <p>
 使用命令简称方便操作<br></p>
 <div class="highlight"><pre><span></span># git related
@@ -558,9 +635,9 @@ alias gpl='git pull'
     </header><div class="p-summary entry-summary">
       <p>
 本文主要介绍在emacs中对一个目录中的很多文件进行字符串查找和替换操作的方法。参考了 <a href="http://ergoemacs.org/emacs/blog.html">XahLee</a> 的教程后，在此记录做个备份。<br></p>
-<div id="outline-container-orga792e77" class="outline-2">
-<h2 id="orga792e77">操作步骤</h2>
-<div class="outline-text-2" id="text-orga792e77">
+<div id="outline-container-org72e2f9a" class="outline-2">
+<h2 id="org72e2f9a">操作步骤</h2>
+<div class="outline-text-2" id="text-org72e2f9a">
 <p>
 <b>进入dired模式</b> ： 我的快捷键配置为 <code>C-x d</code>, 也可以使用 <code>M-x &lt;dired&gt;</code> .<br><b>标记需要查找的文件</b> ： 在进入dired模式后，对需要操作的文件或目录进行操作。<br></p>
 <ul class="org-ul">
@@ -599,9 +676,9 @@ alias gpl='git pull'
 </div>
 </div>
 
-<div id="outline-container-org4cd350b" class="outline-2">
-<h2 id="org4cd350b">相关技巧</h2>
-<div class="outline-text-2" id="text-org4cd350b">
+<div id="outline-container-org9045af2" class="outline-2">
+<h2 id="org9045af2">相关技巧</h2>
+<div class="outline-text-2" id="text-org9045af2">
 <p>
 如果需要批量查找(不进行替换)，可以在dired模式中 <code>M-x &lt;dired-do-search&gt;</code> 进行查找，对于查找结果使用 <code>M-x tags-loop-continue</code> 进行逐条浏览。<br></p>
 </div>
@@ -638,9 +715,9 @@ alias gpl='git pull'
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgb0def0a" class="outline-2">
-<h2 id="orgb0def0a">1 引言</h2>
-<div class="outline-text-2" id="text-orgb0def0a">
+      <div id="outline-container-orgdfe242d" class="outline-2">
+<h2 id="orgdfe242d">1 引言</h2>
+<div class="outline-text-2" id="text-orgdfe242d">
 <p>
 常见的STL容器都能使用迭代器访问容器内元素，迭代器相同于一个指向容器内元素的指针，可以通过移动迭代器实现遍历容器。<br>
 但是在使用迭代器时需要考虑STL容器的失效问题；迭代器失效主要出现在对容器进行了增删操作之后，迭代器不再指向原本的元素。<br>
@@ -648,17 +725,17 @@ alias gpl='git pull'
 </div>
 </div>
 
-<div id="outline-container-org91fe56f" class="outline-2">
-<h2 id="org91fe56f">2 map容器</h2>
-<div class="outline-text-2" id="text-org91fe56f">
+<div id="outline-container-org282e627" class="outline-2">
+<h2 id="org282e627">2 map容器</h2>
+<div class="outline-text-2" id="text-org282e627">
 <p>
 <b>内部数据结构</b> ：红黑树<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入都红黑树中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org8ee7292" class="outline-2">
-<h2 id="org8ee7292">3 vector容器</h2>
-<div class="outline-text-2" id="text-org8ee7292">
+<div id="outline-container-org36ab139" class="outline-2">
+<h2 id="org36ab139">3 vector容器</h2>
+<div class="outline-text-2" id="text-org36ab139">
 <p>
 <b>内部数据结构</b> ：数组(一段连续内存空间)<br><b>插入操作</b> ：由于vector使用的是一段有长度限制的连续空间，插入( <code>push_back</code> / <code>insert</code> )操作在vector中加入新的元素时需要分情况考虑。<br></p>
 <ul class="org-ul">
@@ -673,17 +750,17 @@ alias gpl='git pull'
 </div>
 </div>
 
-<div id="outline-container-org4270e54" class="outline-2">
-<h2 id="org4270e54">4 list容器</h2>
-<div class="outline-text-2" id="text-org4270e54">
+<div id="outline-container-orga4b2ba1" class="outline-2">
+<h2 id="orga4b2ba1">4 list容器</h2>
+<div class="outline-text-2" id="text-orga4b2ba1">
 <p>
 <b>内部数据结构</b> ：双向环状链表<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入到链表中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd93cf82" class="outline-2">
-<h2 id="orgd93cf82">5 小结</h2>
-<div class="outline-text-2" id="text-orgd93cf82">
+<div id="outline-container-org52cdcc1" class="outline-2">
+<h2 id="org52cdcc1">5 小结</h2>
+<div class="outline-text-2" id="text-org52cdcc1">
 <p>
 在操作STL容器时，对容器增删（ <code>erase</code> / <code>insert</code> ）之后应该注意接收返回值，这样可以有效避免迭代器失效的产生。<br>
 对容器进行遍历删除操作时，另一种语法技巧是在 <code>erase</code> 接口中对迭代器进行后自增（it++），这种写法也能够保证遍历正常进行。理解这种写法需要参考运算符重载的相关知识，后自增操作会产生一个临时变量用于函数返回。<br></p>
@@ -720,42 +797,42 @@ alias gpl='git pull'
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org430c33d" class="outline-2">
-<h2 id="org430c33d">1 引言</h2>
-<div class="outline-text-2" id="text-org430c33d">
+      <div id="outline-container-org2bf1940" class="outline-2">
+<h2 id="org2bf1940">1 引言</h2>
+<div class="outline-text-2" id="text-org2bf1940">
 <p>
 编程中常见的表示两种大小的类型标识符有 <code>size_t</code> 和 <code>size_type</code> ，这两种类型十分相似，非常容易混淆。本文对他们的使用场景进行了比较，并提供了示例代码。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgeec6b57" class="outline-2">
-<h2 id="orgeec6b57">2 <code>size_t</code> 类型</h2>
-<div class="outline-text-2" id="text-orgeec6b57">
+<div id="outline-container-org07915e2" class="outline-2">
+<h2 id="org07915e2">2 <code>size_t</code> 类型</h2>
+<div class="outline-text-2" id="text-org07915e2">
 <p>
 当需要描述某个对象的大小（size）时都应该使用 <code>size_t</code> ，其大小被限制为 0 到 <code>SIZE_MAX</code> 之间。<br><code>size_t</code> 的定义在 <code>&lt;cstddef&gt;</code> 中， <code>SIZE_MAX</code> 的定义在 <code>&lt;climits&gt;</code> 中。<br><code>size_t</code> 一般会作为 <code>sizeof</code> 运算符的返回结果，可以理解为在给定的平台中是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4c7d345" class="outline-2">
-<h2 id="org4c7d345">3 <code>size_type</code> 类型</h2>
-<div class="outline-text-2" id="text-org4c7d345">
+<div id="outline-container-orgac251b1" class="outline-2">
+<h2 id="orgac251b1">3 <code>size_type</code> 类型</h2>
+<div class="outline-text-2" id="text-orgac251b1">
 <p>
 在 <code>STL</code> 中定义了 <code>size_type</code> 是与 <code>Allocator::size_tpye</code> 相对应的。而 <code>Allocator</code> 是模板的一个参数。<br><code>size_type</code> 可以理解为在给定容器范围内是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgc47cf5d" class="outline-2">
-<h2 id="orgc47cf5d">4 二者之间的比较</h2>
-<div class="outline-text-2" id="text-orgc47cf5d">
+<div id="outline-container-org37e2d17" class="outline-2">
+<h2 id="org37e2d17">4 二者之间的比较</h2>
+<div class="outline-text-2" id="text-org37e2d17">
 <p>
 这两种类型主要是为了提高代码的可移植性。一般情况来说，这两种类型是没有区别的，因为使用标准库默认的 <code>Allocator</code> 所对应的 <code>size_type</code> 就是 <code>size_t</code> 。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org1ea1ddd" class="outline-2">
-<h2 id="org1ea1ddd">5 示例代码</h2>
-<div class="outline-text-2" id="text-org1ea1ddd">
+<div id="outline-container-org227de45" class="outline-2">
+<h2 id="org227de45">5 示例代码</h2>
+<div class="outline-text-2" id="text-org227de45">
 <p>
 注意 <code>size_type</code> 在使用时需要加上容器类型限定。<br></p>
 <div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">n1</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
@@ -769,9 +846,9 @@ alias gpl='git pull'
 </div>
 </div>
 
-<div id="outline-container-org2a3da4d" class="outline-2">
-<h2 id="org2a3da4d">6 参考资料</h2>
-<div class="outline-text-2" id="text-org2a3da4d">
+<div id="outline-container-org74f2775" class="outline-2">
+<h2 id="org74f2775">6 参考资料</h2>
+<div class="outline-text-2" id="text-org74f2775">
 <ul class="org-ul">
 <li>
 <a href="http://en.cppreference.com/w/cpp/types/size_t">http://en.cppreference.com/w/cpp/types/size_t</a><br>
@@ -813,9 +890,9 @@ alias gpl='git pull'
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgc650d78" class="outline-2">
-<h2 id="orgc650d78">1 引言</h2>
-<div class="outline-text-2" id="text-orgc650d78">
+      <div id="outline-container-org0a7a782" class="outline-2">
+<h2 id="org0a7a782">1 引言</h2>
+<div class="outline-text-2" id="text-org0a7a782">
 <p>
 本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。<br>
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
@@ -855,9 +932,9 @@ alias gpl='git pull'
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgc93137d" class="outline-2">
-<h2 id="orgc93137d">1 引言</h2>
-<div class="outline-text-2" id="text-orgc93137d">
+      <div id="outline-container-org47c6873" class="outline-2">
+<h2 id="org47c6873">1 引言</h2>
+<div class="outline-text-2" id="text-org47c6873">
 <p>
 本文主要针对emacs中的global的配置和使用方法做了简要介绍。global是代码标签化索引工具，能够在许多源码中快速定位函数的实现位置。我主要使用global来辅助代码跳转；还有一种用法是用来辅助代码补全，目前正在研究中。<br></p>
 
@@ -901,66 +978,6 @@ alias gpl='git pull'
 通过了解编译警告，也能够了解到哪些代码风格是不好的，有哪些代码的书写格式是容易出现问题的，有助于让自己写出更高质量的代码。<br></p>
 
 <p class="more"><a href="/posts/gcc-warn-on-compile/">Read more…</a></p>
-</div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/linux-directory-structure/" class="u-url">Linux 系统目录结构</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2017-12-15T17:12:25+08:00" itemprop="datePublished" title="2017-12-15 17:12">Dec 15 2017  (17:12)
-    </time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/linux-directory-structure/#disqus_thread" data-disqus-identifier="cache/posts/linux-directory-structure.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div id="outline-container-org577d02b" class="outline-2">
-<h2 id="org577d02b">Linux系统的目录结构以及各个目录的作用</h2>
-<div class="outline-text-2" id="text-org577d02b">
-</div>
-<div id="outline-container-orgcb3c5d3" class="outline-3">
-<h3 id="orgcb3c5d3"><code>/bin</code></h3>
-<div class="outline-text-3" id="text-orgcb3c5d3">
-<p>
-bin是binary的缩写，这个目录存放使用者最经常使用的命令<br></p>
-</div>
-</div>
-
-<div id="outline-container-org182d718" class="outline-3">
-<h3 id="org182d718"><code>/boot</code></h3>
-<div class="outline-text-3" id="text-org182d718">
-<p>
-这里存放的是启动linux时使用的一些核心文件<br></p>
-</div>
-</div>
-
-<div id="outline-container-orge5c0cc3" class="outline-3">
-<h3 id="orge5c0cc3"><code>/etc</code></h3>
-<div class="outline-text-3" id="text-orge5c0cc3">
-<p>
-这个目录用来存放系统管理所需要的配置文件和子目录<br></p>
-
-<p class="more"><a href="/posts/linux-directory-structure/">Read more…</a></p>
-</div>
-</div>
 </div>
     </div>
 
