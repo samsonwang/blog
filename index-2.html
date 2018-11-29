@@ -70,7 +70,181 @@
 
 
 <div class="postindex">
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/algorithm-weekly-letter-combinations-of-a-phone-number/" class="u-url">每周算法：拨号键盘上的字符组合</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/breadth-first-search/" class="u-url">广度优先搜索</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-09-19T09:13:57+08:00" itemprop="datePublished" title="2018-09-19 09:13">Sep 19 2018  (09:13)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/breadth-first-search/#disqus_thread" data-disqus-identifier="cache/posts/breadth-first-search.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/algorithm/" rel="tag">algorithm</a></li>
+        <li><a class="tag p-category" href="/tags/bfs/" rel="tag">bfs</a></li>
+        <li><a class="tag p-category" href="/tags/dfs/" rel="tag">dfs</a></li>
+        <li><a class="tag p-category" href="/tags/graph/" rel="tag">graph</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-org5cef48a" class="outline-2">
+<h2 id="org5cef48a">引言</h2>
+<div class="outline-text-2" id="text-org5cef48a">
+<p>
+在求解 <a href="/posts/algorithm-weekly-letter-combinations-of-a-phone-number/">leetcode 17</a> 时，我遇到了BFS（广度优先搜索）这个概念。在深入了解后发现，BFS是图（graph）的一个知识点，我对这一知识点进行展开学习，并将找到的资料汇总起来。本文主要整理了图和广度优先搜索的相关知识点。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org9adadc7" class="outline-2">
+<h2 id="org9adadc7">图的存储方式</h2>
+<div class="outline-text-2" id="text-org9adadc7">
+<p>
+研究图就需要使用计算机语言对其进行描述。图的存储结构除了要存储图中各个顶点的本身的信息外，同时还要存储顶点与顶点之间的所有关系（边的信息）。因此，图的结构比较复杂，很难以数据元素在存储区中的物理位置来表示元素之间的关系，但也正是由于其任意的特性，故物理表示方法很多。常用的图的存储结构有邻接矩阵、邻接表、十字链表和邻接多重表。<br></p>
+</div>
+
+<div id="outline-container-org60c0a40" class="outline-3">
+<h3 id="org60c0a40">相邻矩阵（adjacency martix）</h3>
+<div class="outline-text-3" id="text-org60c0a40">
+<p>
+对于一个具有 <code>n</code> 个顶点的图，可以使用 <code>n*n</code> 的矩阵（二维数组）来表示它们间的邻接关系。下图中，矩阵 <code>A(i，j)=1</code> 表示图中存在一条边 <code>(Vi，Vj)</code> ，而 <code>A(i，j)=0</code> 表示图中不存在边 <code>(Vi，Vj)</code> 。实际编程时，当图为不带权图时，可以在二维数组中存放bool值， <code>A(i，j)=true</code> 表示存在边 <code>(Vi，Vj)</code> ， <code>A(i，j)=false</code> 表示不存在边 <code>(Vi，Vj)</code> ；当图带权值时，则可以直接在二维数组中存放权值， <code>A(i，j)=null</code> 表示不存在边 <code>(Vi，Vj)</code> 。<br></p>
+
+<p>
+<img src="/assets/images/spinner.svg" data-src="/images/post-breadth-first-search-1.jpg" alt="图的相邻矩阵表示方法"><br></p>
+
+<p>
+左图所示的是无向图的邻接矩阵表示法，可以观察到，矩阵延对角线对称，即 <code>A(i，j)=A(j，i)</code> 。无向图邻接矩阵的第 <code>i</code> 行或第 <code>i</code> 列非零元素的个数其实就是第 <code>i</code> 个顶点的度。这表示无向图邻接矩阵存在一定的数据冗余。<br></p>
+
+<p>
+右图所示的是有向图邻接矩阵表示法，矩阵并不延对角线对称， <code>A(i，j)=1</code> 表示顶点 <code>Vi</code> 邻接到顶点 <code>Vj</code> ； <code>A(j，i)=1</code> 则表示顶点 <code>Vi</code> 邻接自顶点 <code>Vj</code> 。两者并不象无向图邻接矩阵那样表示相同的意思。有向图邻接矩阵的第 <code>i</code> 行非零元素的个数其实就是第 <code>i</code> 个顶点的出度，而第 <code>i</code> 列非零元素的个数是第 <code>i</code> 个顶点的入度，即第 <code>i</code> 个顶点的度是第 <code>i</code> 行和第 <code>i</code> 列非零元素个数之和。<br></p>
+
+<p>
+由于存在 <code>n</code> 个顶点的图需要 <code>n^2</code> 个数组元素进行存储，当图为稀疏图时，使用邻接矩阵存储方法将出现大量零元素，照成极大地空间浪费，这时应该使用邻接表表示法存储图中的数据。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgfd3c8a6" class="outline-3">
+<h3 id="orgfd3c8a6">邻接表（adjacency list）</h3>
+<div class="outline-text-3" id="text-orgfd3c8a6">
+<p>
+邻接表（adjacency list）是一种常用的表示图的数据结构。邻接表是许多链表的集合，每个链表描述了一个顶点（ <code>vectex</code> ）的相邻元素（ <code>Neighbor</code> ）。更形象地讲，邻接表是一个二维容器，第一维描述某个点，第二维描述这个点所对应的边集们。<br>
+图的邻接矩阵存储方法跟树的孩子链表示法相类似，是一种顺序分配和链式分配相结合的存储结构。邻接表由表头结点和表结点两部分组成，其中图中每个顶点均对应一个存储在数组中的表头结点。如这个表头结点所对应的顶点存在相邻顶点，则把相邻顶点依次存放于表头结点所指向的单向链表中。如下图所示，表结点存放的是邻接顶点在数组中的索引。对于无向图来说，使用邻接表进行存储也会出现数据冗余，表头结点 <code>A</code> 所指链表中存在一个指向 <code>C</code> 的表结点的同时，表头结点 <code>C</code> 所指链表也会存在一个指向 <code>A</code> 的表结点。<br><img src="/assets/images/spinner.svg" data-src="/images/post-breadth-first-search-2.jpg" alt="图的相邻表表示方法"><br></p>
+
+<p>
+有向图的邻接表有出边表和入边表（又称逆邻接表）之分。出边表的表结点存放的是从表头结点出发的有向边所指的尾顶点；入边表的表结点存放的则是指向表头结点的某个头顶点。如下图所示，图(b)和(c)分别为有向图(a)的出边表和入边表。<br><img src="/assets/images/spinner.svg" data-src="/images/post-breadth-first-search-3.jpg" alt="有向图的相邻表表示方法"><br></p>
+
+<p>
+以上所讨论的邻接表所表示的都是不带权的图，如果要表示带权图，可以在表结点中增加一个存放权的字段，其效果如下图所示。<br><img src="/assets/images/spinner.svg" data-src="/images/post-breadth-first-search-4.jpg" alt="加权图的相邻表表示方法"><br>
+观察上图可以发现，当删除存储表头结点的数组中的某一元素，有可能使部分表头结点索引号的改变，从而导致大面积修改表结点的情况发生。可以在表结点中直接存放指向表头结点的指针以解决这个问题（在链表中存放类实例即是存放指针，但必须要保证表头结点是类而不是结构体）。在实际创建邻接表时，甚至可以使用链表代替数组存放表头结点或使用顺序表存代替链表存放表结点。<br></p>
+
+<p>
+本节所有的图片摘自 <a href="https://www.cnblogs.com/abatei/archive/2008/06/06/1215114.html">cnblogs.com - abatei</a><br></p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org71e06ef" class="outline-2">
+<h2 id="org71e06ef">图的遍历</h2>
+<div class="outline-text-2" id="text-org71e06ef">
+<p>
+和树的遍历类似，在此，我们希望从图中某一顶点出发访遍图中其余顶点，且使每一个顶点仅被访问一次，这一过程就叫做图的遍历(traversing graph)。如果只访问图的顶点而不关注边的信息，那么图的遍历十分简单，使用一个 <code>foreach</code> 语句遍历存放顶点信息的数组即可。但如果为了实现特定算法，就需要根据边的信息按照一定顺序进行遍历。图的遍历算法是求解图的连通性问题、拓扑排序和求关键路径等算法的基础。<br></p>
+
+<p>
+图的遍历要比树的遍历复杂得多，由于图的任一顶点都可能和其余顶点相邻接，故在访问了某顶点之后，可能顺着某条边又访问到了已访问过的顶点，因此，在图的遍历过程中，必须记下每个访问过的顶点，以免同一个顶点被访问多次。为此给顶点附设访问标志 <code>visited</code> ，其初值为 <code>false</code> ，一旦某个顶点被访问，则其 <code>visited</code> 标志置为 <code>true</code> 。<br></p>
+
+<p>
+图的遍历方法有两种：一种是深度优先搜索遍历（depth first search 简称DFS），另一种是广度优先搜索遍历（breadth first search 简称BFS）。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org124be1a" class="outline-2">
+<h2 id="org124be1a">广度优先搜索（breadth first search）</h2>
+<div class="outline-text-2" id="text-org124be1a">
+<p>
+图的广度优先搜索遍历算法是一个分层遍历的过程，和二叉树的广度优先搜索遍历类同。它从图的某一顶点 <code>Vi</code> 出发，访问此顶点后，依次访问 <code>Vi</code> 的各个未曾访问过的邻接点，然后分别从这些邻接点出发，直至图中所有已有已被访问的顶点的邻接点都被访问到。对于无向连通图，若顶点 <code>Vi</code> 为初始访问的顶点，则广度优先搜索遍历顺序如下所示。<br><img src="/assets/images/spinner.svg" data-src="/images/post-breadth-first-search-5.jpg" alt="图的广度优先搜索遍历"><br></p>
+
+<p>
+广度优先搜索的伪代码如下：<br></p>
+<pre class="example">
+BFS (G, s)  // Where G is the graph and s is the source node
+  let Q be queue.
+  Q.enqueue( s )  // Inserting s in queue until all its neighbour vertices are marked.
+
+  mark s as visited.
+
+  while ( Q is not empty )
+    // Removing that vertex from queue, whose neighbour will be visited now
+    v  =  Q.dequeue( )
+
+    // processing all the neighbours of v
+    for all neighbours w of v in Graph G
+      if w is not visited
+        Q.enqueue( w )  // Stores w in Q to further visit its neighbour
+        mark w as visited.
+</pre>
+
+<p>
+<b>时间复杂度</b><br>
+BFS的时间复杂度为 <code>O(V+E)</code> ，其中 <code>V</code> 是节点的数量， <code>E</code> 是边的数量。<br></p>
+
+<p>
+<b>BFS的应用场景</b><br></p>
+<ul class="org-ul">
+<li>最短路径问题<br>
+</li>
+<li>P2P网络，网络广播<br>
+</li>
+<li>GPS导航系统<br>
+</li>
+<li>搜索引擎的网络爬虫<br>
+</li>
+</ul>
+</div>
+</div>
+
+
+
+<div id="outline-container-org0eb3699" class="outline-2">
+<h2 id="org0eb3699">参考资料</h2>
+<div class="outline-text-2" id="text-org0eb3699">
+<ul class="org-ul">
+<li>
+<a href="https://www.hackerearth.com/zh/practice/algorithms/graphs/breadth-first-search/tutorial/">hackerearth.com - breath first search tutorial</a><br>
+</li>
+<li>
+<a href="http://www.cnblogs.com/abatei/archive/2010/02/25/1215114.html">cnblogs - 图的遍历</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Adjacency_matrix">wikipedia - adjacency matrix</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Adjacency_list">wikipedia - adjacency list</a><br>
+</li>
+<li>
+<a href="https://baike.baidu.com/item/%E9%82%BB%E6%8E%A5%E8%A1%A8">百度百科 - 邻接表</a><br>
+</li>
+<li>
+<a href="https://www.geeksforgeeks.org/applications-of-breadth-first-traversal/">geeksforgeeks - application of BFS</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/algorithm-weekly-letter-combinations-of-a-phone-number/" class="u-url">每周算法：拨号键盘上的字符组合</a></h1>
       <div class="metadata">
         
 
@@ -100,9 +274,9 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orge02cefc" class="outline-2">
-<h2 id="orge02cefc">Description</h2>
-<div class="outline-text-2" id="text-orge02cefc">
+      <div id="outline-container-orgb55345a" class="outline-2">
+<h2 id="orgb55345a">Description</h2>
+<div class="outline-text-2" id="text-orgb55345a">
 <p>
 Given a string containing digits from <code>2-9</code> inclusive, return all possible letter combinations that the number could represent.<br></p>
 
@@ -149,13 +323,13 @@ Although the above answer is in lexicographical order, your answer could be in a
 </div>
 </div>
 
-<div id="outline-container-org4af679b" class="outline-2">
-<h2 id="org4af679b">Solution</h2>
-<div class="outline-text-2" id="text-org4af679b">
+<div id="outline-container-org90f9d00" class="outline-2">
+<h2 id="org90f9d00">Solution</h2>
+<div class="outline-text-2" id="text-org90f9d00">
 </div>
-<div id="outline-container-org99e8cb8" class="outline-3">
-<h3 id="org99e8cb8">Approach 1</h3>
-<div class="outline-text-3" id="text-org99e8cb8">
+<div id="outline-container-org28391bc" class="outline-3">
+<h3 id="org28391bc">Approach 1</h3>
+<div class="outline-text-3" id="text-org28391bc">
 <p>
 借助加法计算进位的思想，下面是我的解法。我首次提交时并没有注意输入字符串为空的情况，对于输入参数的检查还是太容易忽略了。<br></p>
 
@@ -209,9 +383,9 @@ Although the above answer is in lexicographical order, your answer could be in a
 </div>
 </div>
 
-<div id="outline-container-org7b88c6e" class="outline-3">
-<h3 id="org7b88c6e">Approach 2 recursive</h3>
-<div class="outline-text-3" id="text-org7b88c6e">
+<div id="outline-container-orgc5beeb5" class="outline-3">
+<h3 id="orgc5beeb5">Approach 2 recursive</h3>
+<div class="outline-text-3" id="text-orgc5beeb5">
 <p>
 使用递归完成字符串的拼接，在每次递归，都会增加一个字符。终止递归的条件是字符串长度达到输入参数的长度。递归方法符合生活中的使用场景，还是比较容易理解的。<br></p>
 
@@ -262,9 +436,9 @@ Although the above answer is in lexicographical order, your answer could be in a
 </div>
 </div>
 
-<div id="outline-container-org74ba1a7" class="outline-3">
-<h3 id="org74ba1a7">Approach 3 BFS</h3>
-<div class="outline-text-3" id="text-org74ba1a7">
+<div id="outline-container-orgced4839" class="outline-3">
+<h3 id="orgced4839">Approach 3 BFS</h3>
+<div class="outline-text-3" id="text-orgced4839">
 <p>
 宽度优先搜索，breadth-first search（BFS）,是一种对树（tree）或图（graph）的遍历算法，下面就是这种算法的解法，代码使用java编写。<br></p>
 
@@ -316,9 +490,9 @@ Although the above answer is in lexicographical order, your answer could be in a
 </div>
 </div>
 
-<div id="outline-container-orgc2467f8" class="outline-2">
-<h2 id="orgc2467f8">Reference</h2>
-<div class="outline-text-2" id="text-orgc2467f8">
+<div id="outline-container-orgcc4a25d" class="outline-2">
+<h2 id="orgcc4a25d">Reference</h2>
+<div class="outline-text-2" id="text-orgcc4a25d">
 <ul class="org-ul">
 <li>
 <a href="https://en.wikipedia.org/wiki/Breadth-first_search">wikipedia - breadth-first search</a><br>
@@ -357,9 +531,9 @@ Although the above answer is in lexicographical order, your answer could be in a
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orga1fc455" class="outline-2">
-<h2 id="orga1fc455">Description</h2>
-<div class="outline-text-2" id="text-orga1fc455">
+      <div id="outline-container-orgd1170fa" class="outline-2">
+<h2 id="orgd1170fa">Description</h2>
+<div class="outline-text-2" id="text-orgd1170fa">
 <p>
 Given an array nums of n integers and an integer target, find three integers in nums such that the sum is closest to target. Return the sum of the three integers. You may assume that each input would have exactly one solution.<br></p>
 
@@ -375,13 +549,13 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 </div>
 </div>
 
-<div id="outline-container-org663d705" class="outline-2">
-<h2 id="org663d705">Solution</h2>
-<div class="outline-text-2" id="text-org663d705">
+<div id="outline-container-org86ef6c3" class="outline-2">
+<h2 id="org86ef6c3">Solution</h2>
+<div class="outline-text-2" id="text-org86ef6c3">
 </div>
-<div id="outline-container-org44e717d" class="outline-3">
-<h3 id="org44e717d">Approach 1</h3>
-<div class="outline-text-3" id="text-org44e717d">
+<div id="outline-container-org00822d7" class="outline-3">
+<h3 id="org00822d7">Approach 1</h3>
+<div class="outline-text-3" id="text-org00822d7">
 <p>
 这道题与之前的“3Sum”十分类似，做起来思路是非常相似的，最容易想到的就是暴力解法，穷举出所有的组合，进而找出最接近的。<br></p>
 
@@ -415,9 +589,9 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 </div>
 </div>
 
-<div id="outline-container-orgf4f54fa" class="outline-3">
-<h3 id="orgf4f54fa">Approach 2</h3>
-<div class="outline-text-3" id="text-orgf4f54fa">
+<div id="outline-container-orgdc61a5c" class="outline-3">
+<h3 id="orgdc61a5c">Approach 2</h3>
+<div class="outline-text-3" id="text-orgdc61a5c">
 <p>
 套用之前“3Sum”的O(n<sup>2</sup>)解法，下面的解法也是很容易想到的。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">threeSumClosest</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
@@ -465,9 +639,9 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 </div>
 </div>
 
-<div id="outline-container-orge6a8260" class="outline-2">
-<h2 id="orge6a8260">Reference</h2>
-<div class="outline-text-2" id="text-orge6a8260">
+<div id="outline-container-org9ee3567" class="outline-2">
+<h2 id="org9ee3567">Reference</h2>
+<div class="outline-text-2" id="text-org9ee3567">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/3sum/description/">leetcode 3 Sum</a><br>
@@ -511,18 +685,18 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org1e83a9a" class="outline-2">
-<h2 id="org1e83a9a">引言</h2>
-<div class="outline-text-2" id="text-org1e83a9a">
+      <div id="outline-container-org4dc8d59" class="outline-2">
+<h2 id="org4dc8d59">引言</h2>
+<div class="outline-text-2" id="text-org4dc8d59">
 <p>
 本篇文章主要是针对shell中的 <code>grep</code> 和 <code>egrep</code> 的讲解，对于正则表达式的规则本身并没有太多的内容。在阅读本篇文章之前，读者应该对正则表达式有个大致的了解。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org499f634" class="outline-2">
-<h2 id="org499f634">
+<div id="outline-container-org8126230" class="outline-2">
+<h2 id="org8126230">
 <code>grep</code> 命令</h2>
-<div class="outline-text-2" id="text-org499f634">
+<div class="outline-text-2" id="text-org8126230">
 <p>
 <code>grep</code> 命令是linux终端中最常用的命令之一，它的全称是“global regular expression print”，从字面上理解， <code>grep</code> 可以用来进行正则表达式匹配。<br></p>
 
@@ -569,10 +743,10 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 </div>
 </div>
 
-<div id="outline-container-orgfb09b9f" class="outline-2">
-<h2 id="orgfb09b9f">
+<div id="outline-container-orgfef7a74" class="outline-2">
+<h2 id="orgfef7a74">
 <code>egrep</code> 命令</h2>
-<div class="outline-text-2" id="text-orgfb09b9f">
+<div class="outline-text-2" id="text-orgfef7a74">
 <p>
 <code>egrep</code> 的含义为“extended grep”，相对于 <code>grep</code> 有更多的正则表达式特性。同样，可以在使用 <code>grep</code> 时增加 <code>-E</code> 参数获得相同的效果。<br></p>
 
@@ -602,9 +776,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 
 
-<div id="outline-container-orgd19af71" class="outline-2">
-<h2 id="orgd19af71">参考资料</h2>
-<div class="outline-text-2" id="text-orgd19af71">
+<div id="outline-container-orgc745712" class="outline-2">
+<h2 id="orgc745712">参考资料</h2>
+<div class="outline-text-2" id="text-orgc745712">
 <ul class="org-ul">
 <li>
 <a href="https://www.digitalocean.com/community/tutorials/using-grep-regular-expressions-to-search-for-text-patterns-in-linux">digital ocean - grep tutorial</a><br>
@@ -647,9 +821,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org28ab021" class="outline-2">
-<h2 id="org28ab021">进程与线程之间有什么区别</h2>
-<div class="outline-text-2" id="text-org28ab021">
+      <div id="outline-container-orgcc6612e" class="outline-2">
+<h2 id="orgcc6612e">进程与线程之间有什么区别</h2>
+<div class="outline-text-2" id="text-orgcc6612e">
 <p>
 进程（process）是指在系统中正在运行的一个应用程序，是系统资源分配的基本单位，在内存中有其完备的数据空间和代码空间，拥有完整的虚拟空间地址。一个进程所拥有的数据和变量只属于它自己。<br></p>
 
@@ -683,9 +857,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 
 
-<div id="outline-container-orgb96ab50" class="outline-2">
-<h2 id="orgb96ab50">什么情况下适合使用线程</h2>
-<div class="outline-text-2" id="text-orgb96ab50">
+<div id="outline-container-org3c68806" class="outline-2">
+<h2 id="org3c68806">什么情况下适合使用线程</h2>
+<div class="outline-text-2" id="text-org3c68806">
 <p>
 线程相对于进程的优势：<br></p>
 <ul class="org-ul">
@@ -709,9 +883,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 </div>
 
-<div id="outline-container-orge2609cb" class="outline-2">
-<h2 id="orge2609cb">什么情况下适合使用进程</h2>
-<div class="outline-text-2" id="text-orge2609cb">
+<div id="outline-container-org9543c51" class="outline-2">
+<h2 id="org9543c51">什么情况下适合使用进程</h2>
+<div class="outline-text-2" id="text-org9543c51">
 <p>
 进程相对于线程的优势：<br></p>
 <ul class="org-ul">
@@ -728,9 +902,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 
 
-<div id="outline-container-orgfc12598" class="outline-2">
-<h2 id="orgfc12598">参考资料</h2>
-<div class="outline-text-2" id="text-orgfc12598">
+<div id="outline-container-orga76ffbc" class="outline-2">
+<h2 id="orga76ffbc">参考资料</h2>
+<div class="outline-text-2" id="text-orga76ffbc">
 <ul class="org-ul">
 <li>
 <a href="https://www.backblaze.com/blog/whats-the-diff-programs-processes-and-threads/">backblaze.com - difference between process and thread</a><br>
@@ -781,9 +955,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgcc94d06" class="outline-2">
-<h2 id="orgcc94d06">Description</h2>
-<div class="outline-text-2" id="text-orgcc94d06">
+      <div id="outline-container-org3e70aa0" class="outline-2">
+<h2 id="org3e70aa0">Description</h2>
+<div class="outline-text-2" id="text-org3e70aa0">
 <p>
 Given an array nums of n integers, are there elements a, b, c in nums such that a + b + c = 0? Find all unique triplets in the array which gives the sum of zero.<br></p>
 
@@ -808,13 +982,13 @@ A solution set is:
 </div>
 </div>
 
-<div id="outline-container-orgea497e6" class="outline-2">
-<h2 id="orgea497e6">Solution</h2>
-<div class="outline-text-2" id="text-orgea497e6">
+<div id="outline-container-org04a4f22" class="outline-2">
+<h2 id="org04a4f22">Solution</h2>
+<div class="outline-text-2" id="text-org04a4f22">
 </div>
-<div id="outline-container-org03d5c36" class="outline-3">
-<h3 id="org03d5c36">Approach 1</h3>
-<div class="outline-text-3" id="text-org03d5c36">
+<div id="outline-container-org6848864" class="outline-3">
+<h3 id="org6848864">Approach 1</h3>
+<div class="outline-text-3" id="text-org6848864">
 <p>
 这道题有点难度，第一时间没有什么思路。我想到的主要问题是如何保证返回结果中不包含重复的一组数。如果使用暴力解法，将所有满足条件的组合取到后进行重复性清洗，应该是一种可行的解法，只是这样做时间复杂度有点高。<br></p>
 
@@ -879,9 +1053,9 @@ A solution set is:
 </div>
 </div>
 
-<div id="outline-container-org59a1f4e" class="outline-3">
-<h3 id="org59a1f4e">Approach 2</h3>
-<div class="outline-text-3" id="text-org59a1f4e">
+<div id="outline-container-org6d1a278" class="outline-3">
+<h3 id="org6d1a278">Approach 2</h3>
+<div class="outline-text-3" id="text-org6d1a278">
 <p>
 我认为这到题的主要难点啊主要是在去除重复的问题上。下面的解法来自 <a href="https://leetcode.com/problems/3sum/discuss/7402/Share-my-AC-C++-solution-around-50ms-O(N*N)-with-explanation-and-comments">leetcode</a> ，在处理重复性问题时，在匹配答案时将重复的数字跳过，这样就不用在后续的结果中进行剔除重复元素的步骤了。<br></p>
 
@@ -934,9 +1108,9 @@ A solution set is:
 </div>
 
 
-<div id="outline-container-orga3dfafd" class="outline-2">
-<h2 id="orga3dfafd">Reference</h2>
-<div class="outline-text-2" id="text-orga3dfafd">
+<div id="outline-container-org23aa6c3" class="outline-2">
+<h2 id="org23aa6c3">Reference</h2>
+<div class="outline-text-2" id="text-org23aa6c3">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/3sum/discuss/7402/Share-my-AC-C++-solution-around-50ms-O(N*N)-with-explanation-and-comments">leetcode.com discuss</a><br>
@@ -975,9 +1149,9 @@ A solution set is:
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgeb6f4f7" class="outline-2">
-<h2 id="orgeb6f4f7">Description</h2>
-<div class="outline-text-2" id="text-orgeb6f4f7">
+      <div id="outline-container-org994e980" class="outline-2">
+<h2 id="org994e980">Description</h2>
+<div class="outline-text-2" id="text-org994e980">
 <p>
 Roman numerals are represented by seven different symbols: I, V, X, L, C, D and M.<br></p>
 
@@ -1044,13 +1218,13 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgf10e573" class="outline-2">
-<h2 id="orgf10e573">Solution</h2>
-<div class="outline-text-2" id="text-orgf10e573">
+<div id="outline-container-org07b4ba5" class="outline-2">
+<h2 id="org07b4ba5">Solution</h2>
+<div class="outline-text-2" id="text-org07b4ba5">
 </div>
-<div id="outline-container-org4f2aa2c" class="outline-3">
-<h3 id="org4f2aa2c">Approach 1</h3>
-<div class="outline-text-3" id="text-org4f2aa2c">
+<div id="outline-container-org1102dfd" class="outline-3">
+<h3 id="org1102dfd">Approach 1</h3>
+<div class="outline-text-3" id="text-org1102dfd">
 <p>
 这道题不是很难，很容易就能想到解法，需要注意好边界条件问题，下面就是我的解法。<br></p>
 <div class="highlight"><pre><span></span><span class="n">pint</span> <span class="nf">romanToInt</span><span class="p">(</span><span class="n">string</span> <span class="n">str</span><span class="p">)</span> <span class="p">{</span>
@@ -1184,9 +1358,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-org35928fb" class="outline-3">
-<h3 id="org35928fb">Approach 2</h3>
-<div class="outline-text-3" id="text-org35928fb">
+<div id="outline-container-orgf96b95e" class="outline-3">
+<h3 id="orgf96b95e">Approach 2</h3>
+<div class="outline-text-3" id="text-orgf96b95e">
 <p>
 这个解法是leetcode上最快的解法之一，只使用一个循环就完成了计算，代码整体上很简洁，也比较好理解。只需要针对6种特殊情况做特殊处理就好。<br></p>
 
@@ -1250,9 +1424,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-org6ff9880" class="outline-3">
-<h3 id="org6ff9880">Approach 3</h3>
-<div class="outline-text-3" id="text-org6ff9880">
+<div id="outline-container-orga82f697" class="outline-3">
+<h3 id="orga82f697">Approach 3</h3>
+<div class="outline-text-3" id="text-orga82f697">
 <p>
 下面这个是我在看该问题的discuss板块的时候发现的。不得不说，结题思路实在新奇，这点是值得学习的。不过我比较担心它的时间复杂度。该方法使用Java编写。<br></p>
 <div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kt">int</span> <span class="nf">romanToInt</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">)</span> <span class="o">{</span>
@@ -1314,9 +1488,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org111e743" class="outline-2">
-<h2 id="org111e743">Description</h2>
-<div class="outline-text-2" id="text-org111e743">
+      <div id="outline-container-org205e54a" class="outline-2">
+<h2 id="org205e54a">Description</h2>
+<div class="outline-text-2" id="text-org205e54a">
 <p>
 Roman numerals are represented by seven different symbols: <code>I</code> , <code>V</code> , <code>X</code> , <code>L</code> , <code>C</code> , <code>D</code> and <code>M</code>.<br></p>
 <pre class="example">
@@ -1392,13 +1566,13 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-org94e39cf" class="outline-2">
-<h2 id="org94e39cf">Solution</h2>
-<div class="outline-text-2" id="text-org94e39cf">
+<div id="outline-container-org6c13f84" class="outline-2">
+<h2 id="org6c13f84">Solution</h2>
+<div class="outline-text-2" id="text-org6c13f84">
 </div>
-<div id="outline-container-orgc07ac00" class="outline-3">
-<h3 id="orgc07ac00">Approach 1</h3>
-<div class="outline-text-3" id="text-orgc07ac00">
+<div id="outline-container-org7590511" class="outline-3">
+<h3 id="org7590511">Approach 1</h3>
+<div class="outline-text-3" id="text-org7590511">
 <p>
 这道题并不难，方法也很容易想到，这道题被归为 <code>medium</code> 难度反而让我感到有些奇怪，下面的代码就是我的解法。<br></p>
 <div class="highlight"><pre><span></span><span class="n">string</span> <span class="nf">intToRoman</span><span class="p">(</span><span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
@@ -1519,9 +1693,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-org388a2c8" class="outline-3">
-<h3 id="org388a2c8">Approach 2</h3>
-<div class="outline-text-3" id="text-org388a2c8">
+<div id="outline-container-org0e2fcc6" class="outline-3">
+<h3 id="org0e2fcc6">Approach 2</h3>
+<div class="outline-text-3" id="text-org0e2fcc6">
 <p>
 下面代码是从leetcode上找的，这样的打表法，看起来至少从形式上会更加美观，而且也非常好理解。<br></p>
 <div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
@@ -1548,9 +1722,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-org508bc5c" class="outline-3">
-<h3 id="org508bc5c">Approach 3</h3>
-<div class="outline-text-3" id="text-org508bc5c">
+<div id="outline-container-org7590683" class="outline-3">
+<h3 id="org7590683">Approach 3</h3>
+<div class="outline-text-3" id="text-org7590683">
 <p>
 下面这段代码也是leetcode上的答案，这个答案的通用性要好一些，最起码找到了规律，这有助于算法的后续拓展。<br></p>
 <div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
@@ -1623,9 +1797,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orge938b72" class="outline-2">
-<h2 id="orge938b72">引言</h2>
-<div class="outline-text-2" id="text-orge938b72">
+      <div id="outline-container-org0836dc4" class="outline-2">
+<h2 id="org0836dc4">引言</h2>
+<div class="outline-text-2" id="text-org0836dc4">
 <p>
 这篇文章的起因是出于对于 <code>C++</code> 饿汉单例模式代码的一些疑问，查阅了一些资料。在仔细研究后，我发现在一些基础概念的理解还是存在偏差。<br>
 下面请看这样的一段代码，能看出其中有那些不太“正常”的语句么。<br></p>
@@ -1647,9 +1821,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orge1504f2" class="outline-2">
-<h2 id="orge1504f2">私有静态成员的初始化</h2>
-<div class="outline-text-2" id="text-orge1504f2">
+<div id="outline-container-orgfb768ff" class="outline-2">
+<h2 id="orgfb768ff">私有静态成员的初始化</h2>
+<div class="outline-text-2" id="text-orgfb768ff">
 <p>
 上面的代码是饿汉单例模式的 <code>C++</code> 的实现，在没有查阅资料之前，我对其中私有静态成员变量的初始化存疑。主要有以下两点：<br></p>
 <ul class="org-ul">
@@ -1693,9 +1867,9 @@ The static data member <code>run_chain</code> of class process is defined in glo
 </div>
 </div>
 
-<div id="outline-container-org3a92efc" class="outline-2">
-<h2 id="org3a92efc">私有构造函数</h2>
-<div class="outline-text-2" id="text-org3a92efc">
+<div id="outline-container-org4afbb34" class="outline-2">
+<h2 id="org4afbb34">私有构造函数</h2>
+<div class="outline-text-2" id="text-org4afbb34">
 <p>
 在查阅资料时，我发现 Peter 的 <a href="https://stackoverflow.com/a/41361967">描述</a> 纠正了我对私有构造函数的一些看法。<br></p>
 <blockquote>
@@ -1707,9 +1881,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 </div>
 
-<div id="outline-container-org33c2a15" class="outline-2">
-<h2 id="org33c2a15">参考资料</h2>
-<div class="outline-text-2" id="text-org33c2a15">
+<div id="outline-container-org47e5bc4" class="outline-2">
+<h2 id="org47e5bc4">参考资料</h2>
+<div class="outline-text-2" id="text-org47e5bc4">
 <ul class="org-ul">
 <li>
 <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">ISO C++11 standard</a><br>
@@ -1765,17 +1939,17 @@ The point of a <code>private</code> constructor is not preventing object constru
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgff69443" class="outline-2">
-<h2 id="orgff69443">问题</h2>
-<div class="outline-text-2" id="text-orgff69443">
+      <div id="outline-container-org1991c06" class="outline-2">
+<h2 id="org1991c06">问题</h2>
+<div class="outline-text-2" id="text-org1991c06">
 <p>
 使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
 </div>
 </div>
 
-<div id="outline-container-org1a05772" class="outline-2">
-<h2 id="org1a05772">解答</h2>
-<div class="outline-text-2" id="text-org1a05772">
+<div id="outline-container-orgc6877db" class="outline-2">
+<h2 id="orgc6877db">解答</h2>
+<div class="outline-text-2" id="text-orgc6877db">
 <p>
 客户端建立连接的示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">...);</span>
@@ -1825,9 +1999,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 </div>
 
-<div id="outline-container-orge090e19" class="outline-2">
-<h2 id="orge090e19">参考资料</h2>
-<div class="outline-text-2" id="text-orge090e19">
+<div id="outline-container-orga380508" class="outline-2">
+<h2 id="orga380508">参考资料</h2>
+<div class="outline-text-2" id="text-orga380508">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
@@ -1866,9 +2040,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org40156a7" class="outline-2">
-<h2 id="org40156a7">Description</h2>
-<div class="outline-text-2" id="text-org40156a7">
+      <div id="outline-container-org397f360" class="outline-2">
+<h2 id="org397f360">Description</h2>
+<div class="outline-text-2" id="text-org397f360">
 <p>
 Given n non-negative integers a1, a2, …, an , where each represents a point at coordinate (i, ai). n vertical lines are drawn such that the two endpoints of line i is at (i, ai) and (i, 0). Find two lines, which together with x-axis forms a container, such that the container contains the most water.<br></p>
 
@@ -1885,13 +2059,13 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-org86decc6" class="outline-2">
-<h2 id="org86decc6">Solution</h2>
-<div class="outline-text-2" id="text-org86decc6">
+<div id="outline-container-org31144d8" class="outline-2">
+<h2 id="org31144d8">Solution</h2>
+<div class="outline-text-2" id="text-org31144d8">
 </div>
-<div id="outline-container-org7fae907" class="outline-3">
-<h3 id="org7fae907">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org7fae907">
+<div id="outline-container-orgc5dbb1f" class="outline-3">
+<h3 id="orgc5dbb1f">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-orgc5dbb1f">
 <p>
 暴力解法是最容易想到的解法了，然而暴力解法肯定不是本题的意图。<br></p>
 
@@ -1917,9 +2091,9 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-org31caa6a" class="outline-3">
-<h3 id="org31caa6a">Approach 2</h3>
-<div class="outline-text-3" id="text-org31caa6a">
+<div id="outline-container-org84fdf48" class="outline-3">
+<h3 id="org84fdf48">Approach 2</h3>
+<div class="outline-text-3" id="text-org84fdf48">
 <p>
 我在leetcode上看到这样一种解法，这种解法从逻辑和形式上看上不复杂，但是我的疑问在是否有严密的数学推导和论证。<br></p>
 
@@ -1962,9 +2136,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 </div>
 </div>
 
-<div id="outline-container-orgcc37819" class="outline-2">
-<h2 id="orgcc37819">Reference</h2>
-<div class="outline-text-2" id="text-orgcc37819">
+<div id="outline-container-orga8609d9" class="outline-2">
+<h2 id="orga8609d9">Reference</h2>
+<div class="outline-text-2" id="text-orga8609d9">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/container-with-most-water/solution/">leetcode problem solution</a><br>
@@ -2011,9 +2185,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgca9e3ff" class="outline-2">
-<h2 id="orgca9e3ff">引言</h2>
-<div class="outline-text-2" id="text-orgca9e3ff">
+      <div id="outline-container-org84c26f5" class="outline-2">
+<h2 id="org84c26f5">引言</h2>
+<div class="outline-text-2" id="text-org84c26f5">
 <p>
 在学习前端的过程中，我开始接触到许多开发框架或开发工具，这些工具让我开始眼花缭乱。使用常规的html/css/js就已经能够开发出这种网页了，所以我问自己，为什么要学习这些框架或工具，这些库是用来解决什么问题的。想明白这个问题，我学习的目的就更加明确，在遇到一些开发情景时，也能够快速准确地挑选出应该使用的框架。<br></p>
 
@@ -2022,9 +2196,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 </div>
 </div>
 
-<div id="outline-container-org8eb6951" class="outline-2">
-<h2 id="org8eb6951">为什么要使用jQuery</h2>
-<div class="outline-text-2" id="text-org8eb6951">
+<div id="outline-container-org70e8f09" class="outline-2">
+<h2 id="org70e8f09">为什么要使用jQuery</h2>
+<div class="outline-text-2" id="text-org70e8f09">
 <p>
 jQuery是一个轻量级js库，它有如下特性：<br></p>
 <ul class="org-ul">
@@ -2044,9 +2218,9 @@ jQuery是一个轻量级js库，它有如下特性：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org44178ba" class="outline-2">
-<h2 id="org44178ba">为什么要使用SASS</h2>
-<div class="outline-text-2" id="text-org44178ba">
+<div id="outline-container-org30cef33" class="outline-2">
+<h2 id="org30cef33">为什么要使用SASS</h2>
+<div class="outline-text-2" id="text-org30cef33">
 <p>
 SASS是一种CSS预编译格式，它最终会编译成CSS。<br>
 SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操作，函数操作，样式模板（mixin）等强大的特性。它能够让开发人员更方便地编写CSS。SASS支持 <code>import</code> 关键字，这样就能够很方便地对样式进行模块化设计。<br></p>
@@ -2059,9 +2233,9 @@ SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操�
 </div>
 </div>
 
-<div id="outline-container-org4362ea4" class="outline-2">
-<h2 id="org4362ea4">为什么要使用Bootstrap</h2>
-<div class="outline-text-2" id="text-org4362ea4">
+<div id="outline-container-org85bf6af" class="outline-2">
+<h2 id="org85bf6af">为什么要使用Bootstrap</h2>
+<div class="outline-text-2" id="text-org85bf6af">
 <p>
 Bootstrap是一个用于快速开发网页的前端框架。以我目前的理解来看，它更像是一个网页样式框架。<br></p>
 <ul class="org-ul">
@@ -2077,9 +2251,9 @@ Bootstrap是一个用于快速开发网页的前端框架。以我目前的理�
 </div>
 </div>
 
-<div id="outline-container-org0c864fb" class="outline-2">
-<h2 id="org0c864fb">为什么要使用React</h2>
-<div class="outline-text-2" id="text-org0c864fb">
+<div id="outline-container-org11d1c9f" class="outline-2">
+<h2 id="org11d1c9f">为什么要使用React</h2>
+<div class="outline-text-2" id="text-org11d1c9f">
 <p>
 DOM操作对性能的影响很大，频繁的DOM操作会使网页渲染的速度变慢，React主要解决了这个问题。<br>
 React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新渲染。<br></p>
@@ -2119,9 +2293,9 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 </div>
 
 
-<div id="outline-container-orgc206f5b" class="outline-2">
-<h2 id="orgc206f5b">参考资料</h2>
-<div class="outline-text-2" id="text-orgc206f5b">
+<div id="outline-container-orgae459aa" class="outline-2">
+<h2 id="orgae459aa">参考资料</h2>
+<div class="outline-text-2" id="text-orgae459aa">
 <ol class="org-ol">
 <li>
 <a href="https://www.w3schools.com/jquery/jquery_intro.asp">w3schools jQuery intro</a><br>
@@ -2139,201 +2313,6 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 <a href="https://scotch.io/@anitashah/what-problems-does-reactjs-solve-when-must-you-select-reactjs">what problems does reactjs solve</a><br>
 </li>
 </ol>
-</div>
-</div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/javascript-object-oriented-programming/" class="u-url">javscript中的OOP特性</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-08-26T10:31:37+08:00" itemprop="datePublished" title="2018-08-26 10:31">Aug 26 2018  (10:31)
-    </time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/javascript-object-oriented-programming/#disqus_thread" data-disqus-identifier="cache/posts/javascript-object-oriented-programming.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
-        <li><a class="tag p-category" href="/tags/javascript/" rel="tag">javascript</a></li>
-        <li><a class="tag p-category" href="/tags/oop/" rel="tag">oop</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div id="outline-container-org70909f0" class="outline-2">
-<h2 id="org70909f0">
-<span class="section-number-2">1</span> 引言</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-js也是具有OOP（object oriented programming）特性的，OOP在构建一些大型应用程序还是有一套成熟理论的。作为C++的使用者在学习js中的OOP特性的过程中，能够较快地理解其中的各种术语和概念，也能比较两种语言的异同，深化知识理解。通过js的OOP特性的学习也让我开始从语言层面考虑程序设计问题。<br>
-本篇文章主要介绍了js中的一些OOP特性，并且比较了js与C++的语言特性。如果你能熟练掌握C++的OOP特性，本文能帮助你快速地对js中的OOP特性建立整体的认识。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org7a6c76f" class="outline-2">
-<h2 id="org7a6c76f">
-<span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
-<div class="outline-text-2" id="text-2">
-</div>
-<div id="outline-container-orgd6d68c1" class="outline-3">
-<h3 id="orgd6d68c1">
-<span class="section-number-3">2.1</span> 创建对象（object）</h3>
-<div class="outline-text-3" id="text-2-1">
-<p>
-js中创建object的代码，示例如下：<br></p>
-<div class="highlight"><pre><span></span>let duck = {
-  name: "Aflac",
-  numLegs: 2,
-  sayName: function() {
-    return "The name of this duck is " + this.name + ".";
-  }
-};
-</pre></div>
-<p>
-js直接通过 <code>{}</code> 就可以创建出对象示例来，不需要对该对象（object）的类（class）进行声明。这点和C++不是很相同，C++需要先声明一个class再创建object。<br>
-这个object有两个成员变量和一个成员函数，需要注意的是这两个成员变量都是公有（public）的，他们是可以直接用 <code>.</code> 符号访问的。<br>
-js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关键字用于表示当前实例。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org95200db" class="outline-3">
-<h3 id="org95200db">
-<span class="section-number-3">2.2</span> 类（class）的声明</h3>
-<div class="outline-text-3" id="text-2-2">
-<p>
-js中声明一个类的操作实际上就是声明一个构造函数。<br></p>
-<div class="highlight"><pre><span></span>let Bird = function(name, color) {
-  this.name = name;
-  this.color = color;
-  this.numLegs = 2;
-}
-
-let crow = new Bird("Alexis", "black");
-
-crow instanceof Bird; // =&gt; true
-</pre></div>
-<p>
-上面的代码声明了Bird类，在js中通常类的名字都是由首字母大写的单词表示的。类的构造函数也能接受参数用于对实例的初始化，这点与C++非常相似，使用 <code>new</code> 关键字就能够创建该类的实例。<br>
-使用 <code>instanceof</code> 关键字用于检查对象是否属于某个类，也可通过验证 <code>constructor</code> 属性来判断一个对象是否属于一个类 <code>crow.constructor == Bird</code> 。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org1d12bad" class="outline-3">
-<h3 id="org1d12bad">
-<span class="section-number-3">2.3</span> 类的共有成员</h3>
-<div class="outline-text-3" id="text-2-3">
-<p>
-js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还不太合适）能够实现C++中静态成员变量和静态成员函数的特性。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype.numLegs = 2;
-</pre></div>
-<p>
-上面的代码就给Bird类增加了一个静态成员变量。这个 <code>prototype</code> 可以是一个对象，这样类的共有成员就能方便地承载更多的属性了，示例代码如下。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype = {
-  constructor: Bird,
-  numLegs: 2,
-  eat: function() {
-    console.log("nom nom nom");
-  },
-  describe: function() {
-    console.log("My name is " + this.name);
-  }
-};
-</pre></div>
-<p>
-需要注意的是需要设置好 <code>constructor</code> 属性，这样是为了保证代码逻辑的一致性。<br>
-对象会获得类的 <code>prototype</code> 属性，可以通过 <code>isPrototypeof</code> 方法来验证。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype.isPrototypeOf(duck);
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgdaedb96" class="outline-3">
-<h3 id="orgdaedb96">
-<span class="section-number-3">2.4</span> 类的私有成员</h3>
-<div class="outline-text-3" id="text-2-4">
-<p>
-js与C++一样，也可以有私有成员变量，代码如下所示。 <code>hatchedEgg</code> 就相当与是Bird的私有成员变量，并且提供了修改这个成员变量的方法 <code>getHatchedEggCount</code> 。<br></p>
-<div class="highlight"><pre><span></span>function Bird() {
-  let hatchedEgg = 10; // private property
-
-  this.getHatchedEggCount = function() {
-    // publicly available method that a bird object can use
-    return hatchedEgg;
-  };
-}
-let ducky = new Bird();
-ducky.getHatchedEggCount(); // returns 10
-</pre></div>
-<p>
-这种形式在js中被称作闭包（closure），函数能够访问到与他处在同一个作用域（context）中的变量。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org614b661" class="outline-3">
-<h3 id="org614b661">
-<span class="section-number-3">2.5</span> 类的继承和派生</h3>
-<div class="outline-text-3" id="text-2-5">
-<p>
-js中的派生主要通过 <code>prototype</code> 体现，下面的代码表示Bird派生自Object。同样，需要注意将 <code>constructor</code> 属性设置好。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype = Object.create(Animal.prototype);
-Bird.prototype.constructor = Bird;
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgfacab38" class="outline-3">
-<h3 id="orgfacab38">
-<span class="section-number-3">2.6</span> 类的覆盖</h3>
-<div class="outline-text-3" id="text-2-6">
-<p>
-js中可以重写基类中的方法，代码如下所示，这点与C++中的 <code>override</code> 相同。<br></p>
-<div class="highlight"><pre><span></span>function Animal() { }
-Animal.prototype.eat = function() {
-  return "nom nom nom";
-};
-function Bird() { }
-
-// Inherit all methods from Animal
-Bird.prototype = Object.create(Animal.prototype);
-
-// Bird.eat() overrides Animal.eat()
-Bird.prototype.eat = function() {
-  return "peck peck peck";
-};
-
-Bird.prototype.fly = function() {
-  console.log("I'm flying!");
-};
-</pre></div>
-<p>
-通样也在派生之后也可以通过修改派生类的 <code>prototype</code> 以达到特化派生类的作用，上面的 <code>fly</code> 方法就是在Bird完成派生之后新增的方法。现在Bird有两个方法，它们分别是 <code>eat</code> 和 <code>fly</code> 。<br></p>
-</div>
-</div>
-</div>
-
-
-<div id="outline-container-org1af478b" class="outline-2">
-<h2 id="org1af478b">
-<span class="section-number-2">3</span> 参考资料</h2>
-<div class="outline-text-2" id="text-3">
-<ul class="org-ul">
-<li>
-<a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/object-oriented-programming/">FCC javascript oop tutorial</a><br>
-</li>
-</ul>
 </div>
 </div>
     </div>

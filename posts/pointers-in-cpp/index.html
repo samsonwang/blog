@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C++中的智能指针 | Hack Note</title>
+<link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="https://samsonwang.me/posts/pointers-in-cpp/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/launchy-maintain-303/" title="写在launchy3.0.3发布之后" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="https://samsonwang.me/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+<li class="nav-item">
+<a href="/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">C++中的智能指针</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-11-28T23:51:57+08:00" itemprop="datePublished" title="2018-11-28 23:51">Nov 28 2018  (23:51)
+    </time>
+</div>
+
+      
+    <div class="source blur-1">
+      <a href="/posts/pointers-in-cpp/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
+        <li><a class="tag p-category" href="/tags/shared_ptr/" rel="tag">shared_ptr</a></li>
+        <li><a class="tag p-category" href="/tags/smart-pointer/" rel="tag">smart pointer</a></li>
+        <li><a class="tag p-category" href="/tags/unique_ptr/" rel="tag">unique_ptr</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+C++中有很多智能指针，本篇文章主要介绍这些指针的功能和应用场景。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-orgac3b215" class="outline-2">
+<h2 id="orgac3b215"><code>unique_ptr</code></h2>
+<div class="outline-text-2" id="text-orgac3b215">
+<p>
+<code>unique_ptr</code> 用于保证作用域范围内的指针能够被释放，有效避免一些情况下跳出作用域而没有对动态内存进行释放引起的内存泄漏。<br></p>
+
+<p>
+<code>unique_ptr</code> 对象不支持拷贝（copy），支持移动（move）。 <code>unique_ptr</code> 在移动后第一个会失效（变为空指针）。<br></p>
+
+<p>
+<code>unique_ptr</code> 所管理对象被销毁的时机。<br>
+The object is disposed of using the associated deleter when either of the following happens:<br></p>
+<ul class="org-ul">
+<li>the managing unique<sub>ptr</sub> object is destroyed<br>
+</li>
+<li>the managing unique<sub>ptr</sub> object is assigned another pointer via operator= or reset().<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgb6ba00d" class="outline-2">
+<h2 id="orgb6ba00d">
+<code>shared_ptr</code> 与 <code>auto_ptr</code>
+</h2>
+<div class="outline-text-2" id="text-orgb6ba00d">
+<p>
+<code>auto_ptr</code> 是 <code>shared_ptr</code> 的前身， 在C++11中开始支持 <code>shared_ptr</code> ，并弃用了 <code>auto_ptr</code> ，所以在新开发的项目中应该都使用 <code>shared_ptr</code> 。<br></p>
+
+<p>
+<code>shared_ptr</code> 所管理对象被销毁的时机。<br>
+The object is destroyed and its memory deallocated when either of the following happens:<br></p>
+<ul class="org-ul">
+<li>the last remaining shared<sub>ptr</sub> owning the object is destroyed;<br>
+</li>
+<li>the last remaining shared<sub>ptr</sub> owning the object is assigned another pointer via operator= or reset().<br>
+</li>
+</ul>
+<p>
+<code>shared_ptr</code> 在何时会增加引用计数( <code>use_count</code> )呢？<br></p>
+<ul class="org-ul">
+<li>使用等号进行对象的拷贝<br>
+</li>
+<li>作为函数的参数进行传递<br>
+</li>
+</ul>
+<p>
+推荐使用 <code>make_shared</code> 创建 <code>shared_ptr</code> 对象。<br></p>
+
+<p>
+不要用一个动态分配内存的指针同时创建两个 <code>shared_ptr</code> 对象，也不要再手动对这个动态指针进行释放，如下所示的代码是错误的。<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// !! 这是错误代码的示例</span>
+<span class="kt">int</span><span class="o">*</span> <span class="n">pInt</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">pShared1</span><span class="p">(</span><span class="n">pInt</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">pShared2</span><span class="p">(</span><span class="n">pInt</span><span class="p">);</span> <span class="c1">// error</span>
+<span class="k">delete</span> <span class="n">pInt</span><span class="p">;</span>  <span class="c1">// error</span>
+</pre></div>
+
+
+<p>
+在使用 <code>shared_ptr</code> 存放动态申请的数组时，要手动指定 <code>deleter</code> ，也就是对象销毁函数，参考如下示例代码。<br></p>
+<div class="highlight"><pre><span></span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">pInt</span><span class="p">(</span><span class="k">new</span> <span class="kt">int</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="p">[](</span><span class="kt">int</span><span class="o">*</span> <span class="n">p</span><span class="p">){</span><span class="k">delete</span><span class="p">[]</span> <span class="n">p</span><span class="p">;});</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org16fe750" class="outline-2">
+<h2 id="org16fe750"><code>weak_ptr</code></h2>
+<div class="outline-text-2" id="text-org16fe750">
+<p>
+<code>weak_ptr</code> 是从c++11开始支持的，用于在 <code>shared_ptr</code> 中存放一些对象。<br>
+如果有在 <code>shared_ptr</code> 对象中存放对象本身的需求时，可以使用 <code>week_ptr</code> ，参考下面的代码， <code>demo1</code> 应该使用 <code>weak_ptr</code> 进行管理。<br></p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Demo</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
+    <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">Demo</span><span class="o">&gt;</span> <span class="n">demo1</span><span class="p">;</span>  <span class="c1">// error</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org4997e7a" class="outline-2">
+<h2 id="org4997e7a">Reference</h2>
+<div class="outline-text-2" id="text-org4997e7a">
+<ul class="org-ul">
+<li>
+<a href="https://en.cppreference.com/book/intro/smart_pointers">cppreference - smart pointers</a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/memory/unique_ptr">cppreference - unique<sub>ptr</sub></a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/memory/shared_ptr">cppreference - shared<sub>ptr</sub></a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/memory/weak_ptr">cppreference - weak<sub>ptr</sub></a><br>
+</li>
+<li>
+<a href="https://www.acodersjourney.com/top-10-dumb-mistakes-avoid-c-11-smart-pointers/">acodersjourney - 10 dumb mistakes to avoid with smart-pointer</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focus on linux server dev. I use EMACS, and I am learning python.</p>
+        <p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
+</div>
+</div>
+
+       
+<div class="sidebar-module">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+        <ul class="pager hidden-print">
+<li class="previous">
+                <a href="/posts/launchy-maintain-303/" rel="prev" title="写在launchy3.0.3发布之后">Previous post</a>
+            </li>
+        </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="https://samsonwang.me/posts/pointers-in-cpp/",
+        disqus_title="C++\u4e2d\u7684\u667a\u80fd\u6307\u9488",
+        disqus_identifier="cache/posts/smart-pointers-in-cpp.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2018 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="/assets/js/jquery.min.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/jquery.lazyload.min.js"></script><script src="/assets/js/popper.min.js"></script><script src="/assets/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
