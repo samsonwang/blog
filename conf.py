@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+from confutil import ThemeUtil as ThemeUtil
 
 # !! This is the configuration of Nikola. !! #
 # !!  You should edit it to your liking.  !! #
@@ -172,15 +173,19 @@ THEME_CONFIG = {
         <div class="sidebar-aboutme">
         <p>Zeal for coding, C++ developer. Focus on linux server dev. I use EMACS, and I am learning python.</p>
         <p>View my code on <a href="https://github.com/samsonwang"> Github</a></p></div>''',
+        # sidebar category
         'sidebar_categories': '''
         <ol class="list-unstyled sidebar-category">
         <li><a href="/tags/category-cpp/">cpp</a>
         <li><a href="/tags/category-emacs/">emacs</a>
         <li><a href="/tags/category-linux/">linux</a>
         <li><a href="/tags/category-windows/">windows</a>
-        </ol>'''
+        </ol>''',
+    }
 }
-}
+
+# not indexed tags
+ThemeUtil.not_index_tags = ['leetcode', 'not-index']
 
 
 # POSTS and PAGES contains (wildcard, destination, template) tuples.
@@ -223,6 +228,9 @@ POSTS = (
     ("posts/*.txt", "posts", "post.tmpl"),
     ("posts/*.html", "posts", "post.tmpl"),
     ("posts/*.org", "posts", "post.tmpl"),
+
+    ("archives/algorithm/*.org", "posts", "post.tmpl"),
+
 )
 
 PAGES = (
@@ -408,7 +416,7 @@ TAG_PATH = "tags"
 # If you do not want to display a tag publicly, you can mark it as hidden.
 # The tag will not be displayed on the tag list page, the tag cloud and posts.
 # Tag pages will still be generated.
-HIDDEN_TAGS = ['mathjax']
+HIDDEN_TAGS = ['mathjax', 'not-index']
 
 # Only include tags on the tag list/overview page if there are at least
 # TAGLIST_MINIMUM_POSTS number of posts or more with every tag. Every tag
@@ -1312,6 +1320,8 @@ FILE_METADATA_UNSLUGIFY_TITLES = True
 GLOBAL_CONTEXT = {
     "context_demo1": BLOG_AUTHOR,
     "context_demo2": time.gmtime().tm_year,
+#    "not_index": not_index,
+    "theme_util": ThemeUtil,
 }
 
 # Add functions here and they will be called with template
