@@ -13,7 +13,7 @@
 <meta name="theme-color" content="#5670d4">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
-<link rel="canonical" href="https://samsonwang.me/posts/pointers-in-cpp/">
+<link rel="canonical" href="https://samsonwang.me/posts/smart-pointers-in-cpp/">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
 <!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
 <link rel="prev" href="/posts/launchy-maintain-303/" title="写在launchy3.0.3发布之后" type="text/html">
@@ -71,7 +71,7 @@
 
       
     <div class="source blur-1">
-      <a href="/posts/pointers-in-cpp/index.org" class="sourcelink">Source</a>
+      <a href="/posts/smart-pointers-in-cpp/index.org" class="sourcelink">Source</a>
     </div>
 
       
@@ -91,46 +91,60 @@
     </div>
   </header><div class="e-content entry-content" itemprop="articleBody text">
     <p>
-C++中有很多智能指针，本篇文章主要介绍这些指针的功能和应用场景。<br></p>
+C++中有很多智能指针如 <code>unique_ptr</code> 和 <code>shared_ptr</code> ，本篇文章主要介绍这些指针的功能和应用场景。<br></p>
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgbb7f523" class="outline-2">
-<h2 id="orgbb7f523"><code>unique_ptr</code></h2>
-<div class="outline-text-2" id="text-orgbb7f523">
+<div id="outline-container-org4fd582a" class="outline-2">
+<h2 id="org4fd582a"><code>unique_ptr</code></h2>
+<div class="outline-text-2" id="text-org4fd582a">
 <p>
 <code>unique_ptr</code> 用于保证作用域范围内的指针能够被释放，有效避免一些情况下跳出作用域而没有对动态内存进行释放引起的内存泄漏。<br></p>
 
 <p>
-<code>unique_ptr</code> 对象不支持拷贝（copy），支持移动（move）。 <code>unique_ptr</code> 在移动后第一个会失效（变为空指针）。<br></p>
+<code>unique_ptr</code> 对象支持移动（move），不支持拷贝（copy）。 <code>unique_ptr</code> 在移动后（move）第一个会失效（变为空指针），这是move的特性。<br></p>
 
 <p>
-<code>unique_ptr</code> 所管理对象被销毁的时机。<br>
+<code>unique_ptr</code> 作为函数参数进行传递时需要使用move完成，示例代码如下。<br></p>
+
+<div class="highlight"><pre><span></span><span class="c1">// a function consuming a unique_ptr can take it by value or by rvalue reference</span>
+<span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span> <span class="n">pass_through</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">p</span><span class="o">-&gt;</span><span class="n">bar</span><span class="p">();</span>
+    <span class="k">return</span> <span class="n">p</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">auto</span> <span class="n">p</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">();</span> <span class="c1">// p is a unique_ptr that owns a D</span>
+<span class="k">auto</span> <span class="n">q</span> <span class="o">=</span> <span class="n">pass_through</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">p</span><span class="p">));</span>
+<span class="n">assert</span><span class="p">(</span><span class="o">!</span><span class="n">p</span><span class="p">);</span> <span class="c1">// now p owns nothing and holds a null pointer</span>
+<span class="n">q</span><span class="o">-&gt;</span><span class="n">bar</span><span class="p">();</span>   <span class="c1">// and q owns the D object</span>
+</pre></div>
+
+<p>
+<code>unique_ptr</code> 所管理对象被销毁的时机：<br>
 The object is disposed of using the associated deleter when either of the following happens:<br></p>
 <ul class="org-ul">
-<li>the managing unique<sub>ptr</sub> object is destroyed<br>
+<li>the managing <code>unique_ptr</code> object is destroyed<br>
 </li>
-<li>the managing unique<sub>ptr</sub> object is assigned another pointer via operator= or reset().<br>
+<li>the managing <code>unique_ptr</code> object is assigned another pointer via operator= or reset().<br>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orga7372d5" class="outline-2">
-<h2 id="orga7372d5">
+<div id="outline-container-orgee42878" class="outline-2">
+<h2 id="orgee42878">
 <code>shared_ptr</code> 与 <code>auto_ptr</code>
 </h2>
-<div class="outline-text-2" id="text-orga7372d5">
+<div class="outline-text-2" id="text-orgee42878">
 <p>
 <code>auto_ptr</code> 是 <code>shared_ptr</code> 的前身， 在C++11中开始支持 <code>shared_ptr</code> ，并弃用了 <code>auto_ptr</code> ，所以在新开发的项目中应该都使用 <code>shared_ptr</code> 。<br></p>
 
 <p>
-<code>shared_ptr</code> 所管理对象被销毁的时机。<br>
+<code>shared_ptr</code> 所管理对象被销毁的时机：<br>
 The object is destroyed and its memory deallocated when either of the following happens:<br></p>
 <ul class="org-ul">
-<li>the last remaining shared<sub>ptr</sub> owning the object is destroyed;<br>
+<li>the last remaining <code>shared_ptr</code> owning the object is destroyed;<br>
 </li>
-<li>the last remaining shared<sub>ptr</sub> owning the object is assigned another pointer via operator= or reset().<br>
+<li>the last remaining <code>shared_ptr</code> owning the object is assigned another pointer via operator= or reset().<br>
 </li>
 </ul>
 <p>
@@ -142,7 +156,7 @@ The object is destroyed and its memory deallocated when either of the following 
 </li>
 </ul>
 <p>
-推荐使用 <code>make_shared</code> 创建 <code>shared_ptr</code> 对象。<br></p>
+推荐使用 <code>make_shared</code> 创建 <code>shared_ptr</code> 对象，因为这样比使用指针进行创建效率更高。<br></p>
 
 <p>
 不要用一个动态分配内存的指针同时创建两个 <code>shared_ptr</code> 对象，也不要再手动对这个动态指针进行释放，如下所示的代码是错误的。<br></p>
@@ -153,7 +167,6 @@ The object is destroyed and its memory deallocated when either of the following 
 <span class="k">delete</span> <span class="n">pInt</span><span class="p">;</span>  <span class="c1">// error</span>
 </pre></div>
 
-
 <p>
 在使用 <code>shared_ptr</code> 存放动态申请的数组时，要手动指定 <code>deleter</code> ，也就是对象销毁函数，参考如下示例代码。<br></p>
 <div class="highlight"><pre><span></span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">pInt</span><span class="p">(</span><span class="k">new</span> <span class="kt">int</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="p">[](</span><span class="kt">int</span><span class="o">*</span> <span class="n">p</span><span class="p">){</span><span class="k">delete</span><span class="p">[]</span> <span class="n">p</span><span class="p">;});</span>
@@ -162,40 +175,42 @@ The object is destroyed and its memory deallocated when either of the following 
 </div>
 
 
-<div id="outline-container-org53b345f" class="outline-2">
-<h2 id="org53b345f"><code>weak_ptr</code></h2>
-<div class="outline-text-2" id="text-org53b345f">
+<div id="outline-container-org5008564" class="outline-2">
+<h2 id="org5008564"><code>weak_ptr</code></h2>
+<div class="outline-text-2" id="text-org5008564">
 <p>
-<code>weak_ptr</code> 是从c++11开始支持的，用于在 <code>shared_ptr</code> 中存放一些对象。<br>
+<code>weak_ptr</code> 是从c++11开始支持的，用于在 <code>shared_ptr</code> 中存放一些对象。<br></p>
+
+<p>
 如果有在 <code>shared_ptr</code> 对象中存放对象本身的需求时，可以使用 <code>week_ptr</code> ，参考下面的代码， <code>demo1</code> 应该使用 <code>weak_ptr</code> 进行管理。<br></p>
 <div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Demo</span> <span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
     <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
-    <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">Demo</span><span class="o">&gt;</span> <span class="n">demo1</span><span class="p">;</span>  <span class="c1">// error</span>
+    <span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">Demo</span><span class="o">&gt;</span> <span class="n">demo1</span><span class="p">;</span>  <span class="c1">// error, use weak_ptr</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 </div>
 
 
-<div id="outline-container-orgba001ce" class="outline-2">
-<h2 id="orgba001ce">Reference</h2>
-<div class="outline-text-2" id="text-orgba001ce">
+<div id="outline-container-org286feb5" class="outline-2">
+<h2 id="org286feb5">Reference</h2>
+<div class="outline-text-2" id="text-org286feb5">
 <ul class="org-ul">
 <li>
 <a href="https://en.cppreference.com/book/intro/smart_pointers">cppreference - smart pointers</a><br>
 </li>
 <li>
-<a href="https://en.cppreference.com/w/cpp/memory/unique_ptr">cppreference - unique<sub>ptr</sub></a><br>
+<a href="https://en.cppreference.com/w/cpp/memory/unique_ptr">cppreference - <code>unique_ptr</code></a><br>
 </li>
 <li>
-<a href="https://en.cppreference.com/w/cpp/memory/shared_ptr">cppreference - shared<sub>ptr</sub></a><br>
+<a href="https://en.cppreference.com/w/cpp/memory/shared_ptr">cppreference - <code>shared_ptr</code></a><br>
 </li>
 <li>
-<a href="https://en.cppreference.com/w/cpp/memory/weak_ptr">cppreference - weak<sub>ptr</sub></a><br>
+<a href="https://en.cppreference.com/w/cpp/memory/weak_ptr">cppreference - <code>weak_ptr</code></a><br>
 </li>
 <li>
-<a href="https://www.acodersjourney.com/top-10-dumb-mistakes-avoid-c-11-smart-pointers/">acodersjourney - 10 dumb mistakes to avoid with smart-pointer</a><br>
+<a href="https://www.acodersjourney.com/top-10-dumb-mistakes-avoid-c-11-smart-pointers/">acodersjourney.com - 10 dumb mistakes to avoid with smart-pointer</a><br>
 </li>
 </ul>
 </div>
@@ -255,7 +270,7 @@ The object is destroyed and its memory deallocated when either of the following 
         <div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-me",
-            disqus_url="https://samsonwang.me/posts/pointers-in-cpp/",
+            disqus_url="https://samsonwang.me/posts/smart-pointers-in-cpp/",
         disqus_title="C++\u4e2d\u7684\u667a\u80fd\u6307\u9488",
         disqus_identifier="cache/posts/smart-pointers-in-cpp.html",
         disqus_config = function () {

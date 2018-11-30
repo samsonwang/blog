@@ -1,7 +1,8 @@
 #+BEGIN_COMMENT
 .. title: C++中的智能指针
-.. slug: pointers-in-cpp
+.. slug: smart-pointers-in-cpp
 .. date: 2018-11-28 23:51:57 UTC+08:00
+.. update: 2018-11-30 11:10:57 UTC+08:00
 .. tags: cpp, smart pointer, shared_ptr, unique_ptr
 .. category: cpp
 .. link:
@@ -12,7 +13,7 @@
 
 #+TITLE: C++中智能指针
 
-C++中有很多智能指针，本篇文章主要介绍这些指针的功能和应用场景。
+C++中有很多智能指针如 =unique_ptr= 和 =shared_ptr= ，本篇文章主要介绍这些指针的功能和应用场景。
 
 {{{TEASER_END}}}
 
@@ -20,27 +21,41 @@ C++中有很多智能指针，本篇文章主要介绍这些指针的功能和�
 
 =unique_ptr= 用于保证作用域范围内的指针能够被释放，有效避免一些情况下跳出作用域而没有对动态内存进行释放引起的内存泄漏。
 
-=unique_ptr= 对象不支持拷贝（copy），支持移动（move）。 =unique_ptr= 在移动后第一个会失效（变为空指针）。
+=unique_ptr= 对象支持移动（move），不支持拷贝（copy）。 =unique_ptr= 在移动后（move）第一个会失效（变为空指针），这是move的特性。
 
-=unique_ptr= 所管理对象被销毁的时机。
+=unique_ptr= 作为函数参数进行传递时需要使用move完成，示例代码如下。
+
+#+BEGIN_SRC cpp
+// a function consuming a unique_ptr can take it by value or by rvalue reference
+std::unique_ptr<D> pass_through(std::unique_ptr<D> p) {
+    p->bar();
+    return p;
+}
+auto p = std::make_unique<D>(); // p is a unique_ptr that owns a D
+auto q = pass_through(std::move(p));
+assert(!p); // now p owns nothing and holds a null pointer
+q->bar();   // and q owns the D object
+#+END_SRC
+
+=unique_ptr= 所管理对象被销毁的时机：
 The object is disposed of using the associated deleter when either of the following happens:
-- the managing unique_ptr object is destroyed
-- the managing unique_ptr object is assigned another pointer via operator= or reset().
+- the managing =unique_ptr= object is destroyed
+- the managing =unique_ptr= object is assigned another pointer via operator= or reset().
 
 ** =shared_ptr= 与 =auto_ptr=
 
 =auto_ptr= 是 =shared_ptr= 的前身， 在C++11中开始支持 =shared_ptr= ，并弃用了 =auto_ptr= ，所以在新开发的项目中应该都使用 =shared_ptr= 。
 
-=shared_ptr= 所管理对象被销毁的时机。
+=shared_ptr= 所管理对象被销毁的时机：
 The object is destroyed and its memory deallocated when either of the following happens:
-- the last remaining shared_ptr owning the object is destroyed;
-- the last remaining shared_ptr owning the object is assigned another pointer via operator= or reset().
+- the last remaining =shared_ptr= owning the object is destroyed;
+- the last remaining =shared_ptr= owning the object is assigned another pointer via operator= or reset().
 
 =shared_ptr= 在何时会增加引用计数( =use_count= )呢？
 - 使用等号进行对象的拷贝
 - 作为函数的参数进行传递
 
-推荐使用 =make_shared= 创建 =shared_ptr= 对象。
+推荐使用 =make_shared= 创建 =shared_ptr= 对象，因为这样比使用指针进行创建效率更高。
 
 不要用一个动态分配内存的指针同时创建两个 =shared_ptr= 对象，也不要再手动对这个动态指针进行释放，如下所示的代码是错误的。
 #+BEGIN_SRC cpp
@@ -51,7 +66,6 @@ std::shared_ptr<int> pShared2(pInt); // error
 delete pInt;  // error
 #+END_SRC
 
-
 在使用 =shared_ptr= 存放动态申请的数组时，要手动指定 =deleter= ，也就是对象销毁函数，参考如下示例代码。
 #+BEGIN_SRC cpp
 shared_ptr<int> pInt(new int[3], [](int* p){delete[] p;});
@@ -60,19 +74,20 @@ shared_ptr<int> pInt(new int[3], [](int* p){delete[] p;});
 
 ** =weak_ptr=
 =weak_ptr= 是从c++11开始支持的，用于在 =shared_ptr= 中存放一些对象。
+
 如果有在 =shared_ptr= 对象中存放对象本身的需求时，可以使用 =week_ptr= ，参考下面的代码， =demo1= 应该使用 =weak_ptr= 进行管理。
 #+BEGIN_SRC cpp
 class Demo {
 public:
     int n1;
-    shared_ptr<Demo> demo1;  // error
+    shared_ptr<Demo> demo1;  // error, use weak_ptr
 }
 #+END_SRC
 
 
 ** Reference
 - [[https://en.cppreference.com/book/intro/smart_pointers][cppreference - smart pointers]]
-- [[https://en.cppreference.com/w/cpp/memory/unique_ptr][cppreference - unique_ptr]]
-- [[https://en.cppreference.com/w/cpp/memory/shared_ptr][cppreference - shared_ptr]]
-- [[https://en.cppreference.com/w/cpp/memory/weak_ptr][cppreference - weak_ptr]]
-- [[https://www.acodersjourney.com/top-10-dumb-mistakes-avoid-c-11-smart-pointers/][acodersjourney - 10 dumb mistakes to avoid with smart-pointer]]
+- [[https://en.cppreference.com/w/cpp/memory/unique_ptr][cppreference - =unique_ptr=]]
+- [[https://en.cppreference.com/w/cpp/memory/shared_ptr][cppreference - =shared_ptr=]]
+- [[https://en.cppreference.com/w/cpp/memory/weak_ptr][cppreference - =weak_ptr=]]
+- [[https://www.acodersjourney.com/top-10-dumb-mistakes-avoid-c-11-smart-pointers/][acodersjourney.com - 10 dumb mistakes to avoid with smart-pointer]]
