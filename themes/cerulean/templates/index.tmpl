@@ -1,0 +1,64 @@
+## -*- coding: utf-8 -*-
+<%namespace name="helper" file="index_helper.tmpl"/>
+<%namespace name="math" file="math_helper.tmpl"/>
+<%namespace name="pagination" file="pagination_helper.tmpl"/>
+<%namespace name="comments" file="comments_helper.tmpl"/>
+<%namespace name="feeds_translations" file="feeds_translations_helper.tmpl"/>
+<%namespace name="pheader" file="post_header.tmpl"/>
+<%inherit file="base.tmpl"/>
+
+<%block name="extra_head">
+  ${parent.extra_head()}
+  % if posts and (permalink == '/' or permalink == '/' + index_file):
+    <link rel="prefetch" href="${posts[0].permalink()}" type="text/html">
+  % endif
+  ${math.math_styles_ifposts(posts)}
+</%block>
+
+<%block name="content">
+
+<%block name="content_header">
+  ${feeds_translations.translation_link(kind)}
+</%block>
+
+% if 'main_index' in pagekind:
+  ${front_index_header}
+% endif
+
+% if page_links:
+  ${pagination.page_navigation(current_page, page_links, prevlink, nextlink, prev_next_links_reversed)}
+% endif
+
+<div class="postindex">
+% for post in posts:
+  <article class="h-entry post-${post.meta('type')}">
+    <header>
+      <h1 class="p-name entry-title"><a href="${post.permalink()}" class="u-url">${post.title()|h}</a></h1>
+      <div class="metadata">
+        ${pheader.html_author(post)}
+        ${pheader.html_date(post)}
+        ${pheader.html_comment(post)}
+        ${pheader.html_tags(post)}
+      </div>
+    </header>
+
+    %if index_teasers:
+      <div class="p-summary entry-summary">
+      ${post.text(teaser_only=True)}
+    %else:
+      <div class="e-content entry-content">
+      ${post.text(teaser_only=False)}
+    %endif
+    </div>
+
+  </article>
+% endfor
+
+</div>
+${math.math_scripts_ifposts(posts)}
+${comments.comment_link_script()}
+</%block>
+
+<%block name="pagination">
+${helper.html_pager()}
+</%block>

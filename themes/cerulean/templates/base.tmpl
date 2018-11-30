@@ -1,0 +1,113 @@
+## -*- coding: utf-8 -*-
+<%namespace name="helper" file="base_helper.tmpl" />
+<%namespace name="notes" file="annotation_helper.tmpl" />
+
+${set_locale(lang)}
+
+${helper.html_head_start()}
+
+<%block name="extra_head">
+## Leave this block alone.
+## For inheritance use.
+</%block>
+
+${template_hooks['extra_head']()}
+
+${helper.html_head_end()}
+
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">${messages("Skip to main content")}</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark">
+
+  <div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="${abs_link(_link("root", None, lang))}">
+      % if logo_url:
+      <img src="${logo_url}" alt="${blog_title|h}" id="logo" class="d-inline-block align-top">
+      % endif
+
+      % if show_blog_title:
+      <span id="blog-title">${blog_title|h}</span>
+      % endif
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+        ${helper.html_navigation_links_entries(navigation_links)}
+        ${template_hooks['menu']()}
+      </ul>
+
+      % if search_form:
+        ${search_form}
+      % endif
+
+      <ul class="navbar-nav navbar-right">
+        ${helper.html_navigation_links_entries(navigation_alt_links)}
+        <%block name="belowtitle">
+          % if len(translations) > 1:
+            <li>${helper.html_translations()}</li>
+          % endif
+        </%block>
+        ${template_hooks['menu_alt']()}
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container -->
+</nav><!-- End of Menubar -->
+
+<div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        ${template_hooks['page_header']()}
+        <%block name="content"></%block>
+      </div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       ${helper.sidebar_about()}
+       ${helper.sidebar_categories()}
+      </div><!--.sidebar-->
+    </div><!--.row-->
+
+    <%block name="pagination"></%block>
+    <%block name="comment"></%block>
+    <!--End of body content-->
+
+    <footer id="footer">
+      ${content_footer}
+      ${template_hooks['page_footer']()}
+    </footer>
+  </div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+${helper.late_load_js()}
+
+<!-- fancy dates -->
+<script>
+  moment.locale("${momentjs_locales[lang]}");
+  fancydates(${date_fanciness}, ${js_date_format});
+</script>
+<!-- end fancy dates -->
+
+<%block name="extra_js"></%block>
+
+% if annotations and post and not post.meta('noannotations'):
+  ${notes.code()}
+% elif not annotations and post and post.meta('annotations'):
+  ${notes.code()}
+% endif
+
+${body_end}
+${template_hooks['body_end']()}
+</body>
+</html>
