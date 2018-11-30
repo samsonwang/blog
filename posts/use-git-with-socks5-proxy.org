@@ -2,47 +2,54 @@
 .. title: 为git设置socks5代理
 .. slug: use-git-with-socks5-proxy
 .. date: 2018-02-08 09:26:07 UTC+08:00
-.. tags: git, vpn
+.. update: 2018-11-30 10:11:15 UTC+08:00
+.. tags: git, vpn, socks5
 .. category: git
-.. link: 
-.. description: 
+.. link:
+.. description:
 .. type: text
 #+END_COMMENT
 
 #+TITLE:为git设置socks5代理
 在某些时候，为了绕过网络封锁，在使用git时需要借助代理完成相关网络操作。
 
-*一个可用的vpn代理是先决条件*
-关于架设vpn的就不在此讨论了。
+** 一个可用的VPN代理是先决条件
+关于VPN的架设就不在此讨论了。
 
-*将repo的链接由ssh改为为https* （已经是https的repo跳过此步骤）
-只有https（http）的repo是支持代理的，所以如果现有的repo是使用ssh方式clone到本地的，需要修改其为https方式。
-需要修改 ~repo_name/.git/config~ 中的url配置，将其中的 =git格式= 改为 =https格式= 。
-以github为例，需要将 ~git@github.com:user_name/repo_name.git~ 改为 ~https://github.com/user_name/repo_name.git~
-可以使用 ~sed~ 指令完成替换。
+** 将repo的链接由ssh改为为https
+已经使用https的repo跳过此步骤。
+本教程需要通过https（http）的方式使用代理，所以如果现有的repo是使用ssh方式clone到本地的，需要修改其为https方式。
+需要修改 =repo_name/.git/config= 中的url配置，将其中的git格式改为https格式。使用文本编辑工具将其打开进行修改，以github为例，需要将 ~git@github.com:user_name/repo_name.git~ 改为 ~https://github.com/user_name/repo_name.git~ 。
+可以使用sed指令完成替换。
 #+BEGIN_SRC shell
 sed -i 's/git@github.com:/git:\/\/github.com\//' ./.git/config
 #+END_SRC
 
-*设置git使用代理*
-将git配置为使用socks5代理。
+** 设置git使用代理
+将git配置为使用socks5代理，以socks5的ip和端口是 =127.0.0.1:1080= 为例。
 #+BEGIN_SRC shell
 git config --global http.proxy 'socks5://127.0.0.1:1080'
 git config --global https.proxy 'socks5://127.0.0.1:1080'
 #+END_SRC
 
-*将登录信息保存下来*
-使用https时，在推送时会要求验证用户名和密码，考虑将验证信息缓存下来。
+** 将登录信息缓存下来
+使用https时，在向远程仓库进行推送（git push）时会要求验证用户名和密码，由于每次都输入验证信息是十分繁琐的，考虑将验证信息缓存下来。
 #+BEGIN_SRC shell
 git config --global credential.helper cache
 #+END_SRC
-也可以考虑将用户名和密码永久保存为硬盘文件， *注意* 使用这种配置会将密码保存在 ~ ~/.git-cretidentials~ 文件中，仅推荐在个人电脑中将配置文件保存下来。
+git默认会将密码缓存15分钟，在这期间进行的操作是不需要再次进行密码验证的，可以使用下面命令修改缓存的时长。
+#+BEGIN_SRC shell
+git config --global credential.helper "cache --timeout=3600"
+#+END_SRC
+
+** 将登陆信息保存下来
+也可以考虑将用户名和密码永久保存下来，这样就不需要再次进行密码验证了。
+*注意:* 使用这种配置会将明文的账户和密码保存在 =~/.git-cretidentials= 文件中，所以仅推荐在个人电脑中使用这个配置。
 #+BEGIN_SRC shell
 git config --global credential.helper store
 #+END_SRC
 
-*参考资料*
-[[https://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-on-github][stackoverflow question]]
+** 参考资料
+- [[https://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-on-github][stackoverflow question]]
 
-
-
+（全文完）
