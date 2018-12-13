@@ -1,72 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about gdb)</title><link>https://samsonwang.me/</link><description></description><atom:link href="https://samsonwang.me/tags/gdb.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2018 &lt;a href="mailto:wangzhilv@gmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Fri, 30 Nov 2018 08:22:06 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>gdb图形化调试</title><link>https://samsonwang.me/posts/debug-with-gdb-gui/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;p&gt;
+</copyright><lastBuildDate>Thu, 13 Dec 2018 07:45:33 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>gdb图形化调试</title><link>https://samsonwang.me/posts/debug-with-gdb-gui/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;p&gt;
 gdb是linux下很强大的调试工具，它使用命令行进行交互。相比于windows下visual studio的图形化调试界面，gdb的命令行方式操作起来不是很方便，从用户友好度上二者难以相提并论。不过gdb也有许多配套的前端组件，提供了图形化界面展示调试过程中的信息，这样就比传统命令行方式要方便很多。本文介绍了使用图形化的gdb前端让调试变得便捷高效，建议再阅读本文之前先掌握一些gdb的基础知识。&lt;br&gt;
 &lt;/p&gt;
 
-&lt;p&gt;&lt;a href="https://samsonwang.me/posts/debug-with-gdb-gui/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;</description><category>emacs</category><category>gdb</category><category>linux</category><guid>https://samsonwang.me/posts/debug-with-gdb-gui/</guid><pubDate>Thu, 18 Oct 2018 01:45:14 GMT</pubDate></item><item><title>在gdb中查看指定内存地址的内容</title><link>https://samsonwang.me/posts/gdb-display-contents-of-memory-address/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-orgb6cc063" class="outline-2"&gt;
-&lt;h2 id="orgb6cc063"&gt;&lt;span class="section-number-2"&gt;1&lt;/span&gt; 引言&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-1"&gt;
-&lt;p&gt;
+&lt;p&gt;&lt;a href="https://samsonwang.me/posts/debug-with-gdb-gui/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;</description><category>emacs</category><category>gdb</category><category>linux</category><guid>https://samsonwang.me/posts/debug-with-gdb-gui/</guid><pubDate>Thu, 18 Oct 2018 01:45:14 GMT</pubDate></item><item><title>在gdb中查看指定内存地址的内容</title><link>https://samsonwang.me/posts/gdb-display-contents-of-memory-address/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;p&gt;
 调试 C/C++ 程序时，需要打印指定内存地址的内容。我最近调试程序中的序列化模块时，需要将类对象按照指定的格式转化为二进制流，为了验证转化结果，在调试时就需要将指定内存地址中的内容打印出来。&lt;br&gt;
 &lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
 
-&lt;div id="outline-container-org5412169" class="outline-2"&gt;
-&lt;h2 id="org5412169"&gt;&lt;span class="section-number-2"&gt;2&lt;/span&gt; 指令语法&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-2"&gt;
-&lt;p&gt;
-在gdb模式下，使用 &lt;code&gt;x&lt;/code&gt; （ &lt;code&gt;examine&lt;/code&gt; 的缩写）指令能够将指令内存地址中的信息打印出来。指令的语法如下。&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;x/nfu addr
-x addr
-&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;
-其中 &lt;code&gt;n&lt;/code&gt; 、 &lt;code&gt;f&lt;/code&gt; 、 &lt;code&gt;u&lt;/code&gt; 都是可选参数， &lt;code&gt;n&lt;/code&gt; 表示重复次数， &lt;code&gt;f&lt;/code&gt; 表示显示格式（format）， &lt;code&gt;u&lt;/code&gt; 表示显示单元大小(unix size)。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-&lt;code&gt;f&lt;/code&gt; &lt;b&gt;可以取如下值&lt;/b&gt; ：&lt;br&gt;
-x 按十六进制格式显示变量&lt;br&gt;
-d 按十进制格式显示变量&lt;br&gt;
-o 按八进制格式显示变量&lt;br&gt;
-t 按二进制格式显示变量&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-&lt;code&gt;u&lt;/code&gt; &lt;b&gt;可以取如下值&lt;/b&gt; ：&lt;br&gt;
-b 表示单字节（byte）&lt;br&gt;
-h 表示双字节（halfword）&lt;br&gt;
-w 表示四字节(word)&lt;br&gt;
-g 表示八字节(giant word)&lt;br&gt;
-&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-
-&lt;div id="outline-container-org6cf9feb" class="outline-2"&gt;
-&lt;h2 id="org6cf9feb"&gt;&lt;span class="section-number-2"&gt;3&lt;/span&gt; 示例&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-3"&gt;
-&lt;p&gt;
-以下指令会以16进制格式显示addr开始的100字节信息&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;x/100xb addr
-&lt;/pre&gt;&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-
-&lt;div id="outline-container-org3d2dd2e" class="outline-2"&gt;
-&lt;h2 id="org3d2dd2e"&gt;&lt;span class="section-number-2"&gt;4&lt;/span&gt; 参考资料&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-4"&gt;
-&lt;ul class="org-ul"&gt;
-&lt;li&gt;&lt;a href="ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_chapter/gdb_9.html#SEC56"&gt;GDB manual(gnu.org)&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://sourceware.org/gdb/onlinedocs/gdb/Memory.html"&gt;GDB manual(sourceware.org)&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-&lt;/div&gt;</description><category>gdb</category><guid>https://samsonwang.me/posts/gdb-display-contents-of-memory-address/</guid><pubDate>Fri, 29 Jun 2018 08:45:09 GMT</pubDate></item><item><title>使用gdb调试多线程程序</title><link>https://samsonwang.me/posts/debug-with-gdb-on-multi-thread-programs/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-org6c844dd" class="outline-2"&gt;
-&lt;h2 id="org6c844dd"&gt;查看当前线程信息&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-org6c844dd"&gt;
+&lt;p&gt;&lt;a href="https://samsonwang.me/posts/gdb-display-contents-of-memory-address/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;</description><category>debugging</category><category>gdb</category><category>linux</category><guid>https://samsonwang.me/posts/gdb-display-contents-of-memory-address/</guid><pubDate>Fri, 29 Jun 2018 08:45:09 GMT</pubDate></item><item><title>使用gdb调试多线程程序</title><link>https://samsonwang.me/posts/debug-with-gdb-on-multi-thread-programs/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-org7d38d69" class="outline-2"&gt;
+&lt;h2 id="org7d38d69"&gt;查看当前线程信息&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-org7d38d69"&gt;
 &lt;p&gt;
 &lt;b&gt;将进程中的各个线程信息显示出来&lt;/b&gt;&lt;br&gt;
 &lt;/p&gt;
@@ -99,9 +44,9 @@ g 表示八字节(giant word)&lt;br&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 
-&lt;div id="outline-container-org42c4a00" class="outline-2"&gt;
-&lt;h2 id="org42c4a00"&gt;为指定的线程设置断点&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-org42c4a00"&gt;
+&lt;div id="outline-container-org1897195" class="outline-2"&gt;
+&lt;h2 id="org1897195"&gt;为指定的线程设置断点&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-org1897195"&gt;
 &lt;p&gt;
 含有多线程的程序，可以为单独的线程设置断点&lt;br&gt;
 &lt;/p&gt;
@@ -119,9 +64,9 @@ Whenever your program stops under GDB for any reason, all threads of execution s
 &lt;/div&gt;
 &lt;/div&gt;
 
-&lt;div id="outline-container-orgc1d5805" class="outline-2"&gt;
-&lt;h2 id="orgc1d5805"&gt;防止gdb自动切换线程&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-orgc1d5805"&gt;
+&lt;div id="outline-container-orgb04bab6" class="outline-2"&gt;
+&lt;h2 id="orgb04bab6"&gt;防止gdb自动切换线程&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-orgb04bab6"&gt;
 &lt;p&gt;
 在调试gdb程序时，在单步执行时，会出现线程间跳转切换，这样对跟踪代码执行状态十分不方便。&lt;br&gt;
 可以通过设置 &lt;code&gt;scheduler-locking&lt;/code&gt; 让gdb在所调试的线程中运行，防止线程的自动切换。&lt;br&gt;
@@ -151,9 +96,9 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 &lt;/div&gt;
 
 
-&lt;div id="outline-container-org1e2bcbd" class="outline-2"&gt;
-&lt;h2 id="org1e2bcbd"&gt;参考资料&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-org1e2bcbd"&gt;
+&lt;div id="outline-container-org9036c7e" class="outline-2"&gt;
+&lt;h2 id="org9036c7e"&gt;参考资料&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-org9036c7e"&gt;
 &lt;ol class="org-ol"&gt;
 &lt;li&gt;&lt;a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_39.html"&gt;gnu manual 1&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_24.html"&gt;gun manual 2&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
@@ -176,118 +121,22 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 
 &lt;p&gt;
 参考资料： &lt;a href="ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_38.html"&gt;gnu gdb manual&lt;/a&gt;&lt;br&gt;
-&lt;/p&gt;</description><category>gdb</category><category>linux</category><guid>https://samsonwang.me/posts/gdb-ignore-received-signal/</guid><pubDate>Thu, 19 Apr 2018 08:00:47 GMT</pubDate></item><item><title>Linux下使用gdb的调试技巧（2）</title><link>https://samsonwang.me/posts/debug-with-gdb-on-linux-2/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
-相关文章：&lt;a href="https://samsonwang.me/posts/debug-with-gdb-on-linux/"&gt;Linux下使用gdb的调试技巧（1）&lt;/a&gt;&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
+&lt;/p&gt;</description><category>gdb</category><category>linux</category><guid>https://samsonwang.me/posts/gdb-ignore-received-signal/</guid><pubDate>Thu, 19 Apr 2018 08:00:47 GMT</pubDate></item><item><title>Linux下使用gdb的调试技巧（2）</title><link>https://samsonwang.me/posts/debug-with-gdb-on-linux-2/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;p&gt;
 本文重点介绍在gdb模式下的常用命令。&lt;br&gt;
 &lt;/p&gt;
 
-&lt;p&gt;
-查看帮助信息&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) help all
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-查看线程信息&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) info thread
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-切换到某一线程&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) thread 2
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-查看调用堆栈信息&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) bt
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-查看某个调用栈&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) frame 3
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-增加断点&lt;br&gt;
-断点格式：&lt;br&gt;
-&lt;/p&gt;
-&lt;ul class="org-ul"&gt;
-&lt;li&gt;函数名&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;文件名：行号&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;当前调试文件的行号&lt;br&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) breakpoint xxx
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-删除断点&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) delete xxx
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-启用/禁用断点&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) disable/enable xxx
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-查看断点信息&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) info break
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-临时断点，临时断点的使用方法与普通断点相同&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) tb xxx
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-在gdb模式下，回车会执行上一次输入的命令&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-运行到指定行&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;until 81
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-在gdb中打印长字符串&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) set print element 0
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-在gdb中强制在一个线程内调试运行&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;set scheduler-locking step
-&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;
-在gdb中向程序发送信号&lt;br&gt;
-&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(gdb) signal
-&lt;/pre&gt;&lt;/div&gt;</description><category>gdb</category><category>linux</category><guid>https://samsonwang.me/posts/debug-with-gdb-on-linux-2/</guid><pubDate>Tue, 03 Apr 2018 14:51:39 GMT</pubDate></item><item><title>Linux下使用gdb的调试技巧</title><link>https://samsonwang.me/posts/debug-with-gdb-on-linux/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;div id="outline-container-org55b22b6" class="outline-2"&gt;
-&lt;h2 id="org55b22b6"&gt;1 代码编译阶段&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-org55b22b6"&gt;
+&lt;p&gt;&lt;a href="https://samsonwang.me/posts/debug-with-gdb-on-linux-2/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;</description><category>gdb</category><category>linux</category><guid>https://samsonwang.me/posts/debug-with-gdb-on-linux-2/</guid><pubDate>Tue, 03 Apr 2018 14:51:39 GMT</pubDate></item><item><title>Linux下使用gdb的调试技巧</title><link>https://samsonwang.me/posts/debug-with-gdb-on-linux/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;div id="outline-container-org683ea9a" class="outline-2"&gt;
+&lt;h2 id="org683ea9a"&gt;1 代码编译阶段&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-org683ea9a"&gt;
 &lt;p&gt;
 在调试C/C++代码时，在编译阶段使用 &lt;code&gt;gcc/g++ -g&lt;/code&gt; 命令编译，将调试信息生成在目标文件中。&lt;br&gt;
 &lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 
-&lt;div id="outline-container-org751fd5e" class="outline-2"&gt;
-&lt;h2 id="org751fd5e"&gt;2 开启gdb模式&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-org751fd5e"&gt;
+&lt;div id="outline-container-org3c2d797" class="outline-2"&gt;
+&lt;h2 id="org3c2d797"&gt;2 开启gdb模式&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-org3c2d797"&gt;
 &lt;ul class="org-ul"&gt;
 &lt;li&gt;直接进入gdb模式: &lt;code&gt;gdb&lt;/code&gt; &lt;br&gt;&lt;/li&gt;
 &lt;li&gt;使用gdb模式开启一个新的进程: &lt;code&gt;gdb &amp;lt;appname&amp;gt;&lt;/code&gt;&lt;br&gt;&lt;/li&gt;
