@@ -1,0 +1,267 @@
+#+BEGIN_COMMENT
+.. title: 常见排序算法总结
+.. slug: sorting-algorithm
+.. date: 2018-12-24 16:21:50 UTC+08:00
+.. tags: algorithm, sort
+.. category: algorithm
+.. link:
+.. description:
+.. type: text
+、.. status: draft
+#+END_COMMENT
+
+#+TITLE: 常见排序算法总结
+
+排序是计算机编程中很常见的操作，本文对常见的排序算法进行了总结，并针对每种算法给出了示例代码。
+
+{{{TEASER_END}}}
+
+** 冒泡排序
+从头开始依次对相邻的两个数字比较大小并进行交换，对于 =n= 个数字，最多只需要进行 =n-1= 次交换。
+代码示例：
+#+BEGIN_SRC cpp
+void bubble_sort(vector<int>& nums) {
+    if (nums.size() < 2) {
+        return;
+    }
+
+    for (size_t i=0; i<nums.size()-1; ++i) {
+        for (size_t j=0; j+1<nums.size()-i; ++j) {
+            if (nums[j] > nums[j+1]) {
+                swap(nums[j], nums[j+1]);
+            }
+        }
+    }
+}
+#+END_SRC
+
+
+** 插入排序
+从第二个元素开始，将该元素插入到已排序数字列的和合适位置。
+代码示例：
+#+BEGIN_SRC cpp
+void insertion_sort(vector<int>& nums) {
+    if (nums.size() < 2) {
+        return;
+    }
+
+    for (size_t i=1; i < nums.size(); ++i) {
+        int target = nums[i];
+        int j = i - 1; // !!!
+        for (; j >= 0; --j) { // !!!
+            if (target < nums[j]) {
+                nums[j+1] = nums[j];
+            }
+            else {
+                break;
+            }
+        }
+        nums[j+1] = target;
+    }
+}
+#+END_SRC
+
+
+** 选择排序
+以从小到大排序为例，选择排序每次从剩下未排序的数字列中选出最小的数字，将其放在已排序数字列的尾部。
+代码示例：
+#+BEGIN_SRC cpp
+void selection_sort(vector<int>& nums) {
+    if (nums.size() < 2) {
+        return;
+    }
+
+    for (size_t i=0; i < nums.size()-1; ++i) {
+        int pos = i;
+        for (size_t j=i+1; j<nums.size(); ++j) {
+            if (nums[pos] > nums[j]) {
+                pos = j;
+            }
+        }
+        swap(nums[i], nums[pos]);
+    }
+}
+#+END_SRC
+
+
+** 归并排序
+将数字列分不断划分为多个较小的数字列，对较小的数字列按照顺序进行归并，最终实现归并后的数字列是有序的。
+归并排序体现了分治法的思想。归并排序的实现有两种：递归方式和非递归方式。
+
+“非递归方式”代码示例：
+#+BEGIN_SRC cpp
+void merge_sort(vector<int>& nums) {
+    // merge
+    vector<int> temp;
+    temp.resize(nums.size());
+
+    unsigned step = 1; // step 可以从1开始
+    while (step < nums.size()) {
+        for (size_t i=0; i < nums.size(); ) {
+            size_t head1 = i;
+            size_t end1 = min(head1 + step, nums.size());
+            size_t head2 = end1;
+            size_t end2 = min(head2 + step, nums.size());
+
+            while (head1 < end1 && head2 < end2) {
+                if (nums[head1] < nums[head2]) {
+                    temp[i] = nums[head1];
+                    ++head1;
+                }
+                else {
+                    temp[i] = nums[head2];
+                    ++head2;
+                }
+                ++i;
+            }
+
+            while (head1 < end1) {
+                temp[i] = nums[head1];
+                ++head1;
+                ++i;
+            }
+
+            while (head2 < end2) {
+                temp[i] = nums[head2];
+                ++head2;
+                ++i;
+            }
+        }
+        nums = temp; // optimal
+        step *= 2;
+    }
+}
+#+END_SRC
+
+“递归方式”代码示例：
+#+BEGIN_SRC cpp
+// recursive merge sort
+void merge_sort(vector<int>& nums) {
+    if (nums.size() < 2) {
+        return;
+    }
+    else if (nums.size() == 2) {
+        if (nums[0] > nums[1]) {
+            swap(nums[0], nums[1]);
+        }
+        return;
+    }
+
+    // split
+    size_t mid = nums.size() / 2;
+
+    // !!! 使用迭代器完成数组拷贝，注意对mid的处理
+    vector<int> numLeft(nums.begin(), nums.begin()+mid);
+    merge_sort(numLeft);
+
+    vector<int> numRight(nums.begin()+mid, nums.end());
+    merge_sort(numRight);
+
+    size_t i = 0;
+    size_t l = 0;
+    size_t r = 0;
+    while (l < numLeft.size() && r < numRight.size()) {
+        if (numLeft[l] < numRight[r]) {
+            nums[i] = numLeft[l];
+            ++l;
+        }
+        else {
+            nums[i] = numRight[r];
+            ++r;
+        }
+        ++i;
+    }
+
+    while (l < numLeft.size()) {
+        nums[i] = numLeft[l];
+        ++l;
+        ++i;
+    }
+
+    while (r < numRight.size()) {
+        nums[i] = numRight[r];
+        ++r;
+        ++i;
+    }
+}
+#+END_SRC
+
+
+** 快速排序
+快速排序与归并排序比较相似，它们都会对所排序的数字列进行分割，对分割后的子数字列进行排序，对排序后的子数字列进行归并。二者的区别在于分割子数字列的方式，快速排序会根据选取的轴点对数字列进行划分，归并排序总会对数字列进行等分。
+
+代码示例：
+#+BEGIN_SRC cpp
+// qsort的partition是关键
+int partition(std::vector<int>& nums, int low, int high) {
+    int i = low;
+    for (int j=low; j<high; ++j) {
+        if (nums[j] < nums[high]) {
+            std::swap(nums[i], nums[j]);
+            ++i;
+        }
+    }
+    std::swap(nums[i], nums[high]);
+    return i;
+}
+
+void helper(std::vector<int>& nums, int low, int high) {
+    if (low < high) {
+        int piv = partition(nums, low, high);
+        helper(nums, low, piv-1);
+        helper(nums, piv+1, high);
+    }
+}
+
+void quick_sort(std::vector<int>& nums) {
+    helper(nums, 0, nums.size()-1);
+}
+#+END_SRC
+
+
+** 排序算法的性能指标
+*** 时间复杂度
+算法的时间复杂度就是算法的运行速度，是算法性能的重要指标。
+
+| 名称     | 最好  | 平均  | 最坏  |
+|----------+-------+-------+-------|
+| 冒泡排序 | n     | n^2   | n^2   |
+| 插入排序 | n     | n^2   | n^2   |
+| 选择排序 | n^2   | n^2   | n^2   |
+| 归并排序 | nlogn | nlogn | nlogn |
+| 快速排序 | nlogn | nlogn | n^2   |
+
+
+*** 空间复杂度
+算法的空间复杂度表示算法运行时需要的内存空间。
+
+| 名称     | 空间  |
+|----------+-------|
+| 冒泡排序 | 1     |
+| 插入排序 | 1     |
+| 选择排序 | 1     |
+| 归并排序 | n     |
+| 快速排序 | logn  |
+
+
+*** 稳定性
+算法的稳定性主要指相同的元素在排序后，它们的相对位置能够保持不变。
+稳定的排序算法：冒泡排序，插入排序，归并排序
+不稳定的排序算法：选择排序，快速排序
+
+
+** 相似排序算法的比较
+*** 插入排序和选择排序
+插入排序是稳定的算法，而选择排序是不稳定的算法。
+在最理想情况下，插入排序的时间复杂度为 =O(n)= ，选择排序的时间复杂度为 =O(n^2)= 。
+
+
+*** 归并排序和快速排序
+归并排序是稳定的算法，而一般的快速排序是不稳定的算法，也存在以稳定的快速排序算法。
+在最坏情况下，归并排序的时间复杂度为 =O(nlogn)= ，快速排序的时间复杂度为 =O(n^2)= 。
+归并排序需要额外的空间用于存储辅助数据，快速排序并不需要很多额外的空间。
+
+** 参考资料
+- [[https://en.wikipedia.org/wiki/Sorting_algorithm][wikipedia - sorting algorithm]]
+- [[https://stackoverflow.com/questions/15799034/insertion-sort-vs-selection-sort][stackoverflow - inserttion sort vs selection sort]]
+- [[https://techdifferences.com/difference-between-quick-sort-and-merge-sort.html][techdifference.com - difference between quick sort and merge sort]]
