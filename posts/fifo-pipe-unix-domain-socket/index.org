@@ -2,6 +2,7 @@
 .. title: Linux下的FIFO、pipe、unix domain socket漫谈
 .. slug: fifo-pipe-unix-domain-socket
 .. date: 2018-04-11 13:03:25 UTC+08:00
+.. update: 2018-12-24 9:23:25 UTC+08:00
 .. tags: linux, pipe, socket, fifo, ipc
 .. category: linux
 .. link:
@@ -14,20 +15,22 @@
 
 在做Linux开发时，经常会接触 =管道= 、 =AF_UNIX= 等相关词汇，为了弄清他们之间的关系，查阅了一些资料，将结果整理并记录下来。
 
+{{{TEASER_END}}}
+
 ** 1. =FIFO= 与 =pipe= 的比较
-FIFO可以通过 =mkfifo fifo_file= 在本地创建一个文件用来表示一个管道，数据的交换是在操作系统内核完成的，所以在文件中没有内容。
-FIFO可以看做是一个带有名字的管道，我们在命令行中使用的管道是匿名管道。
+FIFO可以通过 =mkfifo <fifo_file>= 在本地创建一个文件用来表示一个管道，数据的交换是在操作系统内核完成的，所以在该文件中没有内容。
+FIFO可以看做是一个带有名字的管道，我们通常在命令行中使用的管道（符号 =|= ）是匿名管道。
 
 #+BEGIN_QUOTE
 A FIFO special file (a named pipe) is similar to a pipe, except that it is accessed as part of the file system. It can be opened by multiple processes for reading or writing. When processes are exchanging data via the FIFO, the kernel passes all data internally without writing it to the file system. Thus, the FIFO special file has no contents on the file system; the file system entry merely serves as a reference point so that processes can access the pipe using a name in the file system.
 #+END_QUOTE
-以上内容截取自Linux的帮助文档（ =man fifo= ）
+以上内容截取自Linux帮助文档（ 在Linux的terminal中输入 =man fifo= 查看）
 
 ** 2. =FIFO= 与 =unix domain socket= 的比较
-FIFO与unix domain socket在他们的实现方式上有相似之处，但是他们是完全不同的两个概念。
+FIFO与unix domain socket在他们的实现方式上有相似之处，但它们是完全不同的两个概念。
 FIFO是更底层的进程间通信方式，允许一端写入数据，另外一端读取数据；unix domain socket与 =TCP/IP= 的套接字很相似。
-socket是双工的，支持多个进程同时访问。进程可以一个socket上同时允许多个客户端进程接入。在每次有新的 ~connect~ 或 ~accept~ 时， 操作系统内核会分配一个新的文件描述符，通信数据包会送达正确的进程。
-FIFO并不支持以上特性。需要两个FIFO才能完成双工通信。对于每个客户端都需要一对FIFO才能完成通信交互。
+socket是双工的，支持多个进程同时访问，一个进程的socket允许多个客户端进程同时接入。在每次有新的 ~connect~ 或 ~accept~ 时， 操作系统内核会分配一个新的文件描述符，通信数据包会送达正确的进程。
+FIFO并不支持以上特性，需要两个FIFO才能完成双工通信，对于每个客户端都需要一对FIFO才能完成双向通信交互。
 
 #+BEGIN_QUOTE
 UNIX domain sockets and FIFO may share some part of their implementation but they are conceptually very different. FIFO functions at a very low level. One process writes bytes into the pipe and another one reads from it. A UNIX domain socket has the same behaviour as a TCP/IP socket.
@@ -46,10 +49,9 @@ The kernel then handles the system calls and abstracts the mechanism.
 ** 3. =unix-domain-socket= 与 =ip socket= 的比较
 unix domain socket是一种进程间通信方式，支持跑在同一个机器上的两个进程的双向数据交互。
 ip socket是一种网络通信方式，能够让两个进程通过网络完成数据交互。
-unix domain socket是针对于文件系统限制访问权限，而ip socket只能在过滤包的级别完成访问控制。
+unix domain socket针对于文件系统限制访问权限，而ip socket在过滤包的级别完成访问控制。
 unix domain socket比ip socket的效率更高，因为省去了校验检查、路由等操作步骤。
 
-以下内容摘抄自 freebsd list:
 #+BEGIN_QUOTE
 There are a few differences that might be of interest, in addition to the already pointed out difference that if you start out using IP sockets, you don't have to migrate to them later when you want inter-machine connectivity:
 
@@ -65,7 +67,11 @@ Right now, the UNIX domain socket code is covered by a subsystem lock; I have a 
 
 Robert N M Watson
 #+END_QUOTE
+以上内容摘抄自 [[https://lists.freebsd.org/pipermail/freebsd-performance/2005-February/001143.html][freebsd lists]]
 
-参考资料如下：
-- [[https://unix.stackexchange.com/questions/236983/differences-between-unix-domain-sockets-and-network-sockets?utm_medium%3Dorganic&utm_source%3Dgoogle_rich_qa&utm_campaign%3Dgoogle_rich_qa][unix stackexchange]]
-- [[https://lists.freebsd.org/pipermail/freebsd-performance/2005-February/001143.html][lists freebsd]]
+** 4. 参考资料
+- [[https://unix.stackexchange.com/questions/236983/differences-between-unix-domain-sockets-and-network-sockets][unix stackexchange - Differences between Unix Domain Sockets and Network Sockets]]
+- [[https://unix.stackexchange.com/questions/75904/are-fifo-pipe-unix-domain-socket-the-same-thing-in-linux-kernel][unix stackexchange - Are FIFO, pipe & Unix domain socket the same thing in Linux kernel]]
+- [[https://lists.freebsd.org/pipermail/freebsd-performance/2005-February/001143.html][freebsd lists]]
+
+（全文完）
