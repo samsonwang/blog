@@ -230,7 +230,7 @@ POSTS = (
     ("posts/*.org", "posts", "post.tmpl"),
 
     ("archives/algorithm/*.org", "posts", "post.tmpl"),
-
+    ("archives/2018/*.org", "posts", "post.tmpl"),
 )
 
 PAGES = (
