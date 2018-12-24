@@ -594,7 +594,7 @@ URL_TYPE = 'full_path'
 # relative URL.
 #
 # If you don't need any of these, just set to []
-REDIRECTIONS = []
+REDIRECTIONS = [("/posts/use-global-in-emacs/index.html","/posts/emacs-global-gtags-guide")]
 
 # Presets of commands to execute to deploy. Can be anything, for
 # example, you may use rsync:
