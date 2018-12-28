@@ -102,9 +102,9 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgc57c3c7" class="outline-2">
-<h2 id="orgc57c3c7">引言</h2>
-<div class="outline-text-2" id="text-orgc57c3c7">
+      <div id="outline-container-org472b036" class="outline-2">
+<h2 id="org472b036">引言</h2>
+<div class="outline-text-2" id="text-org472b036">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -129,9 +129,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org1a26f11" class="outline-2">
-<h2 id="org1a26f11">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-org1a26f11">
+<div id="outline-container-org86f4fae" class="outline-2">
+<h2 id="org86f4fae">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-org86f4fae">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -175,9 +175,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-orgc138a79" class="outline-2">
-<h2 id="orgc138a79">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-orgc138a79">
+<div id="outline-container-org7909663" class="outline-2">
+<h2 id="org7909663">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-org7909663">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -186,18 +186,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org5824a15" class="outline-2">
-<h2 id="org5824a15">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-org5824a15">
+<div id="outline-container-org9885d72" class="outline-2">
+<h2 id="org9885d72">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-org9885d72">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org9ad48e9" class="outline-2">
-<h2 id="org9ad48e9">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-org9ad48e9">
+<div id="outline-container-orgbbc6586" class="outline-2">
+<h2 id="orgbbc6586">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-orgbbc6586">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -206,9 +206,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org8ce0f0b" class="outline-2">
-<h2 id="org8ce0f0b">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-org8ce0f0b">
+<div id="outline-container-org24c4e38" class="outline-2">
+<h2 id="org24c4e38">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-org24c4e38">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
@@ -243,8 +243,8 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org23c95ab" class="outline-2">
-<h2 id="org23c95ab">
+      <div id="outline-container-org341f943" class="outline-2">
+<h2 id="org341f943">
 <span class="section-number-2">1</span> 什么是位域</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -274,8 +274,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org0574557" class="outline-2">
-<h2 id="org0574557">
+<div id="outline-container-org0ac90a5" class="outline-2">
+<h2 id="org0ac90a5">
 <span class="section-number-2">2</span> 位域的语法</h2>
 <div class="outline-text-2" id="text-2">
 <div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="o">:</span> <span class="n">size</span>
@@ -315,8 +315,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </pre></div>
 </div>
 
-<div id="outline-container-org0db740d" class="outline-3">
-<h3 id="org0db740d">
+<div id="outline-container-org09f312a" class="outline-3">
+<h3 id="org09f312a">
 <span class="section-number-3">2.1</span> 在size取0时如何理解</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -324,8 +324,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 如下所示，定义了如下几种情况。<br></p>
 </div>
 
-<div id="outline-container-orga661ff3" class="outline-4">
-<h4 id="orga661ff3">
+<div id="outline-container-org254beac" class="outline-4">
+<h4 id="org254beac">
 <span class="section-number-4">2.1.1</span> case1</h4>
 <div class="outline-text-4" id="text-2-1-1">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -351,8 +351,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-orgf2332d7" class="outline-4">
-<h4 id="orgf2332d7">
+<div id="outline-container-org512b83d" class="outline-4">
+<h4 id="org512b83d">
 <span class="section-number-4">2.1.2</span> case2</h4>
 <div class="outline-text-4" id="text-2-1-2">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -371,8 +371,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org97e9fa1" class="outline-4">
-<h4 id="org97e9fa1">
+<div id="outline-container-org85dc4be" class="outline-4">
+<h4 id="org85dc4be">
 <span class="section-number-4">2.1.3</span> case3</h4>
 <div class="outline-text-4" id="text-2-1-3">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -392,8 +392,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgd4c4636" class="outline-4">
-<h4 id="orgd4c4636">
+<div id="outline-container-org45db0d5" class="outline-4">
+<h4 id="org45db0d5">
 <span class="section-number-4">2.1.4</span> case4</h4>
 <div class="outline-text-4" id="text-2-1-4">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -413,8 +413,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-orgaafefa0" class="outline-3">
-<h3 id="orgaafefa0">
+<div id="outline-container-orgb98727f" class="outline-3">
+<h3 id="orgb98727f">
 <span class="section-number-3">2.2</span> <code>struct</code> 标识符</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -424,8 +424,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org205802e" class="outline-2">
-<h2 id="org205802e">
+<div id="outline-container-orgb4bff63" class="outline-2">
+<h2 id="orgb4bff63">
 <span class="section-number-2">3</span> 位域的常见应用场景</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -435,8 +435,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-orgce0f5fb" class="outline-2">
-<h2 id="orgce0f5fb">
+<div id="outline-container-org3871699" class="outline-2">
+<h2 id="org3871699">
 <span class="section-number-2">4</span> C++中的位操作接口</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -444,8 +444,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-org609e08a" class="outline-2">
-<h2 id="org609e08a">
+<div id="outline-container-orgc38777e" class="outline-2">
+<h2 id="orgc38777e">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -498,8 +498,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org8ec5b14" class="outline-2">
-<h2 id="org8ec5b14">
+      <div id="outline-container-org6512d88" class="outline-2">
+<h2 id="org6512d88">
 <span class="section-number-2">1</span> 原子化操作</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -510,8 +510,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-org1c0b90d" class="outline-2">
-<h2 id="org1c0b90d">
+<div id="outline-container-orgf3977be" class="outline-2">
+<h2 id="orgf3977be">
 <span class="section-number-2">2</span> 函数接口</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -566,8 +566,8 @@ In most cases, these builtins are considered a full barrier. That is, no memory 
 </div>
 </div>
 
-<div id="outline-container-org438a15d" class="outline-2">
-<h2 id="org438a15d">
+<div id="outline-container-orgd051dcf" class="outline-2">
+<h2 id="orgd051dcf">
 <span class="section-number-2">3</span> 内存栅栏（Memory Barrier）</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -607,8 +607,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 
 
-<div id="outline-container-org9066ac5" class="outline-2">
-<h2 id="org9066ac5">
+<div id="outline-container-org0a77f30" class="outline-2">
+<h2 id="org0a77f30">
 <span class="section-number-2">4</span> 操作原子化能够解决多进程访问共享内存的问题吗？</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -617,8 +617,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 
 
-<div id="outline-container-org34941c3" class="outline-2">
-<h2 id="org34941c3">
+<div id="outline-container-orgc9f2a46" class="outline-2">
+<h2 id="orgc9f2a46">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -711,8 +711,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org36f3748" class="outline-2">
-<h2 id="org36f3748">
+      <div id="outline-container-orge0e6ec4" class="outline-2">
+<h2 id="orge0e6ec4">
 <span class="section-number-2">1</span> 同步和异步</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -728,8 +728,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
 </div>
 
-<div id="outline-container-org9c4847a" class="outline-3">
-<h3 id="org9c4847a">
+<div id="outline-container-org2a378b7" class="outline-3">
+<h3 id="org2a378b7">
 <span class="section-number-3">1.1</span> POSIX AIO</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -761,8 +761,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 </div>
 
-<div id="outline-container-orgc4ecc48" class="outline-3">
-<h3 id="orgc4ecc48">
+<div id="outline-container-org6fea0d4" class="outline-3">
+<h3 id="org6fea0d4">
 <span class="section-number-3">1.2</span> Linux AIO</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -801,8 +801,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 </div>
 
-<div id="outline-container-org5185763" class="outline-3">
-<h3 id="org5185763">
+<div id="outline-container-orgd56f0cc" class="outline-3">
+<h3 id="orgd56f0cc">
 <span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -832,8 +832,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 </div>
 
-<div id="outline-container-org5bc238d" class="outline-2">
-<h2 id="org5bc238d">
+<div id="outline-container-org926508b" class="outline-2">
+<h2 id="org926508b">
 <span class="section-number-2">2</span> 阻塞和非阻塞</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -844,8 +844,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-orgf471337" class="outline-2">
-<h2 id="orgf471337">
+<div id="outline-container-orgbb0500e" class="outline-2">
+<h2 id="orgbb0500e">
 <span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -855,8 +855,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org5751183" class="outline-2">
-<h2 id="org5751183">
+<div id="outline-container-org82d7dd2" class="outline-2">
+<h2 id="org82d7dd2">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
@@ -905,9 +905,9 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
       <p>
 查看Linux系统相关信息有助于排查和解决软件和硬件的兼容性问题。系统信息包括硬件信息和软件信息，硬件信息主要有CPU信息、内存信息、PCI信息、USB信息、硬盘信息等等。软件信息主要有系统版本、分区使用状态等等。本文主要介绍了获取当前Linux系统信息的命令。<br></p>
 
-<div id="outline-container-orgc3795e5" class="outline-2">
-<h2 id="orgc3795e5">查看系统相关信息</h2>
-<div class="outline-text-2" id="text-orgc3795e5">
+<div id="outline-container-org467b91a" class="outline-2">
+<h2 id="org467b91a">查看系统相关信息</h2>
+<div class="outline-text-2" id="text-org467b91a">
 <p>
 <code>uname</code> 指令提供了查询系统信息的功能，使用该命令能够快速获取操作系统信息概览。<br></p>
 
@@ -946,25 +946,25 @@ hostnamectl
 </div>
 </div>
 
-<div id="outline-container-org0925b9d" class="outline-2">
-<h2 id="org0925b9d">查看CPU相关信息</h2>
-<div class="outline-text-2" id="text-org0925b9d">
+<div id="outline-container-org8c34b38" class="outline-2">
+<h2 id="org8c34b38">查看CPU相关信息</h2>
+<div class="outline-text-2" id="text-org8c34b38">
 <p>
 <code>lscpu</code> 指令能够查看当前系统中CPU的详细信息，包括型号、主频、构架、大小端等信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org658c2f8" class="outline-2">
-<h2 id="org658c2f8">查看硬盘相关信息</h2>
-<div class="outline-text-2" id="text-org658c2f8">
+<div id="outline-container-orgb626404" class="outline-2">
+<h2 id="orgb626404">查看硬盘相关信息</h2>
+<div class="outline-text-2" id="text-orgb626404">
 <p>
 <code>lsblk</code> 指令能够查看块设备（block device）的详细信息，块设备主要指系统中的存储设备如硬盘和闪存。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb22b1c8" class="outline-2">
-<h2 id="orgb22b1c8">查看PCI设备的相关信息</h2>
-<div class="outline-text-2" id="text-orgb22b1c8">
+<div id="outline-container-orgae34cd3" class="outline-2">
+<h2 id="orgae34cd3">查看PCI设备的相关信息</h2>
+<div class="outline-text-2" id="text-orgae34cd3">
 <p>
 <code>lspci</code> 指令能够查看PCI设备的信息，PCI设备包括USB、显卡、串口、网卡等其他外围设备。<br></p>
 
@@ -981,17 +981,17 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-org918fae2" class="outline-2">
-<h2 id="org918fae2">查看USB设备的相关信息</h2>
-<div class="outline-text-2" id="text-org918fae2">
+<div id="outline-container-org0077310" class="outline-2">
+<h2 id="org0077310">查看USB设备的相关信息</h2>
+<div class="outline-text-2" id="text-org0077310">
 <p>
 <code>lsusb</code> 指令能够查看USBS设备的信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4375170" class="outline-2">
-<h2 id="org4375170">查看文件系统相关信息</h2>
-<div class="outline-text-2" id="text-org4375170">
+<div id="outline-container-orgb0794f6" class="outline-2">
+<h2 id="orgb0794f6">查看文件系统相关信息</h2>
+<div class="outline-text-2" id="text-orgb0794f6">
 <p>
 <code>fdisk</code> 命令能够查看和操作linux系统的分区表。<br></p>
 
@@ -1010,9 +1010,9 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-org3ea1390" class="outline-2">
-<h2 id="org3ea1390">参考资料</h2>
-<div class="outline-text-2" id="text-org3ea1390">
+<div id="outline-container-org183f391" class="outline-2">
+<h2 id="org183f391">参考资料</h2>
+<div class="outline-text-2" id="text-org183f391">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/commands-to-collect-system-and-hardware-information-in-linux/">tecmint.com</a><br>
@@ -1056,15 +1056,15 @@ lspci -vv
       <p>
 linux的top命令能够动态显示当前系统的运行状态。它能够显示操作系统的汇总信息和当前系统上的正在运行的进程列表。<br></p>
 
-<div id="outline-container-orga8aaec9" class="outline-2">
-<h2 id="orga8aaec9">
+<div id="outline-container-org51e2db5" class="outline-2">
+<h2 id="org51e2db5">
 <span class="section-number-2">1</span> 统计信息说明</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 (可以通过配置文件修改通计信息区的显示格式，下文所描述的都是在默认配置下的显示内容)<br></p>
 </div>
-<div id="outline-container-org54ca7d8" class="outline-3">
-<h3 id="org54ca7d8">
+<div id="outline-container-orgb4fa81d" class="outline-3">
+<h3 id="orgb4fa81d">
 <span class="section-number-3">1.1</span> 第1行</h3>
 <div class="outline-text-3" id="text-1-1">
 <ul class="org-ul">
@@ -1081,8 +1081,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 这一行信息也可以通过 <code>uptime</code> 和 <code>w</code> 指令获得<br></p>
 </div>
 </div>
-<div id="outline-container-org874f450" class="outline-3">
-<h3 id="org874f450">
+<div id="outline-container-org5693ae8" class="outline-3">
+<h3 id="org5693ae8">
 <span class="section-number-3">1.2</span> 第2行</h3>
 <div class="outline-text-3" id="text-1-2">
 <ul class="org-ul">
@@ -1099,8 +1099,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </ul>
 </div>
 </div>
-<div id="outline-container-orgd89ef53" class="outline-3">
-<h3 id="orgd89ef53">
+<div id="outline-container-orgbe91247" class="outline-3">
+<h3 id="orgbe91247">
 <span class="section-number-3">1.3</span> 第3行</h3>
 <div class="outline-text-3" id="text-1-3">
 <ul class="org-ul">
@@ -1124,8 +1124,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orgff4a65f" class="outline-3">
-<h3 id="orgff4a65f">
+<div id="outline-container-orgd76a2be" class="outline-3">
+<h3 id="orgd76a2be">
 <span class="section-number-3">1.4</span> 第4行</h3>
 <div class="outline-text-3" id="text-1-4">
 <ul class="org-ul">
@@ -1141,8 +1141,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org23ad7b1" class="outline-3">
-<h3 id="org23ad7b1">
+<div id="outline-container-orgcd00c00" class="outline-3">
+<h3 id="orgcd00c00">
 <span class="section-number-3">1.5</span> 第5行</h3>
 <div class="outline-text-3" id="text-1-5">
 <ul class="org-ul">
@@ -1159,8 +1159,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org3432768" class="outline-2">
-<h2 id="org3432768">
+<div id="outline-container-orgcf2169f" class="outline-2">
+<h2 id="orgcf2169f">
 <span class="section-number-2">2</span> 进程信息</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -1197,8 +1197,8 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-orgce72ff4" class="outline-2">
-<h2 id="orgce72ff4">
+<div id="outline-container-org2c04904" class="outline-2">
+<h2 id="org2c04904">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
@@ -1244,9 +1244,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
       <p>
 我所租用的云服务器操作系统为CentOS Linux，在使用云服务器的过程中为了保证服务器的安全，进行了一些简单的配置，这样能够增加服务器被破解的难度。<br></p>
 
-<div id="outline-container-org42f51be" class="outline-2">
-<h2 id="org42f51be">使用denyhosts防止暴力破解登录密码</h2>
-<div class="outline-text-2" id="text-org42f51be">
+<div id="outline-container-org38d420f" class="outline-2">
+<h2 id="org38d420f">使用denyhosts防止暴力破解登录密码</h2>
+<div class="outline-text-2" id="text-org38d420f">
 <p>
 登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，屏蔽该登录ip，限制密码的尝试次数。<br></p>
 
@@ -1278,9 +1278,9 @@ service denyhosts status
 </div>
 </div>
 
-<div id="outline-container-orgd385bd3" class="outline-2">
-<h2 id="orgd385bd3">更改sshd的端口号</h2>
-<div class="outline-text-2" id="text-orgd385bd3">
+<div id="outline-container-orgfb9893d" class="outline-2">
+<h2 id="orgfb9893d">更改sshd的端口号</h2>
+<div class="outline-text-2" id="text-orgfb9893d">
 <p>
 sshd的默认端口号为22，很多暴力破解程序会直接对该端口进行登录尝试，通过修改默认的sshd的端口号，可以增加破解难度。需要注意的是，在修改sshd端口号之后，自己使用shell工具登录服务器也需要端口号进行修改。<br></p>
 
@@ -1296,9 +1296,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
 </div>
 </div>
 
-<div id="outline-container-org0f0f830" class="outline-2">
-<h2 id="org0f0f830">使用 <code>last</code> 和 <code>lastb</code> 查看系统登录记录</h2>
-<div class="outline-text-2" id="text-org0f0f830">
+<div id="outline-container-org25969e5" class="outline-2">
+<h2 id="org25969e5">使用 <code>last</code> 和 <code>lastb</code> 查看系统登录记录</h2>
+<div class="outline-text-2" id="text-org25969e5">
 <p>
 <code>last</code> 指令能够查看登录成功的记录，而 <code>lastb</code> 指令能够查看登录失败的记录。通过查看登录失败的记录，能够判断出服务器是否有被暴力破解的记录。需要注意的是这两个命令均需要管理员权限才能够执行。<br></p>
 </div>
@@ -1337,9 +1337,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
       <p>
 由于C++是兼容C的，所以使用C++进行文件操作时，会发现有两套库函数可以使用，它们分别是C风格的和C++风格的。<br></p>
 
-<div id="outline-container-org13a7065" class="outline-2">
-<h2 id="org13a7065">C风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-org13a7065">
+<div id="outline-container-org1df2312" class="outline-2">
+<h2 id="org1df2312">C风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-org1df2312">
 <p>
 <b>打开文件，关闭文件</b><br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
@@ -1368,9 +1368,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
 </div>
 
 
-<div id="outline-container-org0d53ffa" class="outline-2">
-<h2 id="org0d53ffa">C++风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-org0d53ffa">
+<div id="outline-container-orgbd78b57" class="outline-2">
+<h2 id="orgbd78b57">C++风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-orgbd78b57">
 <p>
 C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件实际上就会对应一个 <code>fstream</code> 对象，一下函数都是 <code>fstream</code> 的成员函数。<br>
 文件打开和关闭<br></p>
@@ -1388,9 +1388,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 </div>
 
 
-<div id="outline-container-org91292ab" class="outline-2">
-<h2 id="org91292ab">题外话</h2>
-<div class="outline-text-2" id="text-org91292ab">
+<div id="outline-container-orgc1c65b9" class="outline-2">
+<h2 id="orgc1c65b9">题外话</h2>
+<div class="outline-text-2" id="text-orgc1c65b9">
 <p>
 在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。<br></p>
 </div>
@@ -1426,9 +1426,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org6b1a83d" class="outline-2">
-<h2 id="org6b1a83d">字节序</h2>
-<div class="outline-text-2" id="text-org6b1a83d">
+      <div id="outline-container-orgbb07075" class="outline-2">
+<h2 id="orgbb07075">字节序</h2>
+<div class="outline-text-2" id="text-orgbb07075">
 <p>
 字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。<br>
 字节序分为大端字节序和小端字节序，两种字节序不能混用。<br><b>大端字节序</b> ：高位字节保存在较低位地址的内存中<br><b>小端字节序</b> ：高位字节保存在较高位地址的内存中<br></p>
@@ -1447,9 +1447,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 </div>
 
 
-<div id="outline-container-org3dbbc28" class="outline-2">
-<h2 id="org3dbbc28">union类型</h2>
-<div class="outline-text-2" id="text-org3dbbc28">
+<div id="outline-container-org4ee1849" class="outline-2">
+<h2 id="org4ee1849">union类型</h2>
+<div class="outline-text-2" id="text-org4ee1849">
 <p>
 可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。<br></p>
 
@@ -1546,9 +1546,9 @@ Python内置了日志模块，在默认情况下输出的日志是不带文件�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org252898f" class="outline-2">
-<h2 id="org252898f">基础用法</h2>
-<div class="outline-text-2" id="text-org252898f">
+      <div id="outline-container-orgd141b28" class="outline-2">
+<h2 id="orgd141b28">基础用法</h2>
+<div class="outline-text-2" id="text-orgd141b28">
 <p>
 <code>xargs</code> 指令默认情况下从 <code>stdin</code> 中读取信息，按照空格分或换行区分开，并且执行输入的命令（默认的命令是 <code>/bin/echo</code> ）。命令可以通过 <code>xargs</code> 的参数指定执行一次或多次，命令的执行参数为自身初始参数追加上由 <code>stdin</code> 读到的内容，命令在执行时会忽略空行。<br></p>
 
@@ -1569,10 +1569,10 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orgd9488ad" class="outline-2">
-<h2 id="orgd9488ad">
+<div id="outline-container-org9de89ea" class="outline-2">
+<h2 id="org9de89ea">
 <code>xargs</code> 与 <code>find</code> 组合使用</h2>
-<div class="outline-text-2" id="text-orgd9488ad">
+<div class="outline-text-2" id="text-org9de89ea">
 <p>
 常见的使用方法是使用 <code>find</code> 指令找到指定的文件，组合以 <code>xargs</code> 指令实现对指定文件的操作。<br></p>
 <div class="highlight"><pre><span></span>find . -name "demo_" | xargs file -i
@@ -1584,10 +1584,10 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org5e4c834" class="outline-2">
-<h2 id="org5e4c834">
+<div id="outline-container-orge91060a" class="outline-2">
+<h2 id="orge91060a">
 <code>xargs</code> 与 <code>grep</code> 组合使用</h2>
-<div class="outline-text-2" id="text-org5e4c834">
+<div class="outline-text-2" id="text-orge91060a">
 <p>
 常用命令如下，能够实现对指定规则文件的搜索匹配。<br></p>
 <div class="highlight"><pre><span></span>find . -name "*.log" | xargs grep error
@@ -1595,9 +1595,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org4845d03" class="outline-2">
-<h2 id="org4845d03">使用 <code>-n</code> 参数让 <code>xargs</code> 的命令重复执行</h2>
-<div class="outline-text-2" id="text-org4845d03">
+<div id="outline-container-org9e9e4a2" class="outline-2">
+<h2 id="org9e9e4a2">使用 <code>-n</code> 参数让 <code>xargs</code> 的命令重复执行</h2>
+<div class="outline-text-2" id="text-org9e9e4a2">
 <p>
 如果想用 <code>find</code> 指令完成多个匹配规则的搜索，则可以使用 <code>-n</code> 参数将 <code>xargs</code> 的内容分割成多个。<br>
 下面的命令会执行3次 <code>find</code> 命令， <code>xargs</code> 会将接收的到的内容按照单词数为“1”分割，分3次传送给 <code>find</code> 指令。<br></p>
@@ -1606,9 +1606,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orgdce0998" class="outline-2">
-<h2 id="orgdce0998">使用 <code>-t</code> 参数让 <code>xargs</code> 打印将要执行的命令</h2>
-<div class="outline-text-2" id="text-orgdce0998">
+<div id="outline-container-orgb0181a2" class="outline-2">
+<h2 id="orgb0181a2">使用 <code>-t</code> 参数让 <code>xargs</code> 打印将要执行的命令</h2>
+<div class="outline-text-2" id="text-orgb0181a2">
 <p>
 让 <code>xargs</code> 将指令的命令打印出来主要是方便查看命令执行情况，也方便在出现错误时进行调试。<br></p>
 <div class="highlight"><pre><span></span>find . -name *.log | xargs -t rm -f
@@ -1616,9 +1616,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org33f3008" class="outline-2">
-<h2 id="org33f3008">使用 <code>-p</code> 参数让 <code>xargs</code> 在执行命令前询问用户</h2>
-<div class="outline-text-2" id="text-org33f3008">
+<div id="outline-container-orgca3c72b" class="outline-2">
+<h2 id="orgca3c72b">使用 <code>-p</code> 参数让 <code>xargs</code> 在执行命令前询问用户</h2>
+<div class="outline-text-2" id="text-orgca3c72b">
 <p>
 增加 <code>-p</code> 参数后， <code>xargs</code> 在每次执行命令前会将指令打印出来并询问用户，只有用户输入 “y” 时才会真正执行该条命令。<br></p>
 <div class="highlight"><pre><span></span>echo "*.c" "*.cpp" "*.h" | xargs -n 1 -p find . -name
@@ -1626,9 +1626,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org2f6b86f" class="outline-2">
-<h2 id="org2f6b86f">使用 <code>-I</code> 参数让 <code>xargs</code> 进行参数替换</h2>
-<div class="outline-text-2" id="text-org2f6b86f">
+<div id="outline-container-org058601e" class="outline-2">
+<h2 id="org058601e">使用 <code>-I</code> 参数让 <code>xargs</code> 进行参数替换</h2>
+<div class="outline-text-2" id="text-org058601e">
 <p>
 <code>xargs</code> 默认会将读取到的内容追加在指令命令后面作为参数，使用 <code>-I</code> 参数能够控制命令参数的组合方式。<br>
 以下命令会将当前目录中的可执行文件移动到bin文件夹下。<br></p>
@@ -1637,9 +1637,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orga4000ad" class="outline-2">
-<h2 id="orga4000ad">参考资料</h2>
-<div class="outline-text-2" id="text-orga4000ad">
+<div id="outline-container-org2f2edd4" class="outline-2">
+<h2 id="org2f2edd4">参考资料</h2>
+<div class="outline-text-2" id="text-org2f2edd4">
 <ol class="org-ol">
 <li>
 <a href="http://man7.org/linux/man-pages/man1/xargs.1.html">http://man7.org/linux/man-pages/man1/xargs.1.html</a><br>
