@@ -1,0 +1,133 @@
+#+BEGIN_COMMENT
+.. title: 数据结构 - 堆
+.. slug: heap_data_structure
+.. date: 2018-12-28 15:20:46 UTC+08:00
+.. tags: data structure, algorithm
+.. category:data structure
+.. link:
+.. description:
+.. type: text
+.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:t
+
+#+TITLE: 数据结构 - 堆
+
+在计算机科学中，堆是一种特殊的，基于树（tree）的，满足堆特性的数据结构。
+
+{{{TEASER_END}}}
+
+** 堆的特点
+堆分为最大堆和最小堆。
+最大堆：每个父节点的键值（key， value）都大于或等于子节点的键值。
+最小堆：每个父节点的键值（key， value）都小于或等于子节点的键值。
+
+堆通常用于实现 *优先队列* ，优先队列通常被称为堆。需要注意的是，优先队列从概念上还是有别于堆的，堆只是优先队列的一种实现形式。
+优先队列是一种抽象数据结构，它与常规的队列数据结构和栈数据结构相似，但是队列中的每个元素都有关联的优先级。在优先队列中，较高优先级的元素会先于低优先级的元素。
+
+
+** 堆的常见操作
+*基本操作*
+- 找到最大（最小）元素：类似于 =peek= 操作。
+- 取出最大（最小）元素：类似于 =pop= 操作。
+- 删去最大（最小）元素：删去堆的根节点。
+- 替换元素：取出根节点，并且放入一个新的元素。这个操作相比 =pop= 再 =push= 效率要高，因为这个操作只要进行一次平衡（balance）。
+
+*创建操作*
+- 创建：创建一个空的堆。
+- 堆化（heapify）：用给定的元素创建一个堆。
+- 合并（merge）：用两个堆的元素创建一个新的堆，保留原先的堆。
+- 融合（meld）：用两个堆的元素创建一个新的堆，销毁原先的堆。
+
+*查看操作*
+- 大小：得到堆中元素个数。
+- 是否为空：判断这个堆中的元素是否为空。
+
+*内部操作*
+- 增大（减少）元素：在最大堆（最小堆）中更新元素。
+- 删除：删去任意一个节点，伴随着移动最后一个节点，以维持堆的数据结构。
+- 上移：根据需要上移树的一个节点，用于在插入操作后维持堆的数据结构。
+- 下移：下移树的一个节点，与上移相似，用于在删除和替换操作后维持堆的数据结构。
+
+
+** 二叉堆
+堆通常以数组的形式实现，并且不需要存储元素之间的指针。将元素插入堆中或从堆中删除后，堆的数据结构可能会被打破，需要通过内部操作来平衡，使其重新成为一个堆。
+[[img-url:/images/post-heap-data-structure-1.png]]
+二叉堆可以使用数组的形式实现，这样空间效率很高。第一个（或最后一个）元素是根节点，之后的两个元素是根节点的子节点，接下来的四个元素是两个子节点的四个子节点，以此类推。因此，位置 =n= 上元素的子节点将在位置 =2n= 和 =2n+1= 上（下标从1开始的数组），或在 =2n+1= 和 =2n+2= 的位置上（下标从0开始的数组）。
+
+二叉堆与二叉树相比还有两个额外的约束：
+1. 二叉堆是一个完全二叉树
+2. 根据整体顺序，每个节点都会大于等于（或小于等于）子节点
+
+*完全二叉树* ：在完全二叉树中，除了最后一层之外，每一层都被完全填充，最后一层中的所有节点都尽可能靠左，在最后一层可以有 =h= 到 =2^h= 个节点。
+*完美二叉树* ：在完美二叉树中，所有的内部节点都有两个子节点，所有子节点都在同一高度。
+
+
+** 生成堆（heapify）
+
+生成最大堆的代码实现
+#+BEGIN_SRC cpp
+
+#+END_SRC
+
+
+
+** =C++= 标准库中的优先队列
+在头文件 =queue= 中有模板类 =priority_queue= 用来表示优先队列。
+
+示例代码（代码摘自cppreference）
+#+BEGIN_SRC cpp
+#include <functional>
+#include <queue>
+#include <vector>
+#include <iostream>
+
+template<typename T> void print_queue(T& q) {
+    while(!q.empty()) {
+        std::cout << q.top() << " ";
+        q.pop();
+    }
+    std::cout << '\n';
+}
+
+int main() {
+    std::priority_queue<int> q;
+
+    for(int n : {1,8,5,6,3,4,0,9,7,2})
+        q.push(n);
+
+    print_queue(q);
+
+    std::priority_queue<int, std::vector<int>, std::greater<int> > q2;
+
+    for(int n : {1,8,5,6,3,4,0,9,7,2})
+        q2.push(n);
+
+    print_queue(q2);
+
+    // Using lambda to compare elements.
+    auto cmp = [](int left, int right) { return (left ^ 1) < (right ^ 1);};
+    std::priority_queue<int, std::vector<int>, decltype(cmp)> q3(cmp);
+
+    for(int n : {1,8,5,6,3,4,0,9,7,2})
+        q3.push(n);
+
+    print_queue(q3);
+
+    return 0;
+}
+#+END_SRC
+
+
+** 堆排序
+
+
+
+
+
+** 参考资料
+- https://en.wikipedia.org/wiki/Heap_(data_structure)
+- https://en.wikipedia.org/wiki/Priority_queue
+- https://en.wikipedia.org/wiki/Binary_heap
+- https://en.cppreference.com/w/cpp/container/priority_queue
+- https://www.geeksforgeeks.org/heap-sort/
