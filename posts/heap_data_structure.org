@@ -1,49 +1,49 @@
 #+BEGIN_COMMENT
 .. title: 数据结构 - 堆
 .. slug: heap_data_structure
-.. date: 2018-12-28 15:20:46 UTC+08:00
-.. tags: data structure, algorithm
+.. date: 2018-12-29 14:20:46 UTC+08:00
+.. tags: data structure, algorithm, priority queue, heap sort
 .. category:data structure
 .. link:
 .. description:
 .. type: text
-.. status: draft
+/.. status: draft
 #+END_COMMENT
 #+OPTIONS: num:t
 
 #+TITLE: 数据结构 - 堆
 
-在计算机科学中，堆是一种特殊的，基于树（tree）的，满足堆特性的数据结构。
+在计算机科学中，堆是一种特殊的、基于树（tree）的、满足堆特性的数据结构。本文以堆数据结构作为切入点，介绍了与之相关的优先队列和堆排序。
 
 {{{TEASER_END}}}
 
-** 堆的特点
-堆分为最大堆和最小堆。
-最大堆：每个父节点的键值（key， value）都大于或等于子节点的键值。
-最小堆：每个父节点的键值（key， value）都小于或等于子节点的键值。
+** 什么是堆
+堆是一种特殊的树（tree），根据其节点之间的大小关系，堆可以分为最大堆和最小堆。
+- 最大堆：每个父节点的键值（key）都大于或等于子节点的键值。
+- 最小堆：每个父节点的键值（key）都小于或等于子节点的键值。
 
-堆通常用于实现 *优先队列* ，优先队列通常被称为堆。需要注意的是，优先队列从概念上还是有别于堆的，堆只是优先队列的一种实现形式。
-优先队列是一种抽象数据结构，它与常规的队列数据结构和栈数据结构相似，但是队列中的每个元素都有关联的优先级。在优先队列中，较高优先级的元素会先于低优先级的元素。
+堆通常用于实现 *优先队列* ，优先队列也通常被称为堆。需要注意的是，优先队列从概念上还是有别区堆的，堆只是优先队列的一种实现形式。
+优先队列是一种抽象数据结构，它与常规的队列数据结构和栈数据结构相似，但是队列中的每个元素都有关联的优先级。在优先队列中，较高优先级的元素总会先于低优先级的元素。
 
 
 ** 堆的常见操作
-*基本操作*
+*** 基本操作
 - 找到最大（最小）元素：类似于 =peek= 操作。
 - 取出最大（最小）元素：类似于 =pop= 操作。
 - 删去最大（最小）元素：删去堆的根节点。
 - 替换元素：取出根节点，并且放入一个新的元素。这个操作相比 =pop= 再 =push= 效率要高，因为这个操作只要进行一次平衡（balance）。
 
-*创建操作*
+*** 创建操作
 - 创建：创建一个空的堆。
 - 堆化（heapify）：用给定的元素创建一个堆。
 - 合并（merge）：用两个堆的元素创建一个新的堆，保留原先的堆。
 - 融合（meld）：用两个堆的元素创建一个新的堆，销毁原先的堆。
 
-*查看操作*
+*** 查看操作
 - 大小：得到堆中元素个数。
 - 是否为空：判断这个堆中的元素是否为空。
 
-*内部操作*
+*** 内部操作
 - 增大（减少）元素：在最大堆（最小堆）中更新元素。
 - 删除：删去任意一个节点，伴随着移动最后一个节点，以维持堆的数据结构。
 - 上移：根据需要上移树的一个节点，用于在插入操作后维持堆的数据结构。
@@ -52,10 +52,13 @@
 
 ** 二叉堆
 堆通常以数组的形式实现，并且不需要存储元素之间的指针。将元素插入堆中或从堆中删除后，堆的数据结构可能会被打破，需要通过内部操作来平衡，使其重新成为一个堆。
-[[img-url:/images/post-heap-data-structure-1.png]]
-二叉堆可以使用数组的形式实现，这样空间效率很高。第一个（或最后一个）元素是根节点，之后的两个元素是根节点的子节点，接下来的四个元素是两个子节点的四个子节点，以此类推。因此，位置 =n= 上元素的子节点将在位置 =2n= 和 =2n+1= 上（下标从1开始的数组），或在 =2n+1= 和 =2n+2= 的位置上（下标从0开始的数组）。
 
-二叉堆与二叉树相比还有两个额外的约束：
+[[img-url:/images/post-heap-data-structure-1.png]]
+（图片摘自wikipedia）
+
+二叉堆可以使用数组的形式实现，这样空间效率很高。第一个元素是根节点，之后的两个元素是根节点的子节点，接下来的四个元素是两个子节点的四个子节点，以此类推。因此，位置 =n= 上元素的子节点将在位置 =2n= 和 =2n+1= 上（下标从1开始的数组），或在 =2n+1= 和 =2n+2= 的位置上（下标从0开始的数组）。
+
+二叉堆与二叉树相比还有两个额外的特性：
 1. 二叉堆是一个完全二叉树
 2. 根据整体顺序，每个节点都会大于等于（或小于等于）子节点
 
@@ -64,16 +67,37 @@
 
 
 ** 生成堆（heapify）
+生成堆就是将给定的元素变成一个堆。生成堆的操作要从底向上进行，在操作时每次仅需关注三个节点。这三个节点能够组成一个小的二叉树，通过比较这三个节点的值，将合适的（最大堆的最大值、最小堆的最小值）节点与根节点交换，这样三个节点就满足了堆的特性要求。如果发生了节点交换，被交换的节点与其子节点的堆特性可能被破坏，则需要对所交换的节点进行堆平衡操作，以保证节点交换后仍然能够维持堆的特性。
 
-生成最大堆的代码实现
-#+BEGIN_SRC cpp
+生成最大堆的代码实现（代码摘自 geeksforgeeks）
+#+BEGIN_SRC c
+// an index in arr[]. n is size of heap
+void heapify(int arr[], int n, int i) {
+    int largest = i; // Initialize largest as root
+    int l = 2*i + 1; // left = 2*i + 1
+    int r = 2*i + 2; // right = 2*i + 2
 
+    // If left child is larger than root
+    if (l < n && arr[l] > arr[largest])
+    largest = l;
+
+    // If right child is larger than largest so far
+    if (r < n && arr[r] > arr[largest])
+        largest = r;
+
+    // If largest is not root
+    if (largest != i) {
+        swap(arr[i], arr[largest]);
+
+        // Recursively heapify the affected sub-tree
+        heapify(arr, n, largest);
+    }
+}
 #+END_SRC
 
 
-
 ** =C++= 标准库中的优先队列（堆）
-在头文件 =queue= 中有模板类 =priority_queue= 用来表示优先队列。
+在头文件 =queue= 中有模板类 =std::priority_queue= 用来表示优先队列。
 
 示例代码（代码摘自cppreference）
 #+BEGIN_SRC cpp
@@ -119,14 +143,18 @@ int main() {
 #+END_SRC
 
 
-** 堆排序
-堆排序是一种基于堆数据结构的排序算法。
-从下向上不断生成堆,最终实现排序。
+** 堆排序（heapsort）
+堆排序是一种基于堆数据结构的排序算法。由于最大堆的根节点是最大元素，每次都将根结点取出后，不断进行堆数据结构的平衡操作，这样就能不断取出剩余未排序元素中的最大值，最终实现堆数组的排序。
 
-=heapify= 是一个很重要的操作。
+[[img-url:/images/post-heap-data-structure-2.gif]]
+(堆排序的动图示例，摘自wikipedia)
 
-堆排序的伪代码：
-#+BEGIN_QUOTE
+
+堆排序不需要额外的辅助空间，是一种 =in-place= 的排序算法，堆排序是不稳定的排序算法，也有稳定版本的实现。
+生成堆（heapify）的时间复杂度是 =O(logn)= ，需要进行 =n= 次生成堆操作，所以堆排序的时间复杂度为 =O(nlogn)= 。
+
+堆排序的伪代码（摘自 wikipedia）：
+#+BEGIN_SRC org
 procedure heapsort(a, count) is
     input: an unordered array a of length count
 
@@ -135,20 +163,27 @@ procedure heapsort(a, count) is
 
     (The following loop maintains the invariants that a[0:end] is a heap and every element
      beyond end is greater than everything before it (so a[end:count] is in sorted order))
-    end ← count - 1
+    end <-- count - 1
     while end > 0 do
         (a[0] is the root and largest value. The swap moves it in front of the sorted elements.)
         swap(a[end], a[0])
         (the heap size is reduced by one)
-        end ← end - 1
+        end <-- end - 1
         (the swap ruined the heap property, so restore it)
         siftDown(a, 0, end)
-#+END_QUOTE
+#+END_SRC
+
+尽管在大多数机器上，堆排序的运行速度要比快速排序慢，但堆排序的优势在于它最坏情况时间复杂度为 =O(nlogn)= （快速排序最坏情况时间复杂度为 =O(n^2)= ）。
+
+在C++中，可以通过连续调用 =std::make_heap= 和 =std::sort_heap= 完成堆排序。
+
 
 ** 参考资料
-- https://en.wikipedia.org/wiki/Heap_(data_structure)
-- https://en.wikipedia.org/wiki/Priority_queue
-- https://en.wikipedia.org/wiki/Binary_heap
-- https://en.cppreference.com/w/cpp/container/priority_queue
-- https://en.wikipedia.org/wiki/Heapsort
-- https://www.geeksforgeeks.org/heap-sort/
+- [[https://en.wikipedia.org/wiki/Heap_(data_structure)][wikipedia - heap data structure]]
+- [[https://en.wikipedia.org/wiki/Priority_queue][wikipedia - priority queue]]
+- [[https://en.wikipedia.org/wiki/Binary_heap][wikipedia - binary heap]]
+- [[https://en.cppreference.com/w/cpp/container/priority_queue][cppreference - priority queue]]
+- [[https://en.wikipedia.org/wiki/Heapsort][wikipedia - heap sort]]
+- [[https://www.geeksforgeeks.org/heap-sort/][geeksforgeeks - heap sort]]
+
+（全文完）
