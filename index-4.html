@@ -72,7 +72,115 @@
 <div class="postindex">
 
 
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/notes-on-libshmcache/" class="u-url">libshmcache源码阅读笔记</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/shell-output-redirections/" class="u-url">shell的输出重定向</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-07-26T10:02:41+08:00" itemprop="datePublished" title="2018-07-26 10:02">Jul 26 2018  (10:02)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/shell-output-redirections/#disqus_thread" data-disqus-identifier="cache/archives/2018/shell-output-redirections.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
+        <li><a class="tag p-category" href="/tags/shell/" rel="tag">shell</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-org8cec2e0" class="outline-2">
+<h2 id="org8cec2e0">引言</h2>
+<div class="outline-text-2" id="text-org8cec2e0">
+<p>
+在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org6881b4b" class="outline-2">
+<h2 id="org6881b4b">使用尖括号完成重定向</h2>
+<div class="outline-text-2" id="text-org6881b4b">
+<p>
+示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
+<div class="highlight"><pre><span></span>ls . &gt; ls-output.txt
+</pre></div>
+<p>
+可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
+</div>
+
+<div id="outline-container-org9bbb95c" class="outline-3">
+<h3 id="org9bbb95c">重定向 <code>stdout</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org9bbb95c">
+<div class="highlight"><pre><span></span>ls . <span class="m">1</span>&gt; ls-output.txt
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org4ccf88a" class="outline-3">
+<h3 id="org4ccf88a">重定向 <code>stderr</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org4ccf88a">
+<div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt; ls-error.txt
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgf6d9f1a" class="outline-3">
+<h3 id="orgf6d9f1a">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
+<div class="outline-text-3" id="text-orgf6d9f1a">
+<div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> ls-output-and-error.txt
+</pre></div>
+<p>
+以下命令具有相同的效果<br></p>
+<div class="highlight"><pre><span></span>ls . <span class="p">&amp;</span>&gt; ls-output-and-error.txt
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgc7d9d89" class="outline-3">
+<h3 id="orgc7d9d89">将程序的输出丢掉</h3>
+<div class="outline-text-3" id="text-orgc7d9d89">
+<p>
+可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
+<div class="highlight"><pre><span></span>program &gt; /dev/null
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org9390612" class="outline-3">
+<h3 id="org9390612">将输出追加到指定文件尾部</h3>
+<div class="outline-text-3" id="text-org9390612">
+<p>
+使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="nb">echo</span> <span class="nb">test</span> &gt;&gt; file-output.txt
+</pre></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgaaa6453" class="outline-2">
+<h2 id="orgaaa6453">使用管道完成重定向</h2>
+<div class="outline-text-2" id="text-orgaaa6453">
+<p>
+使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
+<div class="highlight"><pre><span></span>ls <span class="p">|</span> grep &lt;pattern&gt;
+</pre></div>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/notes-on-libshmcache/" class="u-url">libshmcache源码阅读笔记</a></h1>
       <div class="metadata">
         
 
@@ -102,9 +210,9 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org472b036" class="outline-2">
-<h2 id="org472b036">引言</h2>
-<div class="outline-text-2" id="text-org472b036">
+      <div id="outline-container-org89041cd" class="outline-2">
+<h2 id="org89041cd">引言</h2>
+<div class="outline-text-2" id="text-org89041cd">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -129,9 +237,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org86f4fae" class="outline-2">
-<h2 id="org86f4fae">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-org86f4fae">
+<div id="outline-container-orgac62135" class="outline-2">
+<h2 id="orgac62135">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-orgac62135">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -175,9 +283,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org7909663" class="outline-2">
-<h2 id="org7909663">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-org7909663">
+<div id="outline-container-org8835699" class="outline-2">
+<h2 id="org8835699">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-org8835699">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -186,18 +294,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org9885d72" class="outline-2">
-<h2 id="org9885d72">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-org9885d72">
+<div id="outline-container-orgf1dd810" class="outline-2">
+<h2 id="orgf1dd810">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-orgf1dd810">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgbbc6586" class="outline-2">
-<h2 id="orgbbc6586">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-orgbbc6586">
+<div id="outline-container-org0a01f03" class="outline-2">
+<h2 id="org0a01f03">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org0a01f03">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -206,9 +314,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org24c4e38" class="outline-2">
-<h2 id="org24c4e38">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-org24c4e38">
+<div id="outline-container-org99d409e" class="outline-2">
+<h2 id="org99d409e">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-org99d409e">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
@@ -243,8 +351,8 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org341f943" class="outline-2">
-<h2 id="org341f943">
+      <div id="outline-container-orgbfab92f" class="outline-2">
+<h2 id="orgbfab92f">
 <span class="section-number-2">1</span> 什么是位域</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -274,8 +382,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org0ac90a5" class="outline-2">
-<h2 id="org0ac90a5">
+<div id="outline-container-org0e2cb60" class="outline-2">
+<h2 id="org0e2cb60">
 <span class="section-number-2">2</span> 位域的语法</h2>
 <div class="outline-text-2" id="text-2">
 <div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="o">:</span> <span class="n">size</span>
@@ -315,8 +423,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </pre></div>
 </div>
 
-<div id="outline-container-org09f312a" class="outline-3">
-<h3 id="org09f312a">
+<div id="outline-container-org422d413" class="outline-3">
+<h3 id="org422d413">
 <span class="section-number-3">2.1</span> 在size取0时如何理解</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -324,8 +432,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 如下所示，定义了如下几种情况。<br></p>
 </div>
 
-<div id="outline-container-org254beac" class="outline-4">
-<h4 id="org254beac">
+<div id="outline-container-org044a7f8" class="outline-4">
+<h4 id="org044a7f8">
 <span class="section-number-4">2.1.1</span> case1</h4>
 <div class="outline-text-4" id="text-2-1-1">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -351,8 +459,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org512b83d" class="outline-4">
-<h4 id="org512b83d">
+<div id="outline-container-org77b0831" class="outline-4">
+<h4 id="org77b0831">
 <span class="section-number-4">2.1.2</span> case2</h4>
 <div class="outline-text-4" id="text-2-1-2">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -371,8 +479,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org85dc4be" class="outline-4">
-<h4 id="org85dc4be">
+<div id="outline-container-org10bf917" class="outline-4">
+<h4 id="org10bf917">
 <span class="section-number-4">2.1.3</span> case3</h4>
 <div class="outline-text-4" id="text-2-1-3">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -392,8 +500,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org45db0d5" class="outline-4">
-<h4 id="org45db0d5">
+<div id="outline-container-orgb070eeb" class="outline-4">
+<h4 id="orgb070eeb">
 <span class="section-number-4">2.1.4</span> case4</h4>
 <div class="outline-text-4" id="text-2-1-4">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -413,8 +521,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-orgb98727f" class="outline-3">
-<h3 id="orgb98727f">
+<div id="outline-container-orge4a7ab4" class="outline-3">
+<h3 id="orge4a7ab4">
 <span class="section-number-3">2.2</span> <code>struct</code> 标识符</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -424,8 +532,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-orgb4bff63" class="outline-2">
-<h2 id="orgb4bff63">
+<div id="outline-container-org6498cca" class="outline-2">
+<h2 id="org6498cca">
 <span class="section-number-2">3</span> 位域的常见应用场景</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -435,8 +543,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org3871699" class="outline-2">
-<h2 id="org3871699">
+<div id="outline-container-org327314d" class="outline-2">
+<h2 id="org327314d">
 <span class="section-number-2">4</span> C++中的位操作接口</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -444,8 +552,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-orgc38777e" class="outline-2">
-<h2 id="orgc38777e">
+<div id="outline-container-org45be297" class="outline-2">
+<h2 id="org45be297">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -498,8 +606,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org6512d88" class="outline-2">
-<h2 id="org6512d88">
+      <div id="outline-container-orgfed50eb" class="outline-2">
+<h2 id="orgfed50eb">
 <span class="section-number-2">1</span> 原子化操作</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -510,8 +618,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-orgf3977be" class="outline-2">
-<h2 id="orgf3977be">
+<div id="outline-container-orgebc9d73" class="outline-2">
+<h2 id="orgebc9d73">
 <span class="section-number-2">2</span> 函数接口</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -566,8 +674,8 @@ In most cases, these builtins are considered a full barrier. That is, no memory 
 </div>
 </div>
 
-<div id="outline-container-orgd051dcf" class="outline-2">
-<h2 id="orgd051dcf">
+<div id="outline-container-org526e407" class="outline-2">
+<h2 id="org526e407">
 <span class="section-number-2">3</span> 内存栅栏（Memory Barrier）</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -607,8 +715,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 
 
-<div id="outline-container-org0a77f30" class="outline-2">
-<h2 id="org0a77f30">
+<div id="outline-container-orgec85ec2" class="outline-2">
+<h2 id="orgec85ec2">
 <span class="section-number-2">4</span> 操作原子化能够解决多进程访问共享内存的问题吗？</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -617,8 +725,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 
 
-<div id="outline-container-orgc9f2a46" class="outline-2">
-<h2 id="orgc9f2a46">
+<div id="outline-container-org03099a3" class="outline-2">
+<h2 id="org03099a3">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -711,8 +819,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orge0e6ec4" class="outline-2">
-<h2 id="orge0e6ec4">
+      <div id="outline-container-orgb668e90" class="outline-2">
+<h2 id="orgb668e90">
 <span class="section-number-2">1</span> 同步和异步</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -728,8 +836,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
 </div>
 
-<div id="outline-container-org2a378b7" class="outline-3">
-<h3 id="org2a378b7">
+<div id="outline-container-orgf020809" class="outline-3">
+<h3 id="orgf020809">
 <span class="section-number-3">1.1</span> POSIX AIO</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -761,8 +869,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 </div>
 
-<div id="outline-container-org6fea0d4" class="outline-3">
-<h3 id="org6fea0d4">
+<div id="outline-container-org70b1e52" class="outline-3">
+<h3 id="org70b1e52">
 <span class="section-number-3">1.2</span> Linux AIO</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -801,8 +909,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 </div>
 
-<div id="outline-container-orgd56f0cc" class="outline-3">
-<h3 id="orgd56f0cc">
+<div id="outline-container-org146b81c" class="outline-3">
+<h3 id="org146b81c">
 <span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -832,8 +940,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 </div>
 
-<div id="outline-container-org926508b" class="outline-2">
-<h2 id="org926508b">
+<div id="outline-container-org837f623" class="outline-2">
+<h2 id="org837f623">
 <span class="section-number-2">2</span> 阻塞和非阻塞</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -844,8 +952,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-orgbb0500e" class="outline-2">
-<h2 id="orgbb0500e">
+<div id="outline-container-org495b4f4" class="outline-2">
+<h2 id="org495b4f4">
 <span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -855,8 +963,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org82d7dd2" class="outline-2">
-<h2 id="org82d7dd2">
+<div id="outline-container-orgf1fa918" class="outline-2">
+<h2 id="orgf1fa918">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
@@ -905,9 +1013,9 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
       <p>
 查看Linux系统相关信息有助于排查和解决软件和硬件的兼容性问题。系统信息包括硬件信息和软件信息，硬件信息主要有CPU信息、内存信息、PCI信息、USB信息、硬盘信息等等。软件信息主要有系统版本、分区使用状态等等。本文主要介绍了获取当前Linux系统信息的命令。<br></p>
 
-<div id="outline-container-org467b91a" class="outline-2">
-<h2 id="org467b91a">查看系统相关信息</h2>
-<div class="outline-text-2" id="text-org467b91a">
+<div id="outline-container-org58dc3b0" class="outline-2">
+<h2 id="org58dc3b0">查看系统相关信息</h2>
+<div class="outline-text-2" id="text-org58dc3b0">
 <p>
 <code>uname</code> 指令提供了查询系统信息的功能，使用该命令能够快速获取操作系统信息概览。<br></p>
 
@@ -946,25 +1054,25 @@ hostnamectl
 </div>
 </div>
 
-<div id="outline-container-org8c34b38" class="outline-2">
-<h2 id="org8c34b38">查看CPU相关信息</h2>
-<div class="outline-text-2" id="text-org8c34b38">
+<div id="outline-container-org4b4c1d1" class="outline-2">
+<h2 id="org4b4c1d1">查看CPU相关信息</h2>
+<div class="outline-text-2" id="text-org4b4c1d1">
 <p>
 <code>lscpu</code> 指令能够查看当前系统中CPU的详细信息，包括型号、主频、构架、大小端等信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb626404" class="outline-2">
-<h2 id="orgb626404">查看硬盘相关信息</h2>
-<div class="outline-text-2" id="text-orgb626404">
+<div id="outline-container-org893cc58" class="outline-2">
+<h2 id="org893cc58">查看硬盘相关信息</h2>
+<div class="outline-text-2" id="text-org893cc58">
 <p>
 <code>lsblk</code> 指令能够查看块设备（block device）的详细信息，块设备主要指系统中的存储设备如硬盘和闪存。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgae34cd3" class="outline-2">
-<h2 id="orgae34cd3">查看PCI设备的相关信息</h2>
-<div class="outline-text-2" id="text-orgae34cd3">
+<div id="outline-container-orge3868d4" class="outline-2">
+<h2 id="orge3868d4">查看PCI设备的相关信息</h2>
+<div class="outline-text-2" id="text-orge3868d4">
 <p>
 <code>lspci</code> 指令能够查看PCI设备的信息，PCI设备包括USB、显卡、串口、网卡等其他外围设备。<br></p>
 
@@ -981,17 +1089,17 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-org0077310" class="outline-2">
-<h2 id="org0077310">查看USB设备的相关信息</h2>
-<div class="outline-text-2" id="text-org0077310">
+<div id="outline-container-org25b4b9b" class="outline-2">
+<h2 id="org25b4b9b">查看USB设备的相关信息</h2>
+<div class="outline-text-2" id="text-org25b4b9b">
 <p>
 <code>lsusb</code> 指令能够查看USBS设备的信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb0794f6" class="outline-2">
-<h2 id="orgb0794f6">查看文件系统相关信息</h2>
-<div class="outline-text-2" id="text-orgb0794f6">
+<div id="outline-container-orgb6358c3" class="outline-2">
+<h2 id="orgb6358c3">查看文件系统相关信息</h2>
+<div class="outline-text-2" id="text-orgb6358c3">
 <p>
 <code>fdisk</code> 命令能够查看和操作linux系统的分区表。<br></p>
 
@@ -1010,9 +1118,9 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-org183f391" class="outline-2">
-<h2 id="org183f391">参考资料</h2>
-<div class="outline-text-2" id="text-org183f391">
+<div id="outline-container-org2081aec" class="outline-2">
+<h2 id="org2081aec">参考资料</h2>
+<div class="outline-text-2" id="text-org2081aec">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/commands-to-collect-system-and-hardware-information-in-linux/">tecmint.com</a><br>
@@ -1056,15 +1164,15 @@ lspci -vv
       <p>
 linux的top命令能够动态显示当前系统的运行状态。它能够显示操作系统的汇总信息和当前系统上的正在运行的进程列表。<br></p>
 
-<div id="outline-container-org51e2db5" class="outline-2">
-<h2 id="org51e2db5">
+<div id="outline-container-orgf4a8e42" class="outline-2">
+<h2 id="orgf4a8e42">
 <span class="section-number-2">1</span> 统计信息说明</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 (可以通过配置文件修改通计信息区的显示格式，下文所描述的都是在默认配置下的显示内容)<br></p>
 </div>
-<div id="outline-container-orgb4fa81d" class="outline-3">
-<h3 id="orgb4fa81d">
+<div id="outline-container-org5a21131" class="outline-3">
+<h3 id="org5a21131">
 <span class="section-number-3">1.1</span> 第1行</h3>
 <div class="outline-text-3" id="text-1-1">
 <ul class="org-ul">
@@ -1081,8 +1189,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 这一行信息也可以通过 <code>uptime</code> 和 <code>w</code> 指令获得<br></p>
 </div>
 </div>
-<div id="outline-container-org5693ae8" class="outline-3">
-<h3 id="org5693ae8">
+<div id="outline-container-org76186e3" class="outline-3">
+<h3 id="org76186e3">
 <span class="section-number-3">1.2</span> 第2行</h3>
 <div class="outline-text-3" id="text-1-2">
 <ul class="org-ul">
@@ -1099,8 +1207,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </ul>
 </div>
 </div>
-<div id="outline-container-orgbe91247" class="outline-3">
-<h3 id="orgbe91247">
+<div id="outline-container-orge83f227" class="outline-3">
+<h3 id="orge83f227">
 <span class="section-number-3">1.3</span> 第3行</h3>
 <div class="outline-text-3" id="text-1-3">
 <ul class="org-ul">
@@ -1124,8 +1232,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orgd76a2be" class="outline-3">
-<h3 id="orgd76a2be">
+<div id="outline-container-org9b9ee5e" class="outline-3">
+<h3 id="org9b9ee5e">
 <span class="section-number-3">1.4</span> 第4行</h3>
 <div class="outline-text-3" id="text-1-4">
 <ul class="org-ul">
@@ -1141,8 +1249,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orgcd00c00" class="outline-3">
-<h3 id="orgcd00c00">
+<div id="outline-container-orgd62c1de" class="outline-3">
+<h3 id="orgd62c1de">
 <span class="section-number-3">1.5</span> 第5行</h3>
 <div class="outline-text-3" id="text-1-5">
 <ul class="org-ul">
@@ -1159,8 +1267,8 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orgcf2169f" class="outline-2">
-<h2 id="orgcf2169f">
+<div id="outline-container-org55ddb08" class="outline-2">
+<h2 id="org55ddb08">
 <span class="section-number-2">2</span> 进程信息</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -1197,8 +1305,8 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-org2c04904" class="outline-2">
-<h2 id="org2c04904">
+<div id="outline-container-orgea923f5" class="outline-2">
+<h2 id="orgea923f5">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
@@ -1244,9 +1352,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
       <p>
 我所租用的云服务器操作系统为CentOS Linux，在使用云服务器的过程中为了保证服务器的安全，进行了一些简单的配置，这样能够增加服务器被破解的难度。<br></p>
 
-<div id="outline-container-org38d420f" class="outline-2">
-<h2 id="org38d420f">使用denyhosts防止暴力破解登录密码</h2>
-<div class="outline-text-2" id="text-org38d420f">
+<div id="outline-container-org6d33ff9" class="outline-2">
+<h2 id="org6d33ff9">使用denyhosts防止暴力破解登录密码</h2>
+<div class="outline-text-2" id="text-org6d33ff9">
 <p>
 登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，屏蔽该登录ip，限制密码的尝试次数。<br></p>
 
@@ -1278,9 +1386,9 @@ service denyhosts status
 </div>
 </div>
 
-<div id="outline-container-orgfb9893d" class="outline-2">
-<h2 id="orgfb9893d">更改sshd的端口号</h2>
-<div class="outline-text-2" id="text-orgfb9893d">
+<div id="outline-container-org67b1753" class="outline-2">
+<h2 id="org67b1753">更改sshd的端口号</h2>
+<div class="outline-text-2" id="text-org67b1753">
 <p>
 sshd的默认端口号为22，很多暴力破解程序会直接对该端口进行登录尝试，通过修改默认的sshd的端口号，可以增加破解难度。需要注意的是，在修改sshd端口号之后，自己使用shell工具登录服务器也需要端口号进行修改。<br></p>
 
@@ -1296,9 +1404,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
 </div>
 </div>
 
-<div id="outline-container-org25969e5" class="outline-2">
-<h2 id="org25969e5">使用 <code>last</code> 和 <code>lastb</code> 查看系统登录记录</h2>
-<div class="outline-text-2" id="text-org25969e5">
+<div id="outline-container-org6a0e4c3" class="outline-2">
+<h2 id="org6a0e4c3">使用 <code>last</code> 和 <code>lastb</code> 查看系统登录记录</h2>
+<div class="outline-text-2" id="text-org6a0e4c3">
 <p>
 <code>last</code> 指令能够查看登录成功的记录，而 <code>lastb</code> 指令能够查看登录失败的记录。通过查看登录失败的记录，能够判断出服务器是否有被暴力破解的记录。需要注意的是这两个命令均需要管理员权限才能够执行。<br></p>
 </div>
@@ -1337,9 +1445,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
       <p>
 由于C++是兼容C的，所以使用C++进行文件操作时，会发现有两套库函数可以使用，它们分别是C风格的和C++风格的。<br></p>
 
-<div id="outline-container-org1df2312" class="outline-2">
-<h2 id="org1df2312">C风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-org1df2312">
+<div id="outline-container-org10dc036" class="outline-2">
+<h2 id="org10dc036">C风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-org10dc036">
 <p>
 <b>打开文件，关闭文件</b><br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
@@ -1368,9 +1476,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> ，端口号配置为�
 </div>
 
 
-<div id="outline-container-orgbd78b57" class="outline-2">
-<h2 id="orgbd78b57">C++风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-orgbd78b57">
+<div id="outline-container-org233e9cf" class="outline-2">
+<h2 id="org233e9cf">C++风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-org233e9cf">
 <p>
 C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件实际上就会对应一个 <code>fstream</code> 对象，一下函数都是 <code>fstream</code> 的成员函数。<br>
 文件打开和关闭<br></p>
@@ -1388,9 +1496,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 </div>
 
 
-<div id="outline-container-orgc1c65b9" class="outline-2">
-<h2 id="orgc1c65b9">题外话</h2>
-<div class="outline-text-2" id="text-orgc1c65b9">
+<div id="outline-container-orgf64bfba" class="outline-2">
+<h2 id="orgf64bfba">题外话</h2>
+<div class="outline-text-2" id="text-orgf64bfba">
 <p>
 在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。<br></p>
 </div>
@@ -1426,9 +1534,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgbb07075" class="outline-2">
-<h2 id="orgbb07075">字节序</h2>
-<div class="outline-text-2" id="text-orgbb07075">
+      <div id="outline-container-org9f95eeb" class="outline-2">
+<h2 id="org9f95eeb">字节序</h2>
+<div class="outline-text-2" id="text-org9f95eeb">
 <p>
 字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。<br>
 字节序分为大端字节序和小端字节序，两种字节序不能混用。<br><b>大端字节序</b> ：高位字节保存在较低位地址的内存中<br><b>小端字节序</b> ：高位字节保存在较高位地址的内存中<br></p>
@@ -1447,9 +1555,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 </div>
 
 
-<div id="outline-container-org4ee1849" class="outline-2">
-<h2 id="org4ee1849">union类型</h2>
-<div class="outline-text-2" id="text-org4ee1849">
+<div id="outline-container-org0ad1104" class="outline-2">
+<h2 id="org0ad1104">union类型</h2>
+<div class="outline-text-2" id="text-org0ad1104">
 <p>
 可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。<br></p>
 
@@ -1516,143 +1624,6 @@ Python内置了日志模块，在默认情况下输出的日志是不带文件�
 
 <p>
 <b>参考资料</b><br><a href="https://stackoverflow.com/questions/10973362/python-logging-function-name-file-name-line-number-using-a-single-file">stackoverflow</a><br></p>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/linux-command-examples-xargs/" class="u-url">Linux常用命令行指令 - xargs</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-04-27T14:03:39+08:00" itemprop="datePublished" title="2018-04-27 14:03">Apr 27 2018  (14:03)
-    </time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/linux-command-examples-xargs/#disqus_thread" data-disqus-identifier="cache/archives/2018/linux-command-examples-xargs.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgd141b28" class="outline-2">
-<h2 id="orgd141b28">基础用法</h2>
-<div class="outline-text-2" id="text-orgd141b28">
-<p>
-<code>xargs</code> 指令默认情况下从 <code>stdin</code> 中读取信息，按照空格分或换行区分开，并且执行输入的命令（默认的命令是 <code>/bin/echo</code> ）。命令可以通过 <code>xargs</code> 的参数指定执行一次或多次，命令的执行参数为自身初始参数追加上由 <code>stdin</code> 读到的内容，命令在执行时会忽略空行。<br></p>
-
-<blockquote>
-<p>
-xargs reads items from the standard input, delimited by blanks (which can be protected with double or single quotes or a backslash) or newlines, and executes the command (default is /bin/echo) one or more times with any initial-arguments followed by items read from standard input. Blank lines on the standard input are ignored.<br></p>
-</blockquote>
-
-<p>
-在命令行输入 <code>xargs</code> 命令，输入 “a b c d” 后按回车，再按 <code>ctrl+d</code> 完成本次输入，则 <code>xargs</code> 的默认 <code>echo</code> 命令会将接收到的字符串打印出来，效果如下所示。<br></p>
-<div class="highlight"><pre><span></span># xargs
-a b c d
-a b c d
-</pre></div>
-
-<p>
-<code>xargs</code> 单独使用时功能比较单一，但是它与其他指令一起使用十分强大。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org9de89ea" class="outline-2">
-<h2 id="org9de89ea">
-<code>xargs</code> 与 <code>find</code> 组合使用</h2>
-<div class="outline-text-2" id="text-org9de89ea">
-<p>
-常见的使用方法是使用 <code>find</code> 指令找到指定的文件，组合以 <code>xargs</code> 指令实现对指定文件的操作。<br></p>
-<div class="highlight"><pre><span></span>find . -name "demo_" | xargs file -i
-</pre></div>
-<p>
-由于 <code>xargs</code> 是使用空格作为各个参数的分隔符，如果遇到的文件名中含有空格，则并不能按照预期处理。可以使用 <code>find</code> 指令的 <code>-print0</code> 含有空格的文件名转化为 <code>\n</code> 结尾的字符串，再配置 <code>xargs</code> 的 <code>-0</code> 参数就能完成文件名中含有空格的处理，改进后的命令如下。<br></p>
-<div class="highlight"><pre><span></span>find . -name "demo_" -print0 | xargs -0 file -i
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orge91060a" class="outline-2">
-<h2 id="orge91060a">
-<code>xargs</code> 与 <code>grep</code> 组合使用</h2>
-<div class="outline-text-2" id="text-orge91060a">
-<p>
-常用命令如下，能够实现对指定规则文件的搜索匹配。<br></p>
-<div class="highlight"><pre><span></span>find . -name "*.log" | xargs grep error
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org9e9e4a2" class="outline-2">
-<h2 id="org9e9e4a2">使用 <code>-n</code> 参数让 <code>xargs</code> 的命令重复执行</h2>
-<div class="outline-text-2" id="text-org9e9e4a2">
-<p>
-如果想用 <code>find</code> 指令完成多个匹配规则的搜索，则可以使用 <code>-n</code> 参数将 <code>xargs</code> 的内容分割成多个。<br>
-下面的命令会执行3次 <code>find</code> 命令， <code>xargs</code> 会将接收的到的内容按照单词数为“1”分割，分3次传送给 <code>find</code> 指令。<br></p>
-<div class="highlight"><pre><span></span>echo "*.c" "*.cpp" "*.h" | xargs -n 1 find . -name
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgb0181a2" class="outline-2">
-<h2 id="orgb0181a2">使用 <code>-t</code> 参数让 <code>xargs</code> 打印将要执行的命令</h2>
-<div class="outline-text-2" id="text-orgb0181a2">
-<p>
-让 <code>xargs</code> 将指令的命令打印出来主要是方便查看命令执行情况，也方便在出现错误时进行调试。<br></p>
-<div class="highlight"><pre><span></span>find . -name *.log | xargs -t rm -f
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgca3c72b" class="outline-2">
-<h2 id="orgca3c72b">使用 <code>-p</code> 参数让 <code>xargs</code> 在执行命令前询问用户</h2>
-<div class="outline-text-2" id="text-orgca3c72b">
-<p>
-增加 <code>-p</code> 参数后， <code>xargs</code> 在每次执行命令前会将指令打印出来并询问用户，只有用户输入 “y” 时才会真正执行该条命令。<br></p>
-<div class="highlight"><pre><span></span>echo "*.c" "*.cpp" "*.h" | xargs -n 1 -p find . -name
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org058601e" class="outline-2">
-<h2 id="org058601e">使用 <code>-I</code> 参数让 <code>xargs</code> 进行参数替换</h2>
-<div class="outline-text-2" id="text-org058601e">
-<p>
-<code>xargs</code> 默认会将读取到的内容追加在指令命令后面作为参数，使用 <code>-I</code> 参数能够控制命令参数的组合方式。<br>
-以下命令会将当前目录中的可执行文件移动到bin文件夹下。<br></p>
-<div class="highlight"><pre><span></span>find . -executable -type f -print0 | xargs -0 -I {} mv {} ./bin
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org2f2edd4" class="outline-2">
-<h2 id="org2f2edd4">参考资料</h2>
-<div class="outline-text-2" id="text-org2f2edd4">
-<ol class="org-ol">
-<li>
-<a href="http://man7.org/linux/man-pages/man1/xargs.1.html">http://man7.org/linux/man-pages/man1/xargs.1.html</a><br>
-</li>
-<li>
-<a href="https://www.howtoforge.com/tutorial/linux-xargs-command/">https://www.howtoforge.com/tutorial/linux-xargs-command/</a><br>
-</li>
-<li>
-<a href="https://www.thegeekstuff.com/2013/12/xargs-examples">https://www.thegeekstuff.com/2013/12/xargs-examples</a><br>
-</li>
-</ol>
-</div>
-</div>
     </div>
 
   </article>
