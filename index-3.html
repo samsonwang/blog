@@ -71,9 +71,251 @@
 
 <div class="postindex">
 
-      
 
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/why-front-end-libraries/" class="u-url">为什么要使用各种前端框架</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/static-member-initialization-and-private-member-function/" class="u-url">静态成员变量初始化相关问题</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-09-04T23:37:37+08:00" itemprop="datePublished" title="2018-09-04 23:37">Sep 04 2018  (23:37)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/static-member-initialization-and-private-member-function/#disqus_thread" data-disqus-identifier="cache/archives/2018/static-member-initialization-and-private-member-function.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
+        <li><a class="tag p-category" href="/tags/syntax/" rel="tag">syntax</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-org89ffefc" class="outline-2">
+<h2 id="org89ffefc">引言</h2>
+<div class="outline-text-2" id="text-org89ffefc">
+<p>
+这篇文章的起因是出于对于 <code>C++</code> 饿汉单例模式代码的一些疑问，查阅了一些资料。在仔细研究后，我发现在一些基础概念的理解还是存在偏差。<br>
+下面请看这样的一段代码，能看出其中有那些不太“正常”的语句么。<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Singleton</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="k">static</span> <span class="n">Singleton</span><span class="o">*</span> <span class="n">getInstance</span><span class="p">();</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="n">Singleton</span><span class="p">()</span> <span class="p">{}</span>
+    <span class="k">static</span> <span class="n">Singleton</span><span class="o">*</span> <span class="n">instance</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">Singleton</span><span class="o">*</span> <span class="n">Singleton</span><span class="o">::</span><span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Singleton</span><span class="p">();</span>
+<span class="n">Singleton</span><span class="o">*</span> <span class="n">Singleton</span><span class="o">::</span><span class="n">getInstance</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">instance</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org4862a5d" class="outline-2">
+<h2 id="org4862a5d">私有静态成员的初始化</h2>
+<div class="outline-text-2" id="text-org4862a5d">
+<p>
+上面的代码是饿汉单例模式的 <code>C++</code> 的实现，在没有查阅资料之前，我对其中私有静态成员变量的初始化存疑。主要有以下两点：<br></p>
+<ul class="org-ul">
+<li>为什么私有变量能够在类外被修改<br>
+</li>
+<li>为什么私有构造函数能够在类外被调用<br>
+</li>
+</ul>
+<p>
+在我之前的知识积累中， <b>私有的成员变量或成员函数是不能够在类外被访问的</b> 。那么为什么以上代码没有问题呢？<br></p>
+
+<p>
+在C++标准中找到了下面的一段话(可以在 <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">C++11 standard</a> 的 9.4.2节 或  <a href="http://eel.is/c++draft/class.static.data#2">C++ standard working draft</a> 的 10.3.9.2节 中找到)<br></p>
+<blockquote>
+<p>
+The initializer expression in the definition of a static data member is in the scope of its class.<br></p>
+</blockquote>
+<p>
+这句话的意思是：静态成员变量的初始化是被看做为它自身的类域中的（ <del>翻译的可能不是很准</del> ）。这样就不难理解为什么私有的静态成员变量能够在其类外被初始化了，由其私有构造函数进行构造也能说的通了。<br></p>
+
+
+<p>
+<b>同样</b> ,在C++标准中给出了下面这样的示例代码：<br></p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">process</span> <span class="p">{</span>
+  <span class="k">static</span> <span class="n">process</span><span class="o">*</span> <span class="n">run_chain</span><span class="p">;</span>
+  <span class="k">static</span> <span class="n">process</span><span class="o">*</span> <span class="n">running</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">process</span><span class="o">*</span> <span class="n">process</span><span class="o">::</span><span class="n">running</span> <span class="o">=</span> <span class="n">get_main</span><span class="p">();</span>
+<span class="n">process</span><span class="o">*</span> <span class="n">process</span><span class="o">::</span><span class="n">run_chain</span> <span class="o">=</span> <span class="n">running</span><span class="p">;</span>
+</pre></div>
+
+<p>
+给出的说明如下：<br></p>
+<blockquote>
+<p>
+The static data member <code>run_chain</code> of class process is defined in global scope; the notation <code>process​::​run_chain</code> specifies that the member <code>run_chain</code> is a member of class <code>process</code> and in the scope of class <code>process</code>. In the static data member definition, the initializer expression refers to the static data member running of class <code>process</code>.<br></p>
+</blockquote>
+<p>
+静态成员 <code>run_chain</code> 定义在全局域；而 <code>process::run_chain</code> 则表示 <code>run_chain</code> 是 <code>process</code> 类的成员变量，从而处在 <code>process</code> 类的作用域中。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org9fa322a" class="outline-2">
+<h2 id="org9fa322a">私有构造函数</h2>
+<div class="outline-text-2" id="text-org9fa322a">
+<p>
+在查阅资料时，我发现 Peter 的 <a href="https://stackoverflow.com/a/41361967">描述</a> 纠正了我对私有构造函数的一些看法。<br></p>
+<blockquote>
+<p>
+The point of a <code>private</code> constructor is not preventing object construction. It is about controlling which code can access the constructor, and therefore limiting which code to create an object that is an instance of that class. A <code>private</code> constructor is accessible to all member functions ( <code>static</code> or otherwise) of the class, and to all declared <code>friend</code> s of the class (which may be individual functions, or other classes) - so any of those can create an instance of the class using a <code>private</code> constructor (assuming the constructor is defined).<br></p>
+</blockquote>
+<p>
+私有构造函数的目的并不是禁止对象构造，其目的在于控制哪些代码能够调用这个构造函数，进而限制类对象的创建。私有的构造函数可以被该类的所有成员函数（静态或非静态的）调用，该类的友元类或友元方法也能访问该类的私有函数，所以在上述情况中都可以通过私有的构造函数实例化出类对象。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org9f03960" class="outline-2">
+<h2 id="org9f03960">参考资料</h2>
+<div class="outline-text-2" id="text-org9f03960">
+<ul class="org-ul">
+<li>
+<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">ISO C++11 standard</a><br>
+</li>
+<li>
+<a href="http://eel.is/c++draft/class.static.data#2">ISO C++ standard working draft</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/38583989/access-to-private-static-function-during-static-member-initialization">stackoverflow.com - access to private static function…</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/41361223/why-private-constructor-prevents-object-creation-c">stackoverflow.com - private constructor</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/7857989/static-member-variable-when-declared-private">stackoverflow.com - static member variable when declared private</a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/language/static#Static_data_members">cppreference.com - static data members</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/non-blocking-socket-connect-tips/" class="u-url">客户端使用非阻塞socket进行connect的流程</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-08-31T17:04:19+08:00" itemprop="datePublished" title="2018-08-31 17:04">Aug 31 2018  (17:04)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/non-blocking-socket-connect-tips/#disqus_thread" data-disqus-identifier="cache/archives/2018/non-blocking-socket-connect-tips.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/network/" rel="tag">network</a></li>
+        <li><a class="tag p-category" href="/tags/nio/" rel="tag">nio</a></li>
+        <li><a class="tag p-category" href="/tags/non-blocking/" rel="tag">non-blocking</a></li>
+        <li><a class="tag p-category" href="/tags/socket/" rel="tag">socket</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-org8a7bb1e" class="outline-2">
+<h2 id="org8a7bb1e">问题</h2>
+<div class="outline-text-2" id="text-org8a7bb1e">
+<p>
+使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
+</div>
+</div>
+
+<div id="outline-container-org45f5168" class="outline-2">
+<h2 id="org45f5168">解答</h2>
+<div class="outline-text-2" id="text-org45f5168">
+<p>
+客户端建立连接的示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">...);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">errno</span> <span class="o">!=</span> <span class="n">EINPROGRESS</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// case1. error, fail somehow, close socket</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// case2. connection has succeeded immediately</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">// case3. connection attempt is in progress</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+由于是非阻塞模式，所以 <code>connect</code> 之后会直接返回，根据返回值 <code>res</code> 和 <code>errno</code> 能够判断建立连接的结果。<br></p>
+<ul class="org-ul">
+<li>case1，表示连接失败；<br>
+</li>
+<li>case2，表示连接建立成功；<br>
+</li>
+<li>case3，表示正在建立连接的过程中，在这个情况下，需要等待socket变成可写（writable）状态，可以使用 <code>select</code> 或 <code>epoll</code> 完成；<br>
+</li>
+</ul>
+<p>
+在 case3 情况下，socket可写后，执行下面的代码检查socket是否出现错误。<br></p>
+<ul class="org-ul">
+<li>case4和case5，表示socket出现了错误，将会关闭连接；<br>
+</li>
+<li>case6，表示连接建立成功，可以开始 <code>read</code> 和 <code>write</code> 了。<br>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">result</span><span class="p">;</span>
+<span class="kt">socklen_t</span> <span class="n">result_len</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">getsockopt</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">SO_ERROR</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">result</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">result_len</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// case4. error, fail somehow, close socket</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// case5. connection failed; error code is in 'result'</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// case6. socket is ready for read()/write()</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org92ef745" class="outline-2">
+<h2 id="org92ef745">参考资料</h2>
+<div class="outline-text-2" id="text-org92ef745">
+<ul class="org-ul">
+<li>
+<a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/why-front-end-libraries/" class="u-url">为什么要使用各种前端框架</a></h1>
       <div class="metadata">
         
 
@@ -104,9 +346,9 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org0569070" class="outline-2">
-<h2 id="org0569070">引言</h2>
-<div class="outline-text-2" id="text-org0569070">
+      <div id="outline-container-orgc8cc909" class="outline-2">
+<h2 id="orgc8cc909">引言</h2>
+<div class="outline-text-2" id="text-orgc8cc909">
 <p>
 在学习前端的过程中，我开始接触到许多开发框架或开发工具，这些工具让我开始眼花缭乱。使用常规的html/css/js就已经能够开发出这种网页了，所以我问自己，为什么要学习这些框架或工具，这些库是用来解决什么问题的。想明白这个问题，我学习的目的就更加明确，在遇到一些开发情景时，也能够快速准确地挑选出应该使用的框架。<br></p>
 
@@ -115,9 +357,9 @@
 </div>
 </div>
 
-<div id="outline-container-org1e0a486" class="outline-2">
-<h2 id="org1e0a486">为什么要使用jQuery</h2>
-<div class="outline-text-2" id="text-org1e0a486">
+<div id="outline-container-org5a63460" class="outline-2">
+<h2 id="org5a63460">为什么要使用jQuery</h2>
+<div class="outline-text-2" id="text-org5a63460">
 <p>
 jQuery是一个轻量级js库，它有如下特性：<br></p>
 <ul class="org-ul">
@@ -137,9 +379,9 @@ jQuery是一个轻量级js库，它有如下特性：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org7e9f095" class="outline-2">
-<h2 id="org7e9f095">为什么要使用SASS</h2>
-<div class="outline-text-2" id="text-org7e9f095">
+<div id="outline-container-orgc164050" class="outline-2">
+<h2 id="orgc164050">为什么要使用SASS</h2>
+<div class="outline-text-2" id="text-orgc164050">
 <p>
 SASS是一种CSS预编译格式，它最终会编译成CSS。<br>
 SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操作，函数操作，样式模板（mixin）等强大的特性。它能够让开发人员更方便地编写CSS。SASS支持 <code>import</code> 关键字，这样就能够很方便地对样式进行模块化设计。<br></p>
@@ -152,9 +394,9 @@ SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操�
 </div>
 </div>
 
-<div id="outline-container-org3279731" class="outline-2">
-<h2 id="org3279731">为什么要使用Bootstrap</h2>
-<div class="outline-text-2" id="text-org3279731">
+<div id="outline-container-org52072cc" class="outline-2">
+<h2 id="org52072cc">为什么要使用Bootstrap</h2>
+<div class="outline-text-2" id="text-org52072cc">
 <p>
 Bootstrap是一个用于快速开发网页的前端框架。以我目前的理解来看，它更像是一个网页样式框架。<br></p>
 <ul class="org-ul">
@@ -170,9 +412,9 @@ Bootstrap是一个用于快速开发网页的前端框架。以我目前的理�
 </div>
 </div>
 
-<div id="outline-container-org2dcb909" class="outline-2">
-<h2 id="org2dcb909">为什么要使用React</h2>
-<div class="outline-text-2" id="text-org2dcb909">
+<div id="outline-container-orgd300939" class="outline-2">
+<h2 id="orgd300939">为什么要使用React</h2>
+<div class="outline-text-2" id="text-orgd300939">
 <p>
 DOM操作对性能的影响很大，频繁的DOM操作会使网页渲染的速度变慢，React主要解决了这个问题。<br>
 React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新渲染。<br></p>
@@ -212,9 +454,9 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 </div>
 
 
-<div id="outline-container-orgc4f925c" class="outline-2">
-<h2 id="orgc4f925c">参考资料</h2>
-<div class="outline-text-2" id="text-orgc4f925c">
+<div id="outline-container-org9efe748" class="outline-2">
+<h2 id="org9efe748">参考资料</h2>
+<div class="outline-text-2" id="text-org9efe748">
 <ol class="org-ol">
 <li>
 <a href="https://www.w3schools.com/jquery/jquery_intro.asp">w3schools jQuery intro</a><br>
@@ -266,8 +508,8 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org71fb8a7" class="outline-2">
-<h2 id="org71fb8a7">
+      <div id="outline-container-org07a350d" class="outline-2">
+<h2 id="org07a350d">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -276,13 +518,13 @@ js也是具有OOP（object oriented programming）特性的，OOP在构建一些
 </div>
 </div>
 
-<div id="outline-container-org73cfd69" class="outline-2">
-<h2 id="org73cfd69">
+<div id="outline-container-orgf0fc3cb" class="outline-2">
+<h2 id="orgf0fc3cb">
 <span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-orge05052a" class="outline-3">
-<h3 id="orge05052a">
+<div id="outline-container-orgdf4f3c3" class="outline-3">
+<h3 id="orgdf4f3c3">
 <span class="section-number-3">2.1</span> 创建对象（object）</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -302,8 +544,8 @@ js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关�
 </div>
 </div>
 
-<div id="outline-container-org09497d9" class="outline-3">
-<h3 id="org09497d9">
+<div id="outline-container-org670673e" class="outline-3">
+<h3 id="org670673e">
 <span class="section-number-3">2.2</span> 类（class）的声明</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -324,8 +566,8 @@ crow instanceof Bird; // =&gt; true
 </div>
 </div>
 
-<div id="outline-container-orgc5b6dae" class="outline-3">
-<h3 id="orgc5b6dae">
+<div id="outline-container-orgc19f741" class="outline-3">
+<h3 id="orgc19f741">
 <span class="section-number-3">2.3</span> 类的共有成员</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
@@ -353,8 +595,8 @@ js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还
 </div>
 </div>
 
-<div id="outline-container-org5b07b65" class="outline-3">
-<h3 id="org5b07b65">
+<div id="outline-container-org67d5955" class="outline-3">
+<h3 id="org67d5955">
 <span class="section-number-3">2.4</span> 类的私有成员</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
@@ -375,8 +617,8 @@ ducky.getHatchedEggCount(); // returns 10
 </div>
 </div>
 
-<div id="outline-container-org0b7da7c" class="outline-3">
-<h3 id="org0b7da7c">
+<div id="outline-container-orga1ce1d9" class="outline-3">
+<h3 id="orga1ce1d9">
 <span class="section-number-3">2.5</span> 类的继承和派生</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
@@ -387,8 +629,8 @@ Bird.prototype.constructor = Bird;
 </div>
 </div>
 
-<div id="outline-container-org0d58b40" class="outline-3">
-<h3 id="org0d58b40">
+<div id="outline-container-orge172ebb" class="outline-3">
+<h3 id="orge172ebb">
 <span class="section-number-3">2.6</span> 类的覆盖</h3>
 <div class="outline-text-3" id="text-2-6">
 <p>
@@ -418,8 +660,8 @@ Bird.prototype.fly = function() {
 </div>
 
 
-<div id="outline-container-org34d62ec" class="outline-2">
-<h2 id="org34d62ec">
+<div id="outline-container-orgd009244" class="outline-2">
+<h2 id="orgd009244">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
@@ -462,9 +704,9 @@ Bird.prototype.fly = function() {
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org98da950" class="outline-2">
-<h2 id="org98da950">引言</h2>
-<div class="outline-text-2" id="text-org98da950">
+      <div id="outline-container-org298c7f0" class="outline-2">
+<h2 id="org298c7f0">引言</h2>
+<div class="outline-text-2" id="text-org298c7f0">
 <p>
 近在FreeCodeCamp(FCC)学习前端的课程，其中有一节就是讲的 <code>regexp</code> ，也就是正则表达式，之前我零星地了解过一些正则表达式的相关知识，不足以对正则表达式得出一个完整的认识。FCC的教程循序渐进，由简到繁，在教学中结合练习，非常适合初学者的学习过程。如何你的英文能够达到阅读技术类文献的水平，又正好想学习一下正则表达式，我推荐你试一下FCC的正则表达式教程，花3~4个小时就能够对正则表达式有个完整的理解。<br></p>
 
@@ -473,9 +715,9 @@ Bird.prototype.fly = function() {
 </div>
 </div>
 
-<div id="outline-container-orgbb86740" class="outline-2">
-<h2 id="orgbb86740">要点总结（js版）</h2>
-<div class="outline-text-2" id="text-orgbb86740">
+<div id="outline-container-org4864fb5" class="outline-2">
+<h2 id="org4864fb5">要点总结（js版）</h2>
+<div class="outline-text-2" id="text-org4864fb5">
 <p>
 FCC的教程使用javascript作为开发语言，本节所有的代码都是js代码。<br></p>
 
@@ -717,9 +959,9 @@ lookahead 的概念， <code>(?=...)</code> 与 <code>(?!...)</code><br></p>
 </div>
 </div>
 
-<div id="outline-container-org092ddcc" class="outline-2">
-<h2 id="org092ddcc">elisp和python中的正则表达式</h2>
-<div class="outline-text-2" id="text-org092ddcc">
+<div id="outline-container-org196e84e" class="outline-2">
+<h2 id="org196e84e">elisp和python中的正则表达式</h2>
+<div class="outline-text-2" id="text-org196e84e">
 <p>
 在emacs中内置了 <code>string-match</code> 函数进行正则表达式匹配，其函数原型为 <code>(string-match REGEXP STRING &amp;optional START)</code> ，下面就是在emacs中使用regexp的示例。<br></p>
 <div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span> <span class="nv">str-regexp</span> <span class="s">"\.[h|cpp]$"</span><span class="p">)</span>
@@ -741,9 +983,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 </div>
 
 
-<div id="outline-container-org975b4fc" class="outline-2">
-<h2 id="org975b4fc">参考资料</h2>
-<div class="outline-text-2" id="text-org975b4fc">
+<div id="outline-container-org792cffe" class="outline-2">
+<h2 id="org792cffe">参考资料</h2>
+<div class="outline-text-2" id="text-org792cffe">
 <ul class="org-ul">
 <li>
 <a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/regular-expressions">FCC regular-expression tutorial</a><br>
@@ -790,17 +1032,17 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org5341217" class="outline-2">
-<h2 id="org5341217">序言</h2>
-<div class="outline-text-2" id="text-org5341217">
+      <div id="outline-container-orgfbc1271" class="outline-2">
+<h2 id="orgfbc1271">序言</h2>
+<div class="outline-text-2" id="text-orgfbc1271">
 <p>
 对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org79cd158" class="outline-2">
-<h2 id="org79cd158">什么是MapReduce</h2>
-<div class="outline-text-2" id="text-org79cd158">
+<div id="outline-container-org99ce343" class="outline-2">
+<h2 id="org99ce343">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-org99ce343">
 <p>
 MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
 
@@ -816,9 +1058,9 @@ MapReduce是面向大数据并行处理的计算模型、框架和平台，它�
 </div>
 </div>
 
-<div id="outline-container-org68602c0" class="outline-2">
-<h2 id="org68602c0">map和reduce</h2>
-<div class="outline-text-2" id="text-org68602c0">
+<div id="outline-container-org11713c3" class="outline-2">
+<h2 id="org11713c3">map和reduce</h2>
+<div class="outline-text-2" id="text-org11713c3">
 <p>
 <b>从编程语言的角度上来说</b><br>
 map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
@@ -837,9 +1079,9 @@ reduce操作也会接收到两个参数，一个列表和一个变换过程，�
 </div>
 </div>
 
-<div id="outline-container-org4b13546" class="outline-2">
-<h2 id="org4b13546">并行计算与大数据</h2>
-<div class="outline-text-2" id="text-org4b13546">
+<div id="outline-container-orged5c4da" class="outline-2">
+<h2 id="orged5c4da">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-orged5c4da">
 <p>
 mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
 
@@ -870,9 +1112,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgaca1355" class="outline-2">
-<h2 id="orgaca1355">参考资料</h2>
-<div class="outline-text-2" id="text-orgaca1355">
+<div id="outline-container-org3236d32" class="outline-2">
+<h2 id="org3236d32">参考资料</h2>
+<div class="outline-text-2" id="text-org3236d32">
 <ul class="org-ul">
 <li>
 <a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
@@ -918,17 +1160,17 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org0ef66a6" class="outline-2">
-<h2 id="org0ef66a6">引言</h2>
-<div class="outline-text-2" id="text-org0ef66a6">
+      <div id="outline-container-org89690cf" class="outline-2">
+<h2 id="org89690cf">引言</h2>
+<div class="outline-text-2" id="text-org89690cf">
 <p>
 本文主要对css flexbox的关键点了总结，方便以后在以后的查阅。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org356ab65" class="outline-2">
-<h2 id="org356ab65">容器的属性</h2>
-<div class="outline-text-2" id="text-org356ab65">
+<div id="outline-container-orge46a6cb" class="outline-2">
+<h2 id="orge46a6cb">容器的属性</h2>
+<div class="outline-text-2" id="text-orge46a6cb">
 <p>
 对于容器需要指定其显示方式为flexbox<br></p>
 <div class="highlight"><pre><span></span><span class="nt">display</span><span class="o">:</span> <span class="nt">flex</span><span class="o">;</span>
@@ -960,9 +1202,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-org2ee083c" class="outline-2">
-<h2 id="org2ee083c">条目的属性</h2>
-<div class="outline-text-2" id="text-org2ee083c">
+<div id="outline-container-org2343314" class="outline-2">
+<h2 id="org2343314">条目的属性</h2>
+<div class="outline-text-2" id="text-org2343314">
 <p>
 用于调整顺序<br></p>
 <div class="highlight"><pre><span></span><span class="nt">order</span><span class="o">:</span> <span class="o">&lt;</span><span class="nt">integer</span><span class="o">&gt;;</span> <span class="c">/* default 0 */</span>
@@ -996,9 +1238,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 
 
-<div id="outline-container-orga22c68a" class="outline-2">
-<h2 id="orga22c68a">参考资料</h2>
-<div class="outline-text-2" id="text-orga22c68a">
+<div id="outline-container-org8782a67" class="outline-2">
+<h2 id="org8782a67">参考资料</h2>
+<div class="outline-text-2" id="text-org8782a67">
 <ul class="org-ul">
 <li>
 <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">css-tricks.com</a><br>
@@ -1060,227 +1302,6 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </li>
 </ul>
 </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/navigation-and-selection-effectively-in-emacs/" class="u-url">提高emacs中浏览和选择操作效率的技巧</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-07-30T11:14:41+08:00" itemprop="datePublished" title="2018-07-30 11:14">Jul 30 2018  (11:14)
-    </time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/navigation-and-selection-effectively-in-emacs/#disqus_thread" data-disqus-identifier="cache/archives/2018/navigation-and-selection-effectively-in-emacs.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/emacs/" rel="tag">emacs</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgaaf0ed5" class="outline-2">
-<h2 id="orgaaf0ed5">
-<span class="section-number-2">1</span> 引言</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with-selection-and-navigation-in-emacs/">一篇博文</a> 给了我很大的启发，他详细地介绍了emacs中的相关概念，并提供了许多充满想象力的小技巧。作为emacs的入门级选手确实学到了很多，也拓宽了自己的思路。<br></p>
-
-<p>
-我最初的开发环境是Visual Studio，这一类比较大型的IDE集成了许多功能，但同时也会束缚住使用者的想法。通过这篇文章我感受到的由普通操作指令能组合成的新编辑方式。<br></p>
-
-<p>
-如果英文水平允许的话，非常推荐阅读一下原版的博文，原文中有更加丰富形象的图片示例，无论是跟我一样刚刚入门emacs的新手，还是经验丰富的老兵，都能够从中获得启发。下面，我结合自己的理解和收获谈谈emacs中操作的体会。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-org6ac3284" class="outline-2">
-<h2 id="org6ac3284">
-<span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
-<div class="outline-text-2" id="text-2">
-<p>
-我之前进行代码段复制的操作是十分基础的，用 <code>C-@</code> 模拟鼠标按下，方向键模拟鼠标拖动，在鼠标拖动的过程中就形成了一个选区，然后用 <code>M-w</code> 对这个选区进行复制操作，用 <code>C-y</code> 粘贴被复制的内容。<br></p>
-
-<p>
-以上操作带出了几个非常重要的概念 。在emacs中，鼠标光标所在位置被称作 <code>point</code> ；组合键 <code>C-@</code> 执行的是 <code>set-mark-command</code> 命令，就是将 <code>point</code> 所在位置标记为 <code>mark</code> ；通过移动光标，也就是移动 <code>point</code> 后，在 <code>point</code> 与 <code>mark</code> 之间就形成了 <code>region</code> 。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-org189787a" class="outline-2">
-<h2 id="org189787a">
-<span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
-<div class="outline-text-2" id="text-3">
-</div>
-<div id="outline-container-org2ef4744" class="outline-3">
-<h3 id="org2ef4744">
-<span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
-<div class="outline-text-3" id="text-3-1">
-<p>
-下面就来介绍一个非常重要的命令 <code>exchange-point-and-mark</code> ，这个命令默认被绑定在组合键 <code>C-x C-x</code> 上，从字面意思上很容易理解这条指令的作用，就是交换 <code>mark</code> 和 <code>point</code> 的位置。这样做的意义在于能够方便地切换 <code>region</code> 的可动边界，这样能够使 <code>region</code> 方便地分别从两端调整大小。<br>
-下面的示例是截取自Paul的博文，需要注意的是，他习惯于使用 <code>C-SPC</code> 调用 <code>set-mark-command</code> 。<br></p>
-
-<div class="highlight"><pre><span></span>Lorem ipsum dolor sit amet
-      ^ Cursor
-
-
-      Point
-      |
-      Mark
-      |
-Lorem ipsum dolor sit amet
-      ^ C-spc
-
-
-      Mark          Point
-      | ----region--|
-      |             |
-Lorem ipsum dolor sit amet
-	 move       ^
-	 forward -&gt;
-
-
-      Mark          Point
-      | ----region--|
-      |             |
-Lorem ipsum dolor sit amet
-		    ^
-		    C-x C-x
-
-
-      Point         Mark
-      | ----region--|
-      |             |
-Lorem ipsum dolor sit amet
-
-Point and mark interchanged
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org2050e8f" class="outline-3">
-<h3 id="org2050e8f">
-<span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
-<div class="outline-text-3" id="text-3-2">
-<p>
-对于 <code>region</code> 相关的操作，通常是对已经存在的代码段进行编辑的，如果我们在输入之前就知道有许多字段是需要重复输入的，那么就可以在输入之前设置好 <code>mark</code> ，对输入后形成的 <code>region</code> 完成复制。这个技巧在特定情况能够很大地提升输入效率，但是我个人认为，想要在实战中完成这个操作，还需要保证非常清晰的思路。可以通过下面的示例感受这种操作带来的方便(示例截取自Paul的博文)。<br></p>
-
-<p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-navigation-and-selection-effectively-in-emacs-1.gif" alt="nil"><br></p>
-
-<p>
-下面给出了详细的操作解析<br></p>
-
-<div class="highlight"><pre><span></span>class
-      ^ C-spc =&gt; Activate mark
-
-class Foo
-	  ^ M-w =&gt; Foo has now been killed (copied)
-
-class Foo extends React.Component&lt;
-				  ^ C-spc =&gt; Activate mark
-
-class Foo extends React.Component&lt;
-				  ^ C-y =&gt; Yank (paste) Foo
-
-class Foo extends React.Component&lt;FooProps
-					  ^ M-w =&gt; FooProps has now been killed (copied)
-
-class Foo extends React.Component&lt;FooProps&gt;
-
-// Later
-interface
-	   ^ C-y =&gt; Yank FooProps
-
-interface FooProps {}
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org1a61d28" class="outline-3">
-<h3 id="org1a61d28">
-<span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
-</h3>
-<div class="outline-text-3" id="text-3-3">
-<p>
-使用 <code>rectangle-mark-mode</code> 命令，默认快捷键 <code>C-x-SPC</code> ，能够框选出一个矩形的 <code>region</code> 。对于矩形 <code>region</code> ，Paul给出的示例是复制 <code>dired</code> 中的多个文件名称，貌似其他合适的使用场景不太多。<br></p>
-
-<p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-navigation-and-selection-effectively-in-emacs-2.gif" alt="nil"><br></p>
-</div>
-</div>
-</div>
-
-
-<div id="outline-container-org432e2ef" class="outline-2">
-<h2 id="org432e2ef">
-<span class="section-number-2">4</span> 其他插件支持</h2>
-<div class="outline-text-2" id="text-4">
-<p>
-有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
-</div>
-
-<div id="outline-container-org3e1c363" class="outline-3">
-<h3 id="org3e1c363">
-<span class="section-number-3">4.1</span> helm swoop</h3>
-<div class="outline-text-3" id="text-4-1">
-<p>
-从我个人的使用体验来看 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和helm occur的功能十分相似，它们都提供了方便的关键词跳转功能。<br></p>
-
-<p>
-下面的图片来自helm swoop的 <a href="https://github.com/ShingoFukuyama/helm-swoop">主页</a><br></p>
-
-<p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-navigation-and-selection-effectively-in-emacs-3.gif" alt="nil"><br></p>
-</div>
-</div>
-
-<div id="outline-container-org351a053" class="outline-3">
-<h3 id="org351a053">
-<span class="section-number-3">4.2</span> avy</h3>
-<div class="outline-text-3" id="text-4-2">
-<p>
-<a href="https://github.com/abo-abo/avy">avy</a> 的思路非常独特，这样的跳转和定位让我想起了Chrome浏览器中的Vimium插件，他允许我们使用更少的按键就能跳转到当前buffer中的任意位置，略微遗憾的是它只支持拉丁字母，不过在编写代码的大多数情况下是够用的。<br></p>
-
-<p>
-下面的图片来自Paul的博文<br></p>
-
-<p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-navigation-and-selection-effectively-in-emacs-4.gif" alt="nil"><br></p>
-</div>
-</div>
-</div>
-
-
-<div id="outline-container-org647b4c6" class="outline-2">
-<h2 id="org647b4c6">
-<span class="section-number-2">5</span> 参考资料</h2>
-<div class="outline-text-2" id="text-5">
-<ul class="org-ul">
-<li>
-<a href="https://lorefnon.tech/2018/07/14/getting-productive-with-selection-and-navigation-in-emacs/">lorefnon.tech</a><br>
-</li>
-<li>
-<a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a><br>
-</li>
-<li>
-<a href="https://github.com/abo-abo/avy">avy</a><br>
-</li>
-</ul>
-</div>
-</div>
-    </div>
 
   </article>
 </div>

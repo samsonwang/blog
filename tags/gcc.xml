@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about gcc)</title><link>https://samsonwang.me/</link><description></description><atom:link href="https://samsonwang.me/tags/gcc.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2019 &lt;a href="mailto:wangzhilv@gmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"&gt;&lt;img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Tue, 08 Jan 2019 07:16:09 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>GCC的内存原子化操作函数接口</title><link>https://samsonwang.me/posts/gcc-built-in-functions-for-atomic-memory-access/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-org1e1f492" class="outline-2"&gt;
-&lt;h2 id="org1e1f492"&gt;&lt;span class="section-number-2"&gt;1&lt;/span&gt; 原子化操作&lt;/h2&gt;
+</copyright><lastBuildDate>Wed, 09 Jan 2019 09:44:23 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>GCC的内存原子化操作函数接口</title><link>https://samsonwang.me/posts/gcc-built-in-functions-for-atomic-memory-access/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-orgb482142" class="outline-2"&gt;
+&lt;h2 id="orgb482142"&gt;&lt;span class="section-number-2"&gt;1&lt;/span&gt; 原子化操作&lt;/h2&gt;
 &lt;div class="outline-text-2" id="text-1"&gt;
 &lt;p&gt;
 在并发编程中，一个操作或一组操作是原子操作、可线性化操作、不可分操作或不可中断操作（atomic, linearizable, indivisible, uniterruptible），表示该操作执行时不可被中断的。操作的原子性能够保证操作在执行时免受中断、信号、并发进程线程的影响。另外，原子操作大多只有两种结果，要么成功并改变系统中对应的状态，要么没有相关效果。&lt;br&gt;
@@ -14,8 +14,8 @@
 &lt;/div&gt;
 &lt;/div&gt;
 
-&lt;div id="outline-container-orgf21a3e2" class="outline-2"&gt;
-&lt;h2 id="orgf21a3e2"&gt;&lt;span class="section-number-2"&gt;2&lt;/span&gt; 函数接口&lt;/h2&gt;
+&lt;div id="outline-container-org201b331" class="outline-2"&gt;
+&lt;h2 id="org201b331"&gt;&lt;span class="section-number-2"&gt;2&lt;/span&gt; 函数接口&lt;/h2&gt;
 &lt;div class="outline-text-2" id="text-2"&gt;
 &lt;p&gt;
 GCC提供了原子化的操作接口，能够支持长度为1、2、4、8字节的整形变量或指针。&lt;br&gt;
@@ -79,8 +79,8 @@ In most cases, these builtins are considered a full barrier. That is, no memory 
 &lt;/div&gt;
 &lt;/div&gt;
 
-&lt;div id="outline-container-orgea1a7d7" class="outline-2"&gt;
-&lt;h2 id="orgea1a7d7"&gt;&lt;span class="section-number-2"&gt;3&lt;/span&gt; 内存栅栏（Memory Barrier）&lt;/h2&gt;
+&lt;div id="outline-container-org8f6d2f9" class="outline-2"&gt;
+&lt;h2 id="org8f6d2f9"&gt;&lt;span class="section-number-2"&gt;3&lt;/span&gt; 内存栅栏（Memory Barrier）&lt;/h2&gt;
 &lt;div class="outline-text-2" id="text-3"&gt;
 &lt;p&gt;
 在上面的说明中提到了memory barrier的概念，这个概念是CPU指令的一个术语。&lt;br&gt;
@@ -130,8 +130,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 &lt;/div&gt;
 
 
-&lt;div id="outline-container-orgb38aec7" class="outline-2"&gt;
-&lt;h2 id="orgb38aec7"&gt;&lt;span class="section-number-2"&gt;4&lt;/span&gt; 操作原子化能够解决多进程访问共享内存的问题吗？&lt;/h2&gt;
+&lt;div id="outline-container-orgcc735e6" class="outline-2"&gt;
+&lt;h2 id="orgcc735e6"&gt;&lt;span class="section-number-2"&gt;4&lt;/span&gt; 操作原子化能够解决多进程访问共享内存的问题吗？&lt;/h2&gt;
 &lt;div class="outline-text-2" id="text-4"&gt;
 &lt;p&gt;
 原子化操作是对于CPU而言的指令操作，它不关心线程还是进程，它只关心这一系列的指令是不可分割的。所以，进程间可以使用原子操作完成内存的操作同步。&lt;br&gt;
@@ -140,8 +140,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 &lt;/div&gt;
 
 
-&lt;div id="outline-container-org136ae7f" class="outline-2"&gt;
-&lt;h2 id="org136ae7f"&gt;&lt;span class="section-number-2"&gt;5&lt;/span&gt; 参考资料&lt;/h2&gt;
+&lt;div id="outline-container-orgfffcd5c" class="outline-2"&gt;
+&lt;h2 id="orgfffcd5c"&gt;&lt;span class="section-number-2"&gt;5&lt;/span&gt; 参考资料&lt;/h2&gt;
 &lt;div class="outline-text-2" id="text-5"&gt;
 &lt;ul class="org-ul"&gt;
 &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Linearizability"&gt;Wikipedia - Linearizability&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
@@ -152,9 +152,9 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 &lt;li&gt;&lt;a href="https://en.cppreference.com/w/cpp/atomic"&gt;cppreference - atomic&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description><category>gcc</category><category>linux</category><guid>https://samsonwang.me/posts/gcc-built-in-functions-for-atomic-memory-access/</guid><pubDate>Mon, 02 Jul 2018 09:54:08 GMT</pubDate></item><item><title>常见的由于语法不当引起的编译警告</title><link>https://samsonwang.me/posts/frequent-improper-syntax-warning-on-compile/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-org7869cad" class="outline-2"&gt;
-&lt;h2 id="org7869cad"&gt;1 引言&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-org7869cad"&gt;
+&lt;/div&gt;</description><category>gcc</category><category>linux</category><guid>https://samsonwang.me/posts/gcc-built-in-functions-for-atomic-memory-access/</guid><pubDate>Mon, 02 Jul 2018 09:54:08 GMT</pubDate></item><item><title>常见的由于语法不当引起的编译警告</title><link>https://samsonwang.me/posts/frequent-improper-syntax-warning-on-compile/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-orgd3540cd" class="outline-2"&gt;
+&lt;h2 id="orgd3540cd"&gt;1 引言&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-orgd3540cd"&gt;
 &lt;p&gt;
 本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。&lt;br&gt;
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。&lt;br&gt;
