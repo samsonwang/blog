@@ -1,0 +1,99 @@
+#+BEGIN_COMMENT
+.. title: 线程API总结
+.. slug: thread_api_cheatsheet
+.. date: 2019-01-11 10:50:31 UTC+08:00
+.. tags: thread, cpp11, cpp, linux, posix
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:t
+
+#+TITLE: 线程API总结
+
+线程的使用在软件开发中是十分普遍的，本文总结了两种常用的线程API接口：POSIX线程和CPP11线程。
+
+{{{TEASER_END}}}
+
+** POSIX线程
+
+创建线程
+#+BEGIN_SRC c
+int pthread_create(pthread_t* tid, const phtread_attr_t* attr,
+                   void* (*start_routine)(void*), void* arg);
+#+END_SRC
+
+停止线程
+#+BEGIN_SRC c
+int pthread_cancel(pthread_t tid);
+#+END_SRC
+
+获取当前线程id
+#+BEGIN_SRC c
+pthread_t pthread_self();
+#+END_SRC
+
+等待线程
+#+BEGIN_SRC c
+int pthread_join(pthread_t tid, void** retval);
+#+END_SRC
+
+信号处理
+#+BEGIN_SRC c
+// 向线程发送信号
+int pthread_kill(pthread_t thread, int sig);
+// 检查或修改被屏蔽的信号
+int pthread_sigmask(int how, const sigset_t* set, sigset_t* oldset);
+#+END_SRC
+
+互斥量
+#+BEGIN_SRC c
+int pthread_mutex_init(pthread_mutex_t* restrict mutex,
+                       const pthread_mutexattr_t* restrict attr);
+
+int pthread_mutex_destroy(pthread_mutex_t* mutex);
+
+int pthread_mutex_lock(pthread_mutex_t* mutex);
+
+int pthread_mutex_trylock(pthread_mutex_t* mutex);
+
+int pthread_mutex_unlock(pthread_mutex_t* mutex);
+#+END_SRC
+
+条件变量
+#+BEGIN_SRC c
+int pthread_cond_destroy(pthread_cond_t* restrict cond,
+                         const pthread_condattr_t* restrict attr);
+
+int pthread_cond_init(pthread_cond_t* cond);
+
+int phread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex);
+
+int pthread_cond_signal(pthread_cond_t* cond);
+
+int pthread_cond_broadcast(pthread_cond_t* cond);
+#+END_SRC
+
+编译时额外参数 =-lpthread=
+
+这里列举的只是一小部分，在linux中使用 =apropos pthread= 命令能够获得更多相关 =pthread= 接口。
+
+** CPP11线程
+创建线程
+#+BEGIN_SRC cpp
+template< class Function, class... Args >
+explicit thread( Function&& f, Args&&... args );
+#+END_SRC
+
+获取线程id
+
+
+
+** 参考资料
+- [[https://www.cs.cmu.edu/afs/cs/academic/class/15492-f07/www/pthreads.html][cs.cmu.edu - pthread]]
+- [[https://en.cppreference.com/w/cpp/thread/thread][cppreference.com - thread]]
+
+
+（全文完）
