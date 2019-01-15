@@ -1,0 +1,47 @@
+#+BEGIN_COMMENT
+.. title: fork和vfork的区别
+.. slug: fork_and_vfork
+.. date: 2019-01-15 16:05:13 UTC+08:00
+.. tags: posix, linux
+.. category: linux
+.. link:
+.. description:
+.. type: text
+.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:t
+#+TITLE: fork和vfork的区别
+
+fork和vfork都是用来创建子进程的系统调用函数，本文主要对比了二者的区别。
+
+{{{TEASER_END}}}
+
+** 函数形式
+=fork= 创建一个子进程
+#+BEGIN_SRC c
+#include <unistd.h>
+pid_t fork(void);
+#+END_SRC
+
+=vfork= 创建一个子进程并阻塞父进程
+#+BEGIN_SRC c
+#include <sys/types.h>
+#include <unistd.h>
+pid_t vfork(void);
+#+END_SRC
+
+** 区别对比
+二者的函数形式十分相似，函数的功能也类似，它们的区别可以归纳为以下几点。
+- 由 =fork= 创建的子进程拥有与父进程独立的地址空间，而 =vfork= 创建的子进程与父进程共享地址空间。
+- 因为 =vfork= 创建的子进程共享了父进程的地址空间，如果子进程对地址空间中的内容进行了修改，则父进程也会受到影响（实际上并不推荐这样做）。
+- 使用 =fork= 时，父子进程是同时执行的，而 =vfork= 的父进程会等待子进程执行完成后才会继续执行。
+- =fork= 会使用copy on write策略以提高效率； =vfork= 并不会复制地址空间。需要注意的是， =fork= 的速度仍然会受到父进程使用内存大小影响（详见参考资料）。
+
+
+
+** 参考资料
+- [[https://stackoverflow.com/questions/4259629/what-is-the-difference-between-fork-and-vfork][stackoverflow.com - difference between fork and vfork]]
+- [[https://techdifferences.com/difference-between-fork-and-vfork.html][techdifferences.com - difference between fork and vfork]]
+- https://blog.famzah.net/2009/11/20/fork-gets-slower-as-parent-process-use-more-memory/
+
+（全文完）
