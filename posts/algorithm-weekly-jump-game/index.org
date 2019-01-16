@@ -1,0 +1,141 @@
+#+BEGIN_COMMENT
+.. title: 每周算法：跳跃游戏
+.. slug: algorithm-weekly-jump-game
+.. date: 2019-01-16 16:37:08 UTC+08:00
+.. tags: algorithm, leetcode
+.. category: algorithm
+.. link: https://leetcode.com/problems/jump-game/
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:t
+
+#+TITLE: 每周算法：跳跃游戏
+
+leetcode第55题，难度为medium。本题可以用的思路比较多，可行的方法有：回溯算法、动态规划、贪心算法。
+
+{{{TEASER_END}}}
+
+** Description
+Given an array of non-negative integers, you are initially positioned at the first index of the array.
+
+Each element in the array represents your maximum jump length at that position.
+
+Determine if you are able to reach the last index.
+
+*Example 1:*
+#+BEGIN_EXAMPLE
+Input: [2,3,1,1,4]
+Output: true
+#+END_EXAMPLE
+Explanation: Jump 1 step from index 0 to 1, then 3 steps to the last index.
+
+*Example 2:*
+#+BEGIN_EXAMPLE
+Input: [3,2,1,0,4]
+Output: false
+#+END_EXAMPLE
+Explanation: You will always arrive at index 3 no matter what. Its maximum jump length is 0, which makes it impossible to reach the last index.
+
+来源：[[https://leetcode.com/problems/jump-game/][leetcode 55 jump game]]
+
+
+
+** Solution
+题外话：这道题的solution解析是我在leetcode上看到的最好的解析，真的非常非常细致，原文链接为参考资料第二个，十分推荐去看看。
+
+*** Approach 1 backtracking
+这是我见到这道题的第一思路，通过回溯和穷举可以得到最终的结果。
+
+#+BEGIN_SRC cpp
+bool jump(const vector<int>& nums, size_t pos) {
+    if (pos >= nums.size()-1) {
+        return true;
+    }
+
+    int step = nums[pos];
+    bool ret = false;
+    for (int i=step; i>0; --i) {
+        ret |= jump(nums, pos+i);
+        if (ret) {
+            break;
+        }
+    }
+
+    return ret;
+}
+
+bool canJump(vector<int>& nums) {
+    return jump(nums, 0);
+}
+#+END_SRC
+
+该算法的时间复杂度为 =O(2^n)= ，详细的推导过程见参考资料2；空间复杂复杂度为 =O(n)= ，由于使用了递归，需要额外的空间存储堆栈数据。
+
+遗憾的是，这个方法在leetcode中被判定超时了。
+
+
+*** Approach 2 dynamic programming
+
+进行动态规划算法有两种方案，自底向顶推导和自顶向下推导。我使用的是自底向下推导。
+
+#+BEGIN_SRC cpp
+bool canJump(vector<int>& nums) {
+    if (nums.size() < 2) {
+        return true;
+    }
+
+    vector<bool> dpJump(nums.size(), false);
+    size_t size = dpJump.size();
+    dpJump[size - 1] = true;
+
+    for (int i=size-2; i>=0; --i) {
+        int step = nums[i];
+        if ((size_t)step + i >= size-1) {
+            dpJump[i] = true;
+        }
+        else {
+            bool jmp = false;
+            for (int j=step+i; j>0; --j) {
+                jmp |= dpJump[j];
+                if (jmp) {
+                    break;
+                }
+            }
+            dpJump[i] = jmp;
+        }
+    }
+
+    return dpJump[0];
+}
+#+END_SRC
+
+该算法的时间复杂度为 =O(2^n)= ；空间复杂复杂度为 =O(n)= ，使用额外的空间存储动态规划的辅助数据。
+
+
+*** Approach 3 greedy
+
+第三种方法采用贪心算法的思想，需要找到题目答案的规律，我是在看到leetcode解答之后才想出该算法的。
+
+#+BEGIN_SRC cpp
+bool canJump(vector<int>& nums) {
+    int lastPos = nums.size() - 1;
+
+    for (int i = nums.size()-1; i >= 0; --i) {
+        if (i + nums[i] >= lastPos) {
+            lastPos = i;
+        }
+    }
+    return lastPos == 0;
+}
+#+END_SRC
+
+该算法的时间复杂度为 =O(n)= ；空间复杂复杂度为 =O(1)= 。
+
+
+** Reference
+1. https://leetcode.com/problems/jump-game/
+2. https://leetcode.com/articles/jump-game/
+
+（全文完）
