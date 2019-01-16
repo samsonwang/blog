@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fork和vfork的区别 | Hack Note</title>
+<link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="https://samsonwang.me/posts/fork_and_vfork/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/thread_api_cheatsheet/" title="线程API总结" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="https://samsonwang.me/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+<li class="nav-item">
+<a href="/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">fork和vfork的区别</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2019-01-16T09:05:13+08:00" itemprop="datePublished" title="2019-01-16 09:05">Jan 16 2019  (09:05)
+    </time>
+</div>
+
+      
+    <div class="source blur-1">
+      <a href="/posts/fork_and_vfork/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/fork/" rel="tag">fork</a></li>
+        <li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
+        <li><a class="tag p-category" href="/tags/posix/" rel="tag">posix</a></li>
+        <li><a class="tag p-category" href="/tags/process/" rel="tag">process</a></li>
+        <li><a class="tag p-category" href="/tags/vfork/" rel="tag">vfork</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+fork和vfork都是用来创建子进程的系统调用函数，本文主要对比了二者的区别。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-orge941d6c" class="outline-2">
+<h2 id="orge941d6c">函数形式</h2>
+<div class="outline-text-2" id="text-orge941d6c">
+<p>
+<code>fork</code> 创建一个子进程<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="kt">pid_t</span> <span class="nf">fork</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</pre></div>
+
+<p>
+<code>vfork</code> 创建一个子进程并阻塞父进程<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;sys/types.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="kt">pid_t</span> <span class="nf">vfork</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgc995bcb" class="outline-2">
+<h2 id="orgc995bcb">区别对比</h2>
+<div class="outline-text-2" id="text-orgc995bcb">
+<p>
+二者的函数形式十分相似，函数的功能也类似，它们的区别可以归纳为以下几点。<br></p>
+<ul class="org-ul">
+<li>由 <code>fork</code> 创建的子进程拥有与父进程独立的地址空间，而 <code>vfork</code> 创建的子进程与父进程共享地址空间。<br>
+</li>
+<li>因为 <code>vfork</code> 创建的子进程共享了父进程的地址空间，如果子进程对地址空间中的内容进行了修改，则父进程也会受到影响（实际上并不推荐这样做）。<br>
+</li>
+<li>使用 <code>fork</code> 时，父子进程是同时执行的，而 <code>vfork</code> 的父进程会等待子进程执行完成后才会继续执行。<br>
+</li>
+<li>
+<code>fork</code> 会使用copy on write策略以提高效率； <code>vfork</code> 并不会复制地址空间。需要注意的是， <code>fork</code> 的速度仍然会受到父进程使用内存大小影响（详见参考资料3）。<br>
+</li>
+</ul>
+<p>
+<code>vfork</code> 的应用场景主要是配合 <code>exec</code> 系列函数，如果只在子进程中调用 <code>exec</code> 函数，由于 <code>exec</code> 函数会替换子进程的进程映像（process image），所以也就没有必要复制父进程的地址空间了。使用 <code>vfork</code> 时，父进程会阻塞到子进程的 <code>exec</code> 或 <code>_exit</code> 执行。<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">((</span><span class="n">pid</span> <span class="o">=</span> <span class="n">vfork</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">execl</span><span class="p">(...,</span> <span class="nb">NULL</span><span class="p">);</span> <span class="cm">/* after a successful execl the parent should be resumed */</span>
+    <span class="n">_exit</span><span class="p">(</span><span class="mi">127</span><span class="p">);</span> <span class="cm">/* terminate the child in case execl fails */</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orge76f95f" class="outline-2">
+<h2 id="orge76f95f">参考资料</h2>
+<div class="outline-text-2" id="text-orge76f95f">
+<ol class="org-ol">
+<li>
+<a href="https://stackoverflow.com/questions/4259629/what-is-the-difference-between-fork-and-vfork">stackoverflow.com - difference between fork and vfork</a><br>
+</li>
+<li>
+<a href="https://techdifferences.com/difference-between-fork-and-vfork.html">techdifferences.com - difference between fork and vfork</a><br>
+</li>
+<li>
+<a href="https://blog.famzah.net/2009/11/20/fork-gets-slower-as-parent-process-use-more-memory/">blog.famzah.net - fork gets slower</a><br>
+</li>
+</ol>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focus on linux server dev. I use EMACS, and I am learning python.</p>
+        <p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
+</div>
+</div>
+
+       
+<div class="sidebar-module">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+        <ul class="pager hidden-print">
+<li class="previous">
+                <a href="/posts/thread_api_cheatsheet/" rel="prev" title="线程API总结">Previous post</a>
+            </li>
+        </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="https://samsonwang.me/posts/fork_and_vfork/",
+        disqus_title="fork\u548cvfork\u7684\u533a\u522b",
+        disqus_identifier="cache/posts/fork_and_vfork.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2019 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="/assets/js/jquery.min.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/jquery.lazyload.min.js"></script><script src="/assets/js/popper.min.js"></script><script src="/assets/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
