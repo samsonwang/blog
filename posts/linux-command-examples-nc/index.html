@@ -81,6 +81,9 @@
     <div class="tags blur-2">
     <ul itemprop="keywords">
 <li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
+        <li><a class="tag p-category" href="/tags/nc/" rel="tag">nc</a></li>
+        <li><a class="tag p-category" href="/tags/netcat/" rel="tag">netcat</a></li>
+        <li><a class="tag p-category" href="/tags/network/" rel="tag">network</a></li>
     </ul>
 </div>
 
@@ -91,73 +94,82 @@
     <p>
 <code>nc</code> 命令是 <code>netcat</code> 的缩写，能够使用TCP或UDP协议读写网络连接中的数据，是一个方便可靠的调试工具。<br></p>
 
-<div id="outline-container-orgd5ada05" class="outline-2">
-<h2 id="orgd5ada05">1. 基本 <code>C/S</code> 模型</h2>
-<div class="outline-text-2" id="text-orgd5ada05">
+<!-- TEASER_END -->
+
+<div id="outline-container-orgf1937ec" class="outline-2">
+<h2 id="orgf1937ec">1. 基本 <code>C/S</code> 模型</h2>
+<div class="outline-text-2" id="text-orgf1937ec">
 <p>
 作为服务端建立监听<br></p>
-<div class="highlight"><pre><span></span>nc -l 127.0.0.1 8060
+<div class="highlight"><pre><span></span>nc -l <span class="m">127</span>.0.0.1 <span class="m">8060</span>
 </pre></div>
+
 <p>
 作为客户端连接端口<br></p>
-<div class="highlight"><pre><span></span>nc 172.0.0.1 8060
+<div class="highlight"><pre><span></span>nc <span class="m">172</span>.0.0.1 <span class="m">8060</span>
 </pre></div>
+
 <p>
-但是需要注意的是，该服务端只允许一个客户端连接进来。<br><code>nc</code> 会默认以TCP协议运行，可以增加 <code>-u</code> 参数转换为UDP协议。<br></p>
+但是需要注意的是，该服务端只允许一个客户端连接进来。<br></p>
+
+<p>
+<code>nc</code> 会默认以TCP协议运行，可以增加 <code>-u</code> 参数转换为UDP协议。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org40c1ba9" class="outline-2">
-<h2 id="org40c1ba9">2. 文件传输</h2>
-<div class="outline-text-2" id="text-org40c1ba9">
+<div id="outline-container-org96cba83" class="outline-2">
+<h2 id="org96cba83">2. 文件传输</h2>
+<div class="outline-text-2" id="text-org96cba83">
 <p>
 模拟客户端向服务端传输文件的示例代码如下，同理，也可以模拟服务端向客户端发送文件。<br></p>
-<div class="highlight"><pre><span></span>nc -l 1234  &gt; filename.out
-nc 127.0.0.1 1234 &lt; fielname.in
+<div class="highlight"><pre><span></span>nc -l <span class="m">1234</span>  &gt; filename.out
+nc <span class="m">127</span>.0.0.1 <span class="m">1234</span> &lt; fielname.in
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org35c821c" class="outline-2">
-<h2 id="org35c821c">3. 连接远程系统</h2>
-<div class="outline-text-2" id="text-org35c821c">
+<div id="outline-container-org6343836" class="outline-2">
+<h2 id="org6343836">3. 连接远程系统</h2>
+<div class="outline-text-2" id="text-org6343836">
 <p>
 已连接http服务器为例，在作为客户端连接以后，可以向服务器发送 <code>GET /HTTP/1.1</code> 来获取网站的主页。<br>
 示例代码如下<br></p>
-<div class="highlight"><pre><span></span>print "GET /HTTP/1.0 \r\n"| nc host.example.com 80
+<div class="highlight"><pre><span></span>print <span class="s2">"GET /HTTP/1.0 \r\n"</span><span class="p">|</span> nc host.example.com <span class="m">80</span>
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org0b567cb" class="outline-2">
-<h2 id="org0b567cb">4. 简易代理</h2>
-<div class="outline-text-2" id="text-org0b567cb">
+<div id="outline-container-org5545353" class="outline-2">
+<h2 id="org5545353">4. 简易代理</h2>
+<div class="outline-text-2" id="text-org5545353">
 <p>
 将nc命令嵌套使用，可以将一个端口中的数据转发到目的ip和端口。<br></p>
-<div class="highlight"><pre><span></span>ncat -l 8080 | ncat 192.168.1.200 80
+<div class="highlight"><pre><span></span>ncat -l <span class="m">8080</span> <span class="p">|</span> ncat <span class="m">192</span>.168.1.200 <span class="m">80</span>
 </pre></div>
 <p>
 通过上面的命令能够将本机8080端口的数据转发到192.168.1.200的80端口上，但是这样是单向的。可以建立 <code>fifo</code> 实现数据的双向传输。<br></p>
 <div class="highlight"><pre><span></span>mkfifo ./fifo_temp
-ncat -l 8080 0&lt;fifo_temp | ncat 192.168.1.200 80 1&gt;fifo_temp
+ncat -l <span class="m">8080</span> <span class="m">0</span>&lt;fifo_temp <span class="p">|</span> ncat <span class="m">192</span>.168.1.200 <span class="m">80</span> <span class="m">1</span>&gt;fifo_temp
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org73936fe" class="outline-2">
-<h2 id="org73936fe">5. 参考资料</h2>
-<div class="outline-text-2" id="text-org73936fe">
+<div id="outline-container-orge84a42e" class="outline-2">
+<h2 id="orge84a42e">5. 参考资料</h2>
+<div class="outline-text-2" id="text-orge84a42e">
 <ul class="org-ul">
 <li>
-<a href="https://www.linuxtechi.com/nc-ncat-command-examples-linux-systems/">linuxtech</a><br>
+<a href="https://www.linuxtechi.com/nc-ncat-command-examples-linux-systems/">linuxtechi.com - 10 useful ncat command examples</a><br>
 </li>
 <li>
-<a href="https://www.thegeekstuff.com/2012/04/nc-command-examples/?utm_source=feedburner">thegeekstuff</a><br>
+<a href="https://www.thegeekstuff.com/2012/04/nc-command-examples/?utm_source=feedburner">thegeekstuff.com - nc command examples</a><br>
 </li>
 <li>
-<a href="https://www.computerhope.com/unix/nc.htm">computerhope</a><br>
+<a href="https://www.computerhope.com/unix/nc.htm">computerhope.com - nc</a><br>
 </li>
 </ul>
+<p>
+（全文完）<br></p>
 </div>
 </div>
   </div>

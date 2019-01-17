@@ -2,32 +2,37 @@
 .. title: Linux常用命令行指令 - nc
 .. slug: linux-command-examples-nc
 .. date: 2018-03-24 10:01:10 UTC+08:00
-.. tags: linux
-.. category: 
-.. link: 
-.. description: 
+.. update: 2019-01-17 17:11:10 UTC+08:00
+.. tags: linux, nc, netcat, network
+.. category: linux
+.. link:
+.. description:
 .. type: text
 #+END_COMMENT
-
-#+TITLE:Linux常用命令行指令 - nc
+#+TITLE:Linux常用命令行指令 - nc/netcat
 
 ~nc~ 命令是 =netcat= 的缩写，能够使用TCP或UDP协议读写网络连接中的数据，是一个方便可靠的调试工具。
 
+{{{TEASER_END}}}
+
 ** 1. 基本 =C/S= 模型
 作为服务端建立监听
-#+BEGIN_SRC shell
+#+BEGIN_SRC sh
 nc -l 127.0.0.1 8060
 #+END_SRC
+
 作为客户端连接端口
-#+BEGIN_SRC shell
+#+BEGIN_SRC sh
 nc 172.0.0.1 8060
 #+END_SRC
+
 但是需要注意的是，该服务端只允许一个客户端连接进来。
+
 ~nc~ 会默认以TCP协议运行，可以增加 =-u= 参数转换为UDP协议。
 
 ** 2. 文件传输
 模拟客户端向服务端传输文件的示例代码如下，同理，也可以模拟服务端向客户端发送文件。
-#+BEGIN_SRC shell
+#+BEGIN_SRC sh
 nc -l 1234  > filename.out
 nc 127.0.0.1 1234 < fielname.in
 #+END_SRC
@@ -35,24 +40,25 @@ nc 127.0.0.1 1234 < fielname.in
 ** 3. 连接远程系统
 已连接http服务器为例，在作为客户端连接以后，可以向服务器发送 =GET /HTTP/1.1= 来获取网站的主页。
 示例代码如下
-#+BEGIN_SRC shell
+#+BEGIN_SRC sh
 print "GET /HTTP/1.0 \r\n"| nc host.example.com 80
 #+END_SRC
 
 ** 4. 简易代理
 将nc命令嵌套使用，可以将一个端口中的数据转发到目的ip和端口。
-#+BEGIN_SRC shell
+#+BEGIN_SRC sh
 ncat -l 8080 | ncat 192.168.1.200 80
 #+END_SRC
 通过上面的命令能够将本机8080端口的数据转发到192.168.1.200的80端口上，但是这样是单向的。可以建立 =fifo= 实现数据的双向传输。
-#+BEGIN_SRC shell
+#+BEGIN_SRC sh
 mkfifo ./fifo_temp
 ncat -l 8080 0<fifo_temp | ncat 192.168.1.200 80 1>fifo_temp
 #+END_SRC
 
 ** 5. 参考资料
-- [[https://www.linuxtechi.com/nc-ncat-command-examples-linux-systems/][linuxtech]]
-- [[https://www.thegeekstuff.com/2012/04/nc-command-examples/?utm_source%3Dfeedburner][thegeekstuff]]
-- [[https://www.computerhope.com/unix/nc.htm][computerhope]]
+- [[https://www.linuxtechi.com/nc-ncat-command-examples-linux-systems/][linuxtechi.com - 10 useful ncat command examples]]
+- [[https://www.thegeekstuff.com/2012/04/nc-command-examples/?utm_source=feedburner][thegeekstuff.com - nc command examples]]
+- [[https://www.computerhope.com/unix/nc.htm][computerhope.com - nc]]
 
 
+（全文完）
