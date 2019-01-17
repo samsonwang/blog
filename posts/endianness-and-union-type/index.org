@@ -32,7 +32,7 @@
 lscpu | grep -i endian
 #+END_SRC
 
-以下命令在大端系统中会输出0，在小端系统中会输出1。
+通过常用shell命令，在大端系统中会输出0，在小端系统中会输出1。
 #+BEGIN_SRC sh
 echo -n I | od -to2 | head -n1 | cut -f2 -d" " | cut -c6
 #+END_SRC
@@ -40,12 +40,14 @@ echo -n I | od -to2 | head -n1 | cut -f2 -d" " | cut -c6
 借助python进行判断。
 #+BEGIN_SRC sh
 python -c "import sys; print(sys.byteorder)"
+# or
 python -c "import sys;sys.exit(0 if sys.byteorder=='big' else 1)"
 #+END_SRC
 
 借助linux的ELF进行判断，查看第6个字节，小端系统中为1，大端系统中为2。
 #+BEGIN_SRC sh
 xxd -c 1 -l 6 /bin/bash
+# or
 hexdump -n 6 -C /bin/bash
 #+END_SRC
 
