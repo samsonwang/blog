@@ -82,6 +82,8 @@
     <ul itemprop="keywords">
 <li><a class="tag p-category" href="/tags/computer-science/" rel="tag">computer science</a></li>
         <li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
+        <li><a class="tag p-category" href="/tags/endian/" rel="tag">endian</a></li>
+        <li><a class="tag p-category" href="/tags/union/" rel="tag">union</a></li>
     </ul>
 </div>
 
@@ -89,9 +91,9 @@
 
     </div>
   </header><div class="e-content entry-content" itemprop="articleBody text">
-    <div id="outline-container-org746b926" class="outline-2">
-<h2 id="org746b926">字节序</h2>
-<div class="outline-text-2" id="text-org746b926">
+    <div id="outline-container-org48508e0" class="outline-2">
+<h2 id="org48508e0">字节序</h2>
+<div class="outline-text-2" id="text-org48508e0">
 <p>
 字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。<br>
 字节序分为大端字节序和小端字节序，两种字节序不能混用。<br><b>大端字节序</b> ：高位字节保存在较低位地址的内存中<br><b>小端字节序</b> ：高位字节保存在较高位地址的内存中<br></p>
@@ -110,22 +112,51 @@
 </div>
 
 
-<div id="outline-container-orgc9f19eb" class="outline-2">
-<h2 id="orgc9f19eb">union类型</h2>
-<div class="outline-text-2" id="text-orgc9f19eb">
+
+<div id="outline-container-orgc57d7ca" class="outline-2">
+<h2 id="orgc57d7ca">查看当前系统的字节序</h2>
+<div class="outline-text-2" id="text-orgc57d7ca">
+<p>
+通过 <code>lscpu</code> 命令，能得到cpu的大端和小端信息。<br></p>
+<div class="highlight"><pre><span></span>lscpu <span class="p">|</span> grep -i endian
+</pre></div>
+
+<p>
+以下命令在大端系统中会输出0，在小端系统中会输出1。<br></p>
+<div class="highlight"><pre><span></span><span class="nb">echo</span> -n I <span class="p">|</span> od -to2 <span class="p">|</span> head -n1 <span class="p">|</span> cut -f2 -d<span class="s2">" "</span> <span class="p">|</span> cut -c6
+</pre></div>
+
+<p>
+借助python进行判断。<br></p>
+<div class="highlight"><pre><span></span>python -c <span class="s2">"import sys; print(sys.byteorder)"</span>
+python -c <span class="s2">"import sys;sys.exit(0 if sys.byteorder=='big' else 1)"</span>
+</pre></div>
+
+<p>
+借助linux的ELF进行判断，查看第6个字节，小端系统中为1，大端系统中为2。<br></p>
+<div class="highlight"><pre><span></span>xxd -c <span class="m">1</span> -l <span class="m">6</span> /bin/bash
+hexdump -n <span class="m">6</span> -C /bin/bash
+</pre></div>
+</div>
+</div>
+
+
+
+<div id="outline-container-orge0056b7" class="outline-2">
+<h2 id="orge0056b7">union类型</h2>
+<div class="outline-text-2" id="text-orge0056b7">
 <p>
 可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。<br></p>
 
 <div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;inttypes.h&gt;</span><span class="cp"></span>
 
-<span class="k">typedef</span> <span class="k">union</span> <span class="n">un</span>
-<span class="p">{</span>
+<span class="k">typedef</span> <span class="k">union</span> <span class="n">un</span> <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>
     <span class="kt">char</span> <span class="n">ch</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
 <span class="p">}</span><span class="n">un</span><span class="p">;</span>
 
-<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
-<span class="p">{</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">un</span> <span class="n">u</span><span class="p">;</span>
     <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -135,6 +166,24 @@
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-orgd1dd172" class="outline-2">
+<h2 id="orgd1dd172">参考资料</h2>
+<div class="outline-text-2" id="text-orgd1dd172">
+<ul class="org-ul">
+<li>
+<a href="https://en.wikipedia.org/wiki/Endianness">wikipedia.com - endianness</a><br>
+</li>
+<li>
+<a href="https://serverfault.com/questions/163487/how-to-tell-if-a-linux-system-is-big-endian-or-little-endian">serverfault.com - how to check endian</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format">wikipedia.com - ELF format</a><br>
+</li>
+</ul>
 </div>
 </div>
   </div>

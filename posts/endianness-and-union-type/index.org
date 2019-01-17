@@ -2,14 +2,13 @@
 .. title: 字节序与union类型
 .. slug: endianness-and-union-type
 .. date: 2018-05-11 09:55:34 UTC+08:00
-.. tags: cpp, computer science
+.. update: 2019-01-17 15:51:34 UTC+08:00
+.. tags: cpp, computer science, endian, union
 .. category: computer science
-.. link: 
-.. description: 
+.. link:
+.. description:
 .. type: text
 #+END_COMMENT
-
-
 #+TITLE: 字节序与union类型
 
 ** 字节序
@@ -27,20 +26,45 @@
 网络字节序使用的大端字节序，常用网络协议如IPv4、IPv6、TCP和UDP协议都是使用大端字节序完成数据传输的。
 
 
+
+** 查看当前系统的字节序
+通过 =lscpu= 命令，能得到cpu的大端和小端信息。
+#+BEGIN_SRC sh
+lscpu | grep -i endian
+#+END_SRC
+
+以下命令在大端系统中会输出0，在小端系统中会输出1。
+#+BEGIN_SRC sh
+echo -n I | od -to2 | head -n1 | cut -f2 -d" " | cut -c6
+#+END_SRC
+
+借助python进行判断。
+#+BEGIN_SRC sh
+python -c "import sys; print(sys.byteorder)"
+python -c "import sys;sys.exit(0 if sys.byteorder=='big' else 1)"
+#+END_SRC
+
+借助linux的ELF进行判断，查看第6个字节，小端系统中为1，大端系统中为2。
+#+BEGIN_SRC sh
+xxd -c 1 -l 6 /bin/bash
+hexdump -n 6 -C /bin/bash
+#+END_SRC
+
+
+
 ** union类型
 可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。
 
 #+BEGIN_SRC cpp
 #include <stdio.h>
+#include <inttypes.h>
 
-typedef union un
-{
+typedef union un {
     int32_t x;
     char ch[4];
 }un;
 
-int main(int argc, char* argv[])
-{
+int main() {
     un u;
     u.ch[0] = 1;
     u.ch[1] = 2;
@@ -52,6 +76,7 @@ int main(int argc, char* argv[])
 #+END_SRC
 
 
-
-
-
+** 参考资料
+- [[https://en.wikipedia.org/wiki/Endianness][wikipedia.com - endianness]]
+- [[https://serverfault.com/questions/163487/how-to-tell-if-a-linux-system-is-big-endian-or-little-endian][serverfault.com - how to check endian]]
+- [[https://en.wikipedia.org/wiki/Executable_and_Linkable_Format][wikipedia.com - ELF format]]
