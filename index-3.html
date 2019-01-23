@@ -71,11 +71,158 @@
 
 <div class="postindex">
 
-      
-      
-      
 
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/static-member-initialization-and-private-member-function/" class="u-url">静态成员变量初始化相关问题</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/compares-between-thread-and-process/" class="u-url">线程与进程的比较</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-09-14T09:51:15+08:00" itemprop="datePublished" title="2018-09-14 09:51">Sep 14 2018  (09:51)
+    </time>
+</div>
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/compares-between-thread-and-process/#disqus_thread" data-disqus-identifier="cache/archives/2018/compares-between-thread-and-process.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/computer-science/" rel="tag">computer science</a></li>
+        <li><a class="tag p-category" href="/tags/process/" rel="tag">process</a></li>
+        <li><a class="tag p-category" href="/tags/thread/" rel="tag">thread</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-org58157e2" class="outline-2">
+<h2 id="org58157e2">进程与线程之间有什么区别</h2>
+<div class="outline-text-2" id="text-org58157e2">
+<p>
+进程（process）是指在系统中正在运行的一个应用程序，是系统资源分配的基本单位，在内存中有其完备的数据空间和代码空间，拥有完整的虚拟空间地址。一个进程所拥有的数据和变量只属于它自己。<br></p>
+
+<p>
+线程（thread）是进程内相对独立的可执行单元，所以也被称为轻量进程（lightweight processes）。线程是操作系统进行任务调度的基本单元，它与父进程的其它线程共享该进程所拥有的全部代码空间和全局变量，但拥有独立的堆栈（即局部变量对于线程来说是私有的）。<br></p>
+
+<p>
+进程和线程都具有就绪、阻塞和运行三种基本状态。<br></p>
+</div>
+
+<div id="outline-container-org84f069b" class="outline-3">
+<h3 id="org84f069b">联系</h3>
+<div class="outline-text-3" id="text-org84f069b">
+<ul class="org-ul">
+<li>一个进程至少拥有一个线程(主线程)，也可以拥有多个线程<br>
+</li>
+<li>一个线程必须有一个父进程，多个进程可以并发执行<br>
+</li>
+<li>一个线程可以创建和撤销另一个线程<br>
+</li>
+<li>同一个进程中的多个线程之间可以并发执行<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org71bec30" class="outline-3">
+<h3 id="org71bec30">区别</h3>
+<div class="outline-text-3" id="text-org71bec30">
+<p>
+系统开销：在创建或撤消进程时，由于系统都要为之分配和回收资源，导致系统的开销明显大于创建或撤消线程时的开销<br>
+资源管理：进程有独立的地址空间，一个进程崩溃后，在保护模式下不会对其它进程产生影响，而线程只是一个进程中的不同执行路径。线程有自己的堆栈和局部变量，但线程之间没有单独的地址空间，一个线程死掉就等于整个进程死掉，所以多进程的程序要比多线程的程序健壮，但在进程切换时，耗费资源较大，效率要差一些。但对于一些要求同时进行并且又要共享某些变量的并发操作，只能用线程，不能用进程。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org9c98637" class="outline-3">
+<h3 id="org9c98637">通信方式</h3>
+<div class="outline-text-3" id="text-org9c98637">
+<p>
+进程间通信主要包括管道、系统IPC(包括消息队列，信号量，共享存储)、SOCKET，具体说明参考linux进程间通信方式。进程间通信其实是指分属于不同进程的线程之间的通讯，所以进程间的通信方法同样适用于线程间的通信。但对于同一进程的不同线程来说，使用全局变量进行通信效率会更高。<br></p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org6d3d642" class="outline-2">
+<h2 id="org6d3d642">什么情况下适合使用线程</h2>
+<div class="outline-text-2" id="text-org6d3d642">
+<p>
+线程相对于进程的优势：<br></p>
+<ul class="org-ul">
+<li>线程间通信（数据交互）比进程间通信更加简便快捷。<br>
+</li>
+<li>线程之间的上下文切换速度要比进程间的快，也就是说，对于操作系统而言，停止一个线程并启动另一个线程的速度比进程之间相似操作更快。<br>
+</li>
+<li>创建一个线程的速度比创建一个进程的速度快。<br>
+</li>
+</ul>
+<p>
+下面的一些情景更适合使用线程来完成：<br></p>
+<ul class="org-ul">
+<li>进行耗时较长的处理：当一个windows界面程序正在计算时，它就不能处理其他消息（message）了，界面就不能及时更新。<br>
+</li>
+<li>进行后台处理：有些任务并不是时间紧迫的，但是需要定期执行。<br>
+</li>
+<li>进行 <code>I/O</code> 处理： <code>I/O</code> 操作或网络操作一般都会有一定的延迟，线程能保证程序中的其他部分不会受到延迟的影响。<br>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-orgcdc1fb0" class="outline-2">
+<h2 id="orgcdc1fb0">什么情况下适合使用进程</h2>
+<div class="outline-text-2" id="text-orgcdc1fb0">
+<p>
+进程相对于线程的优势：<br></p>
+<ul class="org-ul">
+<li>多线程系单进程的软件只能运行在一台机器上，而多进程的软件可以运行在多台机器上。这在一定程度上限制软件的可拓展性，单台机器的性能总是有限的。<br>
+</li>
+<li>多进程模型的鲁棒性更好，有更好的容错性。运行在同一进程下的多个线程会相互影响，如果其中的一个线程出了问题，可能会波及整个进程。<br>
+</li>
+<li>有些功能模块并不是线程安全的，这时就只能使用多进程模型了。<br>
+</li>
+</ul>
+<p>
+以chrome浏览器为例，它使用了多进程模型。每一个标签页都是一个进程，这样能够将渲染引擎中的bug隔离在该进程内，从而使整个程序免受影响。多进程模型将JavaScript隔离在每个进程中，这样就能防止其因占用过多的CPU或内存，使整个软件失去响应。另一方面，多进程模型的系统开销也是比较大的，这点能够从chrome的高额内存使用中看出来。不过chrome的优化策略可以让较低内存的情况下有更好内存使用效率。当一个标签页处于非激活状态，其对应的内存可以在需要时被交换进硬盘中，这样用户当前操作的页面就能够保持响应状态。如果使用的是多线程模型，区分活跃内存和非活跃内存就变得十分困难，导致内存使用效率的下降。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgebed2ec" class="outline-2">
+<h2 id="orgebed2ec">参考资料</h2>
+<div class="outline-text-2" id="text-orgebed2ec">
+<ul class="org-ul">
+<li>
+<a href="https://www.backblaze.com/blog/whats-the-diff-programs-processes-and-threads/">backblaze.com - difference between process and thread</a><br>
+</li>
+<li>
+<a href="https://docs.microsoft.com/zh-cn/windows/desktop/ProcThread/about-processes-and-threads">msdn - about processes and threads</a><br>
+</li>
+<li>
+<a href="https://blog.csdn.net/xiexievv/article/details/7294189">csdn - blog</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/617787/why-should-i-use-a-thread-vs-using-a-process">stackoverflow - why should I use thread vs process</a><br>
+</li>
+<li>
+<a href="https://blog.chromium.org/2008/09/multi-process-architecture.html">chromium blog - multi process architecture</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/static-member-initialization-and-private-member-function/" class="u-url">静态成员变量初始化相关问题</a></h1>
       <div class="metadata">
         
 
@@ -104,9 +251,9 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org8233519" class="outline-2">
-<h2 id="org8233519">引言</h2>
-<div class="outline-text-2" id="text-org8233519">
+      <div id="outline-container-org232312f" class="outline-2">
+<h2 id="org232312f">引言</h2>
+<div class="outline-text-2" id="text-org232312f">
 <p>
 这篇文章的起因是出于对于 <code>C++</code> 饿汉单例模式代码的一些疑问，查阅了一些资料。在仔细研究后，我发现在一些基础概念的理解还是存在偏差。<br>
 下面请看这样的一段代码，能看出其中有那些不太“正常”的语句么。<br></p>
@@ -128,9 +275,9 @@
 </div>
 </div>
 
-<div id="outline-container-org53a2a23" class="outline-2">
-<h2 id="org53a2a23">私有静态成员的初始化</h2>
-<div class="outline-text-2" id="text-org53a2a23">
+<div id="outline-container-org061c10c" class="outline-2">
+<h2 id="org061c10c">私有静态成员的初始化</h2>
+<div class="outline-text-2" id="text-org061c10c">
 <p>
 上面的代码是饿汉单例模式的 <code>C++</code> 的实现，在没有查阅资料之前，我对其中私有静态成员变量的初始化存疑。主要有以下两点：<br></p>
 <ul class="org-ul">
@@ -174,9 +321,9 @@ The static data member <code>run_chain</code> of class process is defined in glo
 </div>
 </div>
 
-<div id="outline-container-orga3f71ee" class="outline-2">
-<h2 id="orga3f71ee">私有构造函数</h2>
-<div class="outline-text-2" id="text-orga3f71ee">
+<div id="outline-container-org8df253e" class="outline-2">
+<h2 id="org8df253e">私有构造函数</h2>
+<div class="outline-text-2" id="text-org8df253e">
 <p>
 在查阅资料时，我发现 Peter 的 <a href="https://stackoverflow.com/a/41361967">描述</a> 纠正了我对私有构造函数的一些看法。<br></p>
 <blockquote>
@@ -188,9 +335,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 </div>
 
-<div id="outline-container-orgbeb029c" class="outline-2">
-<h2 id="orgbeb029c">参考资料</h2>
-<div class="outline-text-2" id="text-orgbeb029c">
+<div id="outline-container-org1f3ef27" class="outline-2">
+<h2 id="org1f3ef27">参考资料</h2>
+<div class="outline-text-2" id="text-org1f3ef27">
 <ul class="org-ul">
 <li>
 <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">ISO C++11 standard</a><br>
@@ -246,17 +393,17 @@ The point of a <code>private</code> constructor is not preventing object constru
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orga64add6" class="outline-2">
-<h2 id="orga64add6">问题</h2>
-<div class="outline-text-2" id="text-orga64add6">
+      <div id="outline-container-orgd2e6f29" class="outline-2">
+<h2 id="orgd2e6f29">问题</h2>
+<div class="outline-text-2" id="text-orgd2e6f29">
 <p>
 使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
 </div>
 </div>
 
-<div id="outline-container-org7277077" class="outline-2">
-<h2 id="org7277077">解答</h2>
-<div class="outline-text-2" id="text-org7277077">
+<div id="outline-container-org2128d92" class="outline-2">
+<h2 id="org2128d92">解答</h2>
+<div class="outline-text-2" id="text-org2128d92">
 <p>
 客户端建立连接的示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">...);</span>
@@ -306,9 +453,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 </div>
 
-<div id="outline-container-orgd6613b6" class="outline-2">
-<h2 id="orgd6613b6">参考资料</h2>
-<div class="outline-text-2" id="text-orgd6613b6">
+<div id="outline-container-orgdb2621f" class="outline-2">
+<h2 id="orgdb2621f">参考资料</h2>
+<div class="outline-text-2" id="text-orgdb2621f">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
@@ -349,9 +496,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org7b1d85f" class="outline-2">
-<h2 id="org7b1d85f">引言</h2>
-<div class="outline-text-2" id="text-org7b1d85f">
+      <div id="outline-container-orga40a0ff" class="outline-2">
+<h2 id="orga40a0ff">引言</h2>
+<div class="outline-text-2" id="text-orga40a0ff">
 <p>
 在学习前端的过程中，我开始接触到许多开发框架或开发工具，这些工具让我开始眼花缭乱。使用常规的html/css/js就已经能够开发出这种网页了，所以我问自己，为什么要学习这些框架或工具，这些库是用来解决什么问题的。想明白这个问题，我学习的目的就更加明确，在遇到一些开发情景时，也能够快速准确地挑选出应该使用的框架。<br></p>
 
@@ -360,9 +507,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 </div>
 
-<div id="outline-container-org90e0db6" class="outline-2">
-<h2 id="org90e0db6">为什么要使用jQuery</h2>
-<div class="outline-text-2" id="text-org90e0db6">
+<div id="outline-container-orgc328731" class="outline-2">
+<h2 id="orgc328731">为什么要使用jQuery</h2>
+<div class="outline-text-2" id="text-orgc328731">
 <p>
 jQuery是一个轻量级js库，它有如下特性：<br></p>
 <ul class="org-ul">
@@ -382,9 +529,9 @@ jQuery是一个轻量级js库，它有如下特性：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org08c4ccc" class="outline-2">
-<h2 id="org08c4ccc">为什么要使用SASS</h2>
-<div class="outline-text-2" id="text-org08c4ccc">
+<div id="outline-container-orgf48f216" class="outline-2">
+<h2 id="orgf48f216">为什么要使用SASS</h2>
+<div class="outline-text-2" id="text-orgf48f216">
 <p>
 SASS是一种CSS预编译格式，它最终会编译成CSS。<br>
 SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操作，函数操作，样式模板（mixin）等强大的特性。它能够让开发人员更方便地编写CSS。SASS支持 <code>import</code> 关键字，这样就能够很方便地对样式进行模块化设计。<br></p>
@@ -397,9 +544,9 @@ SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操�
 </div>
 </div>
 
-<div id="outline-container-orgc2b67cb" class="outline-2">
-<h2 id="orgc2b67cb">为什么要使用Bootstrap</h2>
-<div class="outline-text-2" id="text-orgc2b67cb">
+<div id="outline-container-org67aa8f6" class="outline-2">
+<h2 id="org67aa8f6">为什么要使用Bootstrap</h2>
+<div class="outline-text-2" id="text-org67aa8f6">
 <p>
 Bootstrap是一个用于快速开发网页的前端框架。以我目前的理解来看，它更像是一个网页样式框架。<br></p>
 <ul class="org-ul">
@@ -415,9 +562,9 @@ Bootstrap是一个用于快速开发网页的前端框架。以我目前的理�
 </div>
 </div>
 
-<div id="outline-container-orgb36eadc" class="outline-2">
-<h2 id="orgb36eadc">为什么要使用React</h2>
-<div class="outline-text-2" id="text-orgb36eadc">
+<div id="outline-container-orgee65539" class="outline-2">
+<h2 id="orgee65539">为什么要使用React</h2>
+<div class="outline-text-2" id="text-orgee65539">
 <p>
 DOM操作对性能的影响很大，频繁的DOM操作会使网页渲染的速度变慢，React主要解决了这个问题。<br>
 React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新渲染。<br></p>
@@ -457,9 +604,9 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 </div>
 
 
-<div id="outline-container-org416ebc5" class="outline-2">
-<h2 id="org416ebc5">参考资料</h2>
-<div class="outline-text-2" id="text-org416ebc5">
+<div id="outline-container-org4aed317" class="outline-2">
+<h2 id="org4aed317">参考资料</h2>
+<div class="outline-text-2" id="text-org4aed317">
 <ol class="org-ol">
 <li>
 <a href="https://www.w3schools.com/jquery/jquery_intro.asp">w3schools jQuery intro</a><br>
@@ -511,8 +658,8 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org981b54f" class="outline-2">
-<h2 id="org981b54f">
+      <div id="outline-container-org84bab58" class="outline-2">
+<h2 id="org84bab58">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -521,13 +668,13 @@ js也是具有OOP（object oriented programming）特性的，OOP在构建一些
 </div>
 </div>
 
-<div id="outline-container-org9a5e2b9" class="outline-2">
-<h2 id="org9a5e2b9">
+<div id="outline-container-orgeb9323b" class="outline-2">
+<h2 id="orgeb9323b">
 <span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-org7d1d25d" class="outline-3">
-<h3 id="org7d1d25d">
+<div id="outline-container-org7a58f8d" class="outline-3">
+<h3 id="org7a58f8d">
 <span class="section-number-3">2.1</span> 创建对象（object）</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -547,8 +694,8 @@ js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关�
 </div>
 </div>
 
-<div id="outline-container-org3ff3d8a" class="outline-3">
-<h3 id="org3ff3d8a">
+<div id="outline-container-org223676b" class="outline-3">
+<h3 id="org223676b">
 <span class="section-number-3">2.2</span> 类（class）的声明</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -569,8 +716,8 @@ crow instanceof Bird; // =&gt; true
 </div>
 </div>
 
-<div id="outline-container-org735da95" class="outline-3">
-<h3 id="org735da95">
+<div id="outline-container-org379dd8a" class="outline-3">
+<h3 id="org379dd8a">
 <span class="section-number-3">2.3</span> 类的共有成员</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
@@ -598,8 +745,8 @@ js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还
 </div>
 </div>
 
-<div id="outline-container-orgeb0d26e" class="outline-3">
-<h3 id="orgeb0d26e">
+<div id="outline-container-org5b1befd" class="outline-3">
+<h3 id="org5b1befd">
 <span class="section-number-3">2.4</span> 类的私有成员</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
@@ -620,8 +767,8 @@ ducky.getHatchedEggCount(); // returns 10
 </div>
 </div>
 
-<div id="outline-container-org96d44a5" class="outline-3">
-<h3 id="org96d44a5">
+<div id="outline-container-org9d01263" class="outline-3">
+<h3 id="org9d01263">
 <span class="section-number-3">2.5</span> 类的继承和派生</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
@@ -632,8 +779,8 @@ Bird.prototype.constructor = Bird;
 </div>
 </div>
 
-<div id="outline-container-org484ec64" class="outline-3">
-<h3 id="org484ec64">
+<div id="outline-container-orgee99014" class="outline-3">
+<h3 id="orgee99014">
 <span class="section-number-3">2.6</span> 类的覆盖</h3>
 <div class="outline-text-3" id="text-2-6">
 <p>
@@ -663,8 +810,8 @@ Bird.prototype.fly = function() {
 </div>
 
 
-<div id="outline-container-org41d2ada" class="outline-2">
-<h2 id="org41d2ada">
+<div id="outline-container-orgbd83e96" class="outline-2">
+<h2 id="orgbd83e96">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
@@ -707,9 +854,9 @@ Bird.prototype.fly = function() {
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org03b6090" class="outline-2">
-<h2 id="org03b6090">引言</h2>
-<div class="outline-text-2" id="text-org03b6090">
+      <div id="outline-container-org6f29475" class="outline-2">
+<h2 id="org6f29475">引言</h2>
+<div class="outline-text-2" id="text-org6f29475">
 <p>
 近在FreeCodeCamp(FCC)学习前端的课程，其中有一节就是讲的 <code>regexp</code> ，也就是正则表达式，之前我零星地了解过一些正则表达式的相关知识，不足以对正则表达式得出一个完整的认识。FCC的教程循序渐进，由简到繁，在教学中结合练习，非常适合初学者的学习过程。如何你的英文能够达到阅读技术类文献的水平，又正好想学习一下正则表达式，我推荐你试一下FCC的正则表达式教程，花3~4个小时就能够对正则表达式有个完整的理解。<br></p>
 
@@ -718,9 +865,9 @@ Bird.prototype.fly = function() {
 </div>
 </div>
 
-<div id="outline-container-org247bd0a" class="outline-2">
-<h2 id="org247bd0a">要点总结（js版）</h2>
-<div class="outline-text-2" id="text-org247bd0a">
+<div id="outline-container-orgdac9a6d" class="outline-2">
+<h2 id="orgdac9a6d">要点总结（js版）</h2>
+<div class="outline-text-2" id="text-orgdac9a6d">
 <p>
 FCC的教程使用javascript作为开发语言，本节所有的代码都是js代码。<br></p>
 
@@ -962,9 +1109,9 @@ lookahead 的概念， <code>(?=...)</code> 与 <code>(?!...)</code><br></p>
 </div>
 </div>
 
-<div id="outline-container-org82108cc" class="outline-2">
-<h2 id="org82108cc">elisp和python中的正则表达式</h2>
-<div class="outline-text-2" id="text-org82108cc">
+<div id="outline-container-orgbcec335" class="outline-2">
+<h2 id="orgbcec335">elisp和python中的正则表达式</h2>
+<div class="outline-text-2" id="text-orgbcec335">
 <p>
 在emacs中内置了 <code>string-match</code> 函数进行正则表达式匹配，其函数原型为 <code>(string-match REGEXP STRING &amp;optional START)</code> ，下面就是在emacs中使用regexp的示例。<br></p>
 <div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span> <span class="nv">str-regexp</span> <span class="s">"\.[h|cpp]$"</span><span class="p">)</span>
@@ -986,9 +1133,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 </div>
 
 
-<div id="outline-container-orged68c5f" class="outline-2">
-<h2 id="orged68c5f">参考资料</h2>
-<div class="outline-text-2" id="text-orged68c5f">
+<div id="outline-container-org816dfcf" class="outline-2">
+<h2 id="org816dfcf">参考资料</h2>
+<div class="outline-text-2" id="text-org816dfcf">
 <ul class="org-ul">
 <li>
 <a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/regular-expressions">FCC regular-expression tutorial</a><br>
@@ -1035,17 +1182,17 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgc68f762" class="outline-2">
-<h2 id="orgc68f762">序言</h2>
-<div class="outline-text-2" id="text-orgc68f762">
+      <div id="outline-container-org822cac8" class="outline-2">
+<h2 id="org822cac8">序言</h2>
+<div class="outline-text-2" id="text-org822cac8">
 <p>
 对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org312f05c" class="outline-2">
-<h2 id="org312f05c">什么是MapReduce</h2>
-<div class="outline-text-2" id="text-org312f05c">
+<div id="outline-container-org27be98c" class="outline-2">
+<h2 id="org27be98c">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-org27be98c">
 <p>
 MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
 
@@ -1061,9 +1208,9 @@ MapReduce是面向大数据并行处理的计算模型、框架和平台，它�
 </div>
 </div>
 
-<div id="outline-container-orgb25c1f1" class="outline-2">
-<h2 id="orgb25c1f1">map和reduce</h2>
-<div class="outline-text-2" id="text-orgb25c1f1">
+<div id="outline-container-org3f643cf" class="outline-2">
+<h2 id="org3f643cf">map和reduce</h2>
+<div class="outline-text-2" id="text-org3f643cf">
 <p>
 <b>从编程语言的角度上来说</b><br>
 map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
@@ -1082,9 +1229,9 @@ reduce操作也会接收到两个参数，一个列表和一个变换过程，�
 </div>
 </div>
 
-<div id="outline-container-org16da224" class="outline-2">
-<h2 id="org16da224">并行计算与大数据</h2>
-<div class="outline-text-2" id="text-org16da224">
+<div id="outline-container-org524ed1a" class="outline-2">
+<h2 id="org524ed1a">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-org524ed1a">
 <p>
 mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
 
@@ -1115,9 +1262,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-org07ef3ca" class="outline-2">
-<h2 id="org07ef3ca">参考资料</h2>
-<div class="outline-text-2" id="text-org07ef3ca">
+<div id="outline-container-orgfa91b22" class="outline-2">
+<h2 id="orgfa91b22">参考资料</h2>
+<div class="outline-text-2" id="text-orgfa91b22">
 <ul class="org-ul">
 <li>
 <a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
