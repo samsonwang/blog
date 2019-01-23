@@ -171,8 +171,8 @@ THEME_CONFIG = {
         # Contents of the sidebar, If empty, the sidebar is not displayed.
         'sidebar_aboutme': '''
         <div class="sidebar-aboutme">
-        <p>Zeal for coding, C++ developer. Focus on linux server dev. I use EMACS, and I am learning python.</p>
-        <p>View my code on <a href="https://github.com/samsonwang"> Github</a></p></div>''',
+        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
+        </div>''',
         # sidebar category
         'sidebar_categories': '''
         <ol class="list-unstyled sidebar-category">
