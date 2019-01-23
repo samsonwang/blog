@@ -24,7 +24,7 @@
 
 <!-- Menubar -->
 <nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
-    <a class="navbar-brand" href="https://samsonwang.me/">
+    <a class="navbar-brand" href="/">
 
       <span id="blog-title">Hack Note</span>
     </a>
@@ -90,9 +90,9 @@
 
     </div>
   </header><div class="e-content entry-content" itemprop="articleBody text">
-    <div id="outline-container-org2e2b1da" class="outline-2">
-<h2 id="org2e2b1da">引言</h2>
-<div class="outline-text-2" id="text-org2e2b1da">
+    <div id="outline-container-org1c184a3" class="outline-2">
+<h2 id="org1c184a3">引言</h2>
+<div class="outline-text-2" id="text-org1c184a3">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -117,9 +117,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org153fb0a" class="outline-2">
-<h2 id="org153fb0a">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-org153fb0a">
+<div id="outline-container-org2078efc" class="outline-2">
+<h2 id="org2078efc">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-org2078efc">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -163,9 +163,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-orgbfa8246" class="outline-2">
-<h2 id="orgbfa8246">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-orgbfa8246">
+<div id="outline-container-orgaa74cec" class="outline-2">
+<h2 id="orgaa74cec">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-orgaa74cec">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -174,18 +174,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org30d08f1" class="outline-2">
-<h2 id="org30d08f1">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-org30d08f1">
+<div id="outline-container-orga7b5fca" class="outline-2">
+<h2 id="orga7b5fca">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-orga7b5fca">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orge21e43b" class="outline-2">
-<h2 id="orge21e43b">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-orge21e43b">
+<div id="outline-container-org920d26a" class="outline-2">
+<h2 id="org920d26a">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org920d26a">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -194,9 +194,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orgaeca2b4" class="outline-2">
-<h2 id="orgaeca2b4">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-orgaeca2b4">
+<div id="outline-container-orgdc09c1b" class="outline-2">
+<h2 id="orgdc09c1b">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-orgdc09c1b">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
@@ -213,13 +213,12 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
   <h4>About Me</h4>
   
         <div class="sidebar-aboutme">
-        <p>Zeal for coding, C++ developer. Focus on linux server dev. I use EMACS, and I am learning python.</p>
-        <p>View my code on <a href="https://github.com/samsonwang"> Github</a></p>
-</div>
+        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
+        </div>
 </div>
 
        
-<div class="sidebar-module">
+<div class="sidebar-module sidebar-module-inset">
   <h4>Categories</h4>
   
         <ol class="list-unstyled sidebar-category">
