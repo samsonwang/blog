@@ -53,10 +53,20 @@ function initNavbar () {
   }, 100);
 }
 
+function modAnchorTarget () {
+  $('a').each(function() {
+    var a = new RegExp('/' + window.location.host + '/');
+    if (!a.test(this.href)) {
+      $(this).attr("target", "_blank");
+    }
+  });
+}
+
 $(document).ready(function () {
   initNavbar();
   initLazyLoad();
   initScrollTop();
+  modAnchorTarget();
 });
 
 // avoid css transition on load
