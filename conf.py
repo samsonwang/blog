@@ -268,7 +268,7 @@ TIMEZONE = "Asia/Shanghai"
 # Used by babel.dates, CLDR style: http://cldr.unicode.org/translation/date-time
 # You can also use 'full', 'long', 'medium', or 'short'
 # DATE_FORMAT = 'YYYY-MM-dd HH:mm'
-DATE_FORMAT = {"en": "MMM dd yyyy  '('HH:mm')'",
+DATE_FORMAT = {"en": "MMM dd yyyy",
                "pl": "dd MMMM yyyy 'o' HH:mm"}
 
 # Date format used to display post dates, if local dates are used. (translatable)
