@@ -12,31 +12,101 @@
 #+OPTIONS: num:t
 #+TITLE: Tips on Linux Process and Subprocess
 
-Here are some tips on Linux subprocess, such as orphan process, zombie process, subprocess exit, close on exec flag and more.
+Here are some tips on Linux subprocess, such as orphan process, zombie process, process exit, close on exec flag and more.
 
 {{{TEASER_END}}}
 
 ** Orphan process
 
-In Linux system, when parent process exits and child process is still executing, the child process becomes an orphan process.
+In Linux system, when parent process exits and child process is still running, the child process becomes an orphan process.
+
+Here is a demo code to make a orphan process.
+#+BEGIN_SRC c
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int main() {
+    switch(fork()) {
+    case -1:
+        printf("fail to create subprocess\n");
+        break;
+    case 0:
+        printf("child process, pid = %d\n", getpid());
+        sleep(30);
+        break;
+    default:
+        printf("parent process, pid = %d\n", getpid());
+        sleep(10);
+        break;
+    }
+    return 0;
+}
+#+END_SRC
+
 
 How to make child process exit when parent process exits?
 
 
+
+
 ** Zombie process
 
-parent process could call =wait= to wait for child process
+*** What is a zombie process?
+Zombie process is also called defunct process. When child process has finished the execution (via the ~exit~ system call) but still has entry in the process table: It is a process in the "Terminated state". The parent process should read (via the ~wait~ system call) its child's exit staus from process table, then the child process entry is removed from the process table and is said to be "reaped".
 
+A child process always first becomes a zombie before being removed from the resource table. In most cases, under normal system operation zombies are immediately waited on by their parent and then reaped by the system – processes that stay zombies for a long time are generally an error and cause a resource leak.
 
-child process call =exec= , and
+Here is a demo code to make a zombie process.
+#+BEGIN_SRC c
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
 
+int main() {
+    switch(fork()) {
+    case -1:
+        printf("fail to create subprocess\n");
+        break;
+    case 0:
+        printf("child process, pid = %d\n", getpid());
+        sleep(10);
+        break;
+    default:
+        printf("parent process, pid = %d\n", getpid());
+        sleep(30);
+        break;
+    }
+    return 0;
+}
+#+END_SRC
+
+Check out process tree using the following command.
+#+BEGIN_SRC sh
+ps -efx
+#+END_SRC
+
+*** How to kill a zombie process?
+As a zombie process is already dead, so you can not ~kill~ it. The ~kill~ command has no effect on a zombie process.
+
+To clean up a zombie, it must be waited on by its parent, so killing the parent should work to eliminate the zombie. (After the parent dies, the zombie will be inherited by init process (pid 1), which will wait on it and clear its entry in the process table).
+
+The following command will kill all the parent processes that has a zombie child process. As this maight kill processes that is running normally, it not recommended. The better solution is to find out the very zombie process and stop its parent.
+#+BEGIN_SRC sh
+kill $(ps -A -ostat,ppid | awk '/[zZ]/ && !a[$2]++ {print $2}')
+#+END_SRC
+
+*** child process call =exec= , and
 
 
 ** Process exit
 exit
-
+_exit
+_Exit
 
 ** close on exec
+
+
 文件描述符号的 =close-on-exec= 作用于子进程
 
 
@@ -44,4 +114,9 @@ exit
 ** Reference
 1. https://stackoverflow.com/questions/6125068/what-does-the-fd-cloexec-fcntl-flag-do
 2. https://danwalsh.livejournal.com/53603.html
-https://www.geeksforgeeks.org/zombie-and-orphan-processes-in-c/
+3. https://en.wikipedia.org/wiki/Zombie_process
+4. [[https://stackoverflow.com/questions/16944886/how-to-kill-zombie-process][stackoverflow.com - how to kill zombie process]]
+5. https://www.geeksforgeeks.org/zombie-and-orphan-processes-in-c/
+
+
+(The end)
