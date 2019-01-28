@@ -91,17 +91,17 @@
     </div>
   </header><div class="e-content entry-content" itemprop="articleBody text">
     <p>
-Here are some tips on Linux process, such as orphan process, zombie process, process exit, close on exec flag.<br></p>
+Here are some tips on Linux process and subprocess, such as orphan process, zombie process, process exit, close on exec flag.<br></p>
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org51336f7" class="outline-2">
-<h2 id="org51336f7">
+<div id="outline-container-org4292a3d" class="outline-2">
+<h2 id="org4292a3d">
 <span class="section-number-2">1</span> Orphan process</h2>
 <div class="outline-text-2" id="text-1">
 </div>
-<div id="outline-container-orga89594e" class="outline-3">
-<h3 id="orga89594e">
+<div id="outline-container-org8cbcbde" class="outline-3">
+<h3 id="org8cbcbde">
 <span class="section-number-3">1.1</span> What is orphan process?</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -133,9 +133,8 @@ Here is a demo code to make a orphan process.<br></p>
 </div>
 </div>
 
-
-<div id="outline-container-orgd46a1d4" class="outline-3">
-<h3 id="orgd46a1d4">
+<div id="outline-container-org5a7781d" class="outline-3">
+<h3 id="org5a7781d">
 <span class="section-number-3">1.2</span> How to make child process exit after parent process exits?</h3>
 <div class="outline-text-3" id="text-1-2">
 <ol class="org-ol">
@@ -163,13 +162,13 @@ Function to get process identification.<br></p>
 </div>
 
 
-<div id="outline-container-org28253d3" class="outline-2">
-<h2 id="org28253d3">
+<div id="outline-container-org06eb084" class="outline-2">
+<h2 id="org06eb084">
 <span class="section-number-2">2</span> Zombie process</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-org75bf730" class="outline-3">
-<h3 id="org75bf730">
+<div id="outline-container-org907b2ee" class="outline-3">
+<h3 id="org907b2ee">
 <span class="section-number-3">2.1</span> What is a zombie process?</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -209,8 +208,8 @@ Check out process tree using the following command.<br></p>
 </div>
 </div>
 
-<div id="outline-container-org5d2509f" class="outline-3">
-<h3 id="org5d2509f">
+<div id="outline-container-org36d0091" class="outline-3">
+<h3 id="org36d0091">
 <span class="section-number-3">2.2</span> How to kill a zombie process?</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -228,13 +227,13 @@ The following command will kill all the parent processes that has a zombie child
 </div>
 
 
-<div id="outline-container-orgf3443db" class="outline-2">
-<h2 id="orgf3443db">
+<div id="outline-container-org064089c" class="outline-2">
+<h2 id="org064089c">
 <span class="section-number-2">3</span> Process exit</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-org645bcf2" class="outline-3">
-<h3 id="org645bcf2">
+<div id="outline-container-org3b0fbbc" class="outline-3">
+<h3 id="org3b0fbbc">
 <span class="section-number-3">3.1</span> <code>exit</code> function</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -260,8 +259,8 @@ Here is the demo code:<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgccc6c13" class="outline-3">
-<h3 id="orgccc6c13">
+<div id="outline-container-org8562324" class="outline-3">
+<h3 id="org8562324">
 <span class="section-number-3">3.2</span> <code>_exit</code> or <code>_Exit</code> function</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -291,19 +290,49 @@ Here is the demo code:<br></p>
 </div>
 </div>
 
-<div id="outline-container-orged4d03f" class="outline-2">
-<h2 id="orged4d03f">
-<span class="section-number-2">4</span> close on exec</h2>
+
+<div id="outline-container-orgb6bef17" class="outline-2">
+<h2 id="orgb6bef17">
+<span class="section-number-2">4</span> Close on exec flag</h2>
 <div class="outline-text-2" id="text-4">
 <p>
-文件描述符号的 <code>close-on-exec</code> 作用于子进程<br></p>
+The <code>close-on-exec</code> flag is set on file descriptor to indicate that the descriptor should be closed when an <code>exec</code> function is invoked. The flag is initially disabled on new descriptors, the descriptor will survive into the new program after <code>exec</code> , and resource is leaked. This would happen unintentionally when parent process forks a child and the child calls <code>exec</code> .<br></p>
+
+<p>
+It is a good programming practice to use this flag in order to close the descriptor by default.<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">fd1</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">O_CLOEXEC</span> <span class="o">|</span> <span class="n">flags</span><span class="p">);</span>
+<span class="kt">int</span> <span class="n">fd2</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">DOMAIN</span><span class="p">,</span> <span class="n">SOCK_CLOEXEC</span> <span class="o">|</span> <span class="n">type</span><span class="p">,</span> <span class="n">PROTOCOL</span><span class="p">);</span>
+<span class="kt">int</span> <span class="n">fd3</span> <span class="o">=</span> <span class="n">accept4</span><span class="p">(</span><span class="kt">int</span> <span class="n">sockfd</span><span class="p">,</span> <span class="k">struct</span> <span class="n">sockaddr</span> <span class="o">*</span><span class="n">addr</span><span class="p">,</span>
+		  <span class="kt">socklen_t</span> <span class="o">*</span><span class="n">addrlen</span><span class="p">,</span> <span class="n">SOCK_CLOEXEC</span> <span class="o">|</span> <span class="n">flags</span><span class="p">);</span>
+<span class="kt">int</span> <span class="n">fd4</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">"re"</span><span class="p">);</span>
+</pre></div>
+
+<p>
+If you want to modify flags on an existing file descriptor, you should get the current flags with <code>F_GETFD</code> and modify the value. Don’t assume that the flags listed here are the only ones that are implemented; your program may be run years from now and more flags may exist then. For example, here is a function to set or clear the flag <code>FD_CLOEXEC</code> without altering any other flags:<br></p>
+
+<div class="highlight"><pre><span></span><span class="cm">/* Set the FD_CLOEXEC flag of desc if value is nonzero,</span>
+<span class="cm">   or clear the flag if value is 0.</span>
+<span class="cm">   Return 0 on success, or -1 on error with errno set. */</span>
+<span class="kt">int</span> <span class="nf">set_cloexec_flag</span> <span class="p">(</span><span class="kt">int</span> <span class="n">desc</span><span class="p">,</span> <span class="kt">int</span> <span class="n">value</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">oldflags</span> <span class="o">=</span> <span class="n">fcntl</span> <span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">F_GETFD</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="cm">/* If reading the flags failed, return error indication now. */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">oldflags</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">oldflags</span><span class="p">;</span>
+    <span class="cm">/* Set just the flag we want to set. */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+	<span class="n">oldflags</span> <span class="o">|=</span> <span class="n">FD_CLOEXEC</span><span class="p">;</span>
+    <span class="k">else</span>
+	<span class="n">oldflags</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">FD_CLOEXEC</span><span class="p">;</span>
+    <span class="cm">/* Store modified flag word in the descriptor. */</span>
+    <span class="k">return</span> <span class="n">fcntl</span> <span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">F_SETFD</span><span class="p">,</span> <span class="n">oldflags</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
 </div>
 </div>
 
 
-
-<div id="outline-container-org8053fef" class="outline-2">
-<h2 id="org8053fef">
+<div id="outline-container-org9618f04" class="outline-2">
+<h2 id="org9618f04">
 <span class="section-number-2">5</span> Reference</h2>
 <div class="outline-text-2" id="text-5">
 <ol class="org-ol">
@@ -311,7 +340,7 @@ Here is the demo code:<br></p>
 <a href="https://en.wikipedia.org/wiki/Orphan_process">wikipedia.org - orphan process</a><br>
 </li>
 <li>
-<a href="https://en.wikipedia.org/wiki/Zombie_process">wkipedia.org - zombie process</a><br>
+<a href="https://en.wikipedia.org/wiki/Zombie_process">wikipedia.org - zombie process</a><br>
 </li>
 <li>
 <a href="https://stackoverflow.com/questions/16944886/how-to-kill-zombie-process">stackoverflow.com - how to kill zombie process</a><br>
@@ -326,10 +355,10 @@ Here is the demo code:<br></p>
 <a href="https://en.cppreference.com/w/c/program/_Exit">cppreference.com - <code>_Exit</code></a><br>
 </li>
 <li>
-<a href="https://danwalsh.livejournal.com/53603.html">https://danwalsh.livejournal.com/53603.html</a><br>
+<a href="https://stackoverflow.com/questions/6125068/what-does-the-fd-cloexec-fcntl-flag-do">stackoverflow.com - what does <code>FD_CLOEXEC</code> flag do</a><br>
 </li>
 <li>
-<a href="https://stackoverflow.com/questions/6125068/what-does-the-fd-cloexec-fcntl-flag-do">stackoverflow.com - what does <code>FD_CLOEXEC</code> flag do</a><br>
+<a href="https://www.gnu.org/software/libc/manual/html_node/Descriptor-Flags.html">gnu.org - descriptor flags</a><br>
 </li>
 </ol>
 <p>
