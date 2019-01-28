@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tips on Linux Process and Subprocess | Hack Note</title>
+<link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="https://samsonwang.me/posts/linux-process-and-subprocess/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/linux-errno-cheatsheet/" title="Linux系统errno速查表" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+<li class="nav-item">
+<a href="/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">Tips on Linux Process and Subprocess</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2019-01-25T16:50:23+08:00" itemprop="datePublished" title="2019-01-25 16:50">Jan 25 2019</time>
+</div>
+
+      
+
+      
+    <div class="source blur-1">
+      <a href="/posts/linux-process-and-subprocess/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/en/" rel="tag">en</a></li>
+        <li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
+        <li><a class="tag p-category" href="/tags/process/" rel="tag">process</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+Here are some tips on Linux process, such as orphan process, zombie process, process exit, close on exec flag.<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org51336f7" class="outline-2">
+<h2 id="org51336f7">
+<span class="section-number-2">1</span> Orphan process</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+<div id="outline-container-orga89594e" class="outline-3">
+<h3 id="orga89594e">
+<span class="section-number-3">1.1</span> What is orphan process?</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+In Linux system, when parent process exits and child process is still running, the child process becomes an orphan process. Any orphaned process will be immediately adopted by the special init system process.<br></p>
+
+<p>
+Here is a demo code to make a orphan process.<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">switch</span><span class="p">(</span><span class="n">fork</span><span class="p">())</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="o">-</span><span class="mi">1</span><span class="o">:</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"fail to create subprocess</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="mi">0</span><span class="o">:</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"child process, pid = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">getpid</span><span class="p">());</span>
+	<span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">);</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="k">default</span><span class="o">:</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"parent process, pid = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">getpid</span><span class="p">());</span>
+	<span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-orgd46a1d4" class="outline-3">
+<h3 id="orgd46a1d4">
+<span class="section-number-3">1.2</span> How to make child process exit after parent process exits?</h3>
+<div class="outline-text-3" id="text-1-2">
+<ol class="org-ol">
+<li>Child process can ask kernel to send a signal when its parent dies by <code>prctl()</code> system call. This works in Linux only.<br>
+</li>
+</ol>
+<p>
+Here is the demo code:<br></p>
+<div class="highlight"><pre><span></span><span class="n">prctl</span><span class="p">(</span><span class="n">PR_SET_PDEATHSIG</span><span class="p">,</span> <span class="n">SIGHUP</span><span class="p">);</span>
+</pre></div>
+
+<ol class="org-ol">
+<li>As child process id is changed to 1 (the init pid) after parent process exits, the child process could poll its parent process id by <code>getppid()</code> . When its parent process id becomes 1, the child process is an orphan process.<br>
+</li>
+</ol>
+<p>
+Function to get process identification.<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// get process id</span>
+<span class="kt">pid_t</span> <span class="nf">getpid</span><span class="p">();</span>
+<span class="c1">// get parent process id</span>
+<span class="kt">pid_t</span> <span class="nf">getppid</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org28253d3" class="outline-2">
+<h2 id="org28253d3">
+<span class="section-number-2">2</span> Zombie process</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-org75bf730" class="outline-3">
+<h3 id="org75bf730">
+<span class="section-number-3">2.1</span> What is a zombie process?</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+Zombie process is also called defunct process. When child process has finished the execution (via the <code>exit</code> system call) but still has entry in the process table: It is a process in the "Terminated state". The parent process should read (via the <code>wait</code> system call) its child's exit staus from process table, then the child process entry is removed from the process table and is said to be "reaped".<br></p>
+
+<p>
+A child process always first becomes a zombie before being removed from the resource table. In most cases, under normal system operation zombies are immediately waited on by their parent and then reaped by the system – processes that stay zombies for a long time are generally an error and cause a resource leak.<br></p>
+
+<p>
+Here is a demo code to make a zombie process.<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">switch</span><span class="p">(</span><span class="n">fork</span><span class="p">())</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="o">-</span><span class="mi">1</span><span class="o">:</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"fail to create subprocess</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="mi">0</span><span class="o">:</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"child process, pid = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">getpid</span><span class="p">());</span>
+	<span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="k">default</span><span class="o">:</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"parent process, pid = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">getpid</span><span class="p">());</span>
+	<span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">);</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+Check out process tree using the following command.<br></p>
+<div class="highlight"><pre><span></span>ps -efx
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org5d2509f" class="outline-3">
+<h3 id="org5d2509f">
+<span class="section-number-3">2.2</span> How to kill a zombie process?</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+As a zombie process is already dead, so you can not <code>kill</code> it. The <code>kill</code> command has no effect on a zombie process.<br></p>
+
+<p>
+To clean up a zombie, it must be waited on by its parent, so killing the parent should work to eliminate the zombie. (After the parent dies, the zombie will be inherited by init process (pid 1), which will wait on it and clear its entry in the process table).<br></p>
+
+<p>
+The following command will kill all the parent processes that has a zombie child process. As this might kill processes that is running normally, it not recommended. The better solution is to find out the very zombie process and stop its parent.<br></p>
+<div class="highlight"><pre><span></span><span class="nb">kill</span> <span class="k">$(</span>ps -A -ostat,ppid <span class="p">|</span> awk <span class="s1">'/[zZ]/ &amp;&amp; !a[$2]++ {print $2}'</span><span class="k">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgf3443db" class="outline-2">
+<h2 id="orgf3443db">
+<span class="section-number-2">3</span> Process exit</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-org645bcf2" class="outline-3">
+<h3 id="org645bcf2">
+<span class="section-number-3">3.1</span> <code>exit</code> function</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+<code>exit()</code> function performs some cleaning before termination of the program, such as the <code>atexit()</code> registered method and buffer flushing.<br></p>
+
+<p>
+Here is the demo code:<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+
+<span class="kt">void</span> <span class="nf">cleanup</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"cleanup ...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span> <span class="c1">// this will be printed</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"process running ...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="n">atexit</span><span class="p">(</span><span class="n">cleanup</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"buffer information ..."</span><span class="p">);</span> <span class="c1">// this will be fulshed</span>
+    <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgccc6c13" class="outline-3">
+<h3 id="orgccc6c13">
+<span class="section-number-3">3.2</span> <code>_exit</code> or <code>_Exit</code> function</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+<code>_exit()</code> is equivalent to <code>_Exit()</code> . They all cause normal program termination to occur without completely cleaning the resources. The minor difference is <code>_Exit</code> is from C99 and <code>_exit</code> is from POSIX.<br></p>
+
+<p>
+Use <code>_exit</code> (or <code>_Exit</code> ) in child process to avoid unintended calling <code>atexit()</code> handlers and flushing buffers from parent process.<br></p>
+
+<p>
+Here is the demo code:<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+
+<span class="kt">void</span> <span class="nf">cleanup</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"cleanup ...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span> <span class="c1">// this will not be printed</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"process running ...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="n">atexit</span><span class="p">(</span><span class="n">cleanup</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"buffer information ..."</span><span class="p">);</span>  <span class="c1">// this will not be fulshed</span>
+    <span class="n">_Exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orged4d03f" class="outline-2">
+<h2 id="orged4d03f">
+<span class="section-number-2">4</span> close on exec</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+文件描述符号的 <code>close-on-exec</code> 作用于子进程<br></p>
+</div>
+</div>
+
+
+
+<div id="outline-container-org8053fef" class="outline-2">
+<h2 id="org8053fef">
+<span class="section-number-2">5</span> Reference</h2>
+<div class="outline-text-2" id="text-5">
+<ol class="org-ol">
+<li>
+<a href="https://en.wikipedia.org/wiki/Orphan_process">wikipedia.org - orphan process</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Zombie_process">wkipedia.org - zombie process</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/16944886/how-to-kill-zombie-process">stackoverflow.com - how to kill zombie process</a><br>
+</li>
+<li>
+<a href="https://www.geeksforgeeks.org/zombie-and-orphan-processes-in-c/">geeksforgeeks.org - zombie and orphan process</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/5422831/what-is-the-difference-between-using-exit-exit-in-a-conventional-linux-fo">stackoverflow.com - difference between <code>exit</code> and <code>_exit</code></a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/c/program/_Exit">cppreference.com - <code>_Exit</code></a><br>
+</li>
+<li>
+<a href="https://danwalsh.livejournal.com/53603.html">https://danwalsh.livejournal.com/53603.html</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/6125068/what-does-the-fd-cloexec-fcntl-flag-do">stackoverflow.com - what does <code>FD_CLOEXEC</code> flag do</a><br>
+</li>
+</ol>
+<p>
+(The end)<br></p>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
+        </div>
+</div>
+
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+    <ul class="pager hidden-print">
+<li class="left">
+          <a href="/posts/linux-errno-cheatsheet/" rel="prev">
+            <p class="title">Linux系统errno速查表</p>
+            <p>Previous post</p>
+          </a>
+      </li>
+      <li class="right">
+          <div></div>
+      </li>
+    </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="https://samsonwang.me/posts/linux-process-and-subprocess/",
+        disqus_title="Tips on Linux Process and Subprocess",
+        disqus_identifier="cache/posts/linux-process-and-subprocess.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2019 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="/assets/js/jquery.min.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/jquery.lazyload.min.js"></script><script src="/assets/js/popper.min.js"></script><script src="/assets/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
