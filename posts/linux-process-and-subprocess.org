@@ -12,7 +12,7 @@
 #+OPTIONS: num:t
 #+TITLE: Tips on Linux Process and Subprocess
 
-Here are some tips on Linux process, such as orphan process, zombie process, process exit, close on exec flag.
+Here are some tips on Linux process and subprocess, such as orphan process, zombie process, process exit, close on exec flag.
 
 {{{TEASER_END}}}
 
@@ -43,7 +43,6 @@ int main() {
     return 0;
 }
 #+END_SRC
-
 
 *** How to make child process exit after parent process exits?
 1. Child process can ask kernel to send a signal when its parent dies by =prctl()= system call. This works in Linux only.
@@ -154,22 +153,50 @@ int main(int argc, char* argv[]) {
 }
 #+END_SRC
 
-** close on exec
 
-文件描述符号的 =close-on-exec= 作用于子进程
+** Close on exec flag
+The =close-on-exec= flag is set on file descriptor to indicate that the descriptor should be closed when an ~exec~ function is invoked. The flag is initially disabled on new descriptors, the descriptor will survive into the new program after ~exec~ , and resource is leaked. This would happen unintentionally when parent process forks a child and the child calls ~exec~ .
 
+It is a good programming practice to use this flag in order to close the descriptor by default.
+#+BEGIN_SRC c
+int fd1 = open(path, O_CLOEXEC | flags);
+int fd2 = socket(DOMAIN, SOCK_CLOEXEC | type, PROTOCOL);
+int fd3 = accept4(int sockfd, struct sockaddr *addr,
+                  socklen_t *addrlen, SOCK_CLOEXEC | flags);
+int fd4 = fopen(path, "re");
+#+END_SRC
+
+If you want to modify flags on an existing file descriptor, you should get the current flags with =F_GETFD= and modify the value. Don’t assume that the flags listed here are the only ones that are implemented; your program may be run years from now and more flags may exist then. For example, here is a function to set or clear the flag =FD_CLOEXEC= without altering any other flags:
+
+#+BEGIN_SRC c
+/* Set the FD_CLOEXEC flag of desc if value is nonzero,
+   or clear the flag if value is 0.
+   Return 0 on success, or -1 on error with errno set. */
+int set_cloexec_flag (int desc, int value) {
+    int oldflags = fcntl (desc, F_GETFD, 0);
+    /* If reading the flags failed, return error indication now. */
+    if (oldflags < 0)
+        return oldflags;
+    /* Set just the flag we want to set. */
+    if (value != 0)
+        oldflags |= FD_CLOEXEC;
+    else
+        oldflags &= ~FD_CLOEXEC;
+    /* Store modified flag word in the descriptor. */
+    return fcntl (desc, F_SETFD, oldflags);
+}
+#+END_SRC
 
 
 ** Reference
 1. [[https://en.wikipedia.org/wiki/Orphan_process][wikipedia.org - orphan process]]
-2. [[https://en.wikipedia.org/wiki/Zombie_process][wkipedia.org - zombie process]]
+2. [[https://en.wikipedia.org/wiki/Zombie_process][wikipedia.org - zombie process]]
 3. [[https://stackoverflow.com/questions/16944886/how-to-kill-zombie-process][stackoverflow.com - how to kill zombie process]]
 4. [[https://www.geeksforgeeks.org/zombie-and-orphan-processes-in-c/][geeksforgeeks.org - zombie and orphan process]]
 5. [[https://stackoverflow.com/questions/5422831/what-is-the-difference-between-using-exit-exit-in-a-conventional-linux-fo][stackoverflow.com - difference between ~exit~ and ~_exit~]]
 6. [[https://en.cppreference.com/w/c/program/_Exit][cppreference.com - ~_Exit~]]
-7. https://danwalsh.livejournal.com/53603.html
-8. [[https://stackoverflow.com/questions/6125068/what-does-the-fd-cloexec-fcntl-flag-do][stackoverflow.com - what does =FD_CLOEXEC= flag do]]
-
+7. [[https://stackoverflow.com/questions/6125068/what-does-the-fd-cloexec-fcntl-flag-do][stackoverflow.com - what does =FD_CLOEXEC= flag do]]
+8. [[https://www.gnu.org/software/libc/manual/html_node/Descriptor-Flags.html][gnu.org - descriptor flags]]
 
 
 (The end)
