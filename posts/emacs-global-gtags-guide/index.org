@@ -2,6 +2,7 @@
 .. title: 在emacs中使用GNU Global的配置指南
 .. slug: emacs-global-gtags-guide
 .. date: 2018-01-02 23:47:05 UTC+08:00
+.. updated: 2019-01-29 10:08:05 UTC+08:00
 .. tags: emacs, global, gtags
 .. category: emacs
 .. link:
@@ -15,7 +16,6 @@
   本文主要针对emacs中的global的配置和使用方法做了简要介绍。global是代码标签化索引工具，能够在许多源码中快速定位函数的实现位置。我主要使用global来辅助代码跳转；还有一种用法是用来辅助代码补全，目前正在研究中。
 
   {{{TEASER_END}}}
-
 
 * 2 GNU Global相关介绍
   global是一个源代码标签索引系统，它的特点如下：
@@ -32,7 +32,7 @@
   - GRTAGS ： 引用
   - GPATH ： 路径
 
-  使用global指令就可以完成代码的索引。
+  生成索引文件后，使用global指令就可以完成代码的索引。
 
 * 4 GNU Global高级用法
   高级用法主要涉及对系统的头文件目录中的文件进行索引。
@@ -46,9 +46,10 @@
   同理，后续在emacs中的使用也方便很多。我之前也尝试过使用lisp调用 =setenv= 接口将global运行目录添加到环境变量中，但是并不奏效。
 
 * 6 在emacs中使用global
-  global作为GNU系列软件，已经为emacs提供了插件，在软件发布时的压缩包中就能找到，文件名为 =gtags.el= 。但是，我推荐使用helm gtags作为global的交互接口。我的emacs配置如下：
+  global作为GNU系列软件，已经为emacs提供了插件，在软件发布时的压缩包中就能找到，文件名为 =gtags.el= 。但是，我推荐使用helm gtags作为global的交互接口。
 
-  #+BEGIN_SRC elisp
+我的emacs配置如下：
+#+BEGIN_SRC elisp
 (use-package helm-gtags
   :after (helm)
   :init
@@ -70,5 +71,19 @@
         ("M-s" . helm-gtags-find-symbol)
         ("M-," . helm-gtags-previous-history)
         ("M-." . helm-gtags-next-history)))
-  #+END_SRC
+#+END_SRC
+以上配置实现的效果：
+1. 在 =c-mode= ， =c++-mode= 和 =asm-mode= 中开启 =helm-gtags=
+2. 匹配结果的路径使用相对路径
+3. 在gtags进行符号匹配时忽略大小写
+4. 在文件保存时自动更新global索引
+5. 快捷键 =M-t= 搜索tag， =M-r= 搜索rtag， =M-s= 搜索符号
+6. 快捷键 =M-,= 跳转到上一个历史记录， =M-.= 跳转到下一个历史记录
+
   在MacOS使用时需要额外注意的是在emacs中不能够正常调用global, 需要借助额外的插件 =exec-path-from-shell= 修复可执行程序的路径问题。
+
+参考资料： https://github.com/syohex/emacs-helm-gtags
+
+
+
+（全文完）
