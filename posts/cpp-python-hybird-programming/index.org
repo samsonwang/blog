@@ -1,0 +1,62 @@
+#+BEGIN_COMMENT
+.. title: C++(Qt)和Python混合编程的一些经验之谈
+.. slug: cpp-python-hybird-programming
+.. date: 2019-02-01 08:53:37 UTC+08:00
+.. tags: python, cpp, qt, launchy
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: C++(Qt)和Python混合编程的一些经验之谈
+
+在Launchy的开发中，我使用了Python作为Qt程序的插件开发语言，最近有朋友问我Qt和Python结合使用的一些细节。结合我之前踩坑的经历，C++（Qt）和Python的混合编程可以从几个方面进行考虑。
+
+{{{TEASER_END}}}
+
+** 基础概念
+Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌入到C++程序中，C++代码借助Pyhton解释器完成对Python代码的调用。
+Python代码中调用C++代码以实现数据交互和运行速度提升，实际上是用C++写Python拓展（extension），Python通过调用拓展以实现对C++代码的调用。
+
+** 实现方案的选择
+C++和Python混合编程的解决方法有很多，需要根据需求和实际情况综合考虑来选择适合的方案。
+我目前了解到的有：CPython，Boost Python，SWIG，pybind11，ctypes，cffi等等。这个在后面会结合我的使用情况进行详细阐述。
+
+** 编译器的选择
+在选择C++编译器时需要考虑Python的版本和Qt的版本。Python和Qt都有官方发布的二进制文件，最好选用与官方发版时相同的编译环境，这样可以省去自行编译的麻烦。
+例如：在windows平台下，Qt5.11官方发布的二进制文件包括VS2015和VS2017版本，Python3.6官方发布的二进制文件是VS2015版本，所以我选用了VS2015作为开发编译环境。如果选用VS2017，为防止可能出现二进制兼容性问题，我就需要自行编译VS2017版本的Python3.6的二进制文件（python3.lib）。
+另外，有的实现方案需要特定编译版本的支持，如pybind11就要求兼容C++11的编译器。
+
+** Qt和Python的版本
+32/64bit：在windows下，Qt和Python都有32位和64位版本的库文件，使用时要统一。
+embeddable/install：对于Python在windows平台而言，有官方推荐的embeddable版本，专门用于集成在其他程序中使用。在开发时可以使用installed版，在发版时将对应的模块替换为embeddable版的文件即可，installed版和embeddable版的数字版本号要相同。
+debug/release：这个与开发调试有关，Python默认只包含release版的库文件，如果整个C++程序编译为debug版就会报错，因为在链接阶段需要debug版的Python库。而Qt默认包含了debug和release版本的库文件，不存在这个问题。
+
+** 性能损耗
+Python和C++交叉编程是有性能损耗的，如果这是一个对运行速度比较敏感的模块，尽量选择那些损耗较小的实现方案。
+
+** 我尝试过的一些方案，以及这些方案给我的感受：
+*** [[https://docs.python.org/3/c-api/][CPython]]
+这是Python官方的标准方案，实际上后来的其他方案也大都是基于这个方案进行开发的。
+优点：全方位精细化的控制，文档和教程比较详细，没有额外的依赖
+缺点：学习曲线陡峭，需要自行控制很多细节
+
+*** [[https://www.boost.org/doc/libs/1_66_0/libs/python/doc/html/index.html][Boost.Python]]
+这是Boost库的一部分，提供了C++与Python的交叉编程很好支持。
+优点：对众多编译器都有很好的兼容，是一个比较成熟的方案
+缺点：Boost库太厚重了，Boost本身就很复杂
+
+*** [[http://www.swig.org/][SWIG]]
+支持C/C++与多种编程语言进行交叉编程的解决方案。
+优点：同时支持多种编程语言，如C#等等
+缺点：需要额外编写接口定义文件
+
+*** [[https://pybind11.readthedocs.io/en/stable/index.html][pybind11]]
+大量使用C++11的新特性，代码风格与Boost.Python很相似。
+优点：轻量级，只有头文件，无需引入其他二进制库文件依赖
+缺点：要求编译器支持C++11，相对于其他方案成熟度略低，很多功能要自己摸索
+
+(全文完)
