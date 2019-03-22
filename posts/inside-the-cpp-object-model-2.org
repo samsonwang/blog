@@ -1,9 +1,9 @@
 #+BEGIN_COMMENT
-.. title:
+.. title: 深入探索C++内存模型（1）
 .. slug: inside-the-cpp-object-model-2
 .. date: 2019-03-13 15:52:36 UTC+08:00
-.. tags: nikola
-.. category:
+.. tags: cpp, object model, memory layout, Lippman, digest
+.. category: cpp
 .. link:
 .. description:
 .. type: text
@@ -11,9 +11,38 @@
 #+END_COMMENT
 #+OPTIONS: num:t
 
-#+TITLE:
+#+TITLE: 深入探索C++内存模型（1）
+
+构造函语意学主要针对构造函数在不同情况的底层实现细节。
 
 {{{TEASER_END}}}
 
+** 第二章 构造函数语意学 （the semantics of constructors）
 
-** 第二章 构造函数语义学 （the semantics of constructors）
+关键词 =explicit= 之所以被导入这个语言，就是为了提供给程序员一种方法，使他们能够制止“单一参数的 constructor ”被当作一个 conversion 运算符。
+
+默认构造函数在需要的时候被编译器产生出来。但是这个需要有两层含义，一个是程序员的需要，另一个是编译器的需要。
+只有在编译器需要的时候，才会合成默认构造函数（default constructor）。此外，被合成出来的 constructor 只执行编译器所需的行动。
+
+
+*** 带有 default constructor 的 member class object
+如果一个 class 没有任何 constructor，但它内含一个有 default constructor 的 member object，那么这个 class 的 implicit default constructor 就是 “nontrivial” ，编译器需要为此 class 合成出一个 default constructor。不过这个合成操作只有在 constructor 真正需要被调用时才会发生。
+
+
+*** 带有 default constructor 的 base class
+如果一个没有任何 constructor 的 class 派生自一个“带有 default constructor”的 base class，那么这个 derived class 的 default constructor 会被视为 nontrivial，因此需要被合成出来。它将调用上一层 base classes 的 default consturctor（根据他们的声明顺序）。对于一个后继派生的class而言，这个合成的 constructor 和一个 “被明确提供的 default constructor” 没有什么异常。
+
+
+*** 带有 virtual function 的 class
+另有两种情况，也需要合成出 default constructor：
+1. class 声明（或继承）一个 virtual function；
+2. class 派生自一个继承串链，其中有一个或更多的 virtual base classes。
+
+以下两个扩张会在编译期间发生：
+1. 一个 virtual function table（vtbl） 会被编译器产生出来，用于存放 class 的 virtual functions 地址；
+2. 在每一个 class object 中， 一个额外的 pointer member（vptr）会被编译器合成出来，内含相关的 class vtbl 的地址。
+
+注意：虚函数表（vtbl）属于一个 class，而每个 object 中存放的是虚函数表的地址（vptr）。
+
+
+*** 带有 virtual base class 的 class
