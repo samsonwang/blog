@@ -72,7 +72,154 @@
 <div class="postindex">
 
 
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/qt-chinese-encoding/" class="u-url">关于Qt中使用中文编码的一些问题</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/differences-among-overload-override-and-hide/" class="u-url">重载、覆盖和隐藏的区别</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-03-19T21:51:03+08:00" itemprop="datePublished" title="2018-03-19 21:51">Mar 19 2018</time>
+</div>
+
+        
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/differences-among-overload-override-and-hide/#disqus_thread" data-disqus-identifier="cache/archives/2018/differences-among-overload-override-and-hide.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <p>
+<b>重载（overload）</b> ：就是函数或者方法有相同的名称，但是参数列表不相同的情形，这样的同名不同参数的函数或者方法之间，互相称之为重载函数或者方法。<br>
+多个重载函数在调用的时候根据函数的参数来区别不同的函数。<br>
+关键点：函数名相同，参数表不同<br></p>
+
+<p>
+<b>覆盖（override）</b> ：是指在派生类中重新对基类中的虚函数重新实现，即函数名和参数都一样，只是函数的实现体不一样。<br>
+关键词：派生类中，虚函数，函数名和参数表完全相同<br></p>
+
+<p>
+<b>隐藏（hide）</b> ：派生类中的函数把基类中相同名字的函数屏蔽掉了。<br>
+隐藏一词可以这么理解:在调用一个类的成员函数的时候,编译器会沿着类的继承链逐级的向上查找函数的定义,如果找到了那么就停止查找了,所以如果一个派生类和一个基类都有同一个同名(暂且不论参数是否相同)的函数,而编译器最终选择了在派生类中的函数,那么我们就说这个派生类的成员函数"隐藏"了基类的成员函数,也就是说它阻止了编译器继续向上查找函数的定义.<br></p>
+
+
+<p>
+关于这三种情况的示例代码如下<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;iostream.h&gt;</span><span class="cp"></span>
+<span class="k">class</span> <span class="nc">Base</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::f(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::g(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="n">h</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::h(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::f(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::g(int) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kt">void</span> <span class="n">h</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::h(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+从以上代码能够看出：<br>
+（1）函数Derived::f(float)覆盖了Base::f(float)。<br>
+（2）函数Derived::g(int)隐藏了Base::g(float)，而不是重载。<br>
+（3）函数Derived::h(float)隐藏了Base::h(float)，而不是覆盖。<br></p>
+
+<p>
+考虑代码在运行时的结果：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">Derived</span>  <span class="n">d</span><span class="p">;</span>
+  <span class="n">Base</span> <span class="o">*</span><span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
+  <span class="n">Derived</span> <span class="o">*</span><span class="n">pd</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
+
+  <span class="c1">// Good : behavior depends solely on type of the object</span>
+  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14</span>
+  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14</span>
+
+  <span class="c1">// Bad : behavior depends on type of the pointer</span>
+  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::g(float) 3.14</span>
+  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::g(int) 3        (surprise!)</span>
+
+  <span class="c1">// Bad : behavior depends on type of the pointer</span>
+  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">h</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::h(float) 3.14      (surprise!)</span>
+  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">h</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::h(float) 3.14</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+在第一种调用中，函数的行为取决于指针所指向的对象。在第二第三种调用中，函数的行为取决于指针的类型。所以说，隐藏破坏了面向对象编程中多态这一特性，会使得开发人员产生混乱。<br></p>
+
+
+<p>
+<b>函数接口设计注意要点</b><br>
+在设计基类的函数接口时，不要出现既是虚函数，又对该虚函数进行了重载的情况。这样会对派生类的多态函数实现造成不便。<br>
+示例代码如下<br></p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Base</span>
+<span class="p">{</span>
+  <span class="k">virtual</span> <span class="n">foo</span><span class="p">();</span>
+  <span class="k">virtual</span> <span class="nf">foo</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span>
+<span class="p">{</span>
+  <span class="k">virtual</span> <span class="n">foo</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+从以上代码能够看出：<br></p>
+<ol class="org-ol">
+<li>
+<code>Derived::foo()</code> 与 <code>Base::foo()</code> 构成了多态关系<br>
+</li>
+<li>
+<code>Derived::foo()</code> 隐藏了 <code>Base::foo(int)</code><br>
+</li>
+</ol>
+<p>
+所以，如果派生类希望实现 <code>foo()</code> 函数的多态，也就必须实现 <code>foo(int)</code> 的多态，否则就会出现隐藏。<br>
+如果在现有代码中已经发生了上述 <code>Base</code> 的情况，在不改变原有代码的情况下，可以使用在派生类中使用这样的语法 <code>using Base::foo;</code> ，这会将基类中所有的名为 <code>foo</code> 的函数引入到派生类中来。<br></p>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/qt-chinese-encoding/" class="u-url">关于Qt中使用中文编码的一些问题</a></h1>
       <div class="metadata">
         
 
@@ -187,17 +334,17 @@ Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式�
       <p>
 在某些时候，为了绕过网络封锁，在使用git时需要借助代理完成相关网络操作。<br></p>
 
-<div id="outline-container-org15944b4" class="outline-2">
-<h2 id="org15944b4">一个可用的VPN代理是先决条件</h2>
-<div class="outline-text-2" id="text-org15944b4">
+<div id="outline-container-org51fb5ba" class="outline-2">
+<h2 id="org51fb5ba">一个可用的VPN代理是先决条件</h2>
+<div class="outline-text-2" id="text-org51fb5ba">
 <p>
 关于VPN的架设就不在此讨论了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org615ab67" class="outline-2">
-<h2 id="org615ab67">将repo的链接由ssh改为为https</h2>
-<div class="outline-text-2" id="text-org615ab67">
+<div id="outline-container-org896f386" class="outline-2">
+<h2 id="org896f386">将repo的链接由ssh改为为https</h2>
+<div class="outline-text-2" id="text-org896f386">
 <p>
 已经使用https的repo跳过此步骤。<br>
 本教程需要通过https（http）的方式使用代理，所以如果现有的repo是使用ssh方式clone到本地的，需要修改其为https方式。<br>
@@ -208,9 +355,9 @@ Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式�
 </div>
 </div>
 
-<div id="outline-container-org579b732" class="outline-2">
-<h2 id="org579b732">设置git使用代理</h2>
-<div class="outline-text-2" id="text-org579b732">
+<div id="outline-container-org68c0b79" class="outline-2">
+<h2 id="org68c0b79">设置git使用代理</h2>
+<div class="outline-text-2" id="text-org68c0b79">
 <p>
 将git配置为使用socks5代理，以socks5的ip和端口是 <code>127.0.0.1:1080</code> 为例。<br></p>
 <div class="highlight"><pre><span></span>git config --global http.proxy 'socks5://127.0.0.1:1080'
@@ -219,9 +366,9 @@ git config --global https.proxy 'socks5://127.0.0.1:1080'
 </div>
 </div>
 
-<div id="outline-container-org083722a" class="outline-2">
-<h2 id="org083722a">将登录信息缓存下来</h2>
-<div class="outline-text-2" id="text-org083722a">
+<div id="outline-container-org818314a" class="outline-2">
+<h2 id="org818314a">将登录信息缓存下来</h2>
+<div class="outline-text-2" id="text-org818314a">
 <p>
 使用https时，在向远程仓库进行推送（git push）时会要求验证用户名和密码，由于每次都输入验证信息是十分繁琐的，考虑将验证信息缓存下来。<br></p>
 <div class="highlight"><pre><span></span>git config --global credential.helper cache
@@ -233,9 +380,9 @@ git默认会将密码缓存15分钟，在这期间进行的操作是不需要再
 </div>
 </div>
 
-<div id="outline-container-org2cd8058" class="outline-2">
-<h2 id="org2cd8058">将登陆信息保存下来</h2>
-<div class="outline-text-2" id="text-org2cd8058">
+<div id="outline-container-orgc10d780" class="outline-2">
+<h2 id="orgc10d780">将登陆信息保存下来</h2>
+<div class="outline-text-2" id="text-orgc10d780">
 <p>
 也可以考虑将用户名和密码永久保存下来，这样就不需要再次进行密码验证了。<br><b>注意:</b> 使用这种配置会将明文的账户和密码保存在 <code>~/.git-cretidentials</code> 文件中，所以仅推荐在个人电脑中使用这个配置。<br></p>
 <div class="highlight"><pre><span></span>git config --global credential.helper store
@@ -243,9 +390,9 @@ git默认会将密码缓存15分钟，在这期间进行的操作是不需要再
 </div>
 </div>
 
-<div id="outline-container-orgbafe8d2" class="outline-2">
-<h2 id="orgbafe8d2">参考资料</h2>
-<div class="outline-text-2" id="text-orgbafe8d2">
+<div id="outline-container-org78511f0" class="outline-2">
+<h2 id="org78511f0">参考资料</h2>
+<div class="outline-text-2" id="text-org78511f0">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-on-github">stackoverflow question</a><br>
@@ -293,27 +440,27 @@ git默认会将密码缓存15分钟，在这期间进行的操作是不需要再
       <p>
 在开发windows应用程序时，经常会遇到win32、mfc、atl的函数。下面就对三种API（或者说是开发框架）进行了总结。<br></p>
 
-<div id="outline-container-org22c8950" class="outline-2">
-<h2 id="org22c8950">Win32开发框架</h2>
-<div class="outline-text-2" id="text-org22c8950">
+<div id="outline-container-org6cf890c" class="outline-2">
+<h2 id="org6cf890c">Win32开发框架</h2>
+<div class="outline-text-2" id="text-org6cf890c">
 <p>
 win32开发框架是最基础的函数接口，更接近操作系统底层。<br>
 使用Win32接口的优点是程序的依赖最小，生成的可执行文件的体积也最小。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org420aa52" class="outline-2">
-<h2 id="org420aa52">MFC开发框架</h2>
-<div class="outline-text-2" id="text-org420aa52">
+<div id="outline-container-orga6d84c8" class="outline-2">
+<h2 id="orga6d84c8">MFC开发框架</h2>
+<div class="outline-text-2" id="text-orga6d84c8">
 <p>
 MFC是Microsoft Foundation Class的缩写，将win32的相关接口按照OOP的思想封装了起来，目的是提供一个快速开发原生应用的框架。<br>
 使用MFC开发的程序体型略显臃肿，而且MFC也比较陈旧了，并不推荐使用MFC进行开发。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3197587" class="outline-2">
-<h2 id="org3197587">ATL开发框架</h2>
-<div class="outline-text-2" id="text-org3197587">
+<div id="outline-container-org6ff874a" class="outline-2">
+<h2 id="org6ff874a">ATL开发框架</h2>
+<div class="outline-text-2" id="text-org6ff874a">
 <p>
 ATL是Active Template Library的缩写，是针对COM组件的开发实现的一套开发框架。ATL简化了ActiveX COM组件的开发。<br></p>
 </div>
@@ -405,9 +552,9 @@ tips： 对于安装了 <code>git bash</code> 的同学，直接将其中的 <co
 租一个服务器自己搭建梯子是科学上网方便稳定快捷的好方法。<br>
 本文主要是自己部署vpn服务端的笔记，作为备忘留存下来。<br></p>
 
-<div id="outline-container-org6bcbd61" class="outline-2">
-<h2 id="org6bcbd61">安装ss服务程序</h2>
-<div class="outline-text-2" id="text-org6bcbd61">
+<div id="outline-container-orgf5eab8a" class="outline-2">
+<h2 id="orgf5eab8a">安装ss服务程序</h2>
+<div class="outline-text-2" id="text-orgf5eab8a">
 <p>
 安装环境为CentOS7, 需要使用python的包管理工具pip完成对ss-server的安装。<br></p>
 <div class="highlight"><pre><span></span>sudo yum install m2crypto python-setuptools
@@ -417,9 +564,9 @@ sudo pip install shadowsocks
 </div>
 </div>
 
-<div id="outline-container-org2a9ded8" class="outline-2">
-<h2 id="org2a9ded8">配置ss服务器</h2>
-<div class="outline-text-2" id="text-org2a9ded8">
+<div id="outline-container-org1ab40ab" class="outline-2">
+<h2 id="org1ab40ab">配置ss服务器</h2>
+<div class="outline-text-2" id="text-org1ab40ab">
 <p>
 <b>配置文件示例</b> : <a href="/listings/shadowsocks.json.html">shadowsocks.json</a><br>
 这份配置中使用了多个端口作供ss-server使用<br></p>
@@ -549,9 +696,9 @@ fi
     </header><div class="p-summary entry-summary">
       <p>
 本文主要介绍在emacs中对一个目录中的很多文件进行字符串查找和替换操作的方法。参考了 <a href="http://ergoemacs.org/emacs/blog.html">XahLee</a> 的教程后，在此记录做个备份。<br></p>
-<div id="outline-container-org3c64e2f" class="outline-2">
-<h2 id="org3c64e2f">操作步骤</h2>
-<div class="outline-text-2" id="text-org3c64e2f">
+<div id="outline-container-orga5ad966" class="outline-2">
+<h2 id="orga5ad966">操作步骤</h2>
+<div class="outline-text-2" id="text-orga5ad966">
 <p>
 <b>进入dired模式</b> ： 我的快捷键配置为 <code>C-x d</code>, 也可以使用 <code>M-x &lt;dired&gt;</code> .<br><b>标记需要查找的文件</b> ： 在进入dired模式后，对需要操作的文件或目录进行操作。<br></p>
 <ul class="org-ul">
@@ -590,9 +737,9 @@ fi
 </div>
 </div>
 
-<div id="outline-container-org59458fa" class="outline-2">
-<h2 id="org59458fa">相关技巧</h2>
-<div class="outline-text-2" id="text-org59458fa">
+<div id="outline-container-orgb2c5067" class="outline-2">
+<h2 id="orgb2c5067">相关技巧</h2>
+<div class="outline-text-2" id="text-orgb2c5067">
 <p>
 如果需要批量查找(不进行替换)，可以在dired模式中 <code>M-x &lt;dired-do-search&gt;</code> 进行查找，对于查找结果使用 <code>M-x tags-loop-continue</code> 进行逐条浏览。<br></p>
 </div>
@@ -630,9 +777,9 @@ fi
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org171a352" class="outline-2">
-<h2 id="org171a352">1 引言</h2>
-<div class="outline-text-2" id="text-org171a352">
+      <div id="outline-container-orgded3efd" class="outline-2">
+<h2 id="orgded3efd">1 引言</h2>
+<div class="outline-text-2" id="text-orgded3efd">
 <p>
 常见的STL容器都能使用迭代器访问容器内元素，迭代器相同于一个指向容器内元素的指针，可以通过移动迭代器实现遍历容器。<br>
 但是在使用迭代器时需要考虑STL容器的失效问题；迭代器失效主要出现在对容器进行了增删操作之后，迭代器不再指向原本的元素。<br>
@@ -640,17 +787,17 @@ fi
 </div>
 </div>
 
-<div id="outline-container-org7dce6e2" class="outline-2">
-<h2 id="org7dce6e2">2 map容器</h2>
-<div class="outline-text-2" id="text-org7dce6e2">
+<div id="outline-container-org71e5e9b" class="outline-2">
+<h2 id="org71e5e9b">2 map容器</h2>
+<div class="outline-text-2" id="text-org71e5e9b">
 <p>
 <b>内部数据结构</b> ：红黑树<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入都红黑树中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge0371fb" class="outline-2">
-<h2 id="orge0371fb">3 vector容器</h2>
-<div class="outline-text-2" id="text-orge0371fb">
+<div id="outline-container-orgd5d83f3" class="outline-2">
+<h2 id="orgd5d83f3">3 vector容器</h2>
+<div class="outline-text-2" id="text-orgd5d83f3">
 <p>
 <b>内部数据结构</b> ：数组(一段连续内存空间)<br><b>插入操作</b> ：由于vector使用的是一段有长度限制的连续空间，插入( <code>push_back</code> / <code>insert</code> )操作在vector中加入新的元素时需要分情况考虑。<br></p>
 <ul class="org-ul">
@@ -665,17 +812,17 @@ fi
 </div>
 </div>
 
-<div id="outline-container-org06abcec" class="outline-2">
-<h2 id="org06abcec">4 list容器</h2>
-<div class="outline-text-2" id="text-org06abcec">
+<div id="outline-container-org0825990" class="outline-2">
+<h2 id="org0825990">4 list容器</h2>
+<div class="outline-text-2" id="text-org0825990">
 <p>
 <b>内部数据结构</b> ：双向环状链表<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入到链表中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf34fb0a" class="outline-2">
-<h2 id="orgf34fb0a">5 小结</h2>
-<div class="outline-text-2" id="text-orgf34fb0a">
+<div id="outline-container-org5903b8b" class="outline-2">
+<h2 id="org5903b8b">5 小结</h2>
+<div class="outline-text-2" id="text-org5903b8b">
 <p>
 在操作STL容器时，对容器增删（ <code>erase</code> / <code>insert</code> ）之后应该注意接收返回值，这样可以有效避免迭代器失效的产生。<br>
 对容器进行遍历删除操作时，另一种语法技巧是在 <code>erase</code> 接口中对迭代器进行后自增（it++），这种写法也能够保证遍历正常进行。理解这种写法需要参考运算符重载的相关知识，后自增操作会产生一个临时变量用于函数返回。<br></p>
@@ -713,42 +860,42 @@ fi
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org0dc1b66" class="outline-2">
-<h2 id="org0dc1b66">1 引言</h2>
-<div class="outline-text-2" id="text-org0dc1b66">
+      <div id="outline-container-org6d9b198" class="outline-2">
+<h2 id="org6d9b198">1 引言</h2>
+<div class="outline-text-2" id="text-org6d9b198">
 <p>
 编程中常见的表示两种大小的类型标识符有 <code>size_t</code> 和 <code>size_type</code> ，这两种类型十分相似，非常容易混淆。本文对他们的使用场景进行了比较，并提供了示例代码。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgfa36a31" class="outline-2">
-<h2 id="orgfa36a31">2 <code>size_t</code> 类型</h2>
-<div class="outline-text-2" id="text-orgfa36a31">
+<div id="outline-container-org090b208" class="outline-2">
+<h2 id="org090b208">2 <code>size_t</code> 类型</h2>
+<div class="outline-text-2" id="text-org090b208">
 <p>
 当需要描述某个对象的大小（size）时都应该使用 <code>size_t</code> ，其大小被限制为 0 到 <code>SIZE_MAX</code> 之间。<br><code>size_t</code> 的定义在 <code>&lt;cstddef&gt;</code> 中， <code>SIZE_MAX</code> 的定义在 <code>&lt;climits&gt;</code> 中。<br><code>size_t</code> 一般会作为 <code>sizeof</code> 运算符的返回结果，可以理解为在给定的平台中是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org932dca9" class="outline-2">
-<h2 id="org932dca9">3 <code>size_type</code> 类型</h2>
-<div class="outline-text-2" id="text-org932dca9">
+<div id="outline-container-org9e1e9ec" class="outline-2">
+<h2 id="org9e1e9ec">3 <code>size_type</code> 类型</h2>
+<div class="outline-text-2" id="text-org9e1e9ec">
 <p>
 在 <code>STL</code> 中定义了 <code>size_type</code> 是与 <code>Allocator::size_tpye</code> 相对应的。而 <code>Allocator</code> 是模板的一个参数。<br><code>size_type</code> 可以理解为在给定容器范围内是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org8203053" class="outline-2">
-<h2 id="org8203053">4 二者之间的比较</h2>
-<div class="outline-text-2" id="text-org8203053">
+<div id="outline-container-orgcf6f922" class="outline-2">
+<h2 id="orgcf6f922">4 二者之间的比较</h2>
+<div class="outline-text-2" id="text-orgcf6f922">
 <p>
 这两种类型主要是为了提高代码的可移植性。一般情况来说，这两种类型是没有区别的，因为使用标准库默认的 <code>Allocator</code> 所对应的 <code>size_type</code> 就是 <code>size_t</code> 。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org8fdcfbc" class="outline-2">
-<h2 id="org8fdcfbc">5 示例代码</h2>
-<div class="outline-text-2" id="text-org8fdcfbc">
+<div id="outline-container-org7b4f031" class="outline-2">
+<h2 id="org7b4f031">5 示例代码</h2>
+<div class="outline-text-2" id="text-org7b4f031">
 <p>
 注意 <code>size_type</code> 在使用时需要加上容器类型限定。<br></p>
 <div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">n1</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
@@ -762,9 +909,9 @@ fi
 </div>
 </div>
 
-<div id="outline-container-orgc692079" class="outline-2">
-<h2 id="orgc692079">6 参考资料</h2>
-<div class="outline-text-2" id="text-orgc692079">
+<div id="outline-container-org56d0b95" class="outline-2">
+<h2 id="org56d0b95">6 参考资料</h2>
+<div class="outline-text-2" id="text-org56d0b95">
 <ul class="org-ul">
 <li>
 <a href="http://en.cppreference.com/w/cpp/types/size_t">http://en.cppreference.com/w/cpp/types/size_t</a><br>
@@ -807,9 +954,9 @@ fi
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org49f14fe" class="outline-2">
-<h2 id="org49f14fe">1 引言</h2>
-<div class="outline-text-2" id="text-org49f14fe">
+      <div id="outline-container-orge854a8c" class="outline-2">
+<h2 id="orge854a8c">1 引言</h2>
+<div class="outline-text-2" id="text-orge854a8c">
 <p>
 本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。<br>
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
@@ -853,53 +1000,14 @@ fi
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org4cf53c2" class="outline-2">
-<h2 id="org4cf53c2">1 引言</h2>
-<div class="outline-text-2" id="text-org4cf53c2">
+      <div id="outline-container-org60c775e" class="outline-2">
+<h2 id="org60c775e">1 引言</h2>
+<div class="outline-text-2" id="text-org60c775e">
 <p>
 本文主要针对emacs中的global的配置和使用方法做了简要介绍。global是代码标签化索引工具，能够在许多源码中快速定位函数的实现位置。我主要使用global来辅助代码跳转；还有一种用法是用来辅助代码补全，目前正在研究中。<br></p>
 
 <p class="more"><a href="/posts/emacs-global-gtags-guide/">Read more…</a></p>
 </div>
-</div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/gcc-warn-on-compile/" class="u-url">GCC编译时的警告（warn）相关参数</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2017-12-31T09:51:01+08:00" itemprop="datePublished" title="2017-12-31 09:51">Dec 31 2017</time>
-</div>
-
-        
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/gcc-warn-on-compile/#disqus_thread" data-disqus-identifier="cache/archives/2018/gcc-warn-on-compile.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/gcc/" rel="tag">gcc</a></li>
-        <li><a class="tag p-category" href="/tags/makefile/" rel="tag">makefile</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div>
-<p>
-编译阶段警告信息有助于排查代码中错误，合理配置编译警告信息能够提高开发效率。<br>
-通过了解编译警告，也能够了解到哪些代码风格是不好的，有哪些代码的书写格式是容易出现问题的，有助于让自己写出更高质量的代码。<br></p>
-
-<p class="more"><a href="/posts/gcc-warn-on-compile/">Read more…</a></p>
 </div>
     </div>
 

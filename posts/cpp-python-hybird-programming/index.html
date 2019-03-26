@@ -97,27 +97,27 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org8a30f13" class="outline-2">
-<h2 id="org8a30f13">基础概念</h2>
-<div class="outline-text-2" id="text-org8a30f13">
+<div id="outline-container-org141066b" class="outline-2">
+<h2 id="org141066b">基础概念</h2>
+<div class="outline-text-2" id="text-org141066b">
 <p>
 Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌入到C++程序中，C++代码借助Pyhton解释器完成对Python代码的调用。<br>
 Python代码中调用C++代码以实现数据交互和运行速度提升，实际上是用C++写Python拓展（extension），Python通过调用拓展以实现对C++代码的调用。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga959d68" class="outline-2">
-<h2 id="orga959d68">实现方案的选择</h2>
-<div class="outline-text-2" id="text-orga959d68">
+<div id="outline-container-org884f73c" class="outline-2">
+<h2 id="org884f73c">实现方案的选择</h2>
+<div class="outline-text-2" id="text-org884f73c">
 <p>
 C++和Python混合编程的解决方法有很多，需要根据需求和实际情况综合考虑来选择适合的方案。<br>
 我目前了解到的有：CPython，Boost Python，SWIG，pybind11，ctypes，cffi等等。这个在后面会结合我的使用情况进行详细阐述。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org58bf3b0" class="outline-2">
-<h2 id="org58bf3b0">编译器的选择</h2>
-<div class="outline-text-2" id="text-org58bf3b0">
+<div id="outline-container-orgfa79f1d" class="outline-2">
+<h2 id="orgfa79f1d">编译器的选择</h2>
+<div class="outline-text-2" id="text-orgfa79f1d">
 <p>
 在选择C++编译器时需要考虑Python的版本和Qt的版本。Python和Qt都有官方发布的二进制文件，最好选用与官方发版时相同的编译环境，这样可以省去自行编译的麻烦。<br>
 例如：在windows平台下，Qt5.11官方发布的二进制文件包括VS2015和VS2017版本，Python3.6官方发布的二进制文件是VS2015版本，所以我选用了VS2015作为开发编译环境。如果选用VS2017，为防止可能出现二进制兼容性问题，我就需要自行编译VS2017版本的Python3.6的二进制文件（python3.lib）。<br>
@@ -125,9 +125,9 @@ C++和Python混合编程的解决方法有很多，需要根据需求和实际�
 </div>
 </div>
 
-<div id="outline-container-orgcc566e0" class="outline-2">
-<h2 id="orgcc566e0">Qt和Python的版本</h2>
-<div class="outline-text-2" id="text-orgcc566e0">
+<div id="outline-container-org49f8f6d" class="outline-2">
+<h2 id="org49f8f6d">Qt和Python的版本</h2>
+<div class="outline-text-2" id="text-org49f8f6d">
 <p>
 32/64bit：在windows下，Qt和Python都有32位和64位版本的库文件，使用时要统一。<br>
 embeddable/install：对于Python在windows平台而言，有官方推荐的embeddable版本，专门用于集成在其他程序中使用。在开发时可以使用installed版，在发版时将对应的模块替换为embeddable版的文件即可，installed版和embeddable版的数字版本号要相同。<br>
@@ -135,21 +135,21 @@ debug/release：这个与开发调试有关，Python默认只包含release版的
 </div>
 </div>
 
-<div id="outline-container-org40ee87c" class="outline-2">
-<h2 id="org40ee87c">性能损耗</h2>
-<div class="outline-text-2" id="text-org40ee87c">
+<div id="outline-container-org095a305" class="outline-2">
+<h2 id="org095a305">性能损耗</h2>
+<div class="outline-text-2" id="text-org095a305">
 <p>
 Python和C++交叉编程是有性能损耗的，如果这是一个对运行速度比较敏感的模块，尽量选择那些损耗较小的实现方案。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgdc35eea" class="outline-2">
-<h2 id="orgdc35eea">我尝试过的一些方案，以及这些方案给我的感受：</h2>
-<div class="outline-text-2" id="text-orgdc35eea">
+<div id="outline-container-orgc5af7f1" class="outline-2">
+<h2 id="orgc5af7f1">我尝试过的一些方案，以及这些方案给我的感受：</h2>
+<div class="outline-text-2" id="text-orgc5af7f1">
 </div>
-<div id="outline-container-org1d41980" class="outline-3">
-<h3 id="org1d41980"><a href="https://docs.python.org/3/c-api/">CPython</a></h3>
-<div class="outline-text-3" id="text-org1d41980">
+<div id="outline-container-orga421158" class="outline-3">
+<h3 id="orga421158"><a href="https://docs.python.org/3/c-api/">CPython</a></h3>
+<div class="outline-text-3" id="text-orga421158">
 <p>
 这是Python官方的标准方案，实际上后来的其他方案也大都是基于这个方案进行开发的。<br>
 优点：全方位精细化的控制，文档和教程比较详细，没有额外的依赖<br>
@@ -157,9 +157,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 </div>
 
-<div id="outline-container-org02169bf" class="outline-3">
-<h3 id="org02169bf"><a href="https://www.boost.org/doc/libs/1_66_0/libs/python/doc/html/index.html">Boost.Python</a></h3>
-<div class="outline-text-3" id="text-org02169bf">
+<div id="outline-container-org64a4457" class="outline-3">
+<h3 id="org64a4457"><a href="https://www.boost.org/doc/libs/1_66_0/libs/python/doc/html/index.html">Boost.Python</a></h3>
+<div class="outline-text-3" id="text-org64a4457">
 <p>
 这是Boost库的一部分，提供了C++与Python的交叉编程很好支持。<br>
 优点：对众多编译器都有很好的兼容，是一个比较成熟的方案<br>
@@ -167,9 +167,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 </div>
 
-<div id="outline-container-orgdf75071" class="outline-3">
-<h3 id="orgdf75071"><a href="http://www.swig.org/">SWIG</a></h3>
-<div class="outline-text-3" id="text-orgdf75071">
+<div id="outline-container-org5cdb1e4" class="outline-3">
+<h3 id="org5cdb1e4"><a href="http://www.swig.org/">SWIG</a></h3>
+<div class="outline-text-3" id="text-org5cdb1e4">
 <p>
 支持C/C++与多种编程语言进行交叉编程的解决方案。<br>
 优点：同时支持多种编程语言，如C#等等<br>
@@ -177,9 +177,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 </div>
 
-<div id="outline-container-orgae364bf" class="outline-3">
-<h3 id="orgae364bf"><a href="https://pybind11.readthedocs.io/en/stable/index.html">pybind11</a></h3>
-<div class="outline-text-3" id="text-orgae364bf">
+<div id="outline-container-org2198c8a" class="outline-3">
+<h3 id="org2198c8a"><a href="https://pybind11.readthedocs.io/en/stable/index.html">pybind11</a></h3>
+<div class="outline-text-3" id="text-org2198c8a">
 <p>
 大量使用C++11的新特性，代码风格与Boost.Python很相似。<br>
 优点：轻量级，只有头文件，无需引入其他二进制库文件依赖<br>

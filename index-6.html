@@ -72,7 +72,138 @@
 <div class="postindex">
 
 
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/gdb-ignore-received-signal/" class="u-url">在gdb调试时忽略系统信号（signal）</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/debug-with-gdb-on-multi-thread-programs/" class="u-url">使用gdb调试多线程程序</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-04-20T21:25:09+08:00" itemprop="datePublished" title="2018-04-20 21:25">Apr 20 2018</time>
+</div>
+
+        
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/debug-with-gdb-on-multi-thread-programs/#disqus_thread" data-disqus-identifier="cache/archives/2018/debug-with-gdb-on-multi-thread-programs.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/gdb/" rel="tag">gdb</a></li>
+        <li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-org28b4fe6" class="outline-2">
+<h2 id="org28b4fe6">查看当前线程信息</h2>
+<div class="outline-text-2" id="text-org28b4fe6">
+<p>
+<b>将进程中的各个线程信息显示出来</b><br></p>
+<div class="highlight"><pre><span></span>(gdb) info threads
+</pre></div>
+
+<p>
+<b>切换到指定进程</b><br></p>
+<div class="highlight"><pre><span></span>(gdb) thread tid
+</pre></div>
+
+<p>
+<b>向指定的线程发送自定的指令</b><br></p>
+<div class="highlight"><pre><span></span>(gdb) thread apply tid/all args
+</pre></div>
+<p>
+常用的指定是查看所有线程的调用堆栈 <code>thread apply all bt</code> ，这个指令与 <code>pstack</code> 命令有些相似。<br></p>
+
+<p>
+<b>gdb默认会自动捕捉新产生线程</b><br>
+会在产生一个新的线程时会显示出LWP的字样提示用户，LWP = light weight process<br>
+可以设置gdb是否提示线程相关的事件<br></p>
+<div class="highlight"><pre><span></span>(gdb) set print thread-events on/off
+(gdb) show print thread-events
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgbb8649a" class="outline-2">
+<h2 id="orgbb8649a">为指定的线程设置断点</h2>
+<div class="outline-text-2" id="text-orgbb8649a">
+<p>
+含有多线程的程序，可以为单独的线程设置断点<br></p>
+<div class="highlight"><pre><span></span>(gdb) break linespec thread tid
+</pre></div>
+
+<p>
+任何时候当你的程序在GDB模式下停止的时候，包括当前调试线程的所有线程都会停下来，不会对继续对当前进程造成更改。这时你可以在线程间进行切换，查看整个进程的执行状况。<br></p>
+<blockquote>
+<p>
+Whenever your program stops under GDB for any reason, all threads of execution stop, not just the current thread. This allows you to examine the overall state of the program, including switching between threads, without worrying that things may change underfoot.<br></p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-org2c65cba" class="outline-2">
+<h2 id="org2c65cba">防止gdb自动切换线程</h2>
+<div class="outline-text-2" id="text-org2c65cba">
+<p>
+在调试gdb程序时，在单步执行时，会出现线程间跳转切换，这样对跟踪代码执行状态十分不方便。<br>
+可以通过设置 <code>scheduler-locking</code> 让gdb在所调试的线程中运行，防止线程的自动切换。<br></p>
+<div class="highlight"><pre><span></span>(gdb) set scheduler-locking step
+</pre></div>
+<p>
+可以执行以下命令查看当前 <code>scheduler-locking</code> 的设置<br></p>
+<div class="highlight"><pre><span></span>(gdb) show scheduler-locking
+</pre></div>
+<p>
+<code>scheduler-locking</code> 有三种模式<br></p>
+<ol class="org-ol">
+<li>
+<code>off</code> 任何线程在任何时候都能执行<br>
+</li>
+<li>
+<code>on</code> 只有当前线程能够执行<br>
+</li>
+<li>
+<code>step</code> 为单步执行优化的模式，比较适合一般的调试<br>
+</li>
+</ol>
+<blockquote>
+<p>
+Set the scheduler locking mode. If it is off, then there is no locking and any thread may run at any time. If on, then only the current thread may run when the inferior is resumed. The step mode optimizes for single-stepping. It stops other threads from "seizing the prompt" by preempting the current thread while you are stepping. Other threads will only rarely (or never) get a chance to run when you step. They are more likely to run when you `next' over a function call, and they are completely free to run when you use commands like `continue', `until', or `finish'. However, unless another thread hits a breakpoint during its timeslice, they will never steal the GDB prompt away from the thread that you are debugging.<br></p>
+</blockquote>
+</div>
+</div>
+
+
+<div id="outline-container-orgc2aab9d" class="outline-2">
+<h2 id="orgc2aab9d">参考资料</h2>
+<div class="outline-text-2" id="text-orgc2aab9d">
+<ol class="org-ol">
+<li>
+<a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_39.html">gnu manual 1</a><br>
+</li>
+<li>
+<a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_24.html">gun manual 2</a><br>
+</li>
+<li>
+<a href="https://sourceware.org/gdb/onlinedocs/gdb/Threads.html">sourceware gdb onlinedocs</a><br>
+</li>
+<li>
+<a href="http://www.drdobbs.com/cpp/multithreaded-debugging-techniques/199200938?pgno=1">drdobbs.com</a><br>
+</li>
+</ol>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/gdb-ignore-received-signal/" class="u-url">在gdb调试时忽略系统信号（signal）</a></h1>
       <div class="metadata">
         
 
@@ -241,9 +372,9 @@
 <div class="highlight"><pre><span></span>cp source_path dest_path
 </pre></div>
 
-<div id="outline-container-org582a6bf" class="outline-2">
-<h2 id="org582a6bf">从远程机器向本地拷贝</h2>
-<div class="outline-text-2" id="text-org582a6bf">
+<div id="outline-container-org6b6cde5" class="outline-2">
+<h2 id="org6b6cde5">从远程机器向本地拷贝</h2>
+<div class="outline-text-2" id="text-org6b6cde5">
 <p>
 以下命令会把 <code>host</code> 主机上的 <code>src_path</code> 文件拷贝到本地 <code>dest_path</code> 目录中。<br></p>
 <div class="highlight"><pre><span></span>scp user@host:src_path dest_path
@@ -251,9 +382,9 @@
 </div>
 </div>
 
-<div id="outline-container-org7424cef" class="outline-2">
-<h2 id="org7424cef">从本地向远程机器拷贝</h2>
-<div class="outline-text-2" id="text-org7424cef">
+<div id="outline-container-orge3d74c8" class="outline-2">
+<h2 id="orge3d74c8">从本地向远程机器拷贝</h2>
+<div class="outline-text-2" id="text-orge3d74c8">
 <p>
 以下命令会把本地 <code>src_path</code> 的文件拷贝打 <code>host</code> 主机上的 <code>dest_path</code> 路径上。<br></p>
 <div class="highlight"><pre><span></span>scp src_path user@host:dest_path
@@ -261,9 +392,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgaf881b0" class="outline-2">
-<h2 id="orgaf881b0">拷贝目录下的所有文件</h2>
-<div class="outline-text-2" id="text-orgaf881b0">
+<div id="outline-container-org9a56700" class="outline-2">
+<h2 id="org9a56700">拷贝目录下的所有文件</h2>
+<div class="outline-text-2" id="text-org9a56700">
 <p>
 可以使用 <code>-r</code> 参数完成目录的递归拷贝， <code>r</code> 代表 <code>recursive</code> 递归。<br></p>
 <div class="highlight"><pre><span></span>scp -r user@host:/src_path dest_path
@@ -271,9 +402,9 @@
 </div>
 </div>
 
-<div id="outline-container-org2144504" class="outline-2">
-<h2 id="org2144504">在拷贝时限制带宽</h2>
-<div class="outline-text-2" id="text-org2144504">
+<div id="outline-container-org06983e1" class="outline-2">
+<h2 id="org06983e1">在拷贝时限制带宽</h2>
+<div class="outline-text-2" id="text-org06983e1">
 <p>
 可以使用 <code>-l</code> 参数限制传输的带宽， <code>l</code> 代表 <code>limit</code> 限制，限制带宽的单位是 <code>kbps</code> 。<br>
 命令会在将拷贝传输的速度限制为 100kbps。<br></p>
@@ -313,9 +444,9 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org5e9a707" class="outline-2">
-<h2 id="org5e9a707">关键字 <code>auto</code> 用于自动类型推导</h2>
-<div class="outline-text-2" id="text-org5e9a707">
+      <div id="outline-container-org5ad27f8" class="outline-2">
+<h2 id="org5ad27f8">关键字 <code>auto</code> 用于自动类型推导</h2>
+<div class="outline-text-2" id="text-org5ad27f8">
 <div class="highlight"><pre><span></span><span class="k">auto</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>     <span class="c1">// int</span>
 <span class="k">auto</span> <span class="n">c</span><span class="o">=</span><span class="sc">'a'</span><span class="p">;</span>   <span class="c1">// char</span>
 <span class="k">auto</span> <span class="n">d</span><span class="o">=</span><span class="mf">0.5</span><span class="p">;</span>   <span class="c1">// double</span>
@@ -330,10 +461,10 @@
 </div>
 </div>
 
-<div id="outline-container-orgc224a54" class="outline-2">
-<h2 id="orgc224a54">
+<div id="outline-container-org563413e" class="outline-2">
+<h2 id="org563413e">
 <code>auto</code> 类型推导并不会指定 <code>const</code> 和 <code>volatile</code> 属性</h2>
-<div class="outline-text-2" id="text-orgc224a54">
+<div class="outline-text-2" id="text-org563413e">
 <p>
 如果需要限定声明的变量为 <code>const</code> 和 <code>volatile</code> 属性，需要额外提供相应的关键字限定。因为编译器并不能推断出声明的变量是否具有常值属性和易失属性。<br></p>
 <div class="highlight"><pre><span></span><span class="k">volatile</span> <span class="k">auto</span> <span class="n">num</span><span class="o">=</span><span class="mi">5</span><span class="p">;</span>           <span class="c1">// volatile int</span>
@@ -343,9 +474,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgb63daa9" class="outline-2">
-<h2 id="orgb63daa9">关键字 <code>decltype</code> 用于获取一个对量的类型</h2>
-<div class="outline-text-2" id="text-orgb63daa9">
+<div id="outline-container-orga457dd9" class="outline-2">
+<h2 id="orga457dd9">关键字 <code>decltype</code> 用于获取一个对量的类型</h2>
+<div class="outline-text-2" id="text-orga457dd9">
 <p>
 使用 <code>decltype</code> 存储一个对象或表达式的类型， <code>decltype</code> 可以看做是 <code>auto</code> 的补充。<br></p>
 <div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vecNumbers</span><span class="p">;</span>
@@ -355,9 +486,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgb482304" class="outline-2">
-<h2 id="orgb482304">函数返回值类型推导</h2>
-<div class="outline-text-2" id="text-orgb482304">
+<div id="outline-container-orgae2ded7" class="outline-2">
+<h2 id="orgae2ded7">函数返回值类型推导</h2>
+<div class="outline-text-2" id="text-orgae2ded7">
 <p>
 在C++11中可以使用 <code>auto</code> 和 <code>decltype</code> 完成函数返回类型的推导。<br>
 旧的函数声明格式 <code>return_type func_name(param_type param, ...);</code><br>
@@ -594,41 +725,41 @@ ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
       <p>
 tcpdump常用于网络抓包，能够将抓取的包保存下来，这样就能进一步深入分析。抓包保存的文件可以使用tcpdump进行查看，也可以借助第三方软件（如wireshark）进行辅助分析。<br></p>
 
-<div id="outline-container-org5900204" class="outline-2">
-<h2 id="org5900204">1. 抓取指定网络设备上的包</h2>
-<div class="outline-text-2" id="text-org5900204">
+<div id="outline-container-orga7884c6" class="outline-2">
+<h2 id="orga7884c6">1. 抓取指定网络设备上的包</h2>
+<div class="outline-text-2" id="text-orga7884c6">
 <p>
 抓取网卡eth0上的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org2349d61" class="outline-2">
-<h2 id="org2349d61">2. 限制抓包的数量</h2>
-<div class="outline-text-2" id="text-org2349d61">
+<div id="outline-container-orge7b64ad" class="outline-2">
+<h2 id="orge7b64ad">2. 限制抓包的数量</h2>
+<div class="outline-text-2" id="text-orge7b64ad">
 <p>
 只抓取5个包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -c 5 -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org4ef32f5" class="outline-2">
-<h2 id="org4ef32f5">3. 将抓取的包以ASCII的方式打印出来</h2>
-<div class="outline-text-2" id="text-org4ef32f5">
+<div id="outline-container-orgc383b05" class="outline-2">
+<h2 id="orgc383b05">3. 将抓取的包以ASCII的方式打印出来</h2>
+<div class="outline-text-2" id="text-orgc383b05">
 <div class="highlight"><pre><span></span>tcpdump -A -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org2b49f6f" class="outline-2">
-<h2 id="org2b49f6f">4. 将抓取的包以十六进制的方式打印出来</h2>
-<div class="outline-text-2" id="text-org2b49f6f">
+<div id="outline-container-orgc60e941" class="outline-2">
+<h2 id="orgc60e941">4. 将抓取的包以十六进制的方式打印出来</h2>
+<div class="outline-text-2" id="text-orgc60e941">
 <div class="highlight"><pre><span></span>tcpdump -XX -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgc19f130" class="outline-2">
-<h2 id="orgc19f130">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
-<div class="outline-text-2" id="text-orgc19f130">
+<div id="outline-container-org1c583d5" class="outline-2">
+<h2 id="org1c583d5">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
+<div class="outline-text-2" id="text-org1c583d5">
 <p>
 增加 <code>-t</code> 参数能够将抓取到的包中的时间以方便阅读的形式打印出来，使用 <code>-tttt</code> 参数能够将包中的时间戳以更详细的方式打印出来。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -t -i eth0
@@ -636,23 +767,23 @@ tcpdump -tttt -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org92f3c4f" class="outline-2">
-<h2 id="org92f3c4f">6. 将抓取的包写入到文件中</h2>
-<div class="outline-text-2" id="text-org92f3c4f">
+<div id="outline-container-org57f674c" class="outline-2">
+<h2 id="org57f674c">6. 将抓取的包写入到文件中</h2>
+<div class="outline-text-2" id="text-org57f674c">
 <div class="highlight"><pre><span></span>tcpdump -w netdump.pcap -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgdb07186" class="outline-2">
-<h2 id="orgdb07186">7. 读取抓到的包</h2>
-<div class="outline-text-2" id="text-orgdb07186">
+<div id="outline-container-org48c2735" class="outline-2">
+<h2 id="org48c2735">7. 读取抓到的包</h2>
+<div class="outline-text-2" id="text-org48c2735">
 <div class="highlight"><pre><span></span>tcpdump -r netdump.pcap
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org3982262" class="outline-2">
-<h2 id="org3982262">8. 在抓到的包中显示ip地址</h2>
-<div class="outline-text-2" id="text-org3982262">
+<div id="outline-container-org9dd0640" class="outline-2">
+<h2 id="org9dd0640">8. 在抓到的包中显示ip地址</h2>
+<div class="outline-text-2" id="text-org9dd0640">
 <p>
 增加 <code>-n</code> 参数不会解析主机名，增加 <code>-nn</code> 参数不会解析主机名和端口名<br></p>
 <div class="highlight"><pre><span></span>tcpdump -n -i eth0
@@ -660,16 +791,16 @@ tcpdump -nn -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgb3b6917" class="outline-2">
-<h2 id="orgb3b6917">9. 以绝对值显示包的ISN号</h2>
-<div class="outline-text-2" id="text-orgb3b6917">
+<div id="outline-container-org51ebf21" class="outline-2">
+<h2 id="org51ebf21">9. 以绝对值显示包的ISN号</h2>
+<div class="outline-text-2" id="text-org51ebf21">
 <div class="highlight"><pre><span></span>tcpdump -S -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org07c09da" class="outline-2">
-<h2 id="org07c09da">10. 对抓取到的包显示更详细的信息</h2>
-<div class="outline-text-2" id="text-org07c09da">
+<div id="outline-container-org55e8a9b" class="outline-2">
+<h2 id="org55e8a9b">10. 对抓取到的包显示更详细的信息</h2>
+<div class="outline-text-2" id="text-org55e8a9b">
 <p>
 参数 <code>-v</code> 是verbose的缩写，以下命令表示对抓取到的包显示更详细的信息。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -v -i eth0
@@ -678,9 +809,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org15be003" class="outline-2">
-<h2 id="org15be003">11. 对抓到的包进行协议类型过滤</h2>
-<div class="outline-text-2" id="text-org15be003">
+<div id="outline-container-orgb2404e2" class="outline-2">
+<h2 id="orgb2404e2">11. 对抓到的包进行协议类型过滤</h2>
+<div class="outline-text-2" id="text-orgb2404e2">
 <p>
 支持的协议类型有：fddi, tr, wlan, ip, ip6, arp, rarp, decnet, tcp, udp<br>
 以下命令只会抓取网卡eth0上的arp包<br></p>
@@ -688,9 +819,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgd8edbed" class="outline-2">
-<h2 id="orgd8edbed">12. 在抓包时对包进行大小过滤</h2>
-<div class="outline-text-2" id="text-orgd8edbed">
+<div id="outline-container-org6cd1893" class="outline-2">
+<h2 id="org6cd1893">12. 在抓包时对包进行大小过滤</h2>
+<div class="outline-text-2" id="text-org6cd1893">
 <p>
 下面的命令会分别抓取大于1024字节和小于1024字节的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0 greater 1024
@@ -698,16 +829,16 @@ tcpdump -i eth0 less 1024
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orge9151e6" class="outline-2">
-<h2 id="orge9151e6">13. 抓取指定端口上的包</h2>
-<div class="outline-text-2" id="text-orge9151e6">
+<div id="outline-container-org51860c3" class="outline-2">
+<h2 id="org51860c3">13. 抓取指定端口上的包</h2>
+<div class="outline-text-2" id="text-org51860c3">
 <div class="highlight"><pre><span></span>tcpdump -i eth0 port 22
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org7702ec3" class="outline-2">
-<h2 id="org7702ec3">14. 抓取发往指定目的和端口上包</h2>
-<div class="outline-text-2" id="text-org7702ec3">
+<div id="outline-container-org68abd04" class="outline-2">
+<h2 id="org68abd04">14. 抓取发往指定目的和端口上包</h2>
+<div class="outline-text-2" id="text-org68abd04">
 <p>
 可以使用 <code>and</code> 和 <code>or</code> 对过滤条件进行组合以实现精确的抓包。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -w net_dump.pcap -i eth0 dst 10.181.140.216 and port 22
@@ -715,9 +846,9 @@ tcpdump -i eth0 less 1024
 </div>
 </div>
 
-<div id="outline-container-org5afa3a3" class="outline-2">
-<h2 id="org5afa3a3">常用tcpdump命令示例</h2>
-<div class="outline-text-2" id="text-org5afa3a3">
+<div id="outline-container-org2eb304c" class="outline-2">
+<h2 id="org2eb304c">常用tcpdump命令示例</h2>
+<div class="outline-text-2" id="text-org2eb304c">
 <div class="highlight"><pre><span></span>tcpdump –i any 'port 8888'
 tcpdump –i any 'tcp port 8888'
 tcpdump –i any 'tcp src port 8888'
@@ -727,9 +858,9 @@ tcpdump -i any 'src host 127.0.0.1 and tcp src port 12345' -XX -nn -vv
 </div>
 </div>
 
-<div id="outline-container-orgc62e02a" class="outline-2">
-<h2 id="orgc62e02a">参考资料</h2>
-<div class="outline-text-2" id="text-orgc62e02a">
+<div id="outline-container-orgf8a1dc5" class="outline-2">
+<h2 id="orgf8a1dc5">参考资料</h2>
+<div class="outline-text-2" id="text-orgf8a1dc5">
 <ul class="org-ul">
 <li>
 <a href="https://danielmiessler.com/study/tcpdump/">danielmiessler.com tcpdump</a><br>
@@ -821,25 +952,25 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 <p>
 下面就给出了几种常见的用法，需要注意的是有些指令需要root权限执行。<br></p>
 
-<div id="outline-container-orgea0945e" class="outline-2">
-<h2 id="orgea0945e">1. 查看打开指定文件的进程</h2>
-<div class="outline-text-2" id="text-orgea0945e">
+<div id="outline-container-orgf88773e" class="outline-2">
+<h2 id="orgf88773e">1. 查看打开指定文件的进程</h2>
+<div class="outline-text-2" id="text-orgf88773e">
 <div class="highlight"><pre><span></span>lsof /var/syslog.log
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgff4729b" class="outline-2">
-<h2 id="orgff4729b">2. 查看指定目录下打开的文件</h2>
-<div class="outline-text-2" id="text-orgff4729b">
+<div id="outline-container-org568d8d7" class="outline-2">
+<h2 id="org568d8d7">2. 查看指定目录下打开的文件</h2>
+<div class="outline-text-2" id="text-org568d8d7">
 <div class="highlight"><pre><span></span>lsof +D /home/
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org1a845f8" class="outline-2">
-<h2 id="org1a845f8">3. 查看以指定进程名所有打开的文件</h2>
-<div class="outline-text-2" id="text-org1a845f8">
+<div id="outline-container-org0275c66" class="outline-2">
+<h2 id="org0275c66">3. 查看以指定进程名所有打开的文件</h2>
+<div class="outline-text-2" id="text-org0275c66">
 <p>
 使用 <code>-c</code> 命令能够查看指定进程名使用的文件，允许在一个命令行指令中使用多个 <code>-c</code> 参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -c procname
@@ -847,9 +978,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org793428e" class="outline-2">
-<h2 id="org793428e">4. 查看使用指定挂载点的进程</h2>
-<div class="outline-text-2" id="text-org793428e">
+<div id="outline-container-org417691f" class="outline-2">
+<h2 id="org417691f">4. 查看使用指定挂载点的进程</h2>
+<div class="outline-text-2" id="text-org417691f">
 <p>
 在停止挂载某个目录时，系统会告诉我们“设备资源繁忙”，所以我们需要找出使用挂载点的程序，终止这些进程，解除目录的占用状态。<br></p>
 <div class="highlight"><pre><span></span>lsof /home
@@ -861,9 +992,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orge96327d" class="outline-2">
-<h2 id="orge96327d">5. 查看指定用户打开的文件</h2>
-<div class="outline-text-2" id="text-orge96327d">
+<div id="outline-container-org7a9393e" class="outline-2">
+<h2 id="org7a9393e">5. 查看指定用户打开的文件</h2>
+<div class="outline-text-2" id="text-org7a9393e">
 <div class="highlight"><pre><span></span>lsof -u username
 </pre></div>
 <p>
@@ -873,17 +1004,17 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org923b7fc" class="outline-2">
-<h2 id="org923b7fc">6. 查看指定进程打开的文件</h2>
-<div class="outline-text-2" id="text-org923b7fc">
+<div id="outline-container-orgb8effa3" class="outline-2">
+<h2 id="orgb8effa3">6. 查看指定进程打开的文件</h2>
+<div class="outline-text-2" id="text-orgb8effa3">
 <div class="highlight"><pre><span></span>lsof -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgb1b8c72" class="outline-2">
-<h2 id="orgb1b8c72">7. 终止属于某个用户的所有进程</h2>
-<div class="outline-text-2" id="text-orgb1b8c72">
+<div id="outline-container-org58910eb" class="outline-2">
+<h2 id="org58910eb">7. 终止属于某个用户的所有进程</h2>
+<div class="outline-text-2" id="text-org58910eb">
 <div class="highlight"><pre><span></span>kill `lsof -t -u username`
 </pre></div>
 <p>
@@ -893,9 +1024,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org532a42f" class="outline-2">
-<h2 id="org532a42f">8. 让结果同时满足多个选项</h2>
-<div class="outline-text-2" id="text-org532a42f">
+<div id="outline-container-org071049e" class="outline-2">
+<h2 id="org071049e">8. 让结果同时满足多个选项</h2>
+<div class="outline-text-2" id="text-org071049e">
 <p>
 默认情况下，多个参数是以或（or）进行操作的，可以使用 <code>-a</code> 选项让结果同时满足多个参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -a -u username -c procname
@@ -903,9 +1034,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org29adb6c" class="outline-2">
-<h2 id="org29adb6c">9. 让命令重复执行</h2>
-<div class="outline-text-2" id="text-org29adb6c">
+<div id="outline-container-org67efd4b" class="outline-2">
+<h2 id="org67efd4b">9. 让命令重复执行</h2>
+<div class="outline-text-2" id="text-org67efd4b">
 <p>
 可以使用 <code>-r</code> 参数让命令重复执行。以下命令会每隔5s执行一次，每次的执行结果会用 “====” 分割开。<br></p>
 <div class="highlight"><pre><span></span>lsof -u username -c procname -a -r5
@@ -913,9 +1044,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org325eeef" class="outline-2">
-<h2 id="org325eeef">10. 列出所有的网络连接</h2>
-<div class="outline-text-2" id="text-org325eeef">
+<div id="outline-container-orga84edc1" class="outline-2">
+<h2 id="orga84edc1">10. 列出所有的网络连接</h2>
+<div class="outline-text-2" id="text-orga84edc1">
 <div class="highlight"><pre><span></span>lsof -i
 </pre></div>
 <p>
@@ -929,186 +1060,39 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org45972da" class="outline-2">
-<h2 id="org45972da">11. 列出指定进程使用的网络连接</h2>
-<div class="outline-text-2" id="text-org45972da">
+<div id="outline-container-orga8e804f" class="outline-2">
+<h2 id="orga8e804f">11. 列出指定进程使用的网络连接</h2>
+<div class="outline-text-2" id="text-orga8e804f">
 <div class="highlight"><pre><span></span>lsof -i -a -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org45dd31e" class="outline-2">
-<h2 id="org45dd31e">12. 查看指定端口上的监听</h2>
-<div class="outline-text-2" id="text-org45dd31e">
+<div id="outline-container-org5e37d5c" class="outline-2">
+<h2 id="org5e37d5c">12. 查看指定端口上的监听</h2>
+<div class="outline-text-2" id="text-org5e37d5c">
 <div class="highlight"><pre><span></span>lsof -i :portid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org9ee89dd" class="outline-2">
-<h2 id="org9ee89dd">13. 列出所有tcp和udp连接</h2>
-<div class="outline-text-2" id="text-org9ee89dd">
+<div id="outline-container-orge4281a1" class="outline-2">
+<h2 id="orge4281a1">13. 列出所有tcp和udp连接</h2>
+<div class="outline-text-2" id="text-orge4281a1">
 <div class="highlight"><pre><span></span>lsof -i tcp; lsof -i udp
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org689d84a" class="outline-2">
-<h2 id="org689d84a">14. 列出所有的网络文件系统</h2>
-<div class="outline-text-2" id="text-org689d84a">
+<div id="outline-container-org64faca7" class="outline-2">
+<h2 id="org64faca7">14. 列出所有的网络文件系统</h2>
+<div class="outline-text-2" id="text-org64faca7">
 <p>
 网络文件系统（network file system）<br></p>
 <div class="highlight"><pre><span></span>lsof -N -u username
 </pre></div>
 </div>
 </div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/differences-among-overload-override-and-hide/" class="u-url">重载、覆盖和隐藏的区别</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-03-19T21:51:03+08:00" itemprop="datePublished" title="2018-03-19 21:51">Mar 19 2018</time>
-</div>
-
-        
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/differences-among-overload-override-and-hide/#disqus_thread" data-disqus-identifier="cache/archives/2018/differences-among-overload-override-and-hide.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <p>
-<b>重载（overload）</b> ：就是函数或者方法有相同的名称，但是参数列表不相同的情形，这样的同名不同参数的函数或者方法之间，互相称之为重载函数或者方法。<br>
-多个重载函数在调用的时候根据函数的参数来区别不同的函数。<br>
-关键点：函数名相同，参数表不同<br></p>
-
-<p>
-<b>覆盖（override）</b> ：是指在派生类中重新对基类中的虚函数重新实现，即函数名和参数都一样，只是函数的实现体不一样。<br>
-关键词：派生类中，虚函数，函数名和参数表完全相同<br></p>
-
-<p>
-<b>隐藏（hide）</b> ：派生类中的函数把基类中相同名字的函数屏蔽掉了。<br>
-隐藏一词可以这么理解:在调用一个类的成员函数的时候,编译器会沿着类的继承链逐级的向上查找函数的定义,如果找到了那么就停止查找了,所以如果一个派生类和一个基类都有同一个同名(暂且不论参数是否相同)的函数,而编译器最终选择了在派生类中的函数,那么我们就说这个派生类的成员函数"隐藏"了基类的成员函数,也就是说它阻止了编译器继续向上查找函数的定义.<br></p>
-
-
-<p>
-关于这三种情况的示例代码如下<br></p>
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;iostream.h&gt;</span><span class="cp"></span>
-<span class="k">class</span> <span class="nc">Base</span>
-<span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::f(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::g(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">h</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::h(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-
-<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span>
-<span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::f(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::g(int) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">h</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::h(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-</pre></div>
-
-<p>
-从以上代码能够看出：<br>
-（1）函数Derived::f(float)覆盖了Base::f(float)。<br>
-（2）函数Derived::g(int)隐藏了Base::g(float)，而不是重载。<br>
-（3）函数Derived::h(float)隐藏了Base::h(float)，而不是覆盖。<br></p>
-
-<p>
-考虑代码在运行时的结果：<br></p>
-<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="n">Derived</span>  <span class="n">d</span><span class="p">;</span>
-  <span class="n">Base</span> <span class="o">*</span><span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
-  <span class="n">Derived</span> <span class="o">*</span><span class="n">pd</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
-
-  <span class="c1">// Good : behavior depends solely on type of the object</span>
-  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14</span>
-  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14</span>
-
-  <span class="c1">// Bad : behavior depends on type of the pointer</span>
-  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::g(float) 3.14</span>
-  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::g(int) 3        (surprise!)</span>
-
-  <span class="c1">// Bad : behavior depends on type of the pointer</span>
-  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">h</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::h(float) 3.14      (surprise!)</span>
-  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">h</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::h(float) 3.14</span>
-<span class="p">}</span>
-</pre></div>
-
-<p>
-在第一种调用中，函数的行为取决于指针所指向的对象。在第二第三种调用中，函数的行为取决于指针的类型。所以说，隐藏破坏了面向对象编程中多态这一特性，会使得开发人员产生混乱。<br></p>
-
-
-<p>
-<b>函数接口设计注意要点</b><br>
-在设计基类的函数接口时，不要出现既是虚函数，又对该虚函数进行了重载的情况。这样会对派生类的多态函数实现造成不便。<br>
-示例代码如下<br></p>
-<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Base</span>
-<span class="p">{</span>
-  <span class="k">virtual</span> <span class="n">foo</span><span class="p">();</span>
-  <span class="k">virtual</span> <span class="nf">foo</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span>
-<span class="p">{</span>
-  <span class="k">virtual</span> <span class="n">foo</span><span class="p">();</span>
-<span class="p">}</span>
-</pre></div>
-<p>
-从以上代码能够看出：<br></p>
-<ol class="org-ol">
-<li>
-<code>Derived::foo()</code> 与 <code>Base::foo()</code> 构成了多态关系<br>
-</li>
-<li>
-<code>Derived::foo()</code> 隐藏了 <code>Base::foo(int)</code><br>
-</li>
-</ol>
-<p>
-所以，如果派生类希望实现 <code>foo()</code> 函数的多态，也就必须实现 <code>foo(int)</code> 的多态，否则就会出现隐藏。<br>
-如果在现有代码中已经发生了上述 <code>Base</code> 的情况，在不改变原有代码的情况下，可以使用在派生类中使用这样的语法 <code>using Base::foo;</code> ，这会将基类中所有的名为 <code>foo</code> 的函数引入到派生类中来。<br></p>
     </div>
 
   </article>
