@@ -72,7 +72,148 @@
 <div class="postindex">
 
 
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/non-blocking-socket-connect-tips/" class="u-url">客户端使用非阻塞socket进行connect的流程</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/static-member-initialization-and-private-member-function/" class="u-url">静态成员变量初始化相关问题</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-09-04T23:37:37+08:00" itemprop="datePublished" title="2018-09-04 23:37">Sep 04 2018</time>
+</div>
+
+        
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/static-member-initialization-and-private-member-function/#disqus_thread" data-disqus-identifier="cache/archives/2018/static-member-initialization-and-private-member-function.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
+        <li><a class="tag p-category" href="/tags/syntax/" rel="tag">syntax</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-org005b03c" class="outline-2">
+<h2 id="org005b03c">引言</h2>
+<div class="outline-text-2" id="text-org005b03c">
+<p>
+这篇文章的起因是出于对于 <code>C++</code> 饿汉单例模式代码的一些疑问，查阅了一些资料。在仔细研究后，我发现在一些基础概念的理解还是存在偏差。<br>
+下面请看这样的一段代码，能看出其中有那些不太“正常”的语句么。<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Singleton</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="k">static</span> <span class="n">Singleton</span><span class="o">*</span> <span class="n">getInstance</span><span class="p">();</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="n">Singleton</span><span class="p">()</span> <span class="p">{}</span>
+    <span class="k">static</span> <span class="n">Singleton</span><span class="o">*</span> <span class="n">instance</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">Singleton</span><span class="o">*</span> <span class="n">Singleton</span><span class="o">::</span><span class="n">instance</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Singleton</span><span class="p">();</span>
+<span class="n">Singleton</span><span class="o">*</span> <span class="n">Singleton</span><span class="o">::</span><span class="n">getInstance</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">instance</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgecba82f" class="outline-2">
+<h2 id="orgecba82f">私有静态成员的初始化</h2>
+<div class="outline-text-2" id="text-orgecba82f">
+<p>
+上面的代码是饿汉单例模式的 <code>C++</code> 的实现，在没有查阅资料之前，我对其中私有静态成员变量的初始化存疑。主要有以下两点：<br></p>
+<ul class="org-ul">
+<li>为什么私有变量能够在类外被修改<br>
+</li>
+<li>为什么私有构造函数能够在类外被调用<br>
+</li>
+</ul>
+<p>
+在我之前的知识积累中， <b>私有的成员变量或成员函数是不能够在类外被访问的</b> 。那么为什么以上代码没有问题呢？<br></p>
+
+<p>
+在C++标准中找到了下面的一段话(可以在 <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">C++11 standard</a> 的 9.4.2节 或  <a href="http://eel.is/c++draft/class.static.data#2">C++ standard working draft</a> 的 10.3.9.2节 中找到)<br></p>
+<blockquote>
+<p>
+The initializer expression in the definition of a static data member is in the scope of its class.<br></p>
+</blockquote>
+<p>
+这句话的意思是：静态成员变量的初始化是被看做为它自身的类域中的（ <del>翻译的可能不是很准</del> ）。这样就不难理解为什么私有的静态成员变量能够在其类外被初始化了，由其私有构造函数进行构造也能说的通了。<br></p>
+
+
+<p>
+<b>同样</b> ,在C++标准中给出了下面这样的示例代码：<br></p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">process</span> <span class="p">{</span>
+  <span class="k">static</span> <span class="n">process</span><span class="o">*</span> <span class="n">run_chain</span><span class="p">;</span>
+  <span class="k">static</span> <span class="n">process</span><span class="o">*</span> <span class="n">running</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">process</span><span class="o">*</span> <span class="n">process</span><span class="o">::</span><span class="n">running</span> <span class="o">=</span> <span class="n">get_main</span><span class="p">();</span>
+<span class="n">process</span><span class="o">*</span> <span class="n">process</span><span class="o">::</span><span class="n">run_chain</span> <span class="o">=</span> <span class="n">running</span><span class="p">;</span>
+</pre></div>
+
+<p>
+给出的说明如下：<br></p>
+<blockquote>
+<p>
+The static data member <code>run_chain</code> of class process is defined in global scope; the notation <code>process​::​run_chain</code> specifies that the member <code>run_chain</code> is a member of class <code>process</code> and in the scope of class <code>process</code>. In the static data member definition, the initializer expression refers to the static data member running of class <code>process</code>.<br></p>
+</blockquote>
+<p>
+静态成员 <code>run_chain</code> 定义在全局域；而 <code>process::run_chain</code> 则表示 <code>run_chain</code> 是 <code>process</code> 类的成员变量，从而处在 <code>process</code> 类的作用域中。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgf3725e1" class="outline-2">
+<h2 id="orgf3725e1">私有构造函数</h2>
+<div class="outline-text-2" id="text-orgf3725e1">
+<p>
+在查阅资料时，我发现 Peter 的 <a href="https://stackoverflow.com/a/41361967">描述</a> 纠正了我对私有构造函数的一些看法。<br></p>
+<blockquote>
+<p>
+The point of a <code>private</code> constructor is not preventing object construction. It is about controlling which code can access the constructor, and therefore limiting which code to create an object that is an instance of that class. A <code>private</code> constructor is accessible to all member functions ( <code>static</code> or otherwise) of the class, and to all declared <code>friend</code> s of the class (which may be individual functions, or other classes) - so any of those can create an instance of the class using a <code>private</code> constructor (assuming the constructor is defined).<br></p>
+</blockquote>
+<p>
+私有构造函数的目的并不是禁止对象构造，其目的在于控制哪些代码能够调用这个构造函数，进而限制类对象的创建。私有的构造函数可以被该类的所有成员函数（静态或非静态的）调用，该类的友元类或友元方法也能访问该类的私有函数，所以在上述情况中都可以通过私有的构造函数实例化出类对象。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org94a4d6c" class="outline-2">
+<h2 id="org94a4d6c">参考资料</h2>
+<div class="outline-text-2" id="text-org94a4d6c">
+<ul class="org-ul">
+<li>
+<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">ISO C++11 standard</a><br>
+</li>
+<li>
+<a href="http://eel.is/c++draft/class.static.data#2">ISO C++ standard working draft</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/38583989/access-to-private-static-function-during-static-member-initialization">stackoverflow.com - access to private static function…</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/41361223/why-private-constructor-prevents-object-creation-c">stackoverflow.com - private constructor</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/7857989/static-member-variable-when-declared-private">stackoverflow.com - static member variable when declared private</a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/language/static#Static_data_members">cppreference.com - static data members</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/non-blocking-socket-connect-tips/" class="u-url">客户端使用非阻塞socket进行connect的流程</a></h1>
       <div class="metadata">
         
 
@@ -104,17 +245,17 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org4c6e01a" class="outline-2">
-<h2 id="org4c6e01a">问题</h2>
-<div class="outline-text-2" id="text-org4c6e01a">
+      <div id="outline-container-org43afc04" class="outline-2">
+<h2 id="org43afc04">问题</h2>
+<div class="outline-text-2" id="text-org43afc04">
 <p>
 使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
 </div>
 </div>
 
-<div id="outline-container-org2902836" class="outline-2">
-<h2 id="org2902836">解答</h2>
-<div class="outline-text-2" id="text-org2902836">
+<div id="outline-container-orgb23e383" class="outline-2">
+<h2 id="orgb23e383">解答</h2>
+<div class="outline-text-2" id="text-orgb23e383">
 <p>
 客户端建立连接的示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">...);</span>
@@ -164,9 +305,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgfae2a1d" class="outline-2">
-<h2 id="orgfae2a1d">参考资料</h2>
-<div class="outline-text-2" id="text-orgfae2a1d">
+<div id="outline-container-orgcc2604b" class="outline-2">
+<h2 id="orgcc2604b">参考资料</h2>
+<div class="outline-text-2" id="text-orgcc2604b">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
@@ -208,9 +349,9 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org799db79" class="outline-2">
-<h2 id="org799db79">引言</h2>
-<div class="outline-text-2" id="text-org799db79">
+      <div id="outline-container-orgd8fba11" class="outline-2">
+<h2 id="orgd8fba11">引言</h2>
+<div class="outline-text-2" id="text-orgd8fba11">
 <p>
 在学习前端的过程中，我开始接触到许多开发框架或开发工具，这些工具让我开始眼花缭乱。使用常规的html/css/js就已经能够开发出这种网页了，所以我问自己，为什么要学习这些框架或工具，这些库是用来解决什么问题的。想明白这个问题，我学习的目的就更加明确，在遇到一些开发情景时，也能够快速准确地挑选出应该使用的框架。<br></p>
 
@@ -219,9 +360,9 @@
 </div>
 </div>
 
-<div id="outline-container-org08c668c" class="outline-2">
-<h2 id="org08c668c">为什么要使用jQuery</h2>
-<div class="outline-text-2" id="text-org08c668c">
+<div id="outline-container-org09c2229" class="outline-2">
+<h2 id="org09c2229">为什么要使用jQuery</h2>
+<div class="outline-text-2" id="text-org09c2229">
 <p>
 jQuery是一个轻量级js库，它有如下特性：<br></p>
 <ul class="org-ul">
@@ -241,9 +382,9 @@ jQuery是一个轻量级js库，它有如下特性：<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd52860e" class="outline-2">
-<h2 id="orgd52860e">为什么要使用SASS</h2>
-<div class="outline-text-2" id="text-orgd52860e">
+<div id="outline-container-orga6b3cdf" class="outline-2">
+<h2 id="orga6b3cdf">为什么要使用SASS</h2>
+<div class="outline-text-2" id="text-orga6b3cdf">
 <p>
 SASS是一种CSS预编译格式，它最终会编译成CSS。<br>
 SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操作，函数操作，样式模板（mixin）等强大的特性。它能够让开发人员更方便地编写CSS。SASS支持 <code>import</code> 关键字，这样就能够很方便地对样式进行模块化设计。<br></p>
@@ -256,9 +397,9 @@ SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操�
 </div>
 </div>
 
-<div id="outline-container-orge29fbe3" class="outline-2">
-<h2 id="orge29fbe3">为什么要使用Bootstrap</h2>
-<div class="outline-text-2" id="text-orge29fbe3">
+<div id="outline-container-org1dfb916" class="outline-2">
+<h2 id="org1dfb916">为什么要使用Bootstrap</h2>
+<div class="outline-text-2" id="text-org1dfb916">
 <p>
 Bootstrap是一个用于快速开发网页的前端框架。以我目前的理解来看，它更像是一个网页样式框架。<br></p>
 <ul class="org-ul">
@@ -274,9 +415,9 @@ Bootstrap是一个用于快速开发网页的前端框架。以我目前的理�
 </div>
 </div>
 
-<div id="outline-container-orgf4bd139" class="outline-2">
-<h2 id="orgf4bd139">为什么要使用React</h2>
-<div class="outline-text-2" id="text-orgf4bd139">
+<div id="outline-container-org2722d0e" class="outline-2">
+<h2 id="org2722d0e">为什么要使用React</h2>
+<div class="outline-text-2" id="text-org2722d0e">
 <p>
 DOM操作对性能的影响很大，频繁的DOM操作会使网页渲染的速度变慢，React主要解决了这个问题。<br>
 React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新渲染。<br></p>
@@ -316,9 +457,9 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 </div>
 
 
-<div id="outline-container-orgeb48dd5" class="outline-2">
-<h2 id="orgeb48dd5">参考资料</h2>
-<div class="outline-text-2" id="text-orgeb48dd5">
+<div id="outline-container-org84ce764" class="outline-2">
+<h2 id="org84ce764">参考资料</h2>
+<div class="outline-text-2" id="text-org84ce764">
 <ol class="org-ol">
 <li>
 <a href="https://www.w3schools.com/jquery/jquery_intro.asp">w3schools jQuery intro</a><br>
@@ -371,8 +512,8 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgc2da9ea" class="outline-2">
-<h2 id="orgc2da9ea">
+      <div id="outline-container-orgfd9d9b8" class="outline-2">
+<h2 id="orgfd9d9b8">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -381,13 +522,13 @@ js也是具有OOP（object oriented programming）特性的，OOP在构建一些
 </div>
 </div>
 
-<div id="outline-container-orga7a1f2c" class="outline-2">
-<h2 id="orga7a1f2c">
+<div id="outline-container-org4fdd7cd" class="outline-2">
+<h2 id="org4fdd7cd">
 <span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-org6cb4200" class="outline-3">
-<h3 id="org6cb4200">
+<div id="outline-container-org3532d92" class="outline-3">
+<h3 id="org3532d92">
 <span class="section-number-3">2.1</span> 创建对象（object）</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -407,8 +548,8 @@ js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关�
 </div>
 </div>
 
-<div id="outline-container-org65fd236" class="outline-3">
-<h3 id="org65fd236">
+<div id="outline-container-orgc7b5536" class="outline-3">
+<h3 id="orgc7b5536">
 <span class="section-number-3">2.2</span> 类（class）的声明</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -429,8 +570,8 @@ crow instanceof Bird; // =&gt; true
 </div>
 </div>
 
-<div id="outline-container-orga614b2f" class="outline-3">
-<h3 id="orga614b2f">
+<div id="outline-container-orgec30419" class="outline-3">
+<h3 id="orgec30419">
 <span class="section-number-3">2.3</span> 类的共有成员</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
@@ -458,8 +599,8 @@ js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还
 </div>
 </div>
 
-<div id="outline-container-orgcfa552c" class="outline-3">
-<h3 id="orgcfa552c">
+<div id="outline-container-org0206f18" class="outline-3">
+<h3 id="org0206f18">
 <span class="section-number-3">2.4</span> 类的私有成员</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
@@ -480,8 +621,8 @@ ducky.getHatchedEggCount(); // returns 10
 </div>
 </div>
 
-<div id="outline-container-org6a0a6c8" class="outline-3">
-<h3 id="org6a0a6c8">
+<div id="outline-container-org67fe5b4" class="outline-3">
+<h3 id="org67fe5b4">
 <span class="section-number-3">2.5</span> 类的继承和派生</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
@@ -492,8 +633,8 @@ Bird.prototype.constructor = Bird;
 </div>
 </div>
 
-<div id="outline-container-org1beac32" class="outline-3">
-<h3 id="org1beac32">
+<div id="outline-container-orgc62727a" class="outline-3">
+<h3 id="orgc62727a">
 <span class="section-number-3">2.6</span> 类的覆盖</h3>
 <div class="outline-text-3" id="text-2-6">
 <p>
@@ -523,8 +664,8 @@ Bird.prototype.fly = function() {
 </div>
 
 
-<div id="outline-container-org9017976" class="outline-2">
-<h2 id="org9017976">
+<div id="outline-container-org01eec03" class="outline-2">
+<h2 id="org01eec03">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
@@ -568,9 +709,9 @@ Bird.prototype.fly = function() {
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org823a74c" class="outline-2">
-<h2 id="org823a74c">引言</h2>
-<div class="outline-text-2" id="text-org823a74c">
+      <div id="outline-container-org0edaa1a" class="outline-2">
+<h2 id="org0edaa1a">引言</h2>
+<div class="outline-text-2" id="text-org0edaa1a">
 <p>
 近在FreeCodeCamp(FCC)学习前端的课程，其中有一节就是讲的 <code>regexp</code> ，也就是正则表达式，之前我零星地了解过一些正则表达式的相关知识，不足以对正则表达式得出一个完整的认识。FCC的教程循序渐进，由简到繁，在教学中结合练习，非常适合初学者的学习过程。如何你的英文能够达到阅读技术类文献的水平，又正好想学习一下正则表达式，我推荐你试一下FCC的正则表达式教程，花3~4个小时就能够对正则表达式有个完整的理解。<br></p>
 
@@ -579,9 +720,9 @@ Bird.prototype.fly = function() {
 </div>
 </div>
 
-<div id="outline-container-org13f5cd9" class="outline-2">
-<h2 id="org13f5cd9">要点总结（js版）</h2>
-<div class="outline-text-2" id="text-org13f5cd9">
+<div id="outline-container-orgb1fdfe4" class="outline-2">
+<h2 id="orgb1fdfe4">要点总结（js版）</h2>
+<div class="outline-text-2" id="text-orgb1fdfe4">
 <p>
 FCC的教程使用javascript作为开发语言，本节所有的代码都是js代码。<br></p>
 
@@ -823,9 +964,9 @@ lookahead 的概念， <code>(?=...)</code> 与 <code>(?!...)</code><br></p>
 </div>
 </div>
 
-<div id="outline-container-orged8331e" class="outline-2">
-<h2 id="orged8331e">elisp和python中的正则表达式</h2>
-<div class="outline-text-2" id="text-orged8331e">
+<div id="outline-container-orgf8f44fe" class="outline-2">
+<h2 id="orgf8f44fe">elisp和python中的正则表达式</h2>
+<div class="outline-text-2" id="text-orgf8f44fe">
 <p>
 在emacs中内置了 <code>string-match</code> 函数进行正则表达式匹配，其函数原型为 <code>(string-match REGEXP STRING &amp;optional START)</code> ，下面就是在emacs中使用regexp的示例。<br></p>
 <div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span> <span class="nv">str-regexp</span> <span class="s">"\.[h|cpp]$"</span><span class="p">)</span>
@@ -847,9 +988,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 </div>
 
 
-<div id="outline-container-orge16d30e" class="outline-2">
-<h2 id="orge16d30e">参考资料</h2>
-<div class="outline-text-2" id="text-orge16d30e">
+<div id="outline-container-orge34a4fd" class="outline-2">
+<h2 id="orge34a4fd">参考资料</h2>
+<div class="outline-text-2" id="text-orge34a4fd">
 <ul class="org-ul">
 <li>
 <a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/regular-expressions">FCC regular-expression tutorial</a><br>
@@ -897,17 +1038,17 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgd593784" class="outline-2">
-<h2 id="orgd593784">序言</h2>
-<div class="outline-text-2" id="text-orgd593784">
+      <div id="outline-container-org5b7cfab" class="outline-2">
+<h2 id="org5b7cfab">序言</h2>
+<div class="outline-text-2" id="text-org5b7cfab">
 <p>
 对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0e54711" class="outline-2">
-<h2 id="org0e54711">什么是MapReduce</h2>
-<div class="outline-text-2" id="text-org0e54711">
+<div id="outline-container-orgccfb5a4" class="outline-2">
+<h2 id="orgccfb5a4">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-orgccfb5a4">
 <p>
 MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
 
@@ -923,9 +1064,9 @@ MapReduce是面向大数据并行处理的计算模型、框架和平台，它�
 </div>
 </div>
 
-<div id="outline-container-orgee38e10" class="outline-2">
-<h2 id="orgee38e10">map和reduce</h2>
-<div class="outline-text-2" id="text-orgee38e10">
+<div id="outline-container-orgf45085f" class="outline-2">
+<h2 id="orgf45085f">map和reduce</h2>
+<div class="outline-text-2" id="text-orgf45085f">
 <p>
 <b>从编程语言的角度上来说</b><br>
 map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
@@ -944,9 +1085,9 @@ reduce操作也会接收到两个参数，一个列表和一个变换过程，�
 </div>
 </div>
 
-<div id="outline-container-org3b544c1" class="outline-2">
-<h2 id="org3b544c1">并行计算与大数据</h2>
-<div class="outline-text-2" id="text-org3b544c1">
+<div id="outline-container-org03f4754" class="outline-2">
+<h2 id="org03f4754">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-org03f4754">
 <p>
 mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
 
@@ -977,9 +1118,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgbafed87" class="outline-2">
-<h2 id="orgbafed87">参考资料</h2>
-<div class="outline-text-2" id="text-orgbafed87">
+<div id="outline-container-org9f2147f" class="outline-2">
+<h2 id="org9f2147f">参考资料</h2>
+<div class="outline-text-2" id="text-org9f2147f">
 <ul class="org-ul">
 <li>
 <a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
@@ -1026,17 +1167,17 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgd157ff0" class="outline-2">
-<h2 id="orgd157ff0">引言</h2>
-<div class="outline-text-2" id="text-orgd157ff0">
+      <div id="outline-container-org83812ea" class="outline-2">
+<h2 id="org83812ea">引言</h2>
+<div class="outline-text-2" id="text-org83812ea">
 <p>
 本文主要对css flexbox的关键点了总结，方便以后在以后的查阅。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge01e399" class="outline-2">
-<h2 id="orge01e399">容器的属性</h2>
-<div class="outline-text-2" id="text-orge01e399">
+<div id="outline-container-org1d313fc" class="outline-2">
+<h2 id="org1d313fc">容器的属性</h2>
+<div class="outline-text-2" id="text-org1d313fc">
 <p>
 对于容器需要指定其显示方式为flexbox<br></p>
 <div class="highlight"><pre><span></span><span class="nt">display</span><span class="o">:</span> <span class="nt">flex</span><span class="o">;</span>
@@ -1068,9 +1209,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge9882b0" class="outline-2">
-<h2 id="orge9882b0">条目的属性</h2>
-<div class="outline-text-2" id="text-orge9882b0">
+<div id="outline-container-org4830ac9" class="outline-2">
+<h2 id="org4830ac9">条目的属性</h2>
+<div class="outline-text-2" id="text-org4830ac9">
 <p>
 用于调整顺序<br></p>
 <div class="highlight"><pre><span></span><span class="nt">order</span><span class="o">:</span> <span class="o">&lt;</span><span class="nt">integer</span><span class="o">&gt;;</span> <span class="c">/* default 0 */</span>
@@ -1104,9 +1245,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 
 
-<div id="outline-container-org3925b11" class="outline-2">
-<h2 id="org3925b11">参考资料</h2>
-<div class="outline-text-2" id="text-org3925b11">
+<div id="outline-container-orgc6d1e42" class="outline-2">
+<h2 id="orgc6d1e42">参考资料</h2>
+<div class="outline-text-2" id="text-orgc6d1e42">
 <ul class="org-ul">
 <li>
 <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">css-tricks.com</a><br>
