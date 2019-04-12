@@ -85,6 +85,7 @@ pt->x = 0.0;
 含有虚继承
 #+END_COMMENT
 
+
 **** Static Data Members
 Static data members，按其字面意义，被编译器提出于 class 之外，并被视为一个global变量（但只在 class 声明范围之内可见）。每一个 static data member 只有一个实体，存放在程序的 data segment 之中，每次程序取用 static member，就会被内部转化为对该唯一的 extern 实体的直接参考操作。
 
@@ -111,6 +112,7 @@ origin._y = 0.0;
 请注意其中的 -1 操作，指向 data member 的指针，其 offset 值总是被加上1，这样可以使编译系统区分出以下两种情况：
 - 一个指向 data member 的指针，用以指出 class 的第一个 member （ =Point3d::*_y= ）
 - 一个指向 data member 的指针，没有指出任何 member （空指针）
+*注意：* 经过我在gcc5.3中测试，指向第一个成员变量的指针是0，并没有如书中所说的被加上1。可见编译器的特性也是不断发展的。
 
 每一个 nonstatic data member 的偏移量（offset）在编译时期即可获知，甚至如果 member 属于一个 base class subobject（派生自单一或多重继承串链）也是一样。
 
@@ -118,7 +120,7 @@ origin._y = 0.0;
 分析本章开始的问题，当 =Point3d= 是一个derived class，而在其继承结构中有一个 virtual base class，并且被存取的 member（如本例的 =x= ）是一个从该 virtual base class 继承而来的 member 时，就会有重大差异。这时我们不能确定 =pt= 必然指向哪一种 class type，因此我们也就不知道编译时期这个 member 真正的 offset 位置，这个存取操作必须延迟至执行期。但如果使用 =origin= 就不会有这些问题，其类型无疑是 =Point3d= class，即使它继承自 virtual base class，members 的 offset 位置也在编译时期就固定了。
 
 
-**** 3.4 “继承” 与 Data Member
+*** 3.4 “继承” 与 Data Member
 把两个原本独立不相干的 classes 凑成一对“type/subtype”，并带有继承关系，会有一些易犯错误：
 1. 经验不足的人可能会重复设计一些相同操作的函数
 2. 把一个 class 分解为两层或更多层，有可能会为了“表现 class 体系的抽象化”而膨胀所需空间。C++语言保证出现在 derived class 中的 base class subobject 有其完整原样性。书中有完整的例子可供参考。
@@ -139,7 +141,7 @@ class 如果内含一个或多个 virtual base class subobjects，将被分割�
 一般而言，virtual base class 最有效的一种运用形式就是：一个抽象的virtual base class，没有任何 data members。
 
 
-**** 3.5 对象成员的效率（object member efficiency）
+*** 3.5 对象成员的效率（object member efficiency）
 本节包含数个测试，测试聚合（aggregation）、封装（encapsulation）、继承（inheritance）所引发的额外负荷的程度。
 
 以下是汇总后的测试结论：
@@ -147,7 +149,7 @@ class 如果内含一个或多个 virtual base class subobjects，将被分割�
 - 单一继承不会影响效率，因为 members 被连续存储于 derived class object 中，并且其 offset 在编译时期就已知了。
 
 
-**** 3.6 指向 data members 的指针（pointer to data members）
+*** 3.6 指向 data members 的指针（pointer to data members）
 指向 data members 的指针，是一个有点神秘但颇有用处的语言特性。特别是你需要详细调查 class members 的底层布局的话，可以得知 vptr 是放在 class 的起始处或是尾端。另一个用途展现于3.2节，可以用来检测 class 中的 access section 的次序。
 
 #+BEGIN_SRC cpp
