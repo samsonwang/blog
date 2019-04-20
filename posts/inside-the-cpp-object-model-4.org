@@ -1,0 +1,66 @@
+#+BEGIN_COMMENT
+.. title: 深入探索C++内存模型（4）
+.. slug: inside-the-cpp-object-model-4
+.. date: 2019-04-19 14:27:22 UTC+08:00
+.. tags: cpp, object model, memory layout, Lippman, digest
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:t
+
+#+TITLE: 深入探索C++内存模型（4）
+
+
+
+{{{TEASER_END}}}
+
+** 第4章 Function 语意学 （the semantics of function）
+*** 4.1 Member 的各种调用方式
+**** Nonstatic Member Functions（非静态成员函数）
+C++ 的设计准则之一就是：nonstatic member function 至少必须和一版的nonmember function有相同的效率。
+
+编译器会将member function重写成一个外部函数，对函数名称进行“mangling”处理，使它在程序中成为独一无二的语汇。在这过程中也会施行NRV优化。
+
+**** 名称的特殊处理（name mangling）
+一版而言，member的名称前面汇被加上 class 名称，行程独一无二的命名。
+
+对于类中的成员变量也会进行换名，以应对可能在继承关系中引入的同名成员变量。
+
+两个实体如果拥有独一无二的 name mangling，那么任何不正确的调用操作在链接时期就因无法决议（resolved）而失败，有是由我们可以乐观地称此为“确保类型安全的链接行为”（type-safe linkage）。我说“乐观地”是因为它只可以捕捉函数的标记（signature，即函数名称 + 参数数目 + 参数类型）错误，如果“返回类型”声明错误，就没办法检查出来。
+
+当前的编译系统中，有一种所谓的 demangling 工具，用来拦截名称并将其转换回去，使用者仍然可以不关心其内部名称发生的转换。
+
+**** virtual member functions（虚拟成员函数）
+使用指针调用虚函数会从虚函数表找到对应的虚函数地址，使用该虚函数地址完成函数的调用。
+
+如果使用类域明确地调用虚函数，则会压制由于虚拟机制而产生的不必要的重复查找虚函数表操作。
+
+**** static member functions（静态成员函数）
+静态成员函数的特性：
+1. 没有 this 指针
+2. 不能直接存取其 class 中的 nonstatic members
+3. 不能比声明为 const 、 volatile 或 virtual
+4. 不需要经由 class object 才被调用 （虽然大部分时候它是这样被调用的）
+
+一个 static member function 当然会被体书于 class 声明之外，并给予一个经过“mangled”的适当名称。
+
+如果取一个 static member function 的地址，获得的是其在内存中的位置，也就其地址。由于 static member function 没有 this 指针，所以其地址的类型并不是一个 “指向 class member function 的指针”，而是一个 “nonmember function 的指针”。也就是说：
+#+BEGIN_SRC cpp
+&Point3d::object_count();
+#+END_SRC
+会得到一个数值，类型是：
+#+BEGIN_SRC cpp
+unsigned int (*)();
+#+END_SRC
+而不是：
+#+BEGIN_SRC cpp
+unsigned int (Point3d::*)();
+#+END_SRC
+
+static member function 由于缺乏 this 指针，因此差不多等同于 nonmember function。它提供了一个意想不到的好处：成为一个 callback 函数，也可以应用在线程（thread）函数上。
+
+*** 4.2 virtual member function (虚拟成员函数)
+p152/n183
