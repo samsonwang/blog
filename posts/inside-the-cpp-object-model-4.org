@@ -1,19 +1,19 @@
 #+BEGIN_COMMENT
 .. title: 深入探索C++内存模型（4）
 .. slug: inside-the-cpp-object-model-4
-.. date: 2019-04-19 14:27:22 UTC+08:00
+.. date: 2019-04-22 10:27:22 UTC+08:00
 .. tags: cpp, object model, memory layout, Lippman, digest
 .. category: cpp
 .. link:
 .. description:
 .. type: text
-.. status: draft
+/.. status: draft
 #+END_COMMENT
-#+OPTIONS: num:t
+#+OPTIONS: num:nil
 
 #+TITLE: 深入探索C++内存模型（4）
 
-
+第四章是Function语意学，这一章主要介绍类相关函数的底层实现原理，就虚函数进行了展开讨论，通过实际代码的测试结果验证分析结论。对 inline 函数可能会出现的问题进行了分析，对 inline 函数的使用提出了指导意见。
 
 {{{TEASER_END}}}
 
@@ -63,4 +63,232 @@ unsigned int (Point3d::*)();
 static member function 由于缺乏 this 指针，因此差不多等同于 nonmember function。它提供了一个意想不到的好处：成为一个 callback 函数，也可以应用在线程（thread）函数上。
 
 *** 4.2 virtual member function (虚拟成员函数)
-p152/n183
+为了支持 virtual function 机制，必须首先能够对于多态对象有某种形式的“执行期判断法（runtime type resolution）”。在添加这些特性时，必定会增加类空间的负担，还需要考虑到对C语言的兼容性。
+
+在C++中，多态（polymorphism）表示“以一个public base class 的指针（或reference），寻址出一个 derived class object”的意思。
+
+指针的多态机能主要扮演一个输送机制（transport mechanism）的角色，我们可以通过它在程序的任何地方采用一组 public derived 类型。这种多态形式被称为是消极的，可以在编译时期完成。当被指出的对象真正被使用时，多态也就编程积极的（active）了。
+
+在runtime type identification （RTTI）性质于1993年被引入 C++ 语言之前， C++ 对“积极多态（active polymorphism）”的唯一支持，就是对于 virtual function call 的决议（resolution）操作。有了RTTI，就能够在执行期查询一个多态的 pointer 或多态的 reference 了。
+
+欲鉴定哪些 class 展现多态特性，我们需要额外的执行期信息。适当的方法就是看看啊它是否有任何 virtual function，只要 class 拥有一个 virtual function，它就需要这份额外的执行期信息。
+
+在 C++ 中， virtual functions可以在编译时期获知，这一组地址是固定不变的，执行期不可能新增或替换之。在程序执行时，表格的大小和内容都不会改变，多亿其构建和存取皆可以由编译器完全掌握，不需要执行期的任何介入。
+
+一个 class 只会有一个 virtual table，没一个 table 内含其对应的 class object 中所有 active virtual functions 函数实体的地址。这些 active virtual functions 包括：
+1. 这个 class 所定义的函数实体，它会改写（overriding）一个可能存在的 base class virtual function 函数实体。
+2. 继承自 base class 的函数实体，这是在 derived class 决定不改写 virtual function 时才会出现的情况。
+3. 一个 pure_virtual_called() 函数实体，它既可以扮演 pure virtual function 的空间保卫者角色，也可以当作执行期异常处理函数。
+
+每一个 virtual function 都被指派一个固定的索引值，这个索引在整个继承体系中保持与特定的 virtual function 的关联。
+
+对于虚函数表在派生过程中的修改和拓展，在书中有很多详尽的代码示例可供参考。
+
+如何在编译时期设定 virtual function 的调用：
+1. 我们并不知道 =ptr= 所指内向的真正类型，然而我知道，经由 ptr 可以存取到该对象的 virtual table。
+2. 虽然我不知道那个 =z()= 函数实体会被调用，但我知道每一个 =z()= 函数地址都被放在指定位置（slot4）。
+这些信息使得编译器可以将该调用转化为：
+#+BEGIN_SRC cpp
+(*ptr->vptr[4])(ptr);
+#+END_SRC
+
+在一个单一继承体系中，virtual function 机制的行为十分良好，不但有效而且很容易塑造出模型来，但是在多重继承和虚拟继承之中，对 virtual functions 的支持就没有那么美好了。
+
+**** 多重继承下的 virtual functions
+在多重继承中支持 virtual functions，其复杂度围绕在第二个及后继的 base class 身上，以及“必须在执行期调整 this 指针”这一点。
+
+对于 derived class 的必要的 this 指针调整操作，必须在执行期完成。即 offset 的大小，以及把 offset 加到 this 指针上头的那一小段程序代码，必须有编译器在某个地方插入。
+
+比较有效率的解决方法是利用所谓的 thunk (thunk 是 knuth 博士的倒拼字）。所谓 thunk 是一小段 assembly 码，用来（1）以适当的 offset 值调整 this 指针，（2）跳到 virtual function 去。
+
+Thunk 技术允许 virtual table slot 继续内含一个简单的指针，因此多重继承不需要任何空间上的额外负担。 slots 中的地址可以直接指向 virtual function，也可以指向一个相关的 thunk（如果需要调整 this 指针的话）。于是，对于那些不需要调整 this 指针的 virtual function，也就不需要承担效率上的额外负担。
+
+调整 this 指针的第二个额外负担就是，由于两种不同的可能：（1）经由 derived class （或第一个 base class）调用，（2）经由第二个（或其后继） base class 调用，同一函数在 virtual table 中可能需要多个对应的 slosts。例如：
+#+BEGIN_SRC cpp
+Base* pbase1 = new Derived;
+Base* pbase2 = new Derived;
+
+delete pbase1;
+delete pbase2;
+#+END_SRC
+虽然两个 delete 操作导致相同的 derived destructor，但它们需要两个不同的 virtual table slots：
+1. =pbase1= 不需要调整 this 指针（因为 Base1 是最左端 base class，它已经指向 Derived 对象的起始处），其 virtual table slot 需放置真正的 destructor 地址。
+2. =pbase2= 需要调整 this 指针，其 virtual table slot 需要相关的 thunk 地址。
+
+在多重继承下， 一个 derived class 内含 n-1 个额外的 virtual tables， n 表示其上一层 base class 的数目。因此，单一继承将不会有额外的 virtual table。
+
+**** 虚继承下的 virtual function
+在虚拟继承中，也需要调整 this 指针，至于在虚拟继承的情况下要消除 thunks，一般而言已经被证明是一项高难度技术。
+
+当一个 virtual base class 从另一个 virtual base class 派生而来，并且两者都支持 virtual function 和 nonstatic data member 时， 编译器对于 virtual base class 的支持简直就像进了迷宫一行。
+
+作者的建议是，不要在一个 virtual base class 中声明 nonstatic data members。
+
+
+*** 4.3 函数的效能
+本章节主要针对前文中分析的各种函数调用情况，编写代码进行测试，并对实验结果进行了分析。
+
+按照前文的分析，nonmember 或 static member 或 nonstatic member 函数都被转化为完全相同的形式，所以从结果中能看到三者的效率完全相同。
+
+对于 inline 函数，未优化的情况提高了 25% 左右的效率，而其优化版本的表现提升十分明显。这归功于编译器将“被视为不变的表达式（expressions）”提到循环之外，因此只计算一次。此例显示，inline函数不仅能够节省一般函数调用所带来的额外负担，也提供了程序优化的额外机会。
+
+虚函数的执行效率降低了 4% 到 11% 不等，这是由虚拟机制产生的。
+
+
+*** 4.4 指向 member function 的指针 （pointer to member functions）
+由前文的论述中可以得知，取一个 nonstatic data member 的地址，得到的结果是该 member 在 class 布局中的 byte 位置（再加1）.可以想象它是一个不完整的值，需要被绑定于某个 class object 的地址上，才能够被存取。
+
+取一个 nonstatic member function 的地址，如果该函数是 nonvirtual，则得到的结果是它在内存中的真正地址。然而这个值也是不完全的，它也需要被绑定于某个 class object 的地址上，才能够通过它调用该函数。所有的 nonstatic member function 都需要对象的地址（以参数 this 指出）。
+
+使用一个 “member function 指针”，如果并不用于 virtual function、多重继承、virtual base class 等情况的话，并不会比使用一个“nonmember function 指针”的成本更高，编译器可以为它们提供相同的效率。
+
+
+**** 支持“指向 virtual member function”的指针
+注意下面的程序片段：
+#+BEGIN_SRC cpp
+float (Point::*pmf)() = &Point::z;
+Point* ptr = new Point3d;
+#+END_SRC
+=pmf= , 一个指向 member function 的指针，被设置为 Point::z() (一个 virtual function) 的地址，ptr 则被指定以一个 Point3d 对象，如果直接由 =ptr= 调用 =z()= :
+#+BEGIN_SRC cpp
+ptr->z();
+#+END_SRC
+则被调用的是 Point3d::z()，但如果我们从 =pmf= 间接调用 =z()= 呢？
+#+BEGIN_SRC cpp
+(ptr->*pmf)();
+#+END_SRC
+仍然是 Point3d::z() 被调用吗？答案是 yes，也就是说，虚拟机制仍然能够在使用“指向 member function 的指针”的情况下运行。
+
+结合前面章节，对一个 nonstatic member function 取其地址，将获得该函数在内存中的地址，然而对一个 virtual function，其地址在编译时期时候未知的，所能知道的近视 virtual function 在其相关 virtual table 中的索引值。也就是说，对一个 virtual member function 取其地址，所能获得的只是一个索引值。
+
+通过 =pmf= 来调用 =z()= 会被内部转化为一个编译时期的式子，一般形式如下：
+#+BEGIN_SRC cpp
+(*ptr->vptr[(int)pmf])(ptr);
+#+END_SRC
+
+**** 多重继承下，指向 member function 的指针
+为了让指向 member function 的指针也能够支持多重继承和虚拟继承，Stroustrup设计了下面一个结构体：
+#+BEGIN_SRC cpp
+struct __mptr {
+    int delta;
+    int index;
+    union {
+        ptrtofunc faddr;
+        int v_offset;
+    };
+};
+#+END_SRC
+
+=index= 和 =faddr= 分别（不同时）带有 virtual table 索引和 nonvirtual member function 地址。为了方便，当 index 不指向 virtual table 时，会被设置为 -1。
+
+在该模型之下，像这样的调用操作：
+#+BEGIN_SRC cpp
+(ptr->*pmf)();
+#+END_SRC
+会变成：
+#+BEGIN_SRC cpp
+(pmf.index < 0)
+  ? // non-virtual invocation
+  (*pmf.faddr)(ptr)
+  : // virtual invocation
+  (* ptr->vptr[pmf.index] (ptr));
+#+END_SRC
+
+这种方法的缺点是：
+1. 每一个调用操作都得付出上述成本，检查其是否为 virtual 或 nonvirtual；
+2. 当传递一个不变值的指针给 member function 时，它需要产生一个临时性对象。
+
+**** “指向 member function 的指针”的效率
+本节测试了函数经由一以方式调用的效率：
+1. 指向 nonmember function 的指针；
+2. 指向 class member function 的指针；
+3. 指向 virtual member function 的指针；
+4. 多重继承下的 nonvirtual 及 virtual member function 调用；
+5. 虚拟继承下的 nonvirtual 及 virtual member function 调用。
+
+
+*** 4.5 inline functions
+处理一个 inline 函数，有两个阶段：
+1. 分析函数定义，以决定函数的“intrinsic inline ability”（本质的 inline 能力）。“intrinsic”（本质的、固有的）在这里意指“与编译器相关”。如果函数因其复杂度，或因其构建问题，被判断不可成为inline，它会被转为一个 static 函数，并在“被编译模块”内产生对应的函数定义。
+2. 真正的 inline 函数拓展操作是在调用的那一点上，这回带来参数的求值操作（evaluation）以及临时性对象的管理。同样是在拓展点上，编译器将决定这个调用是否“不可为inline”。
+
+大部分编译器厂商（UNIX和PC都有）似乎认为不值得在 inline 支持技术上做详细的讨论，通常你必须进入到汇编器（assembler）中才能看到是否真的实现了 inline。
+
+**** 形式参数（formal argument）
+在 inline 拓展期间，每一个形式参数都会被对应的实际参数取代。其副作用为，不可以只是简单地塞入程序中出现的每一个形式参数，因为这将导致对于时间参数的多次求值操作（evaluation）。
+
+一般而言，面对“会带来副作用的实际参数”，通常都需要引入临时性对象。换句话说，如果实际参数十一个常量表达式（constant expression），我们可以在替换之间先完成其求值操作（evalutaion）；后继的 inline 替换，就可以把常量直接“绑”上去，如果既不是个常量表达式，也不是个带有副作用的表达式，那么就直接代换之。
+
+示例代码如下：
+#+BEGIN_SRC cpp
+inline int min (int i, int j) {
+    return i < j ? i : j;
+}
+// 调用操作
+inline int bar() {
+    int minval;
+    int val1 = 1024;
+    int val2 = 2048;
+    /*(1)*/ minval = min(val1, val2);
+    /*(2)*/ minval = min(1024, 2048);
+    /*(3)*/ minval = min(foo(), bar() + 1);
+    return minval;
+}
+#+END_SRC
+
+分析如下：
+标记为（1）的那一行会被拓展为：
+#+BEGIN_SRC cpp
+// 参数直接代换
+minval = val1 < val2 ? val1 : val2;
+#+END_SRC
+
+标记为（2）的那一行直接拥抱常量：
+#+BEGIN_SRC cpp
+// 代换之后，直接使用常量
+minval = 1024;
+#+END_SRC
+
+标记为（3）的那一行则引发参数的副作用，它需要引入一个临时对象，以避免重复求值（multiple evaluation）：
+#+BEGIN_SRC cpp
+// 有副作用，所以导入临时对象
+int t1;
+int t2;
+minval = (t1 = foo()), (t2 = bar() + 1), t1 < t2 ? t1 : t2;
+#+END_SRC
+
+**** 局部变量（local variables）
+如果在 inline 定义中加入一个局部变量，会怎样：
+#+BEGIN_SRC cpp
+inline int min(int i, int j) {
+    int minval = i < j ? i : j;
+    return minval;
+}
+#+END_SRC
+
+这时，如果我们有一下的调用操作：
+#+BEGIN_SRC cpp
+int local_var;
+int minval;
+// ...
+minval = min(val1, val2);
+#+END_SRC
+
+会被转化为：
+#+BEGIN_SRC cpp
+int local_var;
+int minval;
+int __min_lv_minval;
+minval = (__min_lv_minval = val1 < val2 ? val1 : val2),
+          __min_lv_minval;
+#+END_SRC
+
+一般而言，inline 函数中的每一个局部变量都必须被放在函数调用的一个粉笔区段中，拥有一个独一无二的名称。如果 inline 函数以单一表达式（expression）拓展多次，那么每次拓展都需要自己的一组局部变量。如果 inline 函数以分离的多个式子（discrete statements）被拓展多次，那么只需要一组局部变量，就可以重复使用（因为它们被放在一个封闭区段中，有自己的 scope）。
+
+inline 函数中的局部变量，再加上有副作用的参数，可能会导致大量临时对象的产生。特别是如果它以单一表达式（expression）被拓展多次时。
+
+inline 函数对于封装提供了一种必要的支持，可以有效存取封装于 class 中的 nonpublic 数据。它同时也是 C 程序中大量使用的 =#define= （前置处理宏）的一个安全替代品，特别是如果红肿的参数有副作用的话。然而一个 inline 函数如果被调用太多次的话，会产生大量的拓展码，使程序的大小暴涨。
+
+对于既要安全又要效率的程序，inline函数提供了一个强而有力的工具。然而，与 non-inline 函数比起来，它们需要更加小心地处理。
+
+（全文完）
