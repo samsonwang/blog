@@ -1,0 +1,353 @@
+#+BEGIN_COMMENT
+.. title: redis基础
+.. slug: redis-fundamental
+.. date: 2019-04-24 11:01:09 UTC+08:00
+.. tags: redis, nosql, memcached
+.. category: redis
+.. link: https://www.tutorialspoint.com/redis/
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:t
+
+#+TITLE: redis基础
+
+本文是 [[https://www.tutorialspoint.com/redis/][tutorialspoint]] 提供的 [[https://redis.io/][redis]] 教程的学习笔记。
+
+{{{TEASER_END}}}
+
+** redis 数据类型
+*** string 类型
+redis的string是字节流（sequence of bytes），是二进制安全的，它有一个给定的长度，不会被任何字符终止符截断。单个string支持的最大长度为512MB。因此可以存放任意小于512MB的数据在单个string中。
+
+操作示例
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> SET name "tutorialspoint"
+OK
+redis 127.0.0.1:6379> GET name
+"tutorialspoint"
+#+END_SRC
+
+string 类型的更多操作命令详见 [[https://www.tutorialspoint.com/redis/redis_strings.htm][redis string]] 。
+
+*** hash 类型
+redis 的 hash 是一个键值对（key value pairs）集合。它们是从字段（string field）到值（string value）的映射。因此它可以用来表示一个对象（object）。
+
+操作示例
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> HMSET user:1 username tutorialspoint password tutorialspoint points 200
+OK
+redis 127.0.0.1:6379> HGETALL user:1
+1) "username"
+2) "tutorialspoint"
+3) "password"
+4) "tutorialspoint"
+5) "points"
+6) "200"
+#+END_SRC
+
+hash 类型的更多操作命令详见 [[https://www.tutorialspoint.com/redis/redis_hashes.htm][redis hash]] 。
+
+*** list 类型
+redis 的 list 是一个 string 链表，按照插入顺序排列。支持从头部和尾部插入元素。
+
+操作示例
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> lpush tutoriallist redis
+(integer) 1
+redis 127.0.0.1:6379> lpush tutoriallist mongodb
+(integer) 2
+redis 127.0.0.1:6379> lpush tutoriallist rabitmq
+(integer) 3
+redis 127.0.0.1:6379> lrange tutoriallist 0 10
+
+1) "rabitmq"
+2) "mongodb"
+3) "redis"
+#+END_SRC
+
+list 类型的更多操作命令详见 [[https://www.tutorialspoint.com/redis/redis_lists.htm][redis list]] 。
+
+*** set 类型
+redis 的 set 是多个 string 的无序集合。其增加、删除、测试操作成员的时间复杂度是 O(1) 。set 中的元素不会重复。
+
+操作示例
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> sadd tutoriallist redis
+(integer) 1
+redis 127.0.0.1:6379> sadd tutoriallist mongodb
+(integer) 1
+redis 127.0.0.1:6379> sadd tutoriallist rabitmq
+(integer) 1
+redis 127.0.0.1:6379> sadd tutoriallist rabitmq
+(integer) 0
+redis 127.0.0.1:6379> smembers tutoriallist
+
+1) "rabitmq"
+2) "mongodb"
+3) "redis"
+#+END_SRC
+
+set 类型的更多操作命令详见 [[https://www.tutorialspoint.com/redis/redis_sets.htm][redis set]] 。
+
+*** sorted set 类型
+redis 的 sorted set 与其 set 类似，无重复元素的 string 集合。区别在于，每个 sorted set 中的成员都关联上一个分数（score），这个分数用于对成员进行排序。其中的每个成员都是唯一的，成员的分数可以重复。
+
+操作示例
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> zadd tutoriallist 0 redis
+(integer) 1
+redis 127.0.0.1:6379> zadd tutoriallist 0 mongodb
+(integer) 1
+redis 127.0.0.1:6379> zadd tutoriallist 0 rabitmq
+(integer) 1
+redis 127.0.0.1:6379> zadd tutoriallist 0 rabitmq
+(integer) 0
+redis 127.0.0.1:6379> ZRANGEBYSCORE tutoriallist 0 1000
+
+1) "redis"
+2) "mongodb"
+3) "rabitmq"
+#+END_SRC
+
+sorted set 类型的更多操作命令详见 [[https://www.tutorialspoint.com/redis/redis_sorted_sets.htm][redis sorted set]] 。
+
+** redis 实用功能
+
+*** HyperLogLog 集合计数
+HyperLogLog 是一种用于实现粗略统计集合（set）中元素个数的算法。它的优点在于空间复杂度为O(1)，仅需要使用很少的定量的内存即可实现唯一性（unique）元素的统计。每个 key 的内存大约为 12kb，误差率为 0.81% 。
+
+操作示例
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> PFADD tutorials "redis"
+1) (integer) 1
+redis 127.0.0.1:6379> PFADD tutorials "mongodb"
+1) (integer) 1
+redis 127.0.0.1:6379> PFADD tutorials "mysql"
+1) (integer) 1
+redis 127.0.0.1:6379> PFCOUNT tutorials
+(integer) 3
+#+END_SRC
+
+HyperLogLog 的更多操作命令详见 [[https://www.tutorialspoint.com/redis/redis_hyperloglog.htm][redis HyperLogLog]] 。
+
+*** Publish Subscribe 消息队列
+redis 的 Pub/Sub 是一种消息分发系统。由发送方（publisher）产生消息，由接收方（subscriber）接收消息，消息传递的通路叫做信道（channel）。
+
+消息接收操作示例
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> SUBSCRIBE redisChat
+Reading messages... (press Ctrl-C to quit)
+1) "subscribe"
+2) "redisChat"
+3) (integer) 1
+#+END_SRC
+
+消息发送操作示例
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> PUBLISH redisChat "Redis is a great caching technique"
+(integer) 1
+redis 127.0.0.1:6379> PUBLISH redisChat "Learn redis by tutorials point"
+(integer) 1
+1) "message"
+2) "redisChat"
+3) "Redis is a great caching technique"
+1) "message"
+2) "redisChat"
+3) "Learn redis by tutorials point"
+#+END_SRC
+
+PubSub 的更多操作命令详见 [[https://www.tutorialspoint.com/redis/redis_pub_sub.htm][redis PubSub]] 。
+
+*** Transaction 事务
+redis 的 transcation 允许在单步中执行多条命令。transcation 有如下两条特点：
+1. 所有在 transcation 中的命令会作为一条独立的操作有序执行，不能在 transcation 中处理其他客户端的请求；
+2. transcation 是原子化操作，这意味着，这些命令要么全部执行，要么全部不执行。
+
+transcation 操作示例
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> MULTI
+OK
+redis 127.0.0.1:6379> SET tutorial redis
+QUEUED
+redis 127.0.0.1:6379> GET tutorial
+QUEUED
+redis 127.0.0.1:6379> INCR visitors
+QUEUED
+redis 127.0.0.1:6379> EXEC
+1) OK
+2) "redis"
+3) (integer) 1
+#+END_SRC
+
+transaction 的更多操作命令详见 [[https://www.tutorialspoint.com/redis/redis_transactions.htm][redis transcation]] 。
+
+*** Scripting 脚本编程
+redis 支持使用 lua 脚本进行编程，redis 从2.6.0版本开始中内置了 lua 脚本解释器。
+
+script 操作示例
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> EVAL "return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}" 2 key1 key2 first second
+1) "key1"
+2) "key2"
+3) "first"
+4) "second"
+#+END_SRC
+
+scripting 的更多操作命令详见 [[https://www.tutorialspoint.com/redis/redis_scripting.htm][redis scripting]] 。
+
+** 使用辅助命令
+*** connection 相关命令
+connection 命令主要用于管理客户端与服务端的链接。
+
+操作示例：
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> AUTH "password"
+OK
+redis 127.0.0.1:6379> PING
+PONG
+#+END_SRC
+
+connection 的更多操作命令详见 [[https://www.tutorialspoint.com/redis/redis_connection.htm][redis connection]] 。
+
+*** server 相关命令
+server 命令主要用于对服务端进行管理。
+
+使用 INFO 命令查看服务端配置。
+#+BEGIN_SRC sh
+redis 127.0.0.1:6379> INFO
+
+# Server
+redis_version:2.8.13
+redis_git_sha1:00000000
+redis_git_dirty:0
+redis_build_id:c2238b38b1edb0e2
+redis_mode:standalone
+os:Linux 3.5.0-48-generic x86_64
+...
+#+END_SRC
+
+server 的更多操作命令详见 [[https://www.tutorialspoint.com/redis/redis_server.htm][redis server]] 。
+
+** 高级用法
+*** 备份数据库
+使用 SAVE 命令创建当前数据库数据的备份。操作示例如下：
+#+BEGIN_SRC sh
+127.0.0.1:6379> SAVE
+OK
+#+END_SRC
+以上命令会在 redis 目录中生成 dump.rdb 文件。
+我在练习时使用了 docker 版的 redis，将 container 中的文件拷贝到 host 的操作为。
+#+BEGIN_SRC sh
+docker cp <container name>:/path/inside /path/outside
+#+END_SRC
+
+在恢复数据时，将 dump.rdb 放在 redis 目录后再启动 redis 服务即可。使用 CONFIG 命令获取 redis 目录路径。
+#+BEGIN_SRC sh
+127.0.0.1:6379> CONFIG get dir
+1) "dir"
+2) "/user/tutorialspoint/redis-2.8.13/src"
+#+END_SRC
+
+*** 设置连接密码
+为 redis 设置密码，在客户端链接后需要输入密码才能操作数据库。
+查看当前密码
+#+BEGIN_SRC sh
+127.0.0.1:6379> CONFIG get requirepass
+1) "requirepass"
+2) ""
+#+END_SRC
+默认情况下，密码是空的，在客户端连接后也就不需要做验证。
+
+设置密码
+#+BEGIN_SRC sh
+127.0.0.1:6379> CONFIG set requirepass "tutorialspoint"
+OK
+#+END_SRC
+
+密码设置是即时生效的，当前链接的客户端都会要求输入密码验证后才可以进行后续操作。验证密码的操作示例。
+#+BEGIN_SRC sh
+127.0.0.1:6379> AUTH password
+#+END_SRC
+
+*** 性能测试
+redis 提供了 redis-benchmark 工具对性能进行测试。
+
+操作示例
+#+BEGIN_SRC sh
+redis-benchmark -n 100000
+
+PING_INLINE: 141043.72 requests per second
+PING_BULK: 142857.14 requests per second
+SET: 141442.72 requests per second
+GET: 145348.83 requests per second
+INCR: 137362.64 requests per second
+LPUSH: 145348.83 requests per second
+LPOP: 146198.83 requests per second
+SADD: 146198.83 requests per second
+SPOP: 149253.73 requests per second
+LPUSH (needed to benchmark LRANGE): 148588.42 requests per second
+LRANGE_100 (first 100 elements): 58411.21 requests per second
+LRANGE_300 (first 300 elements): 21195.42 requests per second
+LRANGE_500 (first 450 elements): 14539.11 requests per second
+LRANGE_600 (first 600 elements): 10504.20 requests per second
+MSET (10 keys): 93283.58 requests per second
+#+END_SRC
+
+更详细的操作说明可以参考 [[https://www.tutorialspoint.com/redis/redis_benchmarks.htm][redis benchmark]] 。
+
+*** 客户端链接
+客户端在连入后会发生如下操作：
+- 客户端的 socket 被设置为非阻塞模式（non-blocking），由于 redis 使用了多路服用技术和非阻塞 I/O；
+- 将 socket 设置为 =TCP_NODELAY= ，以确保在链接中没有延迟；
+- 创建一个可读文件事件，这样 redis 就能在客户端有查询时读取 socket 中的数据。
+
+读取允许客户端的最大数目，操作示例如下：
+#+BEGIN_SRC sh
+config get maxclients
+1) "maxclients"
+2) "10000"
+#+END_SRC
+
+对于客户端的更多操作可以参考 [[https://www.tutorialspoint.com/redis/redis_client_connection.htm][redis client]] 。
+
+*** 流水线
+redis 是一个 TCP 服务器，使用请求应答（request/response）协议。客户端和服务端的交互步骤为：
+- 客户端向服务端发送请求，然后读取 socket，通常是以阻塞的（blocking）方式，等待服务端的回应
+- 服务端接收并处理该请求，并将该结果传回客户端。
+
+使用流水线的意义在于，客户端可以同时将多个 request 发送给服务端，而不必等待每次操作的回执。流水线的使用大大提升了协议的性能。
+
+操作示例
+#+BEGIN_SRC sh
+$(echo -en "PING\r\n SET tutorial redis\r\nGET tutorial\r\nINCR
+visitor\r\nINCR visitor\r\nINCR visitor\r\n"; sleep 10) | nc localhost 6379
++PONG
++OK
+redis
+:1
+:2
+:3
+#+END_SRC
+
+*** 数据库分区
+分区操作是将数据分割在多个 redis 实例（instance）中，每个实例中只存储一部分键值（key）。
+
+分区的优点：
+- 支持更大的数据库存储，使用使用多台计算机的内存，不必局限与单台计算机的内存容量；
+- 将处理要求分散在多个CPU核心（core）和多台计算机，将带宽要求分散在多台主机和多台适配器（adapter）中。
+
+分区的缺点：
+- 不能使用涉及到多个键值（key）的操作，例如，不能对分在两个分区的 set 执行 INTERSECTION 操作
+- 不能使用涉及到多个 key 的 transaction 事务；
+- 分区的划分粒度（granularity）为键值（key），即不能将一个 key 的数据分在两个分区中；
+- 使用分区后，数据的操作会更加复杂，需要处理多个 rdb/aof 文件，在备份数据时，需要聚合多个实例和主机中的持久化数据；
+- 对数据库进行扩容和缩减的操作也很复杂，redis 集群支持在运行时（runtime）增加或减少节点（node）
+
+
+** 参考资料
+- [[https://www.tutorialspoint.com/redis/][tutorialspoint.com - redis]]
+- [[https://redis.io/documentation][redis.io - documentation]]
+
+（全文完）
