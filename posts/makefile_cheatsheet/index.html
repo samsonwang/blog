@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Makefile 要点备忘 | Hack Note</title>
+<link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="https://samsonwang.me/posts/makefile_cheatsheet/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/redis-fundamental/" title="redis基础" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+<li class="nav-item">
+<a href="/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">Makefile 要点备忘</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2019-04-28T10:06:38+08:00" itemprop="datePublished" title="2019-04-28 10:06">Apr 28 2019</time>
+</div>
+
+      
+
+      
+    <div class="source blur-1">
+      <a href="/posts/makefile_cheatsheet/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+     <div class="link blur-1">
+       <a href="https://devhints.io/makefile">Original site</a>
+     </div>
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/cheatsheet/" rel="tag">cheatsheet</a></li>
+        <li><a class="tag p-category" href="/tags/makefile/" rel="tag">makefile</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+本文包含常用的 Makefile 语法，在这里总结一下，方便以后查阅。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org9432c1a" class="outline-2">
+<h2 id="org9432c1a">变量与赋值</h2>
+<div class="outline-text-2" id="text-org9432c1a">
+<div class="highlight"><pre><span></span><span class="nv">uglify</span> <span class="o">=</span> <span class="k">$(</span>uglify<span class="k">)</span>        <span class="c1"># lazy assignment</span>
+<span class="nv">compressor</span> <span class="o">:=</span> <span class="k">$(</span>uglify<span class="k">)</span>   <span class="c1"># immediate assignment</span>
+<span class="nv">prefix</span> <span class="o">?=</span> /usr/local      <span class="c1"># safe assignment</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org1da362a" class="outline-2">
+<h2 id="org1da362a">特殊变量</h2>
+<div class="outline-text-2" id="text-org1da362a">
+<div class="highlight"><pre><span></span><span class="nf">out.o</span><span class="o">:</span> <span class="n">src</span>.<span class="n">c</span> <span class="n">src</span>.<span class="n">h</span>
+  <span class="nv">$@</span>   <span class="c1"># "out.o" (target)</span>
+  $&lt;   <span class="c1"># "src.c" (first prerequisite)</span>
+  $^   <span class="c1"># "src.c src.h" (all prerequisites)</span>
+
+<span class="nf">%.o</span><span class="o">:</span> %.<span class="n">c</span>
+  <span class="nv">$*</span>   <span class="c1"># the 'stem' with which an implicit rule matches ("foo" in "foo.c")</span>
+
+<span class="nf">also</span><span class="o">:</span>
+  $+   <span class="c1"># prerequisites (all, with duplication)</span>
+  <span class="nv">$?</span>   <span class="c1"># prerequisites (new ones)</span>
+  $<span class="p">|</span>   <span class="c1"># prerequisites (order-only?)</span>
+
+  <span class="k">$(</span>@D<span class="k">)</span> <span class="c1"># target directory</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgff79adf" class="outline-2">
+<h2 id="orgff79adf">命令前缀</h2>
+<div class="outline-text-2" id="text-orgff79adf">
+<p>
+<code>-</code> Ignore errors<br><code>@</code> Don’t print command<br><code>+</code> Run even if Make is in ‘don’t execute’ mode<br></p>
+
+<div class="highlight"><pre><span></span><span class="nf">build</span><span class="o">:</span>
+    @echo <span class="s2">"compiling"</span>
+    -gcc $&lt; <span class="nv">$@</span>
+
+<span class="cp">-include .depend</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org306d3e1" class="outline-2">
+<h2 id="org306d3e1">文件相关操作</h2>
+<div class="outline-text-2" id="text-org306d3e1">
+<p>
+列举所有文件<br></p>
+<div class="highlight"><pre><span></span><span class="nv">js_files</span>  <span class="o">:=</span> <span class="k">$(</span>wildcard test/*.js<span class="k">)</span>
+<span class="nv">all_files</span> <span class="o">:=</span> <span class="k">$(</span>shell find images -name <span class="s2">"*"</span><span class="k">)</span>
+</pre></div>
+
+<p>
+替换文件名<br></p>
+<div class="highlight"><pre><span></span><span class="nv">file</span>     <span class="o">=</span> <span class="k">$(</span>SOURCE:.cpp<span class="o">=</span>.o<span class="k">)</span>   <span class="c1"># foo.cpp =&gt; foo.o</span>
+<span class="nv">outputs</span>  <span class="o">=</span> <span class="k">$(</span>files:src/%.coffee<span class="o">=</span>lib/%.js<span class="k">)</span>
+
+<span class="nv">outputs</span>  <span class="o">=</span> <span class="k">$(</span>patsubst %.c, %.o, <span class="k">$(</span>wildcard *.c<span class="k">))</span>
+<span class="nv">assets</span>   <span class="o">=</span> <span class="k">$(</span>patsubst images/%, assets/%, <span class="k">$(</span>wildcard images/*<span class="k">))</span>
+</pre></div>
+
+<p>
+更多函数<br></p>
+<div class="highlight"><pre><span></span><span class="k">$(</span><span class="nv">strip</span> <span class="k">$(</span><span class="nv">string_var</span><span class="k">))</span>
+
+<span class="k">$(</span><span class="nv">filter</span> %.<span class="nv">less</span>, <span class="k">$(</span><span class="nv">files</span><span class="k">))</span>
+<span class="k">$(</span><span class="nv">filter</span>-<span class="nv">out</span> %.<span class="nv">less</span>, <span class="k">$(</span><span class="nv">files</span><span class="k">))</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org6a8f145" class="outline-2">
+<h2 id="org6a8f145">构建操作（编译目标文件）</h2>
+<div class="outline-text-2" id="text-org6a8f145">
+<div class="highlight"><pre><span></span><span class="nf">%.o</span><span class="o">:</span> %.<span class="n">c</span>
+  ffmpeg -i $&lt; &gt; <span class="nv">$@</span>   <span class="c1"># Input and output</span>
+  foo $^
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org32c800b" class="outline-2">
+<h2 id="org32c800b">引入其他 makefile 文件</h2>
+<div class="outline-text-2" id="text-org32c800b">
+<div class="highlight"><pre><span></span><span class="cp">-include foo.make</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgc549eb3" class="outline-2">
+<h2 id="orgc549eb3">make 命令选项</h2>
+<div class="outline-text-2" id="text-orgc549eb3">
+<div class="highlight"><pre><span></span>make
+  -e, --environment-overrides
+  -B, --always-make
+  -s, --silent
+
+  -j, --jobs<span class="o">=</span>N   <span class="c1"># parallel processing</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org5a2193f" class="outline-2">
+<h2 id="org5a2193f">条件判断</h2>
+<div class="outline-text-2" id="text-org5a2193f">
+<div class="highlight"><pre><span></span><span class="nf">foo</span><span class="o">:</span> <span class="k">$(</span><span class="nv">objects</span><span class="k">)</span>
+<span class="cp">ifeq ($(CC),gcc)</span>
+	<span class="k">$(</span>CC<span class="k">)</span> -o foo <span class="k">$(</span>objects<span class="k">)</span> <span class="k">$(</span>libs_for_gcc<span class="k">)</span>
+<span class="cp">else</span>
+	<span class="k">$(</span>CC<span class="k">)</span> -o foo <span class="k">$(</span>objects<span class="k">)</span> <span class="k">$(</span>normal_libs<span class="k">)</span>
+<span class="cp">endif</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org9b6914d" class="outline-2">
+<h2 id="org9b6914d">递归</h2>
+<div class="outline-text-2" id="text-org9b6914d">
+<div class="highlight"><pre><span></span><span class="nf">deploy</span><span class="o">:</span>
+  <span class="k">$(</span>MAKE<span class="k">)</span> deploy2
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-orgedc6c33" class="outline-2">
+<h2 id="orgedc6c33">参考资料</h2>
+<div class="outline-text-2" id="text-orgedc6c33">
+<ul class="org-ul">
+<li>
+<a href="https://devhints.io/makefile">devhints.io - makefile</a><br>
+</li>
+<li>
+<a href="https://gist.github.com/isaacs/62a2d1825d04437c6f08">github gist - isaacs's makefile tutorial</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
+        </div>
+</div>
+
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+    <ul class="pager hidden-print">
+<li class="left">
+          <a href="/posts/redis-fundamental/" rel="prev">
+            <p class="title">redis基础</p>
+            <p>Previous post</p>
+          </a>
+      </li>
+      <li class="right">
+          <div></div>
+      </li>
+    </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="https://samsonwang.me/posts/makefile_cheatsheet/",
+        disqus_title="Makefile \u8981\u70b9\u5907\u5fd8",
+        disqus_identifier="cache/posts/makefile_cheatsheet.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2019 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="/assets/js/jquery.min.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/jquery.lazyload.min.js"></script><script src="/assets/js/popper.min.js"></script><script src="/assets/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
