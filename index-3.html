@@ -224,24 +224,24 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orged5fcaa" class="outline-2">
-<h2 id="orged5fcaa">引言</h2>
-<div class="outline-text-2" id="text-orged5fcaa">
+      <div id="outline-container-org9a7fcdd" class="outline-2">
+<h2 id="org9a7fcdd">引言</h2>
+<div class="outline-text-2" id="text-org9a7fcdd">
 <p>
 在求解 <a href="/posts/algorithm-weekly-letter-combinations-of-a-phone-number/">leetcode 17</a> 时，我遇到了BFS（广度优先搜索）这个概念。在深入了解后发现，BFS是图（graph）的一个知识点，我对这一知识点进行展开学习，并将找到的资料汇总起来。本文主要整理了图和广度优先搜索的相关知识点。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org023b20b" class="outline-2">
-<h2 id="org023b20b">图的存储方式</h2>
-<div class="outline-text-2" id="text-org023b20b">
+<div id="outline-container-org7728fa1" class="outline-2">
+<h2 id="org7728fa1">图的存储方式</h2>
+<div class="outline-text-2" id="text-org7728fa1">
 <p>
 研究图就需要使用计算机语言对其进行描述。图的存储结构除了要存储图中各个顶点的本身的信息外，同时还要存储顶点与顶点之间的所有关系（边的信息）。因此，图的结构比较复杂，很难以数据元素在存储区中的物理位置来表示元素之间的关系，但也正是由于其任意的特性，故物理表示方法很多。常用的图的存储结构有邻接矩阵、邻接表、十字链表和邻接多重表。<br></p>
 </div>
 
-<div id="outline-container-orgabd751e" class="outline-3">
-<h3 id="orgabd751e">相邻矩阵（adjacency martix）</h3>
-<div class="outline-text-3" id="text-orgabd751e">
+<div id="outline-container-org13d4dd8" class="outline-3">
+<h3 id="org13d4dd8">相邻矩阵（adjacency martix）</h3>
+<div class="outline-text-3" id="text-org13d4dd8">
 <p>
 对于一个具有 <code>n</code> 个顶点的图，可以使用 <code>n*n</code> 的矩阵（二维数组）来表示它们间的邻接关系。下图中，矩阵 <code>A(i，j)=1</code> 表示图中存在一条边 <code>(Vi，Vj)</code> ，而 <code>A(i，j)=0</code> 表示图中不存在边 <code>(Vi，Vj)</code> 。实际编程时，当图为不带权图时，可以在二维数组中存放bool值， <code>A(i，j)=true</code> 表示存在边 <code>(Vi，Vj)</code> ， <code>A(i，j)=false</code> 表示不存在边 <code>(Vi，Vj)</code> ；当图带权值时，则可以直接在二维数组中存放权值， <code>A(i，j)=null</code> 表示不存在边 <code>(Vi，Vj)</code> 。<br></p>
 
@@ -259,9 +259,9 @@
 </div>
 </div>
 
-<div id="outline-container-org1c68f8d" class="outline-3">
-<h3 id="org1c68f8d">邻接表（adjacency list）</h3>
-<div class="outline-text-3" id="text-org1c68f8d">
+<div id="outline-container-org599b3b3" class="outline-3">
+<h3 id="org599b3b3">邻接表（adjacency list）</h3>
+<div class="outline-text-3" id="text-org599b3b3">
 <p>
 邻接表（adjacency list）是一种常用的表示图的数据结构。邻接表是许多链表的集合，每个链表描述了一个顶点（ <code>vectex</code> ）的相邻元素（ <code>Neighbor</code> ）。更形象地讲，邻接表是一个二维容器，第一维描述某个点，第二维描述这个点所对应的边集们。<br>
 图的邻接矩阵存储方法跟树的孩子链表示法相类似，是一种顺序分配和链式分配相结合的存储结构。邻接表由表头结点和表结点两部分组成，其中图中每个顶点均对应一个存储在数组中的表头结点。如这个表头结点所对应的顶点存在相邻顶点，则把相邻顶点依次存放于表头结点所指向的单向链表中。如下图所示，表结点存放的是邻接顶点在数组中的索引。对于无向图来说，使用邻接表进行存储也会出现数据冗余，表头结点 <code>A</code> 所指链表中存在一个指向 <code>C</code> 的表结点的同时，表头结点 <code>C</code> 所指链表也会存在一个指向 <code>A</code> 的表结点。<br><img src="/assets/images/spinner.svg" data-src="/images/post-breadth-first-search-2.jpg" alt="图的相邻表表示方法"><br></p>
@@ -279,9 +279,9 @@
 </div>
 </div>
 
-<div id="outline-container-org4648a05" class="outline-2">
-<h2 id="org4648a05">图的遍历</h2>
-<div class="outline-text-2" id="text-org4648a05">
+<div id="outline-container-org455b3de" class="outline-2">
+<h2 id="org455b3de">图的遍历</h2>
+<div class="outline-text-2" id="text-org455b3de">
 <p>
 和树的遍历类似，在此，我们希望从图中某一顶点出发访遍图中其余顶点，且使每一个顶点仅被访问一次，这一过程就叫做图的遍历(traversing graph)。如果只访问图的顶点而不关注边的信息，那么图的遍历十分简单，使用一个 <code>foreach</code> 语句遍历存放顶点信息的数组即可。但如果为了实现特定算法，就需要根据边的信息按照一定顺序进行遍历。图的遍历算法是求解图的连通性问题、拓扑排序和求关键路径等算法的基础。<br></p>
 
@@ -293,9 +293,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgc964dc2" class="outline-2">
-<h2 id="orgc964dc2">广度优先搜索（breadth first search）</h2>
-<div class="outline-text-2" id="text-orgc964dc2">
+<div id="outline-container-org796cb52" class="outline-2">
+<h2 id="org796cb52">广度优先搜索（breadth first search）</h2>
+<div class="outline-text-2" id="text-org796cb52">
 <p>
 图的广度优先搜索遍历算法是一个分层遍历的过程，和二叉树的广度优先搜索遍历类同。它从图的某一顶点 <code>Vi</code> 出发，访问此顶点后，依次访问 <code>Vi</code> 的各个未曾访问过的邻接点，然后分别从这些邻接点出发，直至图中所有已有已被访问的顶点的邻接点都被访问到。对于无向连通图，若顶点 <code>Vi</code> 为初始访问的顶点，则广度优先搜索遍历顺序如下所示。<br><img src="/assets/images/spinner.svg" data-src="/images/post-breadth-first-search-5.jpg" alt="图的广度优先搜索遍历"><br></p>
 
@@ -340,9 +340,9 @@ BFS的时间复杂度为 <code>O(V+E)</code> ，其中 <code>V</code> 是节点�
 
 
 
-<div id="outline-container-org87a11ff" class="outline-2">
-<h2 id="org87a11ff">参考资料</h2>
-<div class="outline-text-2" id="text-org87a11ff">
+<div id="outline-container-org9856eba" class="outline-2">
+<h2 id="org9856eba">参考资料</h2>
+<div class="outline-text-2" id="text-org9856eba">
 <ul class="org-ul">
 <li>
 <a href="https://www.hackerearth.com/zh/practice/algorithms/graphs/breadth-first-search/tutorial/">hackerearth.com - breath first search tutorial</a><br>
@@ -399,18 +399,18 @@ BFS的时间复杂度为 <code>O(V+E)</code> ，其中 <code>V</code> 是节点�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org635cac2" class="outline-2">
-<h2 id="org635cac2">引言</h2>
-<div class="outline-text-2" id="text-org635cac2">
+      <div id="outline-container-org672dcea" class="outline-2">
+<h2 id="org672dcea">引言</h2>
+<div class="outline-text-2" id="text-org672dcea">
 <p>
 本篇文章主要是针对shell中的 <code>grep</code> 和 <code>egrep</code> 的讲解，对于正则表达式的规则本身并没有太多的内容。在阅读本篇文章之前，读者应该对正则表达式有个大致的了解。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org98e5065" class="outline-2">
-<h2 id="org98e5065">
+<div id="outline-container-orgc7cefc1" class="outline-2">
+<h2 id="orgc7cefc1">
 <code>grep</code> 命令</h2>
-<div class="outline-text-2" id="text-org98e5065">
+<div class="outline-text-2" id="text-orgc7cefc1">
 <p>
 <code>grep</code> 命令是linux终端中最常用的命令之一，它的全称是“global regular expression print”，从字面上理解， <code>grep</code> 可以用来进行正则表达式匹配。<br></p>
 
@@ -457,10 +457,10 @@ BFS的时间复杂度为 <code>O(V+E)</code> ，其中 <code>V</code> 是节点�
 </div>
 </div>
 
-<div id="outline-container-org3b77a6c" class="outline-2">
-<h2 id="org3b77a6c">
+<div id="outline-container-org2462099" class="outline-2">
+<h2 id="org2462099">
 <code>egrep</code> 命令</h2>
-<div class="outline-text-2" id="text-org3b77a6c">
+<div class="outline-text-2" id="text-org2462099">
 <p>
 <code>egrep</code> 的含义为“extended grep”，相对于 <code>grep</code> 有更多的正则表达式特性。同样，可以在使用 <code>grep</code> 时增加 <code>-E</code> 参数获得相同的效果。<br></p>
 
@@ -490,9 +490,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 
 
-<div id="outline-container-orgf30c52f" class="outline-2">
-<h2 id="orgf30c52f">参考资料</h2>
-<div class="outline-text-2" id="text-orgf30c52f">
+<div id="outline-container-org554622e" class="outline-2">
+<h2 id="org554622e">参考资料</h2>
+<div class="outline-text-2" id="text-org554622e">
 <ul class="org-ul">
 <li>
 <a href="https://www.digitalocean.com/community/tutorials/using-grep-regular-expressions-to-search-for-text-patterns-in-linux">digital ocean - grep tutorial</a><br>
@@ -539,9 +539,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org0181d82" class="outline-2">
-<h2 id="org0181d82">进程与线程之间有什么区别</h2>
-<div class="outline-text-2" id="text-org0181d82">
+      <div id="outline-container-orgcd0ff18" class="outline-2">
+<h2 id="orgcd0ff18">进程与线程之间有什么区别</h2>
+<div class="outline-text-2" id="text-orgcd0ff18">
 <p>
 进程（process）是指在系统中正在运行的一个应用程序，是系统资源分配的基本单位，在内存中有其完备的数据空间和代码空间，拥有完整的虚拟空间地址。一个进程所拥有的数据和变量只属于它自己。<br></p>
 
@@ -552,9 +552,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 进程和线程都具有就绪、阻塞和运行三种基本状态。<br></p>
 </div>
 
-<div id="outline-container-orgf6b8b6b" class="outline-3">
-<h3 id="orgf6b8b6b">联系</h3>
-<div class="outline-text-3" id="text-orgf6b8b6b">
+<div id="outline-container-org1a57b7e" class="outline-3">
+<h3 id="org1a57b7e">联系</h3>
+<div class="outline-text-3" id="text-org1a57b7e">
 <ul class="org-ul">
 <li>一个进程至少拥有一个线程(主线程)，也可以拥有多个线程<br>
 </li>
@@ -568,18 +568,18 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 </div>
 
-<div id="outline-container-org2afe98b" class="outline-3">
-<h3 id="org2afe98b">区别</h3>
-<div class="outline-text-3" id="text-org2afe98b">
+<div id="outline-container-org0c69df2" class="outline-3">
+<h3 id="org0c69df2">区别</h3>
+<div class="outline-text-3" id="text-org0c69df2">
 <p>
 系统开销：在创建或撤消进程时，由于系统都要为之分配和回收资源，导致系统的开销明显大于创建或撤消线程时的开销<br>
 资源管理：进程有独立的地址空间，一个进程崩溃后，在保护模式下不会对其它进程产生影响，而线程只是一个进程中的不同执行路径。线程有自己的堆栈和局部变量，但线程之间没有单独的地址空间，一个线程死掉就等于整个进程死掉，所以多进程的程序要比多线程的程序健壮，但在进程切换时，耗费资源较大，效率要差一些。但对于一些要求同时进行并且又要共享某些变量的并发操作，只能用线程，不能用进程。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org6c54765" class="outline-3">
-<h3 id="org6c54765">通信方式</h3>
-<div class="outline-text-3" id="text-org6c54765">
+<div id="outline-container-org4c1a4af" class="outline-3">
+<h3 id="org4c1a4af">通信方式</h3>
+<div class="outline-text-3" id="text-org4c1a4af">
 <p>
 进程间通信主要包括管道、系统IPC(包括消息队列，信号量，共享存储)、SOCKET，具体说明参考linux进程间通信方式。进程间通信其实是指分属于不同进程的线程之间的通讯，所以进程间的通信方法同样适用于线程间的通信。但对于同一进程的不同线程来说，使用全局变量进行通信效率会更高。<br></p>
 </div>
@@ -587,9 +587,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 
 
-<div id="outline-container-org267c8d9" class="outline-2">
-<h2 id="org267c8d9">什么情况下适合使用线程</h2>
-<div class="outline-text-2" id="text-org267c8d9">
+<div id="outline-container-org8e5c60d" class="outline-2">
+<h2 id="org8e5c60d">什么情况下适合使用线程</h2>
+<div class="outline-text-2" id="text-org8e5c60d">
 <p>
 线程相对于进程的优势：<br></p>
 <ul class="org-ul">
@@ -614,9 +614,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 
 
-<div id="outline-container-orgf1c4d96" class="outline-2">
-<h2 id="orgf1c4d96">什么情况下适合使用进程</h2>
-<div class="outline-text-2" id="text-orgf1c4d96">
+<div id="outline-container-org0618d3f" class="outline-2">
+<h2 id="org0618d3f">什么情况下适合使用进程</h2>
+<div class="outline-text-2" id="text-org0618d3f">
 <p>
 进程相对于线程的优势：<br></p>
 <ul class="org-ul">
@@ -633,9 +633,9 @@ egrep <span class="s2">"(grouping)"</span> file.txt
 </div>
 
 
-<div id="outline-container-org2016b6e" class="outline-2">
-<h2 id="org2016b6e">参考资料</h2>
-<div class="outline-text-2" id="text-org2016b6e">
+<div id="outline-container-orgb4c95c7" class="outline-2">
+<h2 id="orgb4c95c7">参考资料</h2>
+<div class="outline-text-2" id="text-orgb4c95c7">
 <ul class="org-ul">
 <li>
 <a href="https://www.backblaze.com/blog/whats-the-diff-programs-processes-and-threads/">backblaze.com - difference between process and thread</a><br>
