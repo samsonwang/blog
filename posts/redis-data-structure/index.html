@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>redis中的数据结构 | Hack Note</title>
+<link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="https://samsonwang.me/posts/redis-data-structure/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/makefile_cheatsheet/" title="Makefile 要点备忘" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+<li class="nav-item">
+<a href="/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">redis中的数据结构</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2019-04-29T09:37:50+08:00" itemprop="datePublished" title="2019-04-29 09:37">Apr 29 2019</time>
+</div>
+
+      
+
+      
+    <div class="source blur-1">
+      <a href="/posts/redis-data-structure/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+     <div class="link blur-1">
+       <a href="https://mp.weixin.qq.com/s/RqAiOXbIeh0kcaYY5COrHQ">Original site</a>
+     </div>
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/data-structure/" rel="tag">data structure</a></li>
+        <li><a class="tag p-category" href="/tags/nosql/" rel="tag">nosql</a></li>
+        <li><a class="tag p-category" href="/tags/redis/" rel="tag">redis</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+本文主要介绍了 redis 中的底层数据结构类型，并比较了操作这些数据时的时间复杂度。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org1c2939a" class="outline-2">
+<h2 id="org1c2939a">
+<span class="section-number-2">1</span> 简介</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+redis 常用的类型主要是 String、List、Hash、Set、ZSet 这5种。<br></p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<colgroup>
+<col class="org-left">
+<col class="org-left">
+<col class="org-left">
+</colgroup>
+<thead><tr>
+<th scope="col" class="org-left">数据类型</th>
+<th scope="col" class="org-left">可存储的值</th>
+<th scope="col" class="org-left">支持的操作</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="org-left">string</td>
+<td class="org-left">字符串、整数、浮点数</td>
+<td class="org-left">对整个字符串或字符串的其中一部分执行操作</td>
+</tr>
+<tr>
+<td class="org-left"> </td>
+<td class="org-left"> </td>
+<td class="org-left">对整数和浮点数执行自增和自减操作</td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td class="org-left"> </td>
+<td class="org-left"> </td>
+<td class="org-left">从两端压入或者弹出元素</td>
+</tr>
+<tr>
+<td class="org-left">list</td>
+<td class="org-left">链表</td>
+<td class="org-left">读取单个或多个元素</td>
+</tr>
+<tr>
+<td class="org-left"> </td>
+<td class="org-left"> </td>
+<td class="org-left">进行修剪只保留一个范围内的元素</td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td class="org-left"> </td>
+<td class="org-left"> </td>
+<td class="org-left">添加、获取、移除单个元素</td>
+</tr>
+<tr>
+<td class="org-left">set</td>
+<td class="org-left">无序集合</td>
+<td class="org-left">检查一个元素是否存在集合中</td>
+</tr>
+<tr>
+<td class="org-left"> </td>
+<td class="org-left"> </td>
+<td class="org-left">计算交集、并集、差集</td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td class="org-left"> </td>
+<td class="org-left"> </td>
+<td class="org-left">添加、获取、移除单个键值对</td>
+</tr>
+<tr>
+<td class="org-left">hash</td>
+<td class="org-left">包含键值对的无序散列表</td>
+<td class="org-left">获取所有键值对</td>
+</tr>
+<tr>
+<td class="org-left"> </td>
+<td class="org-left"> </td>
+<td class="org-left">检查某个键是否存在</td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td class="org-left"> </td>
+<td class="org-left"> </td>
+<td class="org-left">添加、获取、删除元素</td>
+</tr>
+<tr>
+<td class="org-left">zset</td>
+<td class="org-left">有序集合</td>
+<td class="org-left">根据分值范围或成员来获取元素</td>
+</tr>
+<tr>
+<td class="org-left"> </td>
+<td class="org-left"> </td>
+<td class="org-left">计算一个键的排名</td>
+</tr>
+</tbody>
+</table>
+<p>
+这些数据结构对应的常见用法：<br></p>
+<ul class="org-ul">
+<li>String：缓存、限流、计数器、分布式锁、分布式Session<br>
+</li>
+<li>Hash：存储用户信息、用户主页访问量、组合查询<br>
+</li>
+<li>List：微博关注人时间轴列表、简单队列<br>
+</li>
+<li>Set：赞、踩、标签、好友关系<br>
+</li>
+<li>Zset：排行榜<br>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-org0ae6da8" class="outline-2">
+<h2 id="org0ae6da8">
+<span class="section-number-2">2</span> redis 的底层存储对象 redisObject</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+redis 每个对象由一个 redisObject 结构表示，它的 ptr 指针指向底层实现的数据结构，而数据结构由 encoding 属性决定。<br>
+可以使用 object encoding key<sub>name</sub> 获得 key 对应的底层数据结构，操作示例：<br></p>
+<div class="highlight"><pre><span></span><span class="m">127</span>.0.0.1:6379&gt; <span class="nb">set</span> hello world
+OK
+<span class="m">127</span>.0.0.1:6379&gt; object encoding hello
+<span class="s2">"embstr"</span>
+</pre></div>
+
+<p>
+redis 所有的数据结构类型<br></p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<colgroup>
+<col class="org-left">
+<col class="org-left">
+</colgroup>
+<thead><tr>
+<th scope="col" class="org-left">底层数据结构</th>
+<th scope="col" class="org-left">object encoding命令输出</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="org-left">整数</td>
+<td class="org-left">"int"</td>
+</tr>
+<tr>
+<td class="org-left">embstr 编码的简单动态字符串（SDS）</td>
+<td class="org-left">"embstr"</td>
+</tr>
+<tr>
+<td class="org-left">简单动态字符串</td>
+<td class="org-left"> </td>
+</tr>
+<tr>
+<td class="org-left">字典</td>
+<td class="org-left">"hashtable"</td>
+</tr>
+<tr>
+<td class="org-left">双端链表</td>
+<td class="org-left">"linkedlist"</td>
+</tr>
+<tr>
+<td class="org-left">压缩列表</td>
+<td class="org-left">"ziplist"</td>
+</tr>
+<tr>
+<td class="org-left">整数集合</td>
+<td class="org-left">"intset"</td>
+</tr>
+<tr>
+<td class="org-left">跳跃表和字典</td>
+<td class="org-left">"skiplist"</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+<div id="outline-container-org9c0394b" class="outline-2">
+<h2 id="org9c0394b">
+<span class="section-number-2">3</span> string 类型</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+字符串对象的底层实现可以是 int、raw、embstr。int 编码字符串对象和 embstr 编码字符串对象在一定条件下会转化为 raw 编码字符串对象。<br>
+embstr：小于等于39字节的字符串<br>
+int：8个字节的长整形<br>
+raw：大于39个字节的字符串<br></p>
+
+<ul class="org-ul">
+<li>get：sdsrange—O(n)<br>
+</li>
+<li>set：sdscpy—O(n)<br>
+</li>
+<li>create：sdsnew—O(1)<br>
+</li>
+<li>len：sdslen—O(1)<br>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-org155751e" class="outline-2">
+<h2 id="org155751e">
+<span class="section-number-2">4</span> list 类型</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+List对象的底层实现是quicklist（快速列表，是ziplist 压缩列表 和linkedlist 双端链表 的组合）。<br></p>
+
+<ul class="org-ul">
+<li>rpush: listAddNodeHead —O(1)<br>
+</li>
+<li>lpush: listAddNodeTail —O(1)<br>
+</li>
+<li>push:listInsertNode —O(1)<br>
+</li>
+<li>index : listIndex —O(N)<br>
+</li>
+<li>pop:ListFirst/listLast —O(1)<br>
+</li>
+<li>llen:listLength —O(N)<br>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-org11c4215" class="outline-2">
+<h2 id="org11c4215">
+<span class="section-number-2">5</span> hash 类型</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+Hash对象的底层实现可以是ziplist（压缩列表）或者hashtable（字典或者也叫哈希表）。<br></p>
+
+<p>
+Hash对象只有同时满足下面两个条件时，才会使用ziplist（压缩列表）：<br></p>
+<ol class="org-ol">
+<li>哈希中元素数量小于512个；<br>
+</li>
+<li>哈希中所有键值对的键和值字符串长度都小于64字节。<br>
+</li>
+</ol>
+<p>
+hashtable哈希表可以实现O(1)复杂度的读写操作，因此效率很高。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org50d8668" class="outline-2">
+<h2 id="org50d8668">
+<span class="section-number-2">6</span> set 类型</h2>
+<div class="outline-text-2" id="text-6">
+<p>
+Set集合对象的底层实现可以是intset（整数集合）或者hashtable（字典或者也叫哈希表）。<br></p>
+
+<ul class="org-ul">
+<li>sadd:intsetAdd—O(1)<br>
+</li>
+<li>smembers:intsetGetO(1)—O(N)<br>
+</li>
+<li>srem:intsetRemove—O(N)<br>
+</li>
+<li>slen:intsetlen —O(1)<br>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-org2acb1d9" class="outline-2">
+<h2 id="org2acb1d9">
+<span class="section-number-2">7</span> sorted set 类型</h2>
+<div class="outline-text-2" id="text-7">
+<p>
+ZSet有序集合对象底层实现可以是ziplist（压缩列表）或者skiplist（跳跃表）。<br>
+当一个有序集合的元素数量比较多或者成员是比较长的字符串时，Redis就使用skiplist（跳跃表）作为ZSet对象的底层实现。<br></p>
+
+<ul class="org-ul">
+<li>zadd—zslinsert—平均O(logN), 最坏O(N)<br>
+</li>
+<li>zrem—zsldelete—平均O(logN), 最坏O(N)<br>
+</li>
+<li>zrank–zslGetRank—平均O(logN), 最坏O(N)<br>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-orgea46f7d" class="outline-2">
+<h2 id="orgea46f7d">
+<span class="section-number-2">8</span> 参考资料</h2>
+<div class="outline-text-2" id="text-8">
+<ul class="org-ul">
+<li>
+<a href="https://mp.weixin.qq.com/s/RqAiOXbIeh0kcaYY5COrHQ">微信公众号文章</a><br>
+</li>
+<li>
+<a href="https://zhuanlan.zhihu.com/p/29665317">zhihu.com - redis常见的应用场景解析</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
+        </div>
+</div>
+
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+    <ul class="pager hidden-print">
+<li class="left">
+          <a href="/posts/makefile_cheatsheet/" rel="prev">
+            <p class="title">Makefile 要点备忘</p>
+            <p>Previous post</p>
+          </a>
+      </li>
+      <li class="right">
+          <div></div>
+      </li>
+    </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="https://samsonwang.me/posts/redis-data-structure/",
+        disqus_title="redis\u4e2d\u7684\u6570\u636e\u7ed3\u6784",
+        disqus_identifier="cache/posts/redis-data-structure.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2019 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="/assets/js/jquery.min.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/jquery.lazyload.min.js"></script><script src="/assets/js/popper.min.js"></script><script src="/assets/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
