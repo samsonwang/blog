@@ -2,7 +2,7 @@
 .. title: C++中的智能指针
 .. slug: smart-pointers-in-cpp
 .. date: 2018-11-28 23:51:57 UTC+08:00
-.. updated: 2018-11-30 11:10:57 UTC+08:00
+.. updated: 2019-05-15 17:55:57 UTC+08:00
 .. tags: cpp, smart pointer, shared_ptr, unique_ptr
 .. category: cpp
 .. link:
@@ -42,6 +42,7 @@ The object is disposed of using the associated deleter when either of the follow
 - the managing =unique_ptr= object is destroyed
 - the managing =unique_ptr= object is assigned another pointer via operator= or reset().
 
+
 ** =shared_ptr= 与 =auto_ptr=
 
 =auto_ptr= 是 =shared_ptr= 的前身， 在C++11中开始支持 =shared_ptr= ，并弃用了 =auto_ptr= ，所以在新开发的项目中应该都使用 =shared_ptr= 。
@@ -49,7 +50,7 @@ The object is disposed of using the associated deleter when either of the follow
 =shared_ptr= 所管理对象被销毁的时机：
 The object is destroyed and its memory deallocated when either of the following happens:
 - the last remaining =shared_ptr= owning the object is destroyed;
-- the last remaining =shared_ptr= owning the object is assigned another pointer via operator= or reset().
+- the last remaining =shared_ptr= owning the object is assigned another pointer via =operator== or =reset()= .
 
 =shared_ptr= 在何时会增加引用计数( =use_count= )呢？
 - 使用等号进行对象的拷贝
@@ -73,17 +74,25 @@ shared_ptr<int> pInt(new int[3], [](int* p){delete[] p;});
 
 
 ** =weak_ptr=
-=weak_ptr= 是从c++11开始支持的，用于在 =shared_ptr= 中存放一些对象。
+=weak_ptr= 是从c++11开始支持的，用于存放已经由 =shared_ptr= 管理的对象。在 =weak_ptr= 需要操作其管理的对象时，需要先转化为 =shared_ptr= 再进行操作。
 
-如果有在 =shared_ptr= 对象中存放对象本身的需求时，可以使用 =week_ptr= ，参考下面的代码， =demo1= 应该使用 =weak_ptr= 进行管理。
+=weak_ptr= 保证的是临时的所有权：只有在对象存在时才可以访问该对象，由于该对象可能会被释放掉， =weak_ptr= 用于追踪（track）该对象，在需要操作该对象时会转换为一个临时的 =shared_ptr= 以获得临时的所有权。如果这时原始的 =shared_ptr= 被销毁，则该对象的生存期会延长至这个临时的 =shared_ptr= 也被销毁。
+
+=weak_ptr= 的另一个用法是打破由 =shared_ptr= 组成的引用环（reference cycle）。用互锁来形容比较贴切，在这种情况下引用计数永远不会清零，因此会产生内存泄漏。需要将引用环中的一个 =shared_ptr= 修改为 =weak_ptr= 以解决这个问题。
+
+以下是示例代码
 #+BEGIN_SRC cpp
-class Demo {
-public:
-    int n1;
-    shared_ptr<Demo> demo1;  // error, use weak_ptr
-}
+class A { shared_ptr<B> b; ... };
+class B { shared_ptr<A> a; ... };
+shared_ptr<A> x(new A);  // +1
+x->b = new B;            // +1
+x->b->a = x;             // +1
+// Ref count of 'x' is 2.
+// Ref count of 'x->b' is 1.
+// When 'x' leaves the scope, there will be a memory leak:
+// 2 is decremented to 1, and so both ref counts will be 1.
+// (Memory is deallocated only when ref count drops to 0)
 #+END_SRC
-
 
 ** Reference
 - [[https://en.cppreference.com/book/intro/smart_pointers][cppreference - smart pointers]]
@@ -91,3 +100,4 @@ public:
 - [[https://en.cppreference.com/w/cpp/memory/shared_ptr][cppreference - =shared_ptr=]]
 - [[https://en.cppreference.com/w/cpp/memory/weak_ptr][cppreference - =weak_ptr=]]
 - [[https://www.acodersjourney.com/top-10-dumb-mistakes-avoid-c-11-smart-pointers/][acodersjourney.com - 10 dumb mistakes to avoid with smart-pointer]]
+- [[https://stackoverflow.com/questions/4984381/shared-ptr-and-weak-ptr-differences][stackoverflow - differences between =shared_ptr= and =weak_ptr=]]
