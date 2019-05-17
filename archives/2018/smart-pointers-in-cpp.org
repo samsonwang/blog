@@ -2,7 +2,7 @@
 .. title: C++中的智能指针
 .. slug: smart-pointers-in-cpp
 .. date: 2018-11-28 23:51:57 UTC+08:00
-.. updated: 2019-05-15 17:55:57 UTC+08:00
+.. updated: 2019-05-16 10:12:00 UTC+08:00
 .. tags: cpp, smart pointer, shared_ptr, unique_ptr
 .. category: cpp
 .. link:
@@ -82,17 +82,18 @@ shared_ptr<int> pInt(new int[3], [](int* p){delete[] p;});
 
 以下是示例代码
 #+BEGIN_SRC cpp
-class A { shared_ptr<B> b; ... };
-class B { shared_ptr<A> a; ... };
-shared_ptr<A> x(new A);  // +1
-x->b = new B;            // +1
-x->b->a = x;             // +1
+class A { std::shared_ptr<B> b; ... };
+class B { std::shared_ptr<A> a; ... };
+std::shared_ptr<A> x(new A);  // +1
+x->b = std::make_shared<B>(); // +1
+x->b->a = x;                  // +1
 // Ref count of 'x' is 2.
 // Ref count of 'x->b' is 1.
 // When 'x' leaves the scope, there will be a memory leak:
 // 2 is decremented to 1, and so both ref counts will be 1.
 // (Memory is deallocated only when ref count drops to 0)
 #+END_SRC
+
 
 ** Reference
 - [[https://en.cppreference.com/book/intro/smart_pointers][cppreference - smart pointers]]
