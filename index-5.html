@@ -71,9 +71,138 @@
 
 <div class="postindex">
 
-      
 
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/css-flexbox-layout-cheatsheet/" class="u-url">css flexbox 总结</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/map-reduce/" class="u-url">MapReduce模型</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-08-20T10:09:10+08:00" itemprop="datePublished" title="2018-08-20 10:09">Aug 20 2018</time>
+</div>
+
+        
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/map-reduce/#disqus_thread" data-disqus-identifier="cache/archives/2018/map-reduce.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/big-data/" rel="tag">big data</a></li>
+        <li><a class="tag p-category" href="/tags/distributed-system/" rel="tag">distributed system</a></li>
+        <li><a class="tag p-category" href="/tags/hadoop/" rel="tag">hadoop</a></li>
+        <li><a class="tag p-category" href="/tags/mapreduce/" rel="tag">mapreduce</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <div id="outline-container-org0739888" class="outline-2">
+<h2 id="org0739888">序言</h2>
+<div class="outline-text-2" id="text-org0739888">
+<p>
+对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org1c85b93" class="outline-2">
+<h2 id="org1c85b93">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-org1c85b93">
+<p>
+MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
+
+<p>
+百度百科中给出的定义比较全面，而且很准确。<br></p>
+<blockquote>
+<p>
+MapReduce是面向大数据并行处理的计算模型、框架和平台，它隐含了以下三层含义：<br>
+1）MapReduce是一个基于集群的高性能并行计算平台（Cluster Infrastructure）。它允许用市场上普通的商用服务器构成一个包含数十、数百至数千个节点的分布和并行计算集群。<br>
+2）MapReduce是一个并行计算与运行软件框架（Software Framework）。它提供了一个庞大但设计精良的并行计算软件框架，能自动完成计算任务的并行化处理，自动划分计算数据和计算任务，在集群节点上自动分配和执行任务以及收集计算结果，将数据分布存储、数据通信、容错处理等并行计算涉及到的很多系统底层的复杂细节交由系统负责处理，大大减少了软件开发人员的负担。<br>
+3）MapReduce是一个并行程序设计模型与方法（Programming Model &amp; Methodology）。它借助于函数式程序设计语言Lisp的设计思想，提供了一种简便的并行程序设计方法，用Map和Reduce两个函数编程实现基本的并行计算任务，提供了抽象的操作和并行编程接口，以简单方便地完成大规模数据的编程和计算处理。<br></p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-orgb0a3c39" class="outline-2">
+<h2 id="orgb0a3c39">map和reduce</h2>
+<div class="outline-text-2" id="text-orgb0a3c39">
+<p>
+<b>从编程语言的角度上来说</b><br>
+map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
+reduce操作也会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程从前向后作用在列表成员上，最终得到一个列表中条目。<br></p>
+
+<p>
+<b>从分布式系统的角度上来说</b> (以下内容摘自百度百科)<br></p>
+<blockquote>
+<p>
+简单说来，一个映射函数就是对一些独立元素组成的概念上的列表（例如，一个测试成绩的列表）的每一个元素进行指定的操作（比如前面的例子里，有人发现所有学生的成绩都被高估了一分，它可以定义一个“减一”的映射函数，用来修正这个错误。）。事实上，每个元素都是被独立操作的，而原始列表没有被更改，因为这里创建了一个新的列表来保存新的答案。这就是说，Map操作是可以高度并行的，这对高性能要求的应用以及并行计算领域的需求非常有用。<br>
+而化简操作指的是对一个列表的元素进行适当的合并（继续看前面的例子，如果有人想知道班级的平均分该怎么做？它可以定义一个化简函数，通过让列表中的元素跟自己的相邻的元素相加的方式把列表减半，如此递归运算直到列表只剩下一个元素，然后用这个元素除以人数，就得到了平均分。）。虽然他不如映射函数那么并行，但是因为化简总是有一个简单的答案，大规模的运算相对独立，所以化简函数在高度并行环境下也很有用。<br></p>
+</blockquote>
+
+<p>
+我之前在学习语言层面的map和reduce时，很难理解其用途，结合分布式计算的背景知识，就能够较形象地理解map和reduce操作的过程和作用。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org639b209" class="outline-2">
+<h2 id="org639b209">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-org639b209">
+<p>
+mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
+
+<p>
+mapreduce最初由google提出，并开发出了如下产品<br></p>
+<ul class="org-ul">
+<li>Google File System（大规模分散文件系统）<br>
+</li>
+<li>MapReduce （大规模分散FrameWork）<br>
+</li>
+<li>BigTable（大规模分散数据库）<br>
+</li>
+<li>Chubby（分散锁服务）<br>
+</li>
+</ul>
+<p>
+随后就有其对应的开源实现，也就是Hadoop。Hadoop是Apache软件基金会发起的一个项目，它是一种分布式数据和计算的框架，它包含许如下子项目。<br></p>
+<ul class="org-ul">
+<li>HDFS，hadoop distributed file system，是Google File System的开源实现<br>
+</li>
+<li>MapReduce，是Google MapReduce的开源实现<br>
+</li>
+<li>HBASE，类似Google BigTable的分布式NoSQL数据库<br>
+</li>
+<li>Zookeeper，分布式锁服务，类似Google Chubby<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org6a16d20" class="outline-2">
+<h2 id="org6a16d20">参考资料</h2>
+<div class="outline-text-2" id="text-org6a16d20">
+<ul class="org-ul">
+<li>
+<a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
+</li>
+<li>
+<a href="https://baike.baidu.com/item/MapReduce/133425">百度百科 mapreduce</a><br>
+</li>
+<li>
+<a href="https://hadoop.apache.org/">Hadoop主页</a><br>
+</li>
+</ul>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/css-flexbox-layout-cheatsheet/" class="u-url">css flexbox 总结</a></h1>
       <div class="metadata">
         
 
@@ -104,17 +233,17 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org4de8e4a" class="outline-2">
-<h2 id="org4de8e4a">引言</h2>
-<div class="outline-text-2" id="text-org4de8e4a">
+      <div id="outline-container-orgf8a71a8" class="outline-2">
+<h2 id="orgf8a71a8">引言</h2>
+<div class="outline-text-2" id="text-orgf8a71a8">
 <p>
 本文主要对css flexbox的关键点了总结，方便以后在以后的查阅。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org5e1eb1e" class="outline-2">
-<h2 id="org5e1eb1e">容器的属性</h2>
-<div class="outline-text-2" id="text-org5e1eb1e">
+<div id="outline-container-org1052764" class="outline-2">
+<h2 id="org1052764">容器的属性</h2>
+<div class="outline-text-2" id="text-org1052764">
 <p>
 对于容器需要指定其显示方式为flexbox<br></p>
 <div class="highlight"><pre><span></span><span class="nt">display</span><span class="o">:</span> <span class="nt">flex</span><span class="o">;</span>
@@ -146,9 +275,9 @@
 </div>
 </div>
 
-<div id="outline-container-org64768cd" class="outline-2">
-<h2 id="org64768cd">条目的属性</h2>
-<div class="outline-text-2" id="text-org64768cd">
+<div id="outline-container-orgcc4cede" class="outline-2">
+<h2 id="orgcc4cede">条目的属性</h2>
+<div class="outline-text-2" id="text-orgcc4cede">
 <p>
 用于调整顺序<br></p>
 <div class="highlight"><pre><span></span><span class="nt">order</span><span class="o">:</span> <span class="o">&lt;</span><span class="nt">integer</span><span class="o">&gt;;</span> <span class="c">/* default 0 */</span>
@@ -182,9 +311,9 @@
 </div>
 
 
-<div id="outline-container-org00079dc" class="outline-2">
-<h2 id="org00079dc">参考资料</h2>
-<div class="outline-text-2" id="text-org00079dc">
+<div id="outline-container-org76b9010" class="outline-2">
+<h2 id="org76b9010">参考资料</h2>
+<div class="outline-text-2" id="text-org76b9010">
 <ul class="org-ul">
 <li>
 <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">css-tricks.com</a><br>
@@ -277,8 +406,8 @@
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgae3c525" class="outline-2">
-<h2 id="orgae3c525">
+      <div id="outline-container-org740d933" class="outline-2">
+<h2 id="org740d933">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -293,8 +422,8 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-orga0c9625" class="outline-2">
-<h2 id="orga0c9625">
+<div id="outline-container-org8181406" class="outline-2">
+<h2 id="org8181406">
 <span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -306,13 +435,13 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-orgc0f0c75" class="outline-2">
-<h2 id="orgc0f0c75">
+<div id="outline-container-orgd565b2a" class="outline-2">
+<h2 id="orgd565b2a">
 <span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-org5fccdbd" class="outline-3">
-<h3 id="org5fccdbd">
+<div id="outline-container-org441b147" class="outline-3">
+<h3 id="org441b147">
 <span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -357,8 +486,8 @@ Point and mark interchanged
 </div>
 </div>
 
-<div id="outline-container-org91c7aeb" class="outline-3">
-<h3 id="org91c7aeb">
+<div id="outline-container-org09ca937" class="outline-3">
+<h3 id="org09ca937">
 <span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -396,8 +525,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org8e5ccfc" class="outline-3">
-<h3 id="org8e5ccfc">
+<div id="outline-container-orgee21c50" class="outline-3">
+<h3 id="orgee21c50">
 <span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
 </h3>
 <div class="outline-text-3" id="text-3-3">
@@ -411,16 +540,16 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org355d4f9" class="outline-2">
-<h2 id="org355d4f9">
+<div id="outline-container-orga96bda1" class="outline-2">
+<h2 id="orga96bda1">
 <span class="section-number-2">4</span> 其他插件支持</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
 </div>
 
-<div id="outline-container-orge689b56" class="outline-3">
-<h3 id="orge689b56">
+<div id="outline-container-org8de336a" class="outline-3">
+<h3 id="org8de336a">
 <span class="section-number-3">4.1</span> helm swoop</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
@@ -434,8 +563,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org4e08210" class="outline-3">
-<h3 id="org4e08210">
+<div id="outline-container-org0e66aa2" class="outline-3">
+<h3 id="org0e66aa2">
 <span class="section-number-3">4.2</span> avy</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
@@ -451,8 +580,8 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org47b13be" class="outline-2">
-<h2 id="org47b13be">
+<div id="outline-container-org8a6cbca" class="outline-2">
+<h2 id="org8a6cbca">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -500,17 +629,17 @@ interface FooProps {}
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org2f2fcef" class="outline-2">
-<h2 id="org2f2fcef">引言</h2>
-<div class="outline-text-2" id="text-org2f2fcef">
+      <div id="outline-container-org3ecc702" class="outline-2">
+<h2 id="org3ecc702">引言</h2>
+<div class="outline-text-2" id="text-org3ecc702">
 <p>
 在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga6e1710" class="outline-2">
-<h2 id="orga6e1710">使用尖括号完成重定向</h2>
-<div class="outline-text-2" id="text-orga6e1710">
+<div id="outline-container-org58f1e28" class="outline-2">
+<h2 id="org58f1e28">使用尖括号完成重定向</h2>
+<div class="outline-text-2" id="text-org58f1e28">
 <p>
 示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
 <div class="highlight"><pre><span></span>ls . &gt; ls-output.txt
@@ -519,25 +648,25 @@ interface FooProps {}
 可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
 </div>
 
-<div id="outline-container-orga9a8b0d" class="outline-3">
-<h3 id="orga9a8b0d">重定向 <code>stdout</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-orga9a8b0d">
+<div id="outline-container-org1a75d1a" class="outline-3">
+<h3 id="org1a75d1a">重定向 <code>stdout</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org1a75d1a">
 <div class="highlight"><pre><span></span>ls . <span class="m">1</span>&gt; ls-output.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org39bdc7d" class="outline-3">
-<h3 id="org39bdc7d">重定向 <code>stderr</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org39bdc7d">
+<div id="outline-container-orgdece5d0" class="outline-3">
+<h3 id="orgdece5d0">重定向 <code>stderr</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-orgdece5d0">
 <div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt; ls-error.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgde65f45" class="outline-3">
-<h3 id="orgde65f45">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
-<div class="outline-text-3" id="text-orgde65f45">
+<div id="outline-container-org8c006dd" class="outline-3">
+<h3 id="org8c006dd">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
+<div class="outline-text-3" id="text-org8c006dd">
 <div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> ls-output-and-error.txt
 </pre></div>
 <p>
@@ -547,9 +676,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org0d707b6" class="outline-3">
-<h3 id="org0d707b6">将程序的输出丢掉</h3>
-<div class="outline-text-3" id="text-org0d707b6">
+<div id="outline-container-org4434226" class="outline-3">
+<h3 id="org4434226">将程序的输出丢掉</h3>
+<div class="outline-text-3" id="text-org4434226">
 <p>
 可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
 <div class="highlight"><pre><span></span>program &gt; /dev/null
@@ -557,9 +686,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org292b092" class="outline-3">
-<h3 id="org292b092">将输出追加到指定文件尾部</h3>
-<div class="outline-text-3" id="text-org292b092">
+<div id="outline-container-org02ed715" class="outline-3">
+<h3 id="org02ed715">将输出追加到指定文件尾部</h3>
+<div class="outline-text-3" id="text-org02ed715">
 <p>
 使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="nb">echo</span> <span class="nb">test</span> &gt;&gt; file-output.txt
@@ -568,9 +697,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-orgd7b4726" class="outline-2">
-<h2 id="orgd7b4726">使用管道完成重定向</h2>
-<div class="outline-text-2" id="text-orgd7b4726">
+<div id="outline-container-orgb3cb20b" class="outline-2">
+<h2 id="orgb3cb20b">使用管道完成重定向</h2>
+<div class="outline-text-2" id="text-orgb3cb20b">
 <p>
 使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
 <div class="highlight"><pre><span></span>ls <span class="p">|</span> grep &lt;pattern&gt;
@@ -610,9 +739,9 @@ interface FooProps {}
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org67038fb" class="outline-2">
-<h2 id="org67038fb">引言</h2>
-<div class="outline-text-2" id="text-org67038fb">
+      <div id="outline-container-orgc211bbd" class="outline-2">
+<h2 id="orgc211bbd">引言</h2>
+<div class="outline-text-2" id="text-orgc211bbd">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -637,9 +766,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org7a792c1" class="outline-2">
-<h2 id="org7a792c1">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-org7a792c1">
+<div id="outline-container-org2c63d67" class="outline-2">
+<h2 id="org2c63d67">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-org2c63d67">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -683,9 +812,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-orgb6c31f5" class="outline-2">
-<h2 id="orgb6c31f5">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-orgb6c31f5">
+<div id="outline-container-orgd82dcdf" class="outline-2">
+<h2 id="orgd82dcdf">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-orgd82dcdf">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -694,18 +823,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org467b747" class="outline-2">
-<h2 id="org467b747">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-org467b747">
+<div id="outline-container-org4a9388f" class="outline-2">
+<h2 id="org4a9388f">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-org4a9388f">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org7ebfeaf" class="outline-2">
-<h2 id="org7ebfeaf">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-org7ebfeaf">
+<div id="outline-container-org1d7267c" class="outline-2">
+<h2 id="org1d7267c">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org1d7267c">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -714,9 +843,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org95d1d3e" class="outline-2">
-<h2 id="org95d1d3e">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-org95d1d3e">
+<div id="outline-container-orgc4f8a89" class="outline-2">
+<h2 id="orgc4f8a89">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-orgc4f8a89">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
@@ -752,8 +881,8 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org25cf563" class="outline-2">
-<h2 id="org25cf563">
+      <div id="outline-container-orgb56bda7" class="outline-2">
+<h2 id="orgb56bda7">
 <span class="section-number-2">1</span> 什么是位域</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -783,8 +912,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org1163fce" class="outline-2">
-<h2 id="org1163fce">
+<div id="outline-container-org7185d51" class="outline-2">
+<h2 id="org7185d51">
 <span class="section-number-2">2</span> 位域的语法</h2>
 <div class="outline-text-2" id="text-2">
 <div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="o">:</span> <span class="n">size</span>
@@ -824,8 +953,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </pre></div>
 </div>
 
-<div id="outline-container-org80ead47" class="outline-3">
-<h3 id="org80ead47">
+<div id="outline-container-org7cc57fe" class="outline-3">
+<h3 id="org7cc57fe">
 <span class="section-number-3">2.1</span> 在size取0时如何理解</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -833,8 +962,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 如下所示，定义了如下几种情况。<br></p>
 </div>
 
-<div id="outline-container-orgffd88f8" class="outline-4">
-<h4 id="orgffd88f8">
+<div id="outline-container-orgeb4a88a" class="outline-4">
+<h4 id="orgeb4a88a">
 <span class="section-number-4">2.1.1</span> case1</h4>
 <div class="outline-text-4" id="text-2-1-1">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -860,8 +989,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-orgb3d5d8d" class="outline-4">
-<h4 id="orgb3d5d8d">
+<div id="outline-container-org3d98a7b" class="outline-4">
+<h4 id="org3d98a7b">
 <span class="section-number-4">2.1.2</span> case2</h4>
 <div class="outline-text-4" id="text-2-1-2">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -880,8 +1009,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-orgf8e6934" class="outline-4">
-<h4 id="orgf8e6934">
+<div id="outline-container-orgd7d99ec" class="outline-4">
+<h4 id="orgd7d99ec">
 <span class="section-number-4">2.1.3</span> case3</h4>
 <div class="outline-text-4" id="text-2-1-3">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -901,8 +1030,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org7fbf10f" class="outline-4">
-<h4 id="org7fbf10f">
+<div id="outline-container-org989bbad" class="outline-4">
+<h4 id="org989bbad">
 <span class="section-number-4">2.1.4</span> case4</h4>
 <div class="outline-text-4" id="text-2-1-4">
 <div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
@@ -922,8 +1051,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org034170d" class="outline-3">
-<h3 id="org034170d">
+<div id="outline-container-orgfc2dba3" class="outline-3">
+<h3 id="orgfc2dba3">
 <span class="section-number-3">2.2</span> <code>struct</code> 标识符</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -933,8 +1062,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-org50a0e16" class="outline-2">
-<h2 id="org50a0e16">
+<div id="outline-container-orgb792fa7" class="outline-2">
+<h2 id="orgb792fa7">
 <span class="section-number-2">3</span> 位域的常见应用场景</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -944,8 +1073,8 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 </div>
 
-<div id="outline-container-orgbb68d23" class="outline-2">
-<h2 id="orgbb68d23">
+<div id="outline-container-org425f3ad" class="outline-2">
+<h2 id="org425f3ad">
 <span class="section-number-2">4</span> C++中的位操作接口</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -953,8 +1082,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-orgf62ef6d" class="outline-2">
-<h2 id="orgf62ef6d">
+<div id="outline-container-org63db95f" class="outline-2">
+<h2 id="org63db95f">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -1008,8 +1137,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 
       </div>
     </header><div class="p-summary entry-summary">
-      <div id="outline-container-org6894c20" class="outline-2">
-<h2 id="org6894c20">
+      <div id="outline-container-org9fd0613" class="outline-2">
+<h2 id="org9fd0613">
 <span class="section-number-2">1</span> 原子化操作</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -1020,8 +1149,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-orgde99e6b" class="outline-2">
-<h2 id="orgde99e6b">
+<div id="outline-container-org75d7ca0" class="outline-2">
+<h2 id="org75d7ca0">
 <span class="section-number-2">2</span> 函数接口</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -1076,8 +1205,8 @@ In most cases, these builtins are considered a full barrier. That is, no memory 
 </div>
 </div>
 
-<div id="outline-container-org909e4e0" class="outline-2">
-<h2 id="org909e4e0">
+<div id="outline-container-org5e884dd" class="outline-2">
+<h2 id="org5e884dd">
 <span class="section-number-2">3</span> 内存栅栏（Memory Barrier）</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -1117,8 +1246,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 
 
-<div id="outline-container-orge48efc0" class="outline-2">
-<h2 id="orge48efc0">
+<div id="outline-container-org0fef9ce" class="outline-2">
+<h2 id="org0fef9ce">
 <span class="section-number-2">4</span> 操作原子化能够解决多进程访问共享内存的问题吗？</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -1127,8 +1256,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 
 
-<div id="outline-container-orgbbd3446" class="outline-2">
-<h2 id="orgbbd3446">
+<div id="outline-container-orge78d42e" class="outline-2">
+<h2 id="orge78d42e">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -1194,198 +1323,6 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 调试 C/C++ 程序时，需要打印指定内存地址的内容。我最近调试程序中的序列化模块时，需要将类对象按照指定的格式转化为二进制流，为了验证转化结果，在调试时就需要将指定内存地址中的内容打印出来。<br></p>
 
 <p class="more"><a href="/posts/gdb-display-contents-of-memory-address/">Read more…</a></p>
-</div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/asynchronous-synchronous-and-blocking-unblocking/" class="u-url">同步和异步、阻塞和非阻塞</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-06-26T09:27:06+08:00" itemprop="datePublished" title="2018-06-26 09:27">Jun 26 2018</time>
-</div>
-
-        
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/asynchronous-synchronous-and-blocking-unblocking/#disqus_thread" data-disqus-identifier="cache/archives/2018/asynchronous-synchronous-and-blocking-unblocking.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/computer-science/" rel="tag">computer science</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div id="outline-container-orgcb5195a" class="outline-2">
-<h2 id="orgcb5195a">
-<span class="section-number-2">1</span> 同步和异步</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-同步和异步指的是在进行I/O操作完成之前，是否允许其他处理步骤继续执行。<br>
-计算机中的I/O操作相对于数据处理操作时十分耗时的。<br></p>
-
-<p>
-一个简单的I/O操作方式就是启动连接并等待操作完成，但是这样的操作（同步阻塞I/O）在通信过程中会阻塞进程的处理进度。<br>
-相应的，可以在启动通信的同时进行其他的处理，并不需要等待I/O操作的完成，这样的操作就被称作是异步I/O。那些依赖于I/O操作执行完成的任务会阻塞等待I/O操作的完成，其他不依赖与I/O操作的任务能够继续执行。<br></p>
-
-<p>
-同步模型常用的函数接口： <code>read</code> , <code>write</code> , <code>send</code> , <code>recv</code><br>
-异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
-</div>
-
-<div id="outline-container-org15de6d2" class="outline-3">
-<h3 id="org15de6d2">
-<span class="section-number-3">1.1</span> POSIX AIO</h3>
-<div class="outline-text-3" id="text-1-1">
-<p>
-在头文件 <code>aio.h</code> 中定义，链接时使用 <code>-lrt</code><br></p>
-
-<p>
-<b>函数接口</b><br>
-异步写操作<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_read</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
-</pre></div>
-
-<p>
-异步读操作<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_write</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
-</pre></div>
-
-<p>
-获取异步操作结果<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_return</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
-</pre></div>
-
-<p>
-获取异步操作中的错误<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_error</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
-</pre></div>
-
-<p>
-示例代码： <a href="https://gist.github.com/rsms/771059">github gist</a><br></p>
-</div>
-</div>
-
-<div id="outline-container-orge08055a" class="outline-3">
-<h3 id="orge08055a">
-<span class="section-number-3">1.2</span> Linux AIO</h3>
-<div class="outline-text-3" id="text-1-2">
-<p>
-在头文件 <code>libaio.h</code> 中定义，链接时使用 <code>-laio</code><br></p>
-
-<p>
-<b>函数接口</b><br>
-需要注意的是aio的函数接口需要借助 <code>syscall</code> 进行调用。<br>
-创建aio context对象<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">io_setup</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">nr</span><span class="p">,</span> <span class="n">aio_context_t</span><span class="o">*</span> <span class="n">ctxp</span><span class="p">);</span>
-</pre></div>
-<p>
-销毁aio context对象<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">io_destroy</span><span class="p">(</span><span class="n">aio_context_t</span> <span class="n">ctx</span><span class="p">);</span>
-</pre></div>
-<p>
-提交异步操作<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">io_submit</span><span class="p">(</span><span class="n">aio_context_t</span> <span class="n">ctx</span><span class="p">,</span> <span class="kt">long</span> <span class="n">nr</span><span class="p">,</span> <span class="k">struct</span> <span class="n">iocb</span><span class="o">**</span> <span class="n">iocbpp</span><span class="p">);</span>
-</pre></div>
-<p>
-获取异步操作结果<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">io_getevents</span><span class="p">(</span><span class="n">aio_context_t</span> <span class="n">ctx</span><span class="p">,</span> <span class="kt">long</span> <span class="n">min_nr</span><span class="p">,</span> <span class="kt">long</span> <span class="n">max_nr</span><span class="p">,</span>
-		 <span class="n">io_event</span><span class="o">*</span> <span class="n">events</span><span class="p">,</span> <span class="k">struct</span> <span class="n">timespec</span><span class="o">*</span> <span class="n">timeout</span><span class="p">);</span>
-</pre></div>
-
-<p>
-示例代码:<br></p>
-<ul class="org-ul">
-<li>
-<a href="https://gist.github.com/larytet/87f90b08643ac3de934df2cadff4989c">github gist</a><br>
-</li>
-<li>
-<a href="http://www.xmailserver.org/eventfd-aio-test.c">xmailserver.org</a><br>
-</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-orgbb8d27d" class="outline-3">
-<h3 id="orgbb8d27d">
-<span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
-<div class="outline-text-3" id="text-1-3">
-<p>
-摘自 <a href="https://stackoverflow.com/questions/8768083/difference-between-posix-aio-and-libaio-on-linux">stackoverflow.com</a><br></p>
-<blockquote>
-<p>
-On linux, the two AIO implementations are fundamentally different.<br>
-The POSIX AIO is a user-level implementation that performs normal blocking I/O in multiple threads, hence giving the illusion that the I/Os are asynchronous. The main reason to do this is that:<br></p>
-<ul class="org-ul">
-<li>it works with any filesystem<br>
-</li>
-<li>it works (essentially) on any operating system (keep in mind that gnu's libc is portable)<br>
-</li>
-<li>it works on files with buffering enabled (i.e. no O<sub>DIRECT</sub> flag set)<br>
-</li>
-</ul>
-<p>
-The main drawback is that your queue depth (i.e. the number of outstanding operations you can have in practice) is limited by the number of threads you choose to have, which also means that a slow operation on one disk may block an operation going to a different disk. It also affects which I/Os (or how many) is seen by the kernel and the disk scheduler as well.<br>
-The kernel AIO (i.e. io<sub>submit</sub>() et.al.) is kernel support for asynchronous I/O operations, where the io requests are actually queued up in the kernel, sorted by whatever disk scheduler you have, presumably some of them are forwarded (in somewhat optimal order one would hope) to the actual disk as asynchronous operations (using TCQ or NCQ). The main restriction with this approach is that not all filesystems work that well or at all with async I/O (and may fall back to blocking semantics), files have to be opened with O<sub>DIRECT</sub> which comes with a whole lot of other restrictions on the I/O requests. If you fail to open your files with O<sub>DIRECT</sub>, it may still "work", as in you get the right data back, but it probably isn't done asynchronously, but is falling back to blocking semantics.<br>
-Also keep in mind that io<sub>submit</sub>() can actually block on the disk under certain circumstances.<br></p>
-</blockquote>
-<p>
-在Linux上两种AIO是完全不同的；<br>
-POSIX AIO实现在用户层，实际上进行的操作是普通的多线程阻塞操作，表现为I/O操作是异步的，这种AIO的优点是兼容性和可移植性好，缺点是操作队列长度受限于最大线程数量。<br>
-Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核中维护，这种AIO的缺点是并不支持所有的文件系统，Linux AIO在某些情况下的磁盘操作是会阻塞的。<br></p>
-</div>
-</div>
-</div>
-
-<div id="outline-container-org97954fe" class="outline-2">
-<h2 id="org97954fe">
-<span class="section-number-2">2</span> 阻塞和非阻塞</h2>
-<div class="outline-text-2" id="text-2">
-<p>
-阻塞与非阻塞的概念针对的是函数是否会立即返回。<br>
-非阻塞模型常与IO复用技术组合使用。<br>
-可以通过函数将IO设备设置为非阻塞模式。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-orgea61cfc" class="outline-2">
-<h2 id="orgea61cfc">
-<span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
-<div class="outline-text-2" id="text-3">
-<p>
-在处理 IO 的时候，阻塞和非阻塞都是同步 IO。<br>
-只有使用了特殊的 API 才是异步 IO。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-org3d4ebcd" class="outline-2">
-<h2 id="org3d4ebcd">
-<span class="section-number-2">4</span> 参考资料</h2>
-<div class="outline-text-2" id="text-4">
-<ul class="org-ul">
-<li>
-<a href="https://blog.csdn.net/hguisu/article/details/38638183">csdn.net</a><br>
-</li>
-<li>
-<a href="https://github.com/littledan/linux-aio%20repo">github.com linux-aio</a><br>
-</li>
-<li>
-<a href="https://www.ibm.com/developerworks/linux/library/l-async/index.html">ibm developerworks</a><br>
-</li>
-</ul>
-</div>
 </div>
     </div>
 

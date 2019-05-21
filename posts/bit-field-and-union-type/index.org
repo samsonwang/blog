@@ -1,0 +1,105 @@
+#+BEGIN_COMMENT
+.. title: 位域内存布局与联合体
+.. slug: bit-field-and-union-type
+.. date: 2019-05-21 16:35:02 UTC+08:00
+.. tags: bit field, union, memory layout, cpp, endian, c
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 位域内存布局与联合体
+
+位域（bit field）与联合体（union）都可以用来控制内存布局。本文主要阐述的内存可总结为：位域的内存布局是编译器决定的，而联合体的内存布局是由大小端决定的。
+
+{{{TEASER_END}}}
+
+** 位域的内存布局
+观察以下代码段，思考程序可能的输出内容。
+#+BEGIN_SRC cpp
+#include <stdio.h>
+union {
+    struct {
+        unsigned char c1 : 2;
+        unsigned char c2 : 3;
+        unsigned char c3 : 3;
+    } s1;
+    unsigned char s2;
+} u1;
+
+int main(int argc, char* argv[]) {
+    printf("sizeof u1 = %d\n", sizeof(u1));
+
+    u1.s2 = 100;
+
+    printf("u1.s1.c1  = %d\n", u1.s1.c1);
+    printf("u1.s1.c2  = %d\n", u1.s1.c2);
+    printf("u1.s1.c3  = %d\n", u1.s1.c3);
+
+    printf("u1.s2     = %d\n", u1.s2);
+
+    return 0;
+}
+#+END_SRC
+
+正确答案是，这段代码在不同编译器下的表现是不同的。
+
+位域在各个编译器下是不一样的，并且它不是便携的（portable）。即使在相同平台上，不同编译器的内存布局也可能不一样。所以在使用位域时要格外小心。
+
+以下引用摘自C99标准。
+#+BEGIN_COMMENT
+The order of allocation of bit-fields within a unit (high-order to low-order or low-order to high-order) is implementation-defined.
+#+END_COMMENT
+
+
+** 结构体的内存布局
+观察以下代码段，思考程序可能的输出内容。
+#+BEGIN_SRC cpp
+#include <stdio.h>
+
+typedef union un {
+    int x;
+    char ch[4];
+}un;
+
+int main(int argc, char* argv[]) {
+    un u;
+    u.ch[0] = 1;
+    u.ch[1] = 2;
+    u.ch[2] = 3;
+    u.ch[3] = 4;
+
+    printf("u.x=%d\n", u.x);
+    printf("u.x=0x%x\n", u.x);
+
+    return 0;
+}
+#+END_SRC
+
+正确的答案是，输出的结果与平台的大小端有关。
+
+#+BEGIN_SRC cpp
+typedef union epoll_data {
+  void        *ptr;
+  int          fd;
+  __uint32_t   u32;
+  __uint64_t   u64;
+} epoll_data_t;
+#+END_SRC
+对于以上代码，联合体中的成员具有相同的地址，即使它们的大小不同。
+
+以下引用自C99标准。
+#+BEGIN_COMMENT
+The size of a union is sufficient to contain the largest of its members. The value of at most one of the members can be stored in a union object at any time. A pointer to a union object, suitably converted, points to each of its members (or if a member is a bit-field, then to the unit in which it resides), and vice versa.
+#+END_COMMENT
+
+** 参考资料
+- [[https://stackoverflow.com/questions/19376426/order-of-fields-when-using-a-bit-field-in-c][stackoverflow - order of fields when using bit field]]
+- [[https://stackoverflow.com/questions/18863913/union-and-endianness][stackoverflow - union and endianness]]
+- [[https://stackoverflow.com/questions/6352199/memory-layout-of-union-of-different-sized-member][stackoverflow - memory layout of union of different sized member]]
+
+
+（全文完）

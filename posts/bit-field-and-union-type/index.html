@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>位域内存布局与联合体 | Hack Note</title>
+<link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="https://samsonwang.me/posts/bit-field-and-union-type/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/redis-data-structure/" title="redis中的数据结构" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+<li class="nav-item">
+<a href="/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">位域内存布局与联合体</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2019-05-21T16:35:02+08:00" itemprop="datePublished" title="2019-05-21 16:35">May 21 2019</time>
+</div>
+
+      
+
+      
+    <div class="source blur-1">
+      <a href="/posts/bit-field-and-union-type/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/bit-field/" rel="tag">bit field</a></li>
+        <li><a class="tag p-category" href="/tags/c/" rel="tag">c</a></li>
+        <li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
+        <li><a class="tag p-category" href="/tags/endian/" rel="tag">endian</a></li>
+        <li><a class="tag p-category" href="/tags/memory-layout/" rel="tag">memory layout</a></li>
+        <li><a class="tag p-category" href="/tags/union/" rel="tag">union</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+位域（bit field）与联合体（union）都可以用来控制内存布局。本文主要阐述的内存可总结为：位域的内存布局是编译器决定的，而联合体的内存布局是由大小端决定的。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org74fc830" class="outline-2">
+<h2 id="org74fc830">位域的内存布局</h2>
+<div class="outline-text-2" id="text-org74fc830">
+<p>
+观察以下代码段，思考程序可能的输出内容。<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="k">union</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="p">{</span>
+	<span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">c1</span> <span class="p">:</span> <span class="mi">2</span><span class="p">;</span>
+	<span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">c2</span> <span class="p">:</span> <span class="mi">3</span><span class="p">;</span>
+	<span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">c3</span> <span class="p">:</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="p">}</span> <span class="n">s1</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">s2</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">u1</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"sizeof u1 = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">u1</span><span class="p">));</span>
+
+    <span class="n">u1</span><span class="p">.</span><span class="n">s2</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">"u1.s1.c1  = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">u1</span><span class="p">.</span><span class="n">s1</span><span class="p">.</span><span class="n">c1</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"u1.s1.c2  = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">u1</span><span class="p">.</span><span class="n">s1</span><span class="p">.</span><span class="n">c2</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"u1.s1.c3  = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">u1</span><span class="p">.</span><span class="n">s1</span><span class="p">.</span><span class="n">c3</span><span class="p">);</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">"u1.s2     = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">u1</span><span class="p">.</span><span class="n">s2</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+正确答案是，这段代码在不同编译器下的表现是不同的。<br></p>
+
+<p>
+位域在各个编译器下是不一样的，并且它不是便携的（portable）。即使在相同平台上，不同编译器的内存布局也可能不一样。所以在使用位域时要格外小心。<br></p>
+
+<p>
+以下引用摘自C99标准。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org8d2dd27" class="outline-2">
+<h2 id="org8d2dd27">结构体的内存布局</h2>
+<div class="outline-text-2" id="text-org8d2dd27">
+<p>
+观察以下代码段，思考程序可能的输出内容。<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+
+<span class="k">typedef</span> <span class="k">union</span> <span class="n">un</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">ch</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+<span class="p">}</span><span class="n">un</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+    <span class="n">un</span> <span class="n">u</span><span class="p">;</span>
+    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">"u.x=%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">u</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"u.x=0x%x</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">u</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+正确的答案是，输出的结果与平台的大小端有关。<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">union</span> <span class="n">epoll_data</span> <span class="p">{</span>
+  <span class="kt">void</span>        <span class="o">*</span><span class="n">ptr</span><span class="p">;</span>
+  <span class="kt">int</span>          <span class="n">fd</span><span class="p">;</span>
+  <span class="n">__uint32_t</span>   <span class="n">u32</span><span class="p">;</span>
+  <span class="n">__uint64_t</span>   <span class="n">u64</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">epoll_data_t</span><span class="p">;</span>
+</pre></div>
+<p>
+对于以上代码，联合体中的成员具有相同的地址，即使它们的大小不同。<br></p>
+
+<p>
+以下引用自C99标准。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orga92b2b3" class="outline-2">
+<h2 id="orga92b2b3">参考资料</h2>
+<div class="outline-text-2" id="text-orga92b2b3">
+<ul class="org-ul">
+<li>
+<a href="https://stackoverflow.com/questions/19376426/order-of-fields-when-using-a-bit-field-in-c">stackoverflow - order of fields when using bit field</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/18863913/union-and-endianness">stackoverflow - union and endianness</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/6352199/memory-layout-of-union-of-different-sized-member">stackoverflow - memory layout of union of different sized member</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
+        </div>
+</div>
+
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+    <ul class="pager hidden-print">
+<li class="left">
+          <a href="/posts/redis-data-structure/" rel="prev">
+            <p class="title">redis中的数据结构</p>
+            <p>Previous post</p>
+          </a>
+      </li>
+      <li class="right">
+          <div></div>
+      </li>
+    </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="https://samsonwang.me/posts/bit-field-and-union-type/",
+        disqus_title="\u4f4d\u57df\u5185\u5b58\u5e03\u5c40\u4e0e\u8054\u5408\u4f53",
+        disqus_identifier="cache/posts/bit-field-and-union-type.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2019 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="/assets/js/jquery.min.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/jquery.lazyload.min.js"></script><script src="/assets/js/popper.min.js"></script><script src="/assets/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><!-- Baidu Analytics --><script>
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7ec47c52179b8ca4f9aee81282bd7b20";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
