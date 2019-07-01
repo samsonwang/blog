@@ -1,0 +1,38 @@
+#+BEGIN_COMMENT
+.. title: C++中delete关键字常见错误
+.. slug: cpp-delete-keyword-common-mistakes
+.. date: 2019-07-01 20:36:31 UTC+08:00
+.. tags: cpp, delete
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: C++中delete关键字常见错误
+
+C++中的delete关键字用于释放动态申请的内存，是使用频率非常高的关键字，本文将开发中常出现的错误加以总结，方便以后查阅。
+
+{{{TEASER_END}}}
+
+** 释放 =new= 关键字申请的数组
+#+BEGIN_SRC cpp
+int pArray = new int[10];
+#+END_SRC
+如上代码用 =new= 动态申请了一个数组，若需要释放这个数组则写法如下。
+#+BEGIN_SRC cpp
+delete[] pArray;
+pArray = nullptr;
+#+END_SRC
+需要注意的是需要在 =delete= 后加上方括号。
+如果忘记带上方括号，从C++标准上来讲，是未定义行为（undefined behaviour）。若这个数组存储的是简单数据类型（POD），就应该不会出现内存泄漏，但是并不推荐这中无方括号的写法。
+
+
+** 使用 =delete= 关键字释放 =void*= 类型的指针
+一般来讲， =delete= 在释放内存时会同时调用对象的析构函数。所以，使用 =delete= 释放 =void*= 指针时，是能够释放该指针所指内存的。但由于没有执行析构函数，所以有潜在的资源泄漏风险，并不推荐这种写法。
+
+
+** 参考资料
+- [[https://stackoverflow.com/questions/941832/is-it-safe-to-delete-a-void-pointer][stackoverflow.com - is it safe to delete a void pointer]]
