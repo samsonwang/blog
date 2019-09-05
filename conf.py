@@ -21,10 +21,10 @@ BLOG_AUTHOR = "Samson Wang"  # (translatable)
 BLOG_TITLE = "Hack Note"  # (translatable)
 # This is the main URL for your site. It will be used
 # in a prominent link. Don't forget the protocol (http/https)!
-SITE_URL = "https://samsonwang.github.io/"
+SITE_URL = "https://samsonwang.github.io/blog/"
 # This is the URL where Nikola's output will be deployed.
 # If not set, defaults to SITE_URL
-BASE_URL = "http://samsonwang.github.io/blog/"
+#BASE_URL = "https://samsonwang.github.io/"
 BLOG_EMAIL = "wangzhilv@gmail.com"
 BLOG_DESCRIPTION = "Personal handnote on software development"  # (translatable)
 
