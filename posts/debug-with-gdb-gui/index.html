@@ -4,27 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>gdb图形化调试 | Hack Note</title>
-<link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-<link href="/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
-<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
-<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
-<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/cerulean.css" rel="stylesheet" type="text/css">
 <meta name="theme-color" content="#5670d4">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
-<link rel="canonical" href="https://samsonwang.me/posts/debug-with-gdb-gui/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<!--[if lt IE 9]><script src="/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
-<link rel="prev" href="/posts/algorithm-weekly-next-permutation/" title="每周算法：下一个组合" type="text/html">
-<link rel="next" href="/posts/brief-intro-to-gateway/" title="网关简介" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/blog/rss.xml">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/debug-with-gdb-gui/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="/blog/assets/js/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/blog/posts/algorithm-weekly-next-permutation/" title="每周算法：下一个组合" type="text/html">
+<link rel="next" href="/blog/posts/brief-intro-to-gateway/" title="网关简介" type="text/html">
 </head>
 <body class="preload">
 <a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
 
 <!-- Menubar -->
 <nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
-    <a class="navbar-brand" href="/">
+    <a class="navbar-brand" href="/blog/">
 
       <span id="blog-title">Hack Note</span>
     </a>
@@ -35,13 +35,13 @@
     <div class="collapse navbar-collapse" id="bs-navbar">
       <ul class="navbar-nav ml-auto">
 <li class="nav-item">
-<a href="/archive/" class="nav-link">Archives</a>
+<a href="/blog/archive/" class="nav-link">Archives</a>
                 </li>
 <li class="nav-item">
-<a href="/tags/" class="nav-link">Tags</a>
+<a href="/blog/tags/" class="nav-link">Tags</a>
                 </li>
 <li class="nav-item">
-<a href="/rss.xml" class="nav-link">RSS Feed</a>
+<a href="/blog/rss.xml" class="nav-link">RSS Feed</a>
 
         
       </li>
@@ -73,7 +73,7 @@
 
       
     <div class="source blur-1">
-      <a href="/posts/debug-with-gdb-gui/index.org" class="sourcelink">Source</a>
+      <a href="/blog/posts/debug-with-gdb-gui/index.org" class="sourcelink">Source</a>
     </div>
 
       
@@ -81,9 +81,9 @@
       
     <div class="tags blur-2">
     <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/emacs/" rel="tag">emacs</a></li>
-        <li><a class="tag p-category" href="/tags/gdb/" rel="tag">gdb</a></li>
-        <li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
+<li><a class="tag p-category" href="/blog/tags/emacs/" rel="tag">emacs</a></li>
+        <li><a class="tag p-category" href="/blog/tags/gdb/" rel="tag">gdb</a></li>
+        <li><a class="tag p-category" href="/blog/tags/linux/" rel="tag">linux</a></li>
     </ul>
 </div>
 
@@ -141,7 +141,7 @@ cgdb的官方介绍 <a href="https://cgdb.github.io/">https://cgdb.github.io/</a
 下图展示的是cgdb的用户界面 （摘自cgdb官方主页）<br></p>
 
 <p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-debug-with-gdb-gui-cgdb.png" alt="nil"><br></p>
+<img src="/blog/assets/images/spinner.svg" data-src="/images/post-debug-with-gdb-gui-cgdb.png" alt="nil"><br></p>
 </div>
 </div>
 
@@ -152,7 +152,7 @@ cgdb的官方介绍 <a href="https://cgdb.github.io/">https://cgdb.github.io/</a
 作为同样属于GNU的emacs，它提供了 <code>gud mode</code> 作为gdb的前端。这也是我目前在使用的工具链。借助emacs的强大可定制性， <code>gud mode</code> 支持对图形化界面进行深度定制。对于一般用户，推荐通过设置 <code>gdb-many-windows</code> 为 <code>t</code> 得到一份默认的多窗口调试界面。<br></p>
 
 <p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-debug-with-gdb-gui-emacs.png" alt="nil"><br></p>
+<img src="/blog/assets/images/spinner.svg" data-src="/images/post-debug-with-gdb-gui-emacs.png" alt="nil"><br></p>
 
 <p>
 上图展示的是默认的多窗口调试界面，从图中可以看到， <code>gud-mode</code> 提供了6个窗口，他们分别展示的是gdb交互界面、本地变量查看、源代码展示、输入输出界面、调用堆栈信息、断点和线程信息。<br></p>
@@ -207,16 +207,16 @@ cgdb的官方介绍 <a href="https://cgdb.github.io/">https://cgdb.github.io/</a
   
         <ol class="list-unstyled sidebar-category">
 <li>
-<a href="/tags/category-cpp/">cpp</a>
+<a href="/blog/tags/category-cpp/">cpp</a>
         </li>
 <li>
-<a href="/tags/category-emacs/">emacs</a>
+<a href="/blog/tags/category-emacs/">emacs</a>
         </li>
 <li>
-<a href="/tags/category-linux/">linux</a>
+<a href="/blog/tags/category-linux/">linux</a>
         </li>
 <li>
-<a href="/tags/category-windows/">windows</a>
+<a href="/blog/tags/category-windows/">windows</a>
         </li>
 </ol>
 </div>
@@ -230,13 +230,13 @@ cgdb的官方介绍 <a href="https://cgdb.github.io/">https://cgdb.github.io/</a
 
     <ul class="pager hidden-print">
 <li class="left">
-          <a href="/posts/algorithm-weekly-next-permutation/" rel="prev">
+          <a href="/blog/posts/algorithm-weekly-next-permutation/" rel="prev">
             <p class="title">每周算法：下一个组合</p>
             <p>Previous post</p>
           </a>
       </li>
       <li class="right">
-          <a href="/posts/brief-intro-to-gateway/" rel="next">
+          <a href="/blog/posts/brief-intro-to-gateway/" rel="next">
             <p class="title">网关简介</p>
             <p>Next post</p>
           </a>
@@ -248,7 +248,7 @@ cgdb的官方介绍 <a href="https://cgdb.github.io/">https://cgdb.github.io/</a
         <div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-me",
-            disqus_url="https://samsonwang.me/posts/debug-with-gdb-gui/",
+            disqus_url="https://samsonwang.github.io/blog/posts/debug-with-gdb-gui/",
         disqus_title="gdb\u56fe\u5f62\u5316\u8c03\u8bd5",
         disqus_identifier="cache/archives/2018/debug-with-gdb-gui.html",
         disqus_config = function () {
@@ -284,7 +284,7 @@ cgdb的官方介绍 <a href="https://cgdb.github.io/">https://cgdb.github.io/</a
 </div>
 
 
-            <script src="/assets/js/jquery.min.js"></script><script src="/assets/js/jquery.colorbox-min.js"></script><script src="/assets/js/jquery.lazyload.min.js"></script><script src="/assets/js/popper.min.js"></script><script src="/assets/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+            <script src="/blog/assets/js/jquery.min.js"></script><script src="/blog/assets/js/jquery.colorbox-min.js"></script><script src="/blog/assets/js/jquery.lazyload.min.js"></script><script src="/blog/assets/js/popper.min.js"></script><script src="/blog/assets/js/bootstrap.min.js"></script><script src="/blog/assets/js/moment-with-locales.min.js"></script><script src="/blog/assets/js/fancydates.js"></script><script src="/blog/assets/js/cerulean.js"></script><!-- fancy dates --><script>
   moment.locale("en");
   fancydates(0, "YYYY-MM-DD HH:mm");
 </script><!-- end fancy dates --><!-- Baidu Analytics --><script>
