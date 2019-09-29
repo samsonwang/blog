@@ -96,36 +96,41 @@
 
 <!-- TEASER_END -->
 
-<p>
-在软件开发中，通常将相似或具有关联性的代码归入一个模块中，这个模块会以动态库或静态库的形式独立出来。每个静态库或动态库会作为独立的编译单元生成目标文件，这些目标文件最终会被链接在一起。这些静态库和动态库之间大多具有依赖关系，在链接过程中如果所依赖的函数出现了缺失就会链接失败。<br></p>
-
 <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">以 <code>_imp_</code> 开头的函数缺失</h2>
+<h2 id="sec-1">动态库和静态库</h2>
 <div class="outline-text-2" id="text-1">
 <p>
-同事的这个工程在以静态库方式链接时出现以 <code>__imp__</code> 开头的函数缺失，通常情况下报这个问题是因为该函数没有定义。但是，在仔细观察函数的名称后发现该函数已经被定义出来了，这就很奇怪了。<br></p>
+在软件开发中，通常将相似或具有关联性的代码归入一个模块中，这个模块会以动态库或静态库的形式独立出来。每个静态库或动态库会作为独立的编译单元生成目标文件，这些目标文件最终会被链接在一起。这些静态库和动态库之间大多具有依赖关系，在链接过程中如果所依赖的函数出现了缺失就会链接失败。<br></p>
 </div>
 </div>
 
 <div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">使用dumpbin工具插件动态库的函数</h2>
+<h2 id="sec-2">以 <code>__imp_</code> 开头的函数缺失</h2>
 <div class="outline-text-2" id="text-2">
+<p>
+同事的这个工程在以静态库方式链接时出现以 <code>__imp_</code> 开头的函数缺失，通常情况下报这个问题是因为该函数没有定义。但是，在仔细观察函数的名称后发现该函数已经被定义出来了，这就很奇怪了。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">使用dumpbin工具插件动态库的函数</h2>
+<div class="outline-text-2" id="text-3">
 <p>
 查看与链接相关的函数名称<br></p>
 <div class="highlight"><pre><span></span>dumpbin /linkermember xxx.lib
 </pre></div>
 
 <p>
-在命令的输出结果中搜索能够找到该函数，但是函数名称前没有 <code>_imp_</code> 前缀。查阅资料后发现 <code>_imp_</code> 前缀是windows平台下动态库导出函数的前缀。<br></p>
+在命令的输出结果中搜索能够找到该函数，但是函数名称前没有 <code>__imp_</code> 前缀。查阅资料后发现 <code>__imp_</code> 前缀是windows平台下动态库导出函数的前缀。<br></p>
 
 <p>
 为什么在链接时寻找的是动态库版本的函数呢？这个与函数声明的头文件有关，由于头文件中使用了条件编译来区分动态库和静态库版本，而默认情况下使用动态库导出标识符 <code>dllexport/dllimport</code> ，将静态的宏定义加上后就能链接通过了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">tips:其他实用的dumpbin指令</h2>
-<div class="outline-text-2" id="text-3">
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">tips:其他实用的dumpbin指令</h2>
+<div class="outline-text-2" id="text-4">
 <p>
 查看静态库中的函数<br></p>
 <div class="highlight"><pre><span></span>dumpbin /symbols xxx.lib
@@ -143,9 +148,9 @@
 </div>
 </div>
 
-<div id="outline-container-sec-4" class="outline-2">
-<h2 id="sec-4">参考资料</h2>
-<div class="outline-text-2" id="text-4">
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5">参考资料</h2>
+<div class="outline-text-2" id="text-5">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/5159353/how-can-i-get-rid-of-the-imp-prefix-in-the-linker-in-vc">stackoverflow.com - imp prefix linking problem</a><br>
