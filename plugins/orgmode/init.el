@@ -122,7 +122,7 @@ contextual information."
 (defun org-custom-link-img-url-export (path desc format)
   (cond
    ((eq format 'html)
-    (format "<img src=\"/assets/images/spinner.svg\" data-src=\"%s\" alt=\"%s\"/>" path desc))))
+    (format "<img src=\"/assets/images/spinner.svg\" data-src=\"/blog/%s\" alt=\"/blog/%s\"/>" path desc))))
 (if (fboundp 'org-link-set-parameters)
     (org-link-set-parameters "img-url"
                              :follow nil
