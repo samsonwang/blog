@@ -72,7 +72,187 @@
 <div class="postindex">
 
 
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/blog/posts/differences-among-overload-override-and-hide/" class="u-url">重载、覆盖和隐藏的区别</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/blog/posts/linux-command-examples-lsof/" class="u-url">Linux常用命令行指令 - lsof</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-03-21T20:28:34+08:00" itemprop="datePublished" title="2018-03-21 20:28">Mar 21 2018</time>
+</div>
+
+        
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/blog/posts/linux-command-examples-lsof/#disqus_thread" data-disqus-identifier="cache/archives/2018/linux-command-examples-lsof.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/blog/tags/linux/" rel="tag">linux</a></li>
+        <li><a class="tag p-category" href="/blog/tags/lsof/" rel="tag">lsof</a></li>
+        <li><a class="tag p-category" href="/blog/tags/shell/" rel="tag">shell</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <p>
+lsof是list open files的简称，用于列出系统中所有打开的文件。由于在linux系统下，所有 对象都是文件，所以这个指令十分有用。<br></p>
+
+<p>
+下面就给出了几种常见的用法，需要注意的是有些指令需要root权限执行。<br></p>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">1. 查看打开指定文件的进程</h2>
+<div class="outline-text-2" id="text-1">
+<div class="highlight"><pre><span></span>lsof /var/syslog.log
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">2. 查看指定目录下打开的文件</h2>
+<div class="outline-text-2" id="text-2">
+<div class="highlight"><pre><span></span>lsof +D /home/
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">3. 查看以指定进程名所有打开的文件</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+使用 <code>-c</code> 命令能够查看指定进程名使用的文件，允许在一个命令行指令中使用多个 <code>-c</code> 参数。<br></p>
+<div class="highlight"><pre><span></span>lsof -c procname
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">4. 查看使用指定挂载点的进程</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+在停止挂载某个目录时，系统会告诉我们“设备资源繁忙”，所以我们需要找出使用挂载点的程序，终止这些进程，解除目录的占用状态。<br></p>
+<div class="highlight"><pre><span></span>lsof /home
+</pre></div>
+<p>
+或<br></p>
+<div class="highlight"><pre><span></span>lsof +D /home/
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5">5. 查看指定用户打开的文件</h2>
+<div class="outline-text-2" id="text-5">
+<div class="highlight"><pre><span></span>lsof -u username
+</pre></div>
+<p>
+另外还可以进行反向过滤，在输出中不显示指定用户的文件，语法如下。<br></p>
+<div class="highlight"><pre><span></span>lsof -u ^username
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-6" class="outline-2">
+<h2 id="sec-6">6. 查看指定进程打开的文件</h2>
+<div class="outline-text-2" id="text-6">
+<div class="highlight"><pre><span></span>lsof -p pid
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-7" class="outline-2">
+<h2 id="sec-7">7. 终止属于某个用户的所有进程</h2>
+<div class="outline-text-2" id="text-7">
+<div class="highlight"><pre><span></span>kill `lsof -t -u username`
+</pre></div>
+<p>
+相似的，可以使用 <code>-t</code> 参数打印使用某个文件的进程id。<br></p>
+<div class="highlight"><pre><span></span>lsof -t /var/log
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-8" class="outline-2">
+<h2 id="sec-8">8. 让结果同时满足多个选项</h2>
+<div class="outline-text-2" id="text-8">
+<p>
+默认情况下，多个参数是以或（or）进行操作的，可以使用 <code>-a</code> 选项让结果同时满足多个参数。<br></p>
+<div class="highlight"><pre><span></span>lsof -a -u username -c procname
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-9" class="outline-2">
+<h2 id="sec-9">9. 让命令重复执行</h2>
+<div class="outline-text-2" id="text-9">
+<p>
+可以使用 <code>-r</code> 参数让命令重复执行。以下命令会每隔5s执行一次，每次的执行结果会用 “====” 分割开。<br></p>
+<div class="highlight"><pre><span></span>lsof -u username -c procname -a -r5
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-10" class="outline-2">
+<h2 id="sec-10">10. 列出所有的网络连接</h2>
+<div class="outline-text-2" id="text-10">
+<div class="highlight"><pre><span></span>lsof -i
+</pre></div>
+<p>
+让结果中的ip地址和端口号显示数字而不是英文别名<br></p>
+<div class="highlight"><pre><span></span>lsof -i -Pn
+</pre></div>
+<p>
+显示所有的 <code>AF_UNIX</code> socket<br></p>
+<div class="highlight"><pre><span></span>lsof -U
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-11" class="outline-2">
+<h2 id="sec-11">11. 列出指定进程使用的网络连接</h2>
+<div class="outline-text-2" id="text-11">
+<div class="highlight"><pre><span></span>lsof -i -a -p pid
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-12" class="outline-2">
+<h2 id="sec-12">12. 查看指定端口上的监听</h2>
+<div class="outline-text-2" id="text-12">
+<div class="highlight"><pre><span></span>lsof -i :portid
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-13" class="outline-2">
+<h2 id="sec-13">13. 列出所有tcp和udp连接</h2>
+<div class="outline-text-2" id="text-13">
+<div class="highlight"><pre><span></span>lsof -i tcp; lsof -i udp
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-14" class="outline-2">
+<h2 id="sec-14">14. 列出所有的网络文件系统</h2>
+<div class="outline-text-2" id="text-14">
+<p>
+网络文件系统（network file system）<br></p>
+<div class="highlight"><pre><span></span>lsof -N -u username
+</pre></div>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/blog/posts/differences-among-overload-override-and-hide/" class="u-url">重载、覆盖和隐藏的区别</a></h1>
       <div class="metadata">
         
 
@@ -962,51 +1142,6 @@ fi
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
 
 <p class="more"><a href="/blog/posts/frequent-improper-syntax-warning-on-compile/">Read more…</a></p>
-</div>
-</div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/blog/posts/emacs-global-gtags-guide/" class="u-url">在emacs中使用GNU Global的配置指南</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-01-02T23:47:05+08:00" itemprop="datePublished" title="2018-01-02 23:47">Jan 02 2018</time>
-</div>
-
-        
-    <div class="update blur-1">
-      <time class="published dt-published" datetime="2019-01-29T10:08:05+08:00" itemprop="datePublished" title="2019-01-29 10:08">Jan 29 2019</time>
-</div>
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/blog/posts/emacs-global-gtags-guide/#disqus_thread" data-disqus-identifier="cache/archives/2018/emacs-global-gtags.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/blog/tags/emacs/" rel="tag">emacs</a></li>
-        <li><a class="tag p-category" href="/blog/tags/global/" rel="tag">global</a></li>
-        <li><a class="tag p-category" href="/blog/tags/gtags/" rel="tag">gtags</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">1 引言</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-本文主要针对emacs中的global的配置和使用方法做了简要介绍。global是代码标签化索引工具，能够在许多源码中快速定位函数的实现位置。我主要使用global来辅助代码跳转；还有一种用法是用来辅助代码补全，目前正在研究中。<br></p>
-
-<p class="more"><a href="/blog/posts/emacs-global-gtags-guide/">Read more…</a></p>
 </div>
 </div>
     </div>

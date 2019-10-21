@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>排查Windows平台动态库和静态库链接失败问题 | Hack Note</title>
+<title>在gdb中以16进程的方式打印变量 | Hack Note</title>
 <link href="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <link href="/blog/assets/css/code.css" rel="stylesheet" type="text/css">
@@ -13,11 +13,11 @@
 <meta name="theme-color" content="#5670d4">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/blog/rss.xml">
-<link rel="canonical" href="https://samsonwang.github.io/blog/posts/library-linking-error-on-windows/">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/gdb-print-variable-in-hex/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
-<link rel="prev" href="/blog/posts/cpp-delete-keyword-common-mistakes/" title="C++中delete关键字常见错误" type="text/html">
-<link rel="next" href="/blog/posts/gdb-print-variable-in-hex/" title="在gdb中以16进程的方式打印变量" type="text/html">
+<link rel="prev" href="/blog/posts/library-linking-error-on-windows/" title="排查Windows平台动态库和静态库链接失败问题" type="text/html">
+<link rel="next" href="/blog/posts/msvc-cpp-project-unicode-and-mbcs/" title="MSVC工程里Unicode字符集和多字节字符集选项" type="text/html">
 </head>
 <body class="preload">
 <a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
@@ -59,21 +59,21 @@
       <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
         
         
-<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">排查Windows平台动态库和静态库链接失败问题</h1>
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">在gdb中以16进程的方式打印变量</h1>
 
     <div class="metadata">
       
 
       
   <div class="date blur-1">
-    <time class="published dt-published" datetime="2019-09-22T10:22:09+08:00" itemprop="datePublished" title="2019-09-22 10:22">Sep 22 2019</time>
+    <time class="published dt-published" datetime="2019-10-12T23:31:57+08:00" itemprop="datePublished" title="2019-10-12 23:31">Oct 12 2019</time>
 </div>
 
       
 
       
     <div class="source blur-1">
-      <a href="/blog/posts/library-linking-error-on-windows/index.org" class="sourcelink">Source</a>
+      <a href="/blog/posts/gdb-print-variable-in-hex/index.org" class="sourcelink">Source</a>
     </div>
 
       
@@ -81,10 +81,8 @@
       
     <div class="tags blur-2">
     <ul itemprop="keywords">
-<li><a class="tag p-category" href="/blog/tags/cpp/" rel="tag">cpp</a></li>
-        <li><a class="tag p-category" href="/blog/tags/dumpbin/" rel="tag">dumpbin</a></li>
-        <li><a class="tag p-category" href="/blog/tags/linking/" rel="tag">linking</a></li>
-        <li><a class="tag p-category" href="/blog/tags/windows/" rel="tag">windows</a></li>
+<li><a class="tag p-category" href="/blog/tags/gdb/" rel="tag">gdb</a></li>
+        <li><a class="tag p-category" href="/blog/tags/linux/" rel="tag">linux</a></li>
     </ul>
 </div>
 
@@ -93,68 +91,77 @@
     </div>
   </header><div class="e-content entry-content" itemprop="articleBody text">
     <p>
-最近帮同事查了一个C++链接过程的问题，这个问题比较隐蔽，也非常有代表性，记录下来方便后面查阅。<br></p>
+在gdb调试过程中可以通过 <code>print(p)</code> 查看指定变量的内容。在默认情况下，数字是以10进制的形式显示的，但有时候我们想以16进制的形式查看该变量。<br></p>
 
 <!-- TEASER_END -->
 
 <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">动态库和静态库</h2>
+<h2 id="sec-1">调整变量的输出格式</h2>
 <div class="outline-text-2" id="text-1">
 <p>
-在软件开发中，通常将相似或具有关联性的代码归入一个模块中，这个模块会以动态库或静态库的形式独立出来。每个静态库或动态库会作为独立的编译单元生成目标文件，这些目标文件最终会被链接在一起。这些静态库和动态库之间大多具有依赖关系，在链接过程中如果所依赖的函数出现了缺失就会链接失败。<br></p>
+在使用gdb调试时，使用 <code>p/x</code> 就能够以16进制（hexadecimal）的形式输出该变量，使用语法为：<br></p>
+<div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span> p/x variable_name
+</pre></div>
+
+<p>
+gdb中的格式参数还有以下几种：<br></p>
+<ul class="org-ul">
+<li>
+<i>a</i> 指针格式<br>
+</li>
+<li>
+<i>c</i> 字符格式<br>
+</li>
+<li>
+<i>d</i> 整数格式<br>
+</li>
+<li>
+<i>f</i> 浮点数格式<br>
+</li>
+<li>
+<i>o</i> 八进制整数格式<br>
+</li>
+<li>
+<i>s</i> 字符串格式<br>
+</li>
+</ul>
+<p>
+同理，使用 <code>p/t</code> 能够以2进制（binary）的方式输出变量；使用 <code>p/a</code> 能够以指针的方式输出变量；使用 <code>p/o</code> 能够以8进制的格式输出。<br></p>
+
+<p>
+<b>tips:</b> 可以使用 <code>set output-radix 16</code> 修改print操作默认输出格式为16进制，使用 <code>set output-radix 10</code> 将输出格式调回默认的10进制。<br></p>
 </div>
 </div>
 
 <div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">以 <code>__imp_</code> 开头的函数缺失</h2>
+<h2 id="sec-2">使用 <code>display</code> 跟踪某个变量</h2>
 <div class="outline-text-2" id="text-2">
 <p>
-同事的这个工程在以静态库方式链接时出现以 <code>__imp_</code> 开头的函数缺失，通常情况下报这个问题是因为该函数没有定义。但是，在仔细观察函数的名称后发现该函数已经被定义出来了，这就很奇怪了。<br></p>
+<code>display</code> 的用法与 <code>print</code> 的用法相似，但是 <code>display</code> 会在每次步进执行后输出该变量。这个功能与Visual Studio中的Watch功能比较类似。在不想观察该变量时，使用 <code>undisplay</code> 命令可以取消。<br></p>
 </div>
 </div>
 
 <div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">使用dumpbin工具插件动态库的函数</h2>
+<h2 id="sec-3">使用 <code>x</code> 命令输出内存</h2>
 <div class="outline-text-2" id="text-3">
 <p>
-查看与链接相关的函数名称<br></p>
-<div class="highlight"><pre><span></span>dumpbin /linkermember xxx.lib
+命令语法为：<br></p>
+<div class="highlight"><pre><span></span>x/nfu &lt;address&gt;
 </pre></div>
-
 <p>
-在命令的输出结果中搜索能够找到该函数，但是函数名称前没有 <code>__imp_</code> 前缀。查阅资料后发现 <code>__imp_</code> 前缀是windows平台下动态库导出函数的前缀。<br></p>
-
-<p>
-为什么在链接时寻找的是动态库版本的函数呢？这个与函数声明的头文件有关，由于头文件中使用了条件编译来区分动态库和静态库版本，而默认情况下使用动态库导出标识符 <code>dllexport/dllimport</code> ，将静态的宏定义加上后就能链接通过了。<br></p>
+<code>n</code> 用于指定打印的数量<br><code>f</code> 用于指定打印的格式<br><code>u</code> 用于指定每个打印变量的长度：b(byte)一个字节，h(half-word)两个字节，w(word)四个字节，g(giant word)八个字节<br></p>
 </div>
 </div>
 
 <div id="outline-container-sec-4" class="outline-2">
-<h2 id="sec-4">tips:其他实用的dumpbin指令</h2>
+<h2 id="sec-4">参考资料</h2>
 <div class="outline-text-2" id="text-4">
-<p>
-查看静态库中的函数<br></p>
-<div class="highlight"><pre><span></span>dumpbin /symbols xxx.lib
-</pre></div>
-
-<p>
-查看动态库中的导出函数<br></p>
-<div class="highlight"><pre><span></span>dumpbin /exports xxx.dll
-</pre></div>
-
-<p>
-查看动态库的依赖库<br></p>
-<div class="highlight"><pre><span></span>dumpbin /dependents xxx.dll
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-5" class="outline-2">
-<h2 id="sec-5">参考资料</h2>
-<div class="outline-text-2" id="text-5">
 <ul class="org-ul">
 <li>
-<a href="https://stackoverflow.com/questions/5159353/how-can-i-get-rid-of-the-imp-prefix-in-the-linker-in-vc">stackoverflow.com - imp prefix linking problem</a><br>
+<a href="https://stackoverflow.com/questions/9671820/print-variables-in-hexadecimal-or-decimal-format">stackoverflow - print variables in hexadeimal or decimal format</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/6618670/how-to-make-gdb-print-out-all-values-in-hexadecimal-mode">stackoverflow - gdb print all values in hexadecimal</a><br>
 </li>
 </ul>
 </div>
@@ -204,14 +211,14 @@
 
     <ul class="pager hidden-print">
 <li class="left">
-          <a href="/blog/posts/cpp-delete-keyword-common-mistakes/" rel="prev">
-            <p class="title">C++中delete关键字常见错误</p>
+          <a href="/blog/posts/library-linking-error-on-windows/" rel="prev">
+            <p class="title">排查Windows平台动态库和静态库链接失败问题</p>
             <p>Previous post</p>
           </a>
       </li>
       <li class="right">
-          <a href="/blog/posts/gdb-print-variable-in-hex/" rel="next">
-            <p class="title">在gdb中以16进程的方式打印变量</p>
+          <a href="/blog/posts/msvc-cpp-project-unicode-and-mbcs/" rel="next">
+            <p class="title">MSVC工程里Unicode字符集和多字节字符集选项</p>
             <p>Next post</p>
           </a>
       </li>
@@ -222,9 +229,9 @@
         <div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-me",
-            disqus_url="https://samsonwang.github.io/blog/posts/library-linking-error-on-windows/",
-        disqus_title="\u6392\u67e5Windows\u5e73\u53f0\u52a8\u6001\u5e93\u548c\u9759\u6001\u5e93\u94fe\u63a5\u5931\u8d25\u95ee\u9898",
-        disqus_identifier="cache/posts/library-linking-error-on-windows.html",
+            disqus_url="https://samsonwang.github.io/blog/posts/gdb-print-variable-in-hex/",
+        disqus_title="\u5728gdb\u4e2d\u4ee516\u8fdb\u7a0b\u7684\u65b9\u5f0f\u6253\u5370\u53d8\u91cf",
+        disqus_identifier="cache/posts/gdb-print-variable-in-hex.html",
         disqus_config = function () {
             this.language = "en";
         };
