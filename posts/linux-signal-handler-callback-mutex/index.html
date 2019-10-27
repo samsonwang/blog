@@ -113,6 +113,24 @@
 <p>
 信号处理函数将会在同一个线程中执行，如果在信号处理函数中进行加锁，则可能会引起互锁。<br>
 如果必须要完成对锁的操作呢，妥协办法是在信号处理函数中创建一个线程，在该线程中进行锁相关的操作。<br></p>
+
+<p>
+实际上，在信号处理函数中的操作要求是“可重入的”（reentrancy），有很多系统调用也是受限制的。以下是 <b>可以</b> 在信号处理函数中调用的系统函数。<br></p>
+<blockquote>
+<p>
+access      alarm         cfgetispeed   cfgetospeed    cfsetispeed   cfsetospeed<br>
+chdir       chmod         chown         close          creat         dup<br>
+dup2        execle        execve        _exit          fcntl         fork<br>
+fstat       getgroups     getpgrp       getpid         getppid       getuid<br>
+kill        link          lseek         mkdir          mkfifo        open<br>
+pathconf    pause         pipe          read           rename        rmdir<br>
+setgid      setpgid       setsid        setuid         sigaction     sigaddset<br>
+sigdelset   sigemptyset   sigfillset    sigismember    sigpending    sigprocmask<br>
+sigsuspend  sleep         stat          sysconf        tcdrain       tcflow<br>
+tcflush     tcgetattr     tcgetpgrp     tcsendbreak    tcsetattr     tcsetgrp<br>
+time        times         umask         uname          unlink        utime<br>
+wait        waitpid       write<br></p>
+</blockquote>
 </div>
 </div>
 
@@ -147,7 +165,7 @@
 <a href="https://linux.die.net/man/2/sigtimedwait">linux man - sigtimedwait</a><br>
 </li>
 <li>
-<a href="https://linux.die.net/man/3/sigwait">linux main - sigwait</a><br>
+<a href="https://linux.die.net/man/3/sigwait">linux man - sigwait</a><br>
 </li>
 </ul>
 </div>

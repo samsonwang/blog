@@ -24,6 +24,22 @@
 信号处理函数将会在同一个线程中执行，如果在信号处理函数中进行加锁，则可能会引起互锁。
 如果必须要完成对锁的操作呢，妥协办法是在信号处理函数中创建一个线程，在该线程中进行锁相关的操作。
 
+实际上，在信号处理函数中的操作要求是“可重入的”（reentrancy），有很多系统调用也是受限制的。以下是 *可以* 在信号处理函数中调用的系统函数。
+#+BEGIN_QUOTE
+access      alarm         cfgetispeed   cfgetospeed    cfsetispeed   cfsetospeed
+chdir       chmod         chown         close          creat         dup
+dup2        execle        execve        _exit          fcntl         fork
+fstat       getgroups     getpgrp       getpid         getppid       getuid
+kill        link          lseek         mkdir          mkfifo        open
+pathconf    pause         pipe          read           rename        rmdir
+setgid      setpgid       setsid        setuid         sigaction     sigaddset
+sigdelset   sigemptyset   sigfillset    sigismember    sigpending    sigprocmask
+sigsuspend  sleep         stat          sysconf        tcdrain       tcflow
+tcflush     tcgetattr     tcgetpgrp     tcsendbreak    tcsetattr     tcsetgrp
+time        times         umask         uname          unlink        utime
+wait        waitpid       write
+#+END_QUOTE
+
 ** 使用 ~sigwait~ 和 ~sigtimedwait~ 等待线程
 为了实现等待某个信号的操作，可以采用 ~sigwait~ 和 ~sigtimedwait~ 来做。这两个函数会阻塞当前线程的执行以等待即将到来的信号。
 思考： ~sigwait~ 如何应对有多个信号需要等待，每个信号的所对应的处理流程都不一样，而且信号接收的顺序可能有变化。
@@ -34,4 +50,4 @@
 - [[http://maxim.int.ru/bookshelf/PthreadsProgram/htm/r_40.html][pthreads program - ch5 pthreads and unix]]
 - [[https://www.ibm.com/support/pages/mutex-bad-signal-context][ibm support - mutex bad signal context]]
 - [[https://linux.die.net/man/2/sigtimedwait][linux man - sigtimedwait]]
-- [[https://linux.die.net/man/3/sigwait][linux main - sigwait]]
+- [[https://linux.die.net/man/3/sigwait][linux man - sigwait]]
