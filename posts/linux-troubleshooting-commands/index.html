@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linux 常用的排查故障指令 | Hack Note</title>
+<link href="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="/blog/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/blog/rss.xml">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/linux-troubleshooting-commands/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/blog/posts/linux-change-run-path-for-executable/" title="linux中修改程序的run path" type="text/html">
+<link rel="next" href="/blog/posts/why-condition-variable-requires-mutex/" title="为什么条件变量需要与互斥锁配合使用" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="/blog/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+<li class="nav-item">
+<a href="/blog/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/blog/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/blog/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">Linux 常用的排查故障指令</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2019-11-30T17:22:35+08:00" itemprop="datePublished" title="2019-11-30 17:22">Nov 30 2019</time>
+</div>
+
+      
+
+      
+    <div class="source blur-1">
+      <a href="/blog/posts/linux-troubleshooting-commands/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/blog/tags/linux/" rel="tag">linux</a></li>
+        <li><a class="tag p-category" href="/blog/tags/shell/" rel="tag">shell</a></li>
+        <li><a class="tag p-category" href="/blog/tags/troubleshooting/" rel="tag">troubleshooting</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+本文总结了常用的排查 linux 服务器故障的命令行指令，这些指令能够查看操作系统的实时状态信息，在排查问题时起到辅助作用。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">进程状态</h2>
+<div class="outline-text-2" id="text-1">
+<ul class="org-ul">
+<li>ps<br>
+</li>
+</ul>
+<p>
+查看系统内的进程列表，可以看到内存、 CPU 等信息<br></p>
+<ul class="org-ul">
+<li>top / htop<br>
+</li>
+</ul>
+<p>
+按照资源的使用情况排序显示系统内的进程列表<br></p>
+<ul class="org-ul">
+<li>pidstat<br>
+</li>
+</ul>
+<p>
+针对某一进程输出系统资源的使用情况，包括： CPU、内存、I/O 等<br></p>
+<ul class="org-ul">
+<li>pstack<br>
+</li>
+</ul>
+<p>
+打印迸程内的调用堆钱<br></p>
+<ul class="org-ul">
+<li>strace<br>
+</li>
+</ul>
+<p>
+跟踪进程内的工作机制<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">内存状态</h2>
+<div class="outline-text-2" id="text-2">
+<ul class="org-ul">
+<li>free<br>
+</li>
+</ul>
+<p>
+查看系统的内存使用情况<br></p>
+<ul class="org-ul">
+<li>pmap<br>
+</li>
+</ul>
+<p>
+查看迸程的详细的内存分配情况<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">CPU状态</h2>
+<div class="outline-text-2" id="text-3">
+<ul class="org-ul">
+<li>vmstat<br>
+</li>
+</ul>
+<p>
+查看系统的 CPU 利用率、负载、内存等信息<br></p>
+<ul class="org-ul">
+<li>mpstat<br>
+</li>
+</ul>
+<p>
+查看系统的 CPU 利用率、负载，并且按照 CPU 核心分别显示相关信息<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">磁盘I/O</h2>
+<div class="outline-text-2" id="text-4">
+<ul class="org-ul">
+<li>iostat<br>
+</li>
+</ul>
+<p>
+查看磁盘信息及传输速度<br></p>
+<ul class="org-ul">
+<li>swapon<br>
+</li>
+</ul>
+<p>
+查看系统交换区的使用情况<br></p>
+<ul class="org-ul">
+<li>df<br>
+</li>
+</ul>
+<p>
+显示磁盘挂载的信息<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5">网络状态</h2>
+<div class="outline-text-2" id="text-5">
+<ul class="org-ul">
+<li>ifconfig / ip<br>
+</li>
+</ul>
+<p>
+显示网卡挂载的信息<br></p>
+<ul class="org-ul">
+<li>ping<br>
+</li>
+</ul>
+<p>
+检测某服务器到其他服务器的网络连接情况<br></p>
+<ul class="org-ul">
+<li>telnet<br>
+</li>
+</ul>
+<p>
+检测某服务器的端口是否正常对外服务<br></p>
+<ul class="org-ul">
+<li>nc<br>
+</li>
+</ul>
+<p>
+模拟开启 TCP/IP 的服务器<br></p>
+<ul class="org-ul">
+<li>mtr<br>
+</li>
+</ul>
+<p>
+检测网络连通性问题，并可以获取某一个域名或者 IP 的丢包率<br></p>
+<ul class="org-ul">
+<li>nslookup<br>
+</li>
+</ul>
+<p>
+判断 DNS 能否正确解析域名，以及将域名解析到哪个 IP 地址<br></p>
+<ul class="org-ul">
+<li>traceroute<br>
+</li>
+</ul>
+<p>
+跟踪网络传输的详细路径，显示每一级网关的信怠<br></p>
+<ul class="org-ul">
+<li>sar<br>
+</li>
+</ul>
+<p>
+为全面监控网络、磁盘、CPU、内存等信息的轻量级工具<br></p>
+<ul class="org-ul">
+<li>netstat / ss<br>
+</li>
+</ul>
+<p>
+通常用于查看网络端口的连接情况<br></p>
+<ul class="org-ul">
+<li>iptraf<br>
+</li>
+</ul>
+<p>
+用于获取网络 ν0 的传输速度及其他网络状态信息<br></p>
+<ul class="org-ul">
+<li>tcpdump<br>
+</li>
+</ul>
+<p>
+可以拦截本机网卡上任何协议的通信内容，用于调试网络问题<br></p>
+<ul class="org-ul">
+<li>nmap<br>
+</li>
+</ul>
+<p>
+扫描某一服务器打开的端口<br></p>
+<ul class="org-ul">
+<li>ethtool<br>
+</li>
+</ul>
+<p>
+查看或修改网卡的配置<br></p>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
+        </div>
+</div>
+
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/blog/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/blog/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/blog/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/blog/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+    <ul class="pager hidden-print">
+<li class="left">
+          <a href="/blog/posts/linux-change-run-path-for-executable/" rel="prev">
+            <p class="title">linux中修改程序的run path</p>
+            <p>Previous post</p>
+          </a>
+      </li>
+      <li class="right">
+          <a href="/blog/posts/why-condition-variable-requires-mutex/" rel="next">
+            <p class="title">为什么条件变量需要与互斥锁配合使用</p>
+            <p>Next post</p>
+          </a>
+      </li>
+    </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-me",
+            disqus_url="https://samsonwang.github.io/blog/posts/linux-troubleshooting-commands/",
+        disqus_title="Linux \u5e38\u7528\u7684\u6392\u67e5\u6545\u969c\u6307\u4ee4",
+        disqus_identifier="cache/posts/linux-troubleshooting-commands.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-me";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2019 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.min.js"></script><script src="https://cdn.staticfile.org/jquery.colorbox/1.6.4/jquery.colorbox-min.js"></script><script src="https://cdn.staticfile.org/jquery_lazyload/1.9.7/jquery.lazyload.min.js"></script><script src="https://cdn.staticfile.org/popper.js/1.14.3/umd/popper.min.js"></script><script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/js/bootstrap.min.js"></script><script src="/blog/assets/js/moment-with-locales.min.js"></script><script src="/blog/assets/js/fancydates.js"></script><script src="/blog/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates -->
+</body>
+</html>
