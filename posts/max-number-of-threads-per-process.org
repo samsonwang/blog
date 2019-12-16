@@ -7,38 +7,58 @@
 .. link:
 .. description:
 .. type: text
-.. status: draft
+/.. status: draft
 #+END_COMMENT
 #+OPTIONS: num:t
 
 #+TITLE: 单个进程内最多可以有多少个线程
 
-在开发一个服务程序时，使用的是单个进程中多线程的模式，要为每个连接的设备分配一个线程。随着设备越来越多，分配的线程数量就不断上升，当线程数量达到一定值时程序就报错退出了。于是我的问题就来了，单个进程到底可以有多少个线程呢？
+在开发一个服务程序时，使用的是单个进程中多线程的模式，要为每个连接的设备分配一个线程。随着设备越来越多，分配的线程数量就不断上升，当线程数量达到一定值时程序就报错退出了。于是问题就来了，单个进程到底可以有多少个线程呢？
 
 {{{TEASER_END}}}
 
 ** Linux平台
-Linux并没有限制进程中的线程数量，但是限制了系统中的最大进程数。
+Linux并没有限制单个进程中的线程数量，但是限制了系统中的最大线程数，可以使用以下命令查看。
+#+BEGIN_SRC sh
+cat /proc/sys/kernel/threads-max
+#+END_SRC
+这个值默认为 =内存页大小/4= ，可以使用下面的命令修改这个值。
+#+BEGIN_SRC sh
+echo 100000 > /proc/sys/kernel/threads-max
+#+END_SRC
 
-查看系统中最大进程数
+另外，Linux系统中限制了最大进程数，可以使用以下命令查看。
+#+BEGIN_SRC sh
+cat /proc/sys/kernel/pid_max
+#+END_SRC
+修改命令与上文中的线程数类似。
+
+Linux系统中还有一个概念是用户最大进程数，可以使用以下命令查看。
 #+BEGIN_SRC sh
 ulimit -u
 #+END_SRC
-
-修改系统中最大进程数
+修改用户最大进程数的命令如下。
 #+BEGIN_SRC sh
 ulimit -u 8000
 #+END_SRC
 
-=ulimit= 还可以查看其他系统的限制值。
+还可以使用 =ulimit= 查看其他系统的限制值。
 
-
+通过观察 =ulimit= 的输出，可以得知当前系统对栈区大小的限制。由于每个线程拥有自己独立的栈区空间，那么其实可以通过当前系统的内存大小和栈区大小间接计算出当前 *操作系统* 支持的最大线程数的理论值。
 
 
 ** Windows平台
+在windows平台并没有对进程数和线程数的限制，但是在实际的开发中存在以下两点限制。
+1. 栈的虚拟内存空间。在32位系统下，进程的虚拟内存约4GB，一般能够使用的是2GB，默认每个线程会预留1MB的栈区空间，这样算下来一共能够产生2000个线程。此外，还可以通过缩小栈空间大小来提高线程数量。在64位系统下，就不存在这样的限制了。
+2. 线程调度的负担。当程序中有上千个线程时，进行线程调度就会消耗很多CPU，随着线程数量的不断增多，程序也会越来越慢。
 
+
+** 结论
+其实，我们不应该担心最大线程数的这个问题。因为真正限制我们的是系统中的内存大小。如果我们软件真正需要考虑这个问题，那么应该反思设计问题。
 
 
 ** 参考资料
-- https://www.geeksforgeeks.org/maximum-number-threads-can-created-within-process-c/
-- https://eknowledger.wordpress.com/2012/05/01/max-number-of-threads-per-windows-process/
+- [[https://stackoverflow.com/questions/344203/maximum-number-of-threads-per-process-in-linux][stackoverflow.com - max number of thread per process in linux]]
+- [[https://stackoverflow.com/questions/9361816/maximum-number-of-processes-in-linux][stackoverflow.com - max number of processes in linux]]
+- [[https://www.geeksforgeeks.org/maximum-number-threads-can-created-within-process-c/][geeksforgeeks.org - max number threads can created within process c]]
+- [[https://stackoverflow.com/questions/16710849/what-is-the-maximum-number-of-threads-a-process-can-have-in-windows][stackoverflow.com - what is the maximum number of threads a process can have in windows]]
