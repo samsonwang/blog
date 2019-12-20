@@ -1,0 +1,115 @@
+#+BEGIN_COMMENT
+.. title: gpg操作备忘
+.. slug: gnu-private-guard-cheatsheet
+.. date: 2019-12-20 21:33:33 UTC+08:00
+.. tags: gpg, gnu, linux, cheatsheet
+.. category: linux
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: gpg操作备忘
+
+gpg的全称是gnu private guard，用于实现网络传输时的加密和解密。它有点类似于ssh的加解密过程，都有公钥和私钥，使用私钥加密公钥解密。我有一个应用场景需要在emacs中自动对org mode进行加密，使用了gpg完成加密过程。本文主要总结了gpg的常用命令。
+
+{{{TEASER_END}}}
+
+** 生成一个新的key
+当初次使用时，需要新生成一个key，这个key包含一个公钥和一个私钥，这两个密钥组成了一个密钥对。
+使用以下命令就能够生成一个新的key，执行这个命令会进入命令行交互界面，跟随指引填写对应的信息即可。
+#+BEGIN_SRC sh
+gpg --gen-key
+#+END_SRC
+
+
+** 查看系统中的key
+我们在生成key以后，可以使用以下命令查看刚刚生成的key。
+
+查看所有公钥和私钥
+#+BEGIN_SRC sh
+gpg --list-keys
+#+END_SRC
+
+查看所有私钥
+#+BEGIN_SRC sh
+gpg --list-secret-keys
+#+END_SRC
+
+
+** 导出key
+在生成key之后有以下几种情况我需要将key导出：
+1. 备份key到其他存储媒介
+2. 将私钥key复制到另外一台电脑上
+3. 将公钥key分享给其他人
+
+导出ascii码形式的私钥的命令如下
+#+BEGIN_SRC sh
+gpg --output private.pgp --armor --export-secret-key username@email
+#+END_SRC
+
+导出二进制形式的私钥的命令如下
+#+BEGIN_SRC sh
+gpg --output private --export-secret-key username@email
+#+END_SRC
+
+导出ascii码形式的公钥的命令如下
+#+BEGIN_SRC sh
+gpg --output public.pgp --armor --export username@email
+#+END_SRC
+
+导出二进制形式的公钥的命令如下
+#+BEGIN_SRC sh
+gpg --output public.pgp --export username@email
+#+END_SRC
+
+** 导入key
+导入key的命令如下
+#+BEGIN_SRC sh
+gpg --import my_key.pgp
+#+END_SRC
+
+刚导入的key的状态为unknown，可以使用以下命令将其设置为ultimate。
+#+BEGIN_SRC sh
+gpg --edit-key {KEY} trust quit
+# enter 5<RETURN> (I trust ultimately)
+# enter y<RETURN> (Really set this key to ultimate trust - Yes)
+#+END_SRC
+
+
+** 缓存passphrase
+在进行加密和解密时都要输入key对应的passphrase，这个passphrase默认会缓存一段时间，这个时间是可以在配置文件中修改的，配置文件为 =~/.gnupg/gpg-agent.conf= 。
+可以通过加入以下两行配置来延长passphrase的时间，两项配置数值的单位均为秒。
+#+BEGIN_SRC org
+default-cache-ttl 34560000
+max-cache-ttl 34560000
+#+END_SRC
+=default-cache-ttl= 用于设置最后 GnuPG 活动的超时时间，默认值为600秒（10分钟）； =max-cache-ttl= 用于设置密码后的超时时间，默认值为7200秒（2小时）。
+
+在修改配置文件后可以使用以下命令使配置生效并查看配置结果。
+#+BEGIN_SRC sh
+gpgconf --reload gpg-agent
+gpgconf --list-options gpg-agent
+#+END_SRC
+
+** 加密解密过程
+解密一个文件
+#+BEGIN_SRC sh
+gpg -d xxx.gpg > xxx
+gpg --output doc.gpg --encrypt --recipient blake@cyb.org doc
+#+END_SRC
+
+加密一个文件
+#+BEGIN_SRC sh
+gpg -e xxx
+gpg --output doc --decrypt doc.gpg
+#+END_SRC
+
+
+** 参考资料
+- [[https://unix.stackexchange.com/questions/481939/how-to-export-a-gpg-private-key-and-public-key-to-a-file][stackexchange.com - export gpg key]]
+- [[https://unix.stackexchange.com/questions/184947/how-to-import-secret-gpg-key-copied-from-one-machine-to-another][stackexchange.com - import gpg key]]
+- [[https://superuser.com/questions/624343/keep-gnupg-credentials-cached-for-entire-user-session][superuser.com - gnupg credential cache timespan]]
+- [[https://www.gnupg.org/gph/en/manual/x110.html][gnupg.org - encrypt and decrypt]]
