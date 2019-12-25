@@ -1191,14 +1191,21 @@ USE_BUNDLES = False
 # before </head>
 # (translatable)
 # EXTRA_HEAD_DATA = ""
+
 # Google Analytics or whatever else you use. Added to the bottom of <body>
 # in the default template (base.tmpl).
 # (translatable)
 # BODY_END = ""
-
-# Google analytics or whatever else you use. Added to the bottom of <body>
-# in the default template (base.tmpl).
 BODY_END = """
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
 """
 
 # The possibility to extract metadata from the filename by using a
