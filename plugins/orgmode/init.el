@@ -140,7 +140,7 @@ contextual information."
 (defun org-custom-link-internal-url-export (path desc format)
   (cond
    ((eq format 'html)
-    (format "<a href=\"%s\" class="post-url">%s</a>"
+    (format "<a href=\"%s\" class=\"post-url\">%s</a>"
             (if (string-match "\\`[ \t\n\r/]+" path) ;; trim path from left
                 (replace-match "" t t path)
               s)
