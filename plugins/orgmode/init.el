@@ -122,7 +122,12 @@ contextual information."
 (defun org-custom-link-img-url-export (path desc format)
   (cond
    ((eq format 'html)
-    (format "<img src=\"/assets/images/spinner.svg\" data-src=\"/blog/%s\" alt=\"%s\"/>" path desc))))
+    (format "<img src=\"/assets/images/spinner.svg\" data-src=\"/blog/%s\" alt=\"%s\"/>"
+            (if (string-match "\\`[ \t\n\r/]+" path) ;; trim path from left
+                (replace-match "" t t path)
+              s)
+            ;;path
+            desc))))
 (if (fboundp 'org-link-set-parameters)
     (org-link-set-parameters "img-url"
                              :follow nil
@@ -135,12 +140,17 @@ contextual information."
 (defun org-custom-link-internal-url-export (path desc format)
   (cond
    ((eq format 'html)
-    (format "<a href=\"%s\">%s</a>" path desc))))
+    (format "<a href=\"%s\" class="post-url">%s</a>"
+            (if (string-match "\\`[ \t\n\r/]+" path) ;; trim path from left
+                (replace-match "" t t path)
+              s)
+            ;;path
+            desc))))
 (if (fboundp 'org-link-set-parameters)
-    (org-link-set-parameters "link"
+    (org-link-set-parameters "post-url"
                              :follow nil
                              :export 'org-custom-link-internal-url-export)
-  (org-add-link-type "link"
+  (org-add-link-type "post-url"
                      nil
                      'org-custom-link-internal-url-export))
 
