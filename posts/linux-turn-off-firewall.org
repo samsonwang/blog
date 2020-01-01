@@ -1,0 +1,97 @@
+#+BEGIN_COMMENT
+.. title: 在Linux中关闭防火墙
+.. slug: linux-turn-off-firewall
+.. date: 2020-01-01 08:41:00 UTC+08:00
+.. tags: linux, firewall, ufw
+.. category: linux
+.. link: https://www.cyberciti.biz/faq/linux-disable-firewall-command/
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 在Linux中关闭防火墙
+
+本文主要介绍了firewalld、ufw和iptables防火墙的关闭方法，为了方便以后查阅。
+
+{{{TEASER_END}}}
+
+** firewalld防火墙
+firewalld主要用在红帽系操作系统中，如RHEL和CentOS。
+
+检查防火墙运行状态
+#+BEGIN_SRC sh
+firewall-cmd --state
+#+END_SRC
+
+暂时停止防火墙，但防火墙仍有可能在下次开机时启动
+#+BEGIN_SRC sh
+systemctl stop firewalld
+#+END_SRC
+
+禁止防火墙开机自启动
+#+BEGIN_SRC sh
+systemctl disable firewalld
+systemctl mask --now firewalld
+#+END_SRC
+
+验证防火墙已经关闭
+#+BEGIN_SRC sh
+systemctl status firewalld
+#+END_SRC
+
+启动防火墙
+#+BEGIN_SRC sh
+systemctl unmask --now firewalld
+systemctl enable firewalld
+systemctl start firewalld
+#+END_SRC
+
+** ufw防火墙
+ufw防火墙主要用在Debian系操作系统中，如Ubuntu。
+
+检查防火墙的运行状态
+#+BEGIN_SRC sh
+ufw status
+#+END_SRC
+
+暂时停止防火墙，但防火墙仍有可能在下次开机时启动
+#+BEGIN_SRC sh
+ufw disable
+#+END_SRC
+
+禁止防火墙开机自启动
+#+BEGIN_SRC sh
+systemctl disable ufw
+#+END_SRC
+
+验证防火墙已经关闭
+#+BEGIN_SRC sh
+ufw status
+systemctl status ufw
+#+END_SRC
+
+启动防火墙
+#+BEGIN_SRC sh
+systemctl enable ufw
+ufw enable
+#+END_SRC
+
+** iptables防火墙
+较老的系统可能使用的iptables作为防火墙。
+
+暂时停止防火墙
+#+BEGIN_SRC sh
+service iptables stop
+#+END_SRC
+
+禁止防火墙开机自启动
+#+BEGIN_SRC sh
+chkconfig iptables off
+#+END_SRC
+
+** 参考资料
+- [[https://www.cyberciti.biz/faq/linux-disable-firewall-command/][cyberciti.biz - how to disable linux firewall]]
+- [[https://www.cyberciti.biz/faq/configure-set-up-a-firewall-using-firewalld-on-rhel-8/][cyberciti.biz - how to set up firewalld]]
+- [[https://www.cyberciti.biz/faq/how-to-setup-a-ufw-firewall-on-ubuntu-18-04-lts-server/][cyberciti.biz - how to set up ufw]]
