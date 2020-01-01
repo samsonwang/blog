@@ -1,0 +1,202 @@
+#+BEGIN_COMMENT
+.. title: Tips on Linux Process and Subprocess
+.. slug: linux-process-and-subprocess
+.. date: 2019-01-25 16:50:23 UTC+08:00
+.. tags: linux, process, en
+.. category: linux
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:t
+#+TITLE: Tips on Linux Process and Subprocess
+
+Here are some tips on Linux process and subprocess, such as orphan process, zombie process, process exit and close on exec flag.
+
+{{{TEASER_END}}}
+
+** Orphan process
+*** What is orphan process?
+In Linux system, when parent process exits and child process is still running, the child process becomes an orphan process. Any orphaned process will be immediately adopted by the special init system process.
+
+Here is a demo code to make a orphan process.
+#+BEGIN_SRC c
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int main() {
+    switch(fork()) {
+    case -1:
+        printf("fail to create subprocess\n");
+        break;
+    case 0:
+        printf("child process, pid = %d\n", getpid());
+        sleep(30);
+        break;
+    default:
+        printf("parent process, pid = %d\n", getpid());
+        sleep(10);
+        break;
+    }
+    return 0;
+}
+#+END_SRC
+
+*** How to make child process exit after parent process exits?
+1. Child process can ask kernel to send a signal when its parent dies by =prctl()= system call. This works in Linux only.
+Here is the demo code:
+#+BEGIN_SRC c
+prctl(PR_SET_PDEATHSIG, SIGHUP);
+#+END_SRC
+
+2. As child process id is changed to 1 (the init pid) after parent process exits, the child process could poll its parent process id by =getppid()= . When its parent process id becomes 1, the child process is an orphan process.
+
+Function to get process identification.
+#+BEGIN_SRC c
+// get process id
+pid_t getpid();
+// get parent process id
+pid_t getppid();
+#+END_SRC
+
+
+** Zombie process
+*** What is a zombie process?
+Zombie process is also called defunct process. When child process has finished the execution (via the ~exit~ system call) but still has entry in the process table: It is a process in the "Terminated state". The parent process should read (via the ~wait~ system call) its child's exit staus from process table, then the child process entry is removed from the process table and is said to be "reaped".
+
+A child process always first becomes a zombie before being removed from the resource table. In most cases, under normal system operation zombies are immediately waited on by their parent and then reaped by the system – processes that stay zombies for a long time are generally an error and cause a resource leak.
+
+Here is a demo code to make a zombie process.
+#+BEGIN_SRC c
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int main() {
+    switch(fork()) {
+    case -1:
+        printf("fail to create subprocess\n");
+        break;
+    case 0:
+        printf("child process, pid = %d\n", getpid());
+        sleep(10);
+        break;
+    default:
+        printf("parent process, pid = %d\n", getpid());
+        sleep(30);
+        break;
+    }
+    return 0;
+}
+#+END_SRC
+
+Check out process tree using the following command.
+#+BEGIN_SRC sh
+ps -efx
+#+END_SRC
+
+*** How to kill a zombie process?
+As a zombie process is already dead, so you can not ~kill~ it. The ~kill~ command has no effect on a zombie process.
+
+To clean up a zombie, it must be waited on by its parent, so killing the parent should work to eliminate the zombie. (After the parent dies, the zombie will be inherited by init process (pid 1), which will wait on it and clear its entry in the process table).
+
+The following command will kill all the parent processes that has a zombie child process. As this might kill processes that is running normally, it is not recommended. The better solution is to find out the very zombie process and stop its parent.
+#+BEGIN_SRC sh
+kill $(ps -A -ostat,ppid | awk '/[zZ]/ && !a[$2]++ {print $2}')
+#+END_SRC
+
+
+** Process exit
+*** ~exit~ function
+~exit()~ function performs some cleaning before termination of the program, such as the ~atexit()~ registered method and buffer flushing.
+
+Here is the demo code:
+#+BEGIN_SRC c
+#include <stdio.h>
+#include <stdlib.h>
+
+void cleanup() {
+    printf("cleanup ...\n"); // this will be printed
+}
+
+int main(int argc, char* argv[]) {
+    printf("process running ...\n");
+    atexit(cleanup);
+    printf("buffer information ..."); // this will be fulshed
+    exit(0);
+    return 0;
+}
+#+END_SRC
+
+*** ~_exit~ or ~_Exit~ function
+~_exit()~ is equivalent to ~_Exit()~ . They all cause normal program termination to occur without completely cleaning the resources. The minor difference is ~_Exit~ is from C99 and ~_exit~ is from POSIX.
+
+Use ~_exit~ (or ~_Exit~ ) in child process to avoid unintended calling ~atexit()~ handlers and flushing buffers from parent process.
+
+Here is the demo code:
+#+BEGIN_SRC c
+#include <stdio.h>
+#include <stdlib.h>
+
+void cleanup() {
+    printf("cleanup ...\n"); // this will not be printed
+}
+
+int main(int argc, char* argv[]) {
+    printf("process running ...\n");
+    atexit(cleanup);
+    printf("buffer information ...");  // this will not be fulshed
+    _Exit(0);
+    return 0;
+}
+#+END_SRC
+
+
+** Close on exec flag
+The =close-on-exec= flag is set on file descriptor to indicate that the descriptor should be closed when an ~exec~ function is invoked. The flag is initially disabled on new descriptors, the descriptor will survive into the new program after ~exec~ , and resource is leaked. This would happen unintentionally when parent process forks a child and the child calls ~exec~ .
+
+It is a good programming practice to use this flag in order to close the descriptor by default.
+#+BEGIN_SRC c
+int fd1 = open(path, O_CLOEXEC | flags);
+int fd2 = socket(DOMAIN, SOCK_CLOEXEC | type, PROTOCOL);
+int fd3 = accept4(int sockfd, struct sockaddr *addr,
+                  socklen_t *addrlen, SOCK_CLOEXEC | flags);
+int fd4 = fopen(path, "re");
+#+END_SRC
+
+If you want to modify flags on an existing file descriptor, you should get the current flags with =F_GETFD= and modify the value. Don’t assume that the flags listed here are the only ones that are implemented; your program may be run years from now and more flags may exist then. For example, here is a function to set or clear the flag =FD_CLOEXEC= without altering any other flags:
+
+#+BEGIN_SRC c
+/* Set the FD_CLOEXEC flag of desc if value is nonzero,
+   or clear the flag if value is 0.
+   Return 0 on success, or -1 on error with errno set. */
+int set_cloexec_flag (int desc, int value) {
+    int oldflags = fcntl (desc, F_GETFD, 0);
+    /* If reading the flags failed, return error indication now. */
+    if (oldflags < 0)
+        return oldflags;
+    /* Set just the flag we want to set. */
+    if (value != 0)
+        oldflags |= FD_CLOEXEC;
+    else
+        oldflags &= ~FD_CLOEXEC;
+    /* Store modified flag word in the descriptor. */
+    return fcntl (desc, F_SETFD, oldflags);
+}
+#+END_SRC
+
+
+** Reference
+1. [[https://en.wikipedia.org/wiki/Orphan_process][wikipedia.org - orphan process]]
+2. [[https://en.wikipedia.org/wiki/Zombie_process][wikipedia.org - zombie process]]
+3. [[https://stackoverflow.com/questions/16944886/how-to-kill-zombie-process][stackoverflow.com - how to kill zombie process]]
+4. [[https://www.geeksforgeeks.org/zombie-and-orphan-processes-in-c/][geeksforgeeks.org - zombie and orphan process]]
+5. [[https://stackoverflow.com/questions/5422831/what-is-the-difference-between-using-exit-exit-in-a-conventional-linux-fo][stackoverflow.com - difference between ~exit~ and ~_exit~]]
+6. [[https://en.cppreference.com/w/c/program/_Exit][cppreference.com - ~_Exit~]]
+7. [[https://stackoverflow.com/questions/6125068/what-does-the-fd-cloexec-fcntl-flag-do][stackoverflow.com - what does =FD_CLOEXEC= flag do]]
+8. [[https://www.gnu.org/software/libc/manual/html_node/Descriptor-Flags.html][gnu.org - descriptor flags]]
+
+
+(The end)

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>深入探索C++内存模型（3） | Hack Note</title>
+<link href="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="/blog/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/blog/rss.xml">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/inside-the-cpp-object-model-3/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/blog/posts/linux-command-examples-grep-and-find/" title="在Linux终端中进行递归搜索" type="text/html">
+<link rel="next" href="/blog/posts/inside-the-cpp-object-model-4/" title="深入探索C++内存模型（4）" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="/blog/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+<li class="nav-item">
+<a href="/blog/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/blog/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/blog/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">深入探索C++内存模型（3）</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2019-04-12T13:13:16+08:00" itemprop="datePublished" title="2019-04-12 13:13">Apr 12 2019</time>
+</div>
+
+      
+
+      
+    <div class="source blur-1">
+      <a href="/blog/posts/inside-the-cpp-object-model-3/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/blog/tags/cpp/" rel="tag">cpp</a></li>
+        <li><a class="tag p-category" href="/blog/tags/digest/" rel="tag">digest</a></li>
+        <li><a class="tag p-category" href="/blog/tags/lippman/" rel="tag">Lippman</a></li>
+        <li><a class="tag p-category" href="/blog/tags/memory-layout/" rel="tag">memory layout</a></li>
+        <li><a class="tag p-category" href="/blog/tags/object-model/" rel="tag">object model</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+第三章的标题是Data语意学，这一章主要的研究对象是类的成员变量相关的操作原理，静态成员变量与非静态成员变量，单一继承、多重继承、虚继承对成员变量内存分布和存取性能的影响。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">第三章 Data语意学（the semantics of data）</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+一个空的（不含有任何成员变量）class，事实上并不是空的，它有一个隐晦的1byte，那是被编译器安插进去的一个char，这使得这个class的两个objects得以在内存中配置独一无二的地址。<br></p>
+
+<p>
+含有虚继承父类的大小受到三个因素的影响：<br></p>
+<ol class="org-ol">
+<li>语言本身所造成的额外负担（overhead），当语言支持 virtual base class时，就会导致一些额外负担；<br>
+</li>
+<li>编译器对于特殊情况所提供的优化处理；<br>
+</li>
+<li>Alignment的限制，在大部分机器上，群聚的结构体大小会受到alignment的限制，使它们能够更有效率地在内存中被存取。<br>
+</li>
+</ol>
+</div>
+
+
+<div id="outline-container-sec-1-1" class="outline-3">
+<h3 id="sec-1-1">3.1 Data Member的绑定（the binding of a data member）</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+文中介绍的一个古老的语言规则“member rewriting rule”，大意是：一个inline函数实体，在整个 class 声明未被完全看见之前，是不会被评估求值（evaluated）的。<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">extern</span> <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+<span class="k">class</span> <span class="nc">Point3d</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="kt">float</span> <span class="n">X</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span><span class="k">return</span> <span class="n">x</span><span class="p">;}</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="kt">float</span> <span class="n">x</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+上面的代码，对于函数本身的分析将延迟直至 class 声明的右大括号出现才开始。<br></p>
+
+<p>
+但是对于 member function 的 argument list 却并不是这样。Argument list 中的名称还是会在它们第一次遭遇时被适当地决议（resolved）完成，示例代码如下。<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="kt">int</span> <span class="n">length</span><span class="p">;</span>
+<span class="k">class</span> <span class="nc">Point3d</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+    <span class="c1">// length 被 resovled 为 global</span>
+    <span class="kt">void</span> <span class="n">mumble</span><span class="p">(</span><span class="n">length</span> <span class="n">val</span><span class="p">)</span> <span class="p">{</span> <span class="n">_val</span> <span class="o">=</span> <span class="n">val</span><span class="p">;}</span>
+    <span class="n">length</span> <span class="n">mumble</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">_val</span><span class="p">;}</span>
+<span class="k">private</span><span class="o">:</span>
+    <span class="k">typedef</span> <span class="kt">float</span> <span class="n">length</span><span class="p">;</span>
+    <span class="n">length</span> <span class="n">_val</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+针对上述这种语言状况，需要某种防御性程序风格：请始终把“nested type 声明”放在class 的起始处。在上述例子中，如果把 <code>length</code> 的 nested typedef 定义于“在 class 中被参考”之前，就可以确保非直觉绑定的正确性。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-2" class="outline-3">
+<h3 id="sec-1-2">3.2 Data Member 的布局（data member layout）</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+Nonstatic data members 在 class object 中的排列顺序将和其被声明的顺序一样，任何中间介入的 static data members 如 freeList 和 chunkSize 都不会被放进对象布局之中。<br></p>
+
+<p>
+C++ standard 要求，在同一个 access section（也就是 private、public、protected等区段）中，members 的排列只需符合“较晚出现的members 在 class object 中有较高的地址” 这一条即可（请看 C++ Standard9.2节）。也就是说各个 members 并不一定得连续排列，members的字节对齐（alignment）可能就需要填补一些 bytes。编译器还可能会合成一些内部是即用的data members，以支持整个对象模型，如vptr虚指针。<br>
+当前各家编译器都是把一个以上的 access sections 连锁在一起，依照声明次序，成为一个连续区块。Access sections 的多寡并不会招来额外负担。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-3" class="outline-3">
+<h3 id="sec-1-3">3.3 Data member 的存取</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+思考一个问题，对于如下代码，通过 origin 存取和通过 pt 存取，有什么重大差异吗？<br></p>
+<div class="highlight"><pre><span></span><span class="n">Point3d</span> <span class="n">origin</span><span class="p">,</span> <span class="o">*</span><span class="n">pt</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">origin</span><span class="p">;</span>
+<span class="c1">// 用它们来存取 data members</span>
+<span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+<span class="n">pt</span><span class="o">-&gt;</span><span class="n">x</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+</pre></div>
+</div>
+
+
+<div id="outline-container-sec-1-3-1" class="outline-4">
+<h4 id="sec-1-3-1">Static Data Members</h4>
+<div class="outline-text-4" id="text-1-3-1">
+<p>
+Static data members，按其字面意义，被编译器提出于 class 之外，并被视为一个global变量（但只在 class 声明范围之内可见）。每一个 static data member 只有一个实体，存放在程序的 data segment 之中，每次程序取用 static member，就会被内部转化为对该唯一的 extern 实体的直接参考操作。<br></p>
+
+<p>
+如果该 static data member 是一个从复杂继承关系中继承而来的，也都是一样，程序之中对于 static data members 还是只有唯一一个实体，而其存取路径仍然是那么直接。<br></p>
+
+<p>
+若取一个 static data member 的地址，会得到一个指向其数据类型的指针，而不是一个指向其 class member 的指针，因为 static data member 并不内含在一个 class object 之中。<br></p>
+
+<p>
+编译器会对 static data member 进行换名（name-mangling），有两个要点：<br></p>
+<ol class="org-ol">
+<li>一种推导出独一无二名称的算法；<br>
+</li>
+<li>如果编译系统（或环境工具）必须和使用者交谈，那些独一无二的名称可以轻易被推导回原来的名称。<br>
+</li>
+</ol>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-3-2" class="outline-4">
+<h4 id="sec-1-3-2">Nonstatic Data Members</h4>
+<div class="outline-text-4" id="text-1-3-2">
+<p>
+Nonstatic data members 直接存放在每一个 class object 之中，需要通过明确的（explicit）或暗喻的（implicit） class object 存取它们。常见的Implicit存取方式是使用省略掉的 <code>this</code> 指针对成员变量进行存取。<br></p>
+
+<p>
+欲对一个 nonstatic data member 进行存取操作，编译器需要把 class object 的起始地址加上 data member 的偏移量（offset）。<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">origin</span><span class="p">.</span><span class="n">_y</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+<span class="c1">// 那么地址 &amp;origin._y 将等于：</span>
+<span class="o">&amp;</span><span class="n">origin</span> <span class="o">+</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">Point3d</span><span class="o">::</span><span class="n">_y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</pre></div>
+
+<p>
+请注意其中的 -1 操作，指向 data member 的指针，其 offset 值总是被加上1，这样可以使编译系统区分出以下两种情况：<br></p>
+<ul class="org-ul">
+<li>一个指向 data member 的指针，用以指出 class 的第一个 member （ <code>Point3d::*_y</code> ）<br>
+</li>
+<li>一个指向 data member 的指针，没有指出任何 member （空指针）<br>
+</li>
+</ul>
+<p>
+<b>注意：</b> 经过我在gcc5.3中测试，指向第一个成员变量的指针是0，并没有如书中所说的被加上1。可见编译器的特性也是不断发展的。<br></p>
+
+<p>
+每一个 nonstatic data member 的偏移量（offset）在编译时期即可获知，甚至如果 member 属于一个 base class subobject（派生自单一或多重继承串链）也是一样。<br></p>
+
+<p>
+对于虚继承，它将为“经由 base class subobject 存取 class members”导入一层新的间接性。<br>
+分析本章开始的问题，当 <code>Point3d</code> 是一个derived class，而在其继承结构中有一个 virtual base class，并且被存取的 member（如本例的 <code>x</code> ）是一个从该 virtual base class 继承而来的 member 时，就会有重大差异。这时我们不能确定 <code>pt</code> 必然指向哪一种 class type，因此我们也就不知道编译时期这个 member 真正的 offset 位置，这个存取操作必须延迟至执行期。但如果使用 <code>origin</code> 就不会有这些问题，其类型无疑是 <code>Point3d</code> class，即使它继承自 virtual base class，members 的 offset 位置也在编译时期就固定了。<br></p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-4" class="outline-3">
+<h3 id="sec-1-4">3.4 “继承” 与 Data Member</h3>
+<div class="outline-text-3" id="text-1-4">
+<p>
+把两个原本独立不相干的 classes 凑成一对“type/subtype”，并带有继承关系，会有一些易犯错误：<br></p>
+<ol class="org-ol">
+<li>经验不足的人可能会重复设计一些相同操作的函数<br>
+</li>
+<li>把一个 class 分解为两层或更多层，有可能会为了“表现 class 体系的抽象化”而膨胀所需空间。C++语言保证出现在 derived class 中的 base class subobject 有其完整原样性。书中有完整的例子可供参考。<br>
+</li>
+</ol>
+<p>
+对于 vptr 在 class object 的位置有两种方案，首端和尾端。放在尾端可以保留 base class C struct 的对象布局，因而允许在 C 程序代码中也能使用，这种做法在 C++ 最初问世时，被许多人采用。<br>
+到了 C++2.0，开始支持虚拟继承以及抽象基类，并且由于面向对象典范（OO paradigm）的兴起，某些编译器开始把 vptr 放到 class object 的起头处。<br></p>
+
+<p>
+<b>多重继承</b><br>
+对一个多重派生对象，将其地址指定给“最左端（也就是第一个）base class 的指针”，情况和单一继承时相同，因为二者都指向相同的起始地址。需付出的成本只有地址的赋值操作而已。对于第二个或后继的 base class 的地址赋值操作，则需要将地址修改过：加上（或减去，如果 downcast 的话）介于中间的 base class subobject(s) 大小。<br></p>
+
+<p>
+<b>虚继承</b><br>
+class 如果内含一个或多个 virtual base class subobjects，将被分割为两部分：一个不变局部和一个共享局部。不变局部中的数据，不管后继如何衍化，总是拥有固定的 offset （从 object 的开头算起），所以这一部分数据可以被直接存取。至于共享局部，所表现的就是 virtual base class subobject。这一部分的数据，其位置会因为每次的派生操作而有变化，所以它们只可以被间接存取。<br></p>
+
+<p>
+方法1：Microsoft 编译器引入所谓的 virtual base class table， 每一个 class object 如果有一个或多个 virtual base class，就会由编译器安插一个指针，指向 virtual base class table，真正的 virtual base class 指针被放在该表格中。<br></p>
+
+<p>
+方法2：在 virtual function table 中放置 virtual base class 的 offset（而不是地址）。将 virtual base class offset 和 virtual function entries 混杂在一起。在新的 Sun 编译器中，virtual function table 可经由正值或负值来索引。如果是正值，很显然就是索引到 virtual function；如果是负值，则是索引到 virtual base class offsets。<br></p>
+
+<p>
+一般而言，virtual base class 最有效的一种运用形式就是：一个抽象的virtual base class，没有任何 data members。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-5" class="outline-3">
+<h3 id="sec-1-5">3.5 对象成员的效率（object member efficiency）</h3>
+<div class="outline-text-3" id="text-1-5">
+<p>
+本节包含数个测试，测试聚合（aggregation）、封装（encapsulation）、继承（inheritance）所引发的额外负荷的程度。<br></p>
+
+<p>
+以下是汇总后的测试结论：<br></p>
+<ul class="org-ul">
+<li>如果把优化开关打开，“封装”就不会带来执行期的效率成本，使用inline存取函数亦然。<br>
+</li>
+<li>单一继承不会影响效率，因为 members 被连续存储于 derived class object 中，并且其 offset 在编译时期就已知了。<br>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-6" class="outline-3">
+<h3 id="sec-1-6">3.6 指向 data members 的指针（pointer to data members）</h3>
+<div class="outline-text-3" id="text-1-6">
+<p>
+指向 data members 的指针，是一个有点神秘但颇有用处的语言特性。特别是你需要详细调查 class members 的底层布局的话，可以得知 vptr 是放在 class 的起始处或是尾端。另一个用途展现于3.2节，可以用来检测 class 中的 access section 的次序。<br></p>
+
+<div class="highlight"><pre><span></span><span class="o">&amp;</span> <span class="n">Point3d</span><span class="o">::</span><span class="n">z</span><span class="p">;</span>
+</pre></div>
+<p>
+如上述代码，取某个坐标成员的地址，将得到 member 在 class object 中的偏移量（offset）。<br></p>
+
+<p>
+需要注意的是，在打印这些指针时，需要使用推荐使用 <code>printf</code> ，而不推荐使用 <code>std::cout</code> ，示例代码如下。<br></p>
+<div class="highlight"><pre><span></span><span class="n">printf</span><span class="p">(</span><span class="s">"&amp;Point3d::x = %p</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">Point3d</span><span class="o">::</span><span class="n">x</span><span class="p">);</span>
+<span class="c1">// 而以下写法会报错</span>
+<span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"&amp;Point3d::x = "</span> <span class="o">&lt;&lt;</span> <span class="o">&amp;</span><span class="n">Point3d</span><span class="o">::</span><span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+</pre></div>
+
+<p>
+为了区分一个“没有指向任何 data member”的指针和一个指向“第一个 data member”的指针（下面代码中的 <code>p1</code> 和 <code>p2</code> ），每一个真正的 member offset 值都被加上1。因此，不论编译器或使用者都必须记住，在真正使用该值以指出一个 member 之前，要先减掉 1。<br></p>
+<div class="highlight"><pre><span></span><span class="kt">float</span> <span class="n">Point3d</span><span class="o">::*</span><span class="n">p1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="kt">float</span> <span class="n">Point3d</span><span class="o">::*</span><span class="n">p2</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">Point3d</span><span class="o">::</span><span class="n">x</span><span class="p">;</span>
+</pre></div>
+
+<p>
+使用“指向members的指针”的效率问题，在经过优化之后，测试结果并没有明显性能损失；而未优化的代码呈现出较大的性能损失。<br></p>
+
+<p>
+指向 data member 的指针，在单一继承情况下没有明显的性能损失，在虚拟继承情况下会有性能损失。并且虚拟继承的层数增多也相应的性能损耗会增多。<br></p>
+
+
+<p>
+（全文完）<br></p>
+</div>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
+        </div>
+</div>
+
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/blog/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/blog/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/blog/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/blog/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+    <ul class="pager hidden-print">
+<li class="left">
+          <a href="/blog/posts/linux-command-examples-grep-and-find/" rel="prev">
+            <p class="title">在Linux终端中进行递归搜索</p>
+            <p>Previous post</p>
+          </a>
+      </li>
+      <li class="right">
+          <a href="/blog/posts/inside-the-cpp-object-model-4/" rel="next">
+            <p class="title">深入探索C++内存模型（4）</p>
+            <p>Next post</p>
+          </a>
+      </li>
+    </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://samsonwang.github.io/blog/posts/inside-the-cpp-object-model-3/",
+        disqus_title="\u6df1\u5165\u63a2\u7d22C++\u5185\u5b58\u6a21\u578b\uff083\uff09",
+        disqus_identifier="cache/archives/2019/inside-the-cpp-object-model-3.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2020 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.min.js"></script><script src="https://cdn.staticfile.org/jquery.colorbox/1.6.4/jquery.colorbox-min.js"></script><script src="https://cdn.staticfile.org/jquery_lazyload/1.9.7/jquery.lazyload.min.js"></script><script src="https://cdn.staticfile.org/popper.js/1.14.3/umd/popper.min.js"></script><script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/js/bootstrap.min.js"></script><script src="/blog/assets/js/moment-with-locales.min.js"></script><script src="/blog/assets/js/fancydates.js"></script><script src="/blog/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

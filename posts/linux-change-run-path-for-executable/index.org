@@ -1,0 +1,71 @@
+#+BEGIN_COMMENT
+.. title: linux中修改程序的run path
+.. slug: linux-change-run-path-for-executable
+.. date: 2019-11-22 14:41:48 UTC+08:00
+.. tags: linux, rpath, elf, chrpath
+.. category: linux
+.. link: https://stackoverflow.com/questions/13769141/can-i-change-rpath-in-an-already-compiled-binary
+.. description:
+.. type: text
+.. status:
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: linux中修改程序的run path
+
+对于动态库的加载，不同的操作系统有不同的搜索策略。在windows下，程序会优先加载同路径中的动态库，这是一个非常方便的特性。而在linux下，需要单独配置 ~LD_LIBRARY_PATH~ 以实现上述类似特性。曾经困扰我很长一段时间的就是linux平台的动态库加载问题，最常出现的问题是程序启动时找不到所需要的动态库。在得知修改run path可以调整程序搜索动态库的路径时，一切都迎刃而解了。
+
+{{{TEASER_END}}}
+
+** 使用 ~ldd~ 查看动态库加载信息
+
+可以使用 ~ldd~ 查看是否能够成功找到程序所需要的动态库。在搜索成功的情况下会将动态库的绝对地址显示出来。
+#+BEGIN_SRC sh
+ldd <exec-file>
+#+END_SRC
+
+有时会有多个名称相同的动态库时在不同的路径中，通过这条命令也能够查看程序在运行时加载的是哪个动态库。
+
+
+** 使用 ~chrpath~ 修改可执行程序的run path信息
+linux程序的run path是ELF信息的一部分，保存了该程序在加载动态库时的搜索路径。chrpath是一个能够查看和修改run path的程序。我在包管理器中并没有搜索到这个软件包，最终通过编译源码的方式安装成功。
+
+查看run path信息
+#+BEGIN_SRC sh
+chrpath -l <exec-file>
+#+END_SRC
+
+修改run path信息
+#+BEGIN_SRC sh
+chrpath -r '/target/path' <exec-file>
+#+END_SRC
+
+
+** 通过设置 ~LD_LIBRARY_PATH~ 增加动态库的查找路径
+~LD_LIBRARY_PATH~ 提供了一种额外的动态库搜索路径，它是一个环境变量，这个设置是对终端生效的。
+
+可以在终端的配置文件中增加以下配置项，使程序在加载动态库搜索当前工作目录。
+#+BEGIN_SRC sh
+export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
+#+END_SRC
+
+tips：需要注意的是，在linux下进行路径之间分隔符使用的是英文冒号。
+
+
+** ~rpath~ 和 ~LD_LIBRARY_PATH~ 的比较
+~rpath~ 和 ~LD_LIBRARY_PATH~ 都能提供额外的动态库搜索路径，这里主要谈谈它们之间的区别。
+
+~rpath~ 是对单个可执行程序生效的，对其他可执行程序没有影响。并且，它不依赖于工作目录和运行环境，这点非常重要，因为有时程序并不是由终端启动的，这样它的工作目录和环境是不可控的。
+
+~LD_LIBRARY_PATH~ 是对终端生效的，影响的是所有由该终端启动的程序。可以通过脚本包裹的方式使其仅对脚本中的程序生效。以下是示例脚本：
+#+BEGIN_SRC sh
+#!/bin/bash
+LD_LIBRARY_PATH="$(pwd)/lib"
+export LD_LIBRARY_PATH
+./exec_app
+#+END_SRC
+
+
+** 参考资料
+- [[https://osdn.net/projects/sfnet_pisilinux/downloads/source/chrpath-0.16.tar.gz/][osdn.net - chrpath download]]
+- [[https://stackoverflow.com/questions/13769141/can-i-change-rpath-in-an-already-compiled-binary][stackoverflow.com - change rpath in compiled binary]]

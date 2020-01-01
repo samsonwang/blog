@@ -1,0 +1,178 @@
+#+BEGIN_COMMENT
+.. title: 初识docker
+.. slug: docker-for-beginners
+.. date: 2019-04-03 11:19:59 UTC+08:00
+.. tags: docker, beginner, cheatsheet
+.. category: docker
+.. link: https://docker-curriculum.com/
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:t
+
+#+TITLE: 初识docker
+
+这篇文章是 [[https://docker-curriculum.com/][docker-curriculum.com]] 的学习笔记，包含 docker 的基础概念和入门用法。通过阅读该教程，我对 docker 以及容器化的软件开发、分发和部署有了初步的认识。
+
+{{{TEASER_END}}}
+
+** 基础概念
+Docker 允许将应用程序部署在一个容器（沙盘）中。Docker 优势在于可以将应用程序和它所依赖的组件打包为一个标准化单元。Docker 并没有很高开销，因此能比虚拟机（virtual machine）更有效率地调动底层系统资源。
+
+使用 Docker 可以实现宿主系统与容器系统的相互隔离，降低两者之间的相互影响。
+
+容器提供了一种逻辑封装机制，能够将应用程序所运行的环境抽象出来。这种解耦过程让基于容器的应用程序更易于部署和维护。容器除了提高可移植性之外，还可以对资源进行更精细的控制，从而提高基础架构的效率，从而提高计算资源的利用率。
+
+
+** 简单的 docker 应用
+学习 Docker 的第一步是安装 Docker。在 Docker 的官网上就能找到对应平台的安装教程。
+
+启动 docker 服务。
+#+BEGIN_SRC sh
+service docker start
+#+END_SRC
+
+Docker 的 hello world，用于测试 Docker 已经安装成功。
+#+BEGIN_SRC sh
+docker run hello-world
+#+END_SRC
+
+Docker 的 busybox，提供命令行的交互。
+#+BEGIN_SRC sh
+docker run busybox echo "hello from busybox"
+#+END_SRC
+
+查看 Docker 容器
+#+BEGIN_SRC sh
+docker ps
+#+END_SRC
+
+查看所有 Docker 容器，包含已经退出的容器。
+#+BEGIN_SRC sh
+docker ps -a
+#+END_SRC
+
+以交互模式模式运行容器，其中的 =it= 是 interactive 的缩写。
+#+BEGIN_SRC sh
+docker run -it busybox sh
+#+END_SRC
+
+停止一个正在运行的容器
+#+BEGIN_SRC sh
+docker stop <container id>
+#+END_SRC
+
+删去容器
+#+BEGIN_SRC sh
+docker rm <container id>
+#+END_SRC
+
+删去所有停止的容器
+#+BEGIN_SRC sh
+docker rm $(docker ps -a -q -f status=exited)
+docker container prune
+#+END_SRC
+
+重新连接到一个正在运行的容器
+#+BEGIN_SRC sh
+docker attach <container name>
+# 或
+docker exec -it <container name> /bin/bash
+#+END_SRC
+
+
+** 运行web应用
+教程的作者提供了一个 web 应用的 Docker image 用于测试。
+#+BEGIN_SRC sh
+docker run --rm prakhar1989/static-site
+#+END_SRC
+
+将服务的端口映射到宿主机
+#+BEGIN_SRC sh
+docker run -d -P --name static-site prakhar1989/static-site
+#+END_SRC
+
+查看端口映射
+#+BEGIN_SRC sh
+docker port static-site
+#+END_SRC
+
+指定端口映射
+#+BEGIN_SRC sh
+docker run -p 8888:80 prakhar1989/static-site
+#+END_SRC
+
+停止运行容器
+#+BEGIN_SRC sh
+docker stop static-site
+#+END_SRC
+
+
+** Docker 镜像
+查看本机上的 Docker image
+#+BEGIN_SRC sh
+docker images
+#+END_SRC
+
+对于 Docker image 的分类：
+- base images: 没有父镜像的镜像，一般是操作系统镜像，如 ubuntu，busybox
+- child images: 基于 base image 的镜像，附加有额外的功能
+- offical images: 官方维护的镜像，它们的名字大多由一个单词组成
+- user images: 用户创建的镜像，它们名字的格式为 =user/image-name=
+
+可以使用 =Dockerfile= 定义一个镜像。
+构建 docker 镜像，注意这个名称应该与自己在Docker hub上的用户名相同，因为后续会将制作好的镜像推送到 docker hub 中。
+#+BEGIN_SRC sh
+docker build -t samsonwang/catnip .
+#+END_SRC
+
+推送镜像到 Docker hub 中
+#+BEGIN_SRC sh
+docker push samsonwang/catnip
+#+END_SRC
+
+删除镜像
+#+BEGIN_SRC sh
+docker rmi image-name
+#+END_SRC
+
+
+** 多容器应用
+现代的网络服务系统大都由多个模块组成，这也就需要多个容器配合完成服务功能。
+多容器之间的通信需要借助 Docker 提供的桥接网络。
+
+查看 Docker 网络
+#+BEGIN_SRC sh
+docker network ls
+#+END_SRC
+
+查看桥接网络
+#+BEGIN_SRC sh
+docker network inspect bridge
+#+END_SRC
+
+创建专用桥接网络
+#+BEGIN_SRC sh
+docker network create xxx-net
+#+END_SRC
+
+在特定的网络中运行
+#+BEGIN_SRC sh
+docker run -it --rm --net foodtrucks-net prakhar1989/foodtrucks-web bash
+#+END_SRC
+
+docker 支持自动服务发现（automatic service discovery）特性，可以使用容器名称指代 ip 地址。
+
+使用 docker compose 工具完成多容器应用的部署，它的配置文件名为 =docker-compose.yml= ，在配置文件中可以设置各个容器的依赖关系。
+使用 docker compose 启动多个容器
+#+BEGIN_SRC sh
+docker-compose up
+docker-compose down
+#+END_SRC
+
+
+** 参考资料
+- https://docker-curriculum.com/
+- https://www.docker.com/
+- https://hub.docker.com/

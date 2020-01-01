@@ -1,0 +1,50 @@
+#+BEGIN_COMMENT
+.. title: MSVC工程里Unicode字符集和多字节字符集选项
+.. slug: msvc-cpp-project-unicode-and-mbcs
+.. date: 2019-10-15 20:44:03 UTC+08:00
+.. tags: cpp, unicode, MBCS, windows, charset
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: MSVC工程里Unicode字符集和多字节字符集选项
+
+在Visual Studio的C++工程中，有个一选项可以设置当前工程的字符集，本文主要围绕着该设置置项展开。
+
+{{{TEASER_END}}}
+
+** Unicode和MBCS
+该选项主要是针对MFC库中函数的来设置的，用于支持国际化的多语言开发。例如，中文的字符集就很大，MFC库提供了Unicode和MBCS来解决这个问题。
+- Unicode 是基于 ~wchar_t~ 的宽字节字符串，其中的字符以UTF-16方式进行编码。
+- MBCS 全称为Multibyte Character Sets，是基于 ~char~ 的单字节字符或多字节字符串，其中的字符以本地 /locale-specific/ 的字符集进行编码的。
+
+微软推荐使用Unicode版本的MFC库进行开发。实际上Windows底层使用的是 ~wchar_t~ 字符串，当一些老软件调用Win32底层API时，其中的 ~char~ 字符串会被转化为 ~wchar_t~ 字符串。
+
+** ~CString~ 和 ~TCHAR~
+~CString~ 是基于 ~TCHAR~ 的数据结构， ~TCHAR~ 会根据当前配置来决定其底层的数据类型。当存在 ~_UNICODE~ 宏定义时是Unicode字符集模式，在Unicode下是 ~wchar_t~ 16bit字符格式；当存在 ~_MBCS~ 宏定义时是多字节字符集模式，在MBCS下是 ~char~ 常用的8bit字符格式。
+
+*tips:* ~_UNICODE~ 和 ~_MBCS~ 是互斥的，不要同时定义二者。
+
+在以Unicode字符集模式下进行开发时，需要注意以下几点：
+1. 使用 ~_T~ 宏将字符串转为Unicode编码
+2. 在使用字符串时，需要额外注意字符个数与字符字节数，在Unicode字符串中二者是不同的
+3. 使用 ~TCHAR~ 代替 ~char~ ， ~LPTSTR~ 代替 ~char*~ ， ~LPCTSTR~ 代替 ~const char*~
+
+** ~std::string~ 和 ~std::wstring~
+~std::string~ 是以 ~char~ 实例化的 ~basic_string~ 模板，而 ~std::wstring~ 是以 ~wchar_t~ 实例化的。
+
+- ~char~ 类型用于存储一个字符，通常是8比特（bit）的。
+- ~wchar_t~ 类型用于存储宽字符，它在linux下是4字节（byte）的，在windows下是2字节的。
+- ~char~ 和 ~wchar_t~ 一般都没有直接和字符集关联在一起的；可以理解为它们仅提供存储数据的容器，并没有限定存储数据的字符集。
+
+
+** 参考资料
+- [[https://docs.microsoft.com/en-us/cpp/text/unicode-and-mbcs][microsoft - unicode and mbcs]]
+- [[https://stackoverflow.com/questions/3064052/c-project-type-unicode-vs-multi-byte-pros-and-cons][stackoverflow - c project unicode and multi byte]]
+- [[https://docs.microsoft.com/en-us/cpp/atl-mfc-shared/unicode-and-multibyte-character-set-mbcs-support][micorsoft - unicode and mbcs support]]
+- [[https://docs.microsoft.com/en-us/cpp/text/mbcs-support-in-visual-cpp][microsoft - mbcs support in visual studio]]
+- [[https://stackoverflow.com/questions/402283/stdwstring-vs-stdstring][stackoverflow - wstring and string]]

@@ -1,0 +1,133 @@
+#+BEGIN_COMMENT
+.. title: redis中的数据结构
+.. slug: redis-data-structure
+.. date: 2019-04-29 9:37:50 UTC+08:00
+.. tags: redis, data structure, nosql
+.. category: redis
+.. link: https://mp.weixin.qq.com/s/RqAiOXbIeh0kcaYY5COrHQ
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:t
+
+#+TITLE: redis 中的数据结构
+
+本文主要介绍了 redis 中的底层数据结构类型，并比较了操作这些数据时的时间复杂度。
+
+{{{TEASER_END}}}
+
+** 简介
+
+redis 常用的类型主要是 String、List、Hash、Set、ZSet 这5种。
+|----------+------------------------+------------------------------------------|
+| 数据类型 | 可存储的值             | 支持的操作                               |
+|----------+------------------------+------------------------------------------|
+| string   | 字符串、整数、浮点数   | 对整个字符串或字符串的其中一部分执行操作 |
+|          |                        | 对整数和浮点数执行自增和自减操作         |
+|----------+------------------------+------------------------------------------|
+|          |                        | 从两端压入或者弹出元素                   |
+| list     | 链表                   | 读取单个或多个元素                       |
+|          |                        | 进行修剪只保留一个范围内的元素           |
+|----------+------------------------+------------------------------------------|
+|          |                        | 添加、获取、移除单个元素                 |
+| set      | 无序集合               | 检查一个元素是否存在集合中               |
+|          |                        | 计算交集、并集、差集                     |
+|----------+------------------------+------------------------------------------|
+|          |                        | 添加、获取、移除单个键值对               |
+| hash     | 包含键值对的无序散列表 | 获取所有键值对                           |
+|          |                        | 检查某个键是否存在                       |
+|----------+------------------------+------------------------------------------|
+|          |                        | 添加、获取、删除元素                     |
+| zset     | 有序集合               | 根据分值范围或成员来获取元素             |
+|          |                        | 计算一个键的排名                         |
+|----------+------------------------+------------------------------------------|
+
+这些数据结构对应的常见用法：
+- String：缓存、限流、计数器、分布式锁、分布式Session
+- Hash：存储用户信息、用户主页访问量、组合查询
+- List：微博关注人时间轴列表、简单队列
+- Set：赞、踩、标签、好友关系
+- Zset：排行榜
+
+
+** redis 的底层存储对象 redisObject
+redis 每个对象由一个 redisObject 结构表示，它的 ptr 指针指向底层实现的数据结构，而数据结构由 encoding 属性决定。
+可以使用 object encoding =key_name= 获得 key 对应的底层数据结构，操作示例：
+#+BEGIN_SRC sh
+127.0.0.1:6379> set hello world
+OK
+127.0.0.1:6379> object encoding hello
+"embstr"
+#+END_SRC
+
+redis 所有的数据结构类型
+| 底层数据结构                       | object encoding命令输出 |
+|------------------------------------+-------------------------|
+| 整数                               | "int"                   |
+| embstr 编码的简单动态字符串（SDS） | "embstr"                |
+| 简单动态字符串                     |                         |
+| 字典                               | "hashtable"             |
+| 双端链表                           | "linkedlist"            |
+| 压缩列表                           | "ziplist"               |
+| 整数集合                           | "intset"                |
+| 跳跃表和字典                       | "skiplist"               |
+
+
+** string 类型
+字符串对象的底层实现可以是 int、raw、embstr。int 编码字符串对象和 embstr 编码字符串对象在一定条件下会转化为 raw 编码字符串对象。
+embstr：小于等于39字节的字符串
+int：8个字节的长整形
+raw：大于39个字节的字符串
+
+- get：sdsrange---O(n)
+- set：sdscpy—O(n)
+- create：sdsnew---O(1)
+- len：sdslen---O(1)
+
+
+** list 类型
+List对象的底层实现是quicklist（快速列表，是ziplist 压缩列表 和linkedlist 双端链表 的组合）。
+
+- rpush: listAddNodeHead ---O(1)
+- lpush: listAddNodeTail ---O(1)
+- push:listInsertNode ---O(1)
+- index : listIndex ---O(N)
+- pop:ListFirst/listLast ---O(1)
+- llen:listLength ---O(N)
+
+
+** hash 类型
+Hash对象的底层实现可以是ziplist（压缩列表）或者hashtable（字典或者也叫哈希表）。
+
+Hash对象只有同时满足下面两个条件时，才会使用ziplist（压缩列表）：
+1. 哈希中元素数量小于512个；
+2. 哈希中所有键值对的键和值字符串长度都小于64字节。
+
+hashtable哈希表可以实现O(1)复杂度的读写操作，因此效率很高。
+
+
+** set 类型
+Set集合对象的底层实现可以是intset（整数集合）或者hashtable（字典或者也叫哈希表）。
+
+- sadd:intsetAdd---O(1)
+- smembers:intsetGetO(1)---O(N)
+- srem:intsetRemove---O(N)
+- slen:intsetlen ---O(1)
+
+
+** sorted set 类型
+ZSet有序集合对象底层实现可以是ziplist（压缩列表）或者skiplist（跳跃表）。
+当一个有序集合的元素数量比较多或者成员是比较长的字符串时，Redis就使用skiplist（跳跃表）作为ZSet对象的底层实现。
+
+- zadd---zslinsert---平均O(logN), 最坏O(N)
+- zrem---zsldelete---平均O(logN), 最坏O(N)
+- zrank--zslGetRank---平均O(logN), 最坏O(N)
+
+
+** 参考资料
+- [[https://mp.weixin.qq.com/s/RqAiOXbIeh0kcaYY5COrHQ][微信公众号文章]]
+- [[https://zhuanlan.zhihu.com/p/29665317][zhihu.com - redis常见的应用场景解析]]
+
+
+（全文完）

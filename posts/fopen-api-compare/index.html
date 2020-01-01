@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文件操作函数接口的比较 | Hack Note</title>
+<link href="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="/blog/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/blog/rss.xml">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/fopen-api-compare/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/blog/posts/why-condition-variable-requires-mutex/" title="为什么条件变量需要与互斥锁配合使用" type="text/html">
+<link rel="next" href="/blog/posts/gnu-private-guard-cheatsheet/" title="gpg操作备忘" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="/blog/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+<li class="nav-item">
+<a href="/blog/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/blog/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/blog/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">文件操作函数接口的比较</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2019-12-19T22:08:11+08:00" itemprop="datePublished" title="2019-12-19 22:08">Dec 19 2019</time>
+</div>
+
+      
+
+      
+    <div class="source blur-1">
+      <a href="/blog/posts/fopen-api-compare/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/blog/tags/c/" rel="tag">c</a></li>
+        <li><a class="tag p-category" href="/blog/tags/c11/" rel="tag">c11</a></li>
+        <li><a class="tag p-category" href="/blog/tags/cpp/" rel="tag">cpp</a></li>
+        <li><a class="tag p-category" href="/blog/tags/cpp11/" rel="tag">cpp11</a></li>
+        <li><a class="tag p-category" href="/blog/tags/file/" rel="tag">file</a></li>
+        <li><a class="tag p-category" href="/blog/tags/windows/" rel="tag">windows</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+最近在维护一个老项目时发现，该程序的日志在程序运行时是不能够被其他程序打开的，也就不能通过日志实时地观察程序的运行状态。在我的印象里，我一直认为打开的文件都是共享的，这应该是个错觉。本篇日志主要总结了在打开一个文件时所使用函数接口，方便以后查阅。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><code>fopen</code></h2>
+<div class="outline-text-2" id="text-1">
+<p>
+<code>fopen</code> 应该是最普通也是最常见的文件操作接口了，属于标准C接口，其完整形式如下。<br></p>
+<div class="highlight"><pre><span></span><span class="kt">FILE</span><span class="o">*</span> <span class="nf">fopen</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">filename</span><span class="p">,</span>
+	    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">mode</span><span class="p">);</span>
+</pre></div>
+
+<p>
+使用该接口创建的日志文件是可以在程序运行时被其他文本浏览器打开的，也就是说该文件是以共享的方式打开的。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><code>fopen_s</code></h2>
+<div class="outline-text-2" id="text-2">
+<p>
+<code>fopen_s</code> 较前一个接口提升了安全性，是C11标准中的接口，其完整形式如下。<br></p>
+<div class="highlight"><pre><span></span><span class="n">errno_t</span> <span class="nf">fopen_s</span><span class="p">(</span><span class="kt">FILE</span> <span class="o">*</span><span class="kr">restrict</span> <span class="o">*</span><span class="kr">restrict</span> <span class="n">streamptr</span><span class="p">,</span>
+		<span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="kr">restrict</span> <span class="n">filename</span><span class="p">,</span>
+		<span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="kr">restrict</span> <span class="n">mode</span><span class="p">);</span>
+</pre></div>
+
+<p>
+使用该接口创建的日志文件不可以在程序运行时被其他文本浏览其打开，该文件接口以独占方式方式打开文件。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><code>_fsopen</code></h2>
+<div class="outline-text-2" id="text-3">
+<p>
+<code>_fsopen</code> 是windows平台专属的接口，可以在打开文件时指定共享权限，其完整形式如下。<br></p>
+<div class="highlight"><pre><span></span><span class="kt">FILE</span> <span class="o">*</span><span class="nf">_fsopen</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">filename</span><span class="p">,</span>
+	      <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">mode</span><span class="p">,</span>
+	      <span class="kt">int</span> <span class="n">shflag</span><span class="p">);</span>
+</pre></div>
+
+<p>
+其中的 <code>shflag</code> 可取的值有以下几种。<br><code>_SH_COMPAT</code> Sets Compatibility mode for 16-bit applications.<br><code>_SH_DENYNO</code> Permits read and write access.<br><code>_SH_DENYRD</code> Denies read access to the file.<br><code>_SH_DENYRW</code> Denies read and write access to the file.<br><code>_SH_DENYWR</code> Denies write access to the file.<br></p>
+
+<p>
+使用该接口创建文件时可以限定其他程序在访问时的共享权限。<br></p>
+
+<p>
+这个函数还有一个 <code>wchar_t</code> 版本的接口，形式为 <code>_wfsopen</code> 。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4"><code>fstream</code></h2>
+<div class="outline-text-2" id="text-4">
+<p>
+上面介绍的几种接口都是C风格的，而 <code>std::fstream</code> 是C++风格的接口，其完整形式如下。<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// constructor</span>
+<span class="k">explicit</span> <span class="nf">basic_fstream</span><span class="p">(</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">filename</span><span class="p">,</span>
+	       <span class="n">std</span><span class="o">::</span><span class="n">ios_base</span><span class="o">::</span><span class="n">openmode</span> <span class="n">mode</span> <span class="o">=</span> <span class="n">ios_base</span><span class="o">::</span><span class="n">in</span><span class="o">|</span><span class="n">ios_base</span><span class="o">::</span><span class="n">out</span> <span class="p">);</span>
+</pre></div>
+
+<p>
+<code>fstream</code> 是面向对象风格的接口，在使用时创建一个文件流对象，该对象可以接受流定向符号的输出和输出，拓展起来更加灵活。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5">参考资料</h2>
+<div class="outline-text-2" id="text-5">
+<ul class="org-ul">
+<li>
+<a href="https://en.cppreference.com/w/c/io/fopen">cppreference.com - fopen</a><br>
+</li>
+<li>
+<a href="https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/fsopen-wfsopen">docs.microsoft.com - fsopen</a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/io/basic_fstream">cppreference.com - fstream</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>About Me</h4>
+  
+        <div class="sidebar-aboutme">
+        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
+        </div>
+</div>
+
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/blog/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/blog/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/blog/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/blog/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+    <ul class="pager hidden-print">
+<li class="left">
+          <a href="/blog/posts/why-condition-variable-requires-mutex/" rel="prev">
+            <p class="title">为什么条件变量需要与互斥锁配合使用</p>
+            <p>Previous post</p>
+          </a>
+      </li>
+      <li class="right">
+          <a href="/blog/posts/gnu-private-guard-cheatsheet/" rel="next">
+            <p class="title">gpg操作备忘</p>
+            <p>Next post</p>
+          </a>
+      </li>
+    </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://samsonwang.github.io/blog/posts/fopen-api-compare/",
+        disqus_title="\u6587\u4ef6\u64cd\u4f5c\u51fd\u6570\u63a5\u53e3\u7684\u6bd4\u8f83",
+        disqus_identifier="cache/archives/2019/fopen-api-compare.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2020 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.min.js"></script><script src="https://cdn.staticfile.org/jquery.colorbox/1.6.4/jquery.colorbox-min.js"></script><script src="https://cdn.staticfile.org/jquery_lazyload/1.9.7/jquery.lazyload.min.js"></script><script src="https://cdn.staticfile.org/popper.js/1.14.3/umd/popper.min.js"></script><script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/js/bootstrap.min.js"></script><script src="/blog/assets/js/moment-with-locales.min.js"></script><script src="/blog/assets/js/fancydates.js"></script><script src="/blog/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
