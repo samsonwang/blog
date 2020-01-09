@@ -171,7 +171,7 @@ THEME_CONFIG = {
         # Contents of the sidebar, If empty, the sidebar is not displayed.
         'sidebar_aboutme': '''
         <a href="https://github.com/samsonwang">
-        <img alt style="padding-bottom:10px;width:100%" src="https://avatars3.githubusercontent.com/u/11832311?s=460&v=4"></a>
+        <img alt style="padding-bottom:10px;width:100%" src="https://avatars2.githubusercontent.com/u/11832311?s=400&v=4"></a>
         <div class="sidebar-aboutme">
         <h4>About Me</h4>
         <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
