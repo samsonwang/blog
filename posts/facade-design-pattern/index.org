@@ -1,0 +1,75 @@
+#+BEGIN_COMMENT
+.. title: 软件设计模式-门面模式
+.. slug: facade-design-pattern
+.. date: 2020-01-13 09:01:26 UTC+08:00
+.. tags: facade, design pattern
+.. category: computer science
+.. link: https://en.wikipedia.org/wiki/Facade_pattern
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 软件设计模式-门面模式
+
+最近在看一些开源的日志库时了解到了门面模式，查了些资料学习了一下。门面模式是我们在设计中经常会使用到的模式，只是在以前的开发中并没有意识到这个是门面模式。
+
+{{{TEASER_END}}}
+
+* 门面模式
+英文单词为 facade，音标为 =/fəˈsäd/= ，单词的释义为楼房的表面。门面模式将内部复杂的实现逻辑隐藏了起来，对外仅提供简单的接口方便调用者使用。
+
+* 适用场景
+- 给复杂的系统提供一个简单的接口
+- 系统过于复杂难以理解
+- 多层软件的每一层都需要一个入口点
+- 抽象和实现是紧密耦合的
+
+* 示例代码
+以下是对电脑的面向对象设计的抽象代码，采用了门面模式将电脑内部的复杂结构封装了起来，代码使用C++实现。
+
+#+BEGIN_SRC cpp
+#include <memory>
+
+class Cpu {
+ public:
+  void Freeze();
+  void Jump(long position);
+  void Execute();
+};
+
+class HardDrive {
+ public:
+  char* Read(long lba, int size);
+};
+
+class Memory {
+ public:
+  void Load(long position, char* data);
+};
+
+// Facade:
+class ComputerFacade {
+ public:
+  void Start() {
+    cpu_->Freeze();
+    memory_->Load(kBootAddress, hard_drive_->Read(kBootSector, kSectorSize));
+    cpu_->Jump(kBootAddress);
+    cpu_->Execute();
+  }
+
+ private:
+  std::unique_ptr<Cpu> cpu_ = std::make_unique<Cpu>();
+  std::unique_ptr<Memory> memory_ = std::make_unique<Memory>();
+  std::unique_ptr<HardDrive> hard_drive_ = std::make_unique<HardDrive>();
+};
+
+int main() {
+  ComputerFacade computer;
+  computer.Start();
+}
+#+END_SRC
+
+* 参考链接
+- [[https://en.wikipedia.org/wiki/Facade_pattern][wikipedia.org - facade pattern]]
