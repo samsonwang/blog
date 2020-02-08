@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qt程序中OLE错误的调试记录 | Hack Note</title>
+<link href="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="/blog/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/blog/rss.xml">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/debug-qt-ole-error/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/blog/posts/facade-design-pattern/" title="软件设计模式-门面模式" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="/blog/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+<li class="nav-item">
+<a href="/blog/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/blog/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/blog/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">Qt程序中OLE错误的调试记录</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2020-02-08T09:37:33+08:00" itemprop="datePublished" title="2020-02-08 09:37">Feb 08 2020</time>
+</div>
+
+      
+
+      
+    <div class="source blur-1">
+      <a href="/blog/posts/debug-qt-ole-error/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/blog/tags/cpp/" rel="tag">cpp</a></li>
+        <li><a class="tag p-category" href="/blog/tags/ole/" rel="tag">ole</a></li>
+        <li><a class="tag p-category" href="/blog/tags/qt/" rel="tag">qt</a></li>
+        <li><a class="tag p-category" href="/blog/tags/windows/" rel="tag">windows</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+最近在解决Launchy的一个 <a href="https://github.com/samsonwang/LaunchyQt/issues/22">bug</a> ，这个bug出现在通过剪贴版向excel拷贝内容时会报OLE错误。我认为这个bug的排查过程比较有意义，在此记录下来。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">什么是OLE错误</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+OLE的全称是Object Linking and Embedding，主要用在Windows Office软件中，它支持编辑类应用程序向另一个应用程序发送当前文档的一部分。出现OLE错误时大多是应用程序没有及时响应OLE操作，错误的完整提示为“Microsoft Excel is waiting for another application to complete an OLE action”。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">不要在非GUI线程中调用QClipboard</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+出现这个问题，我首先想到的是Qt相关的bug，因为剪切版能够在一般的程序中正常完成复制和粘粘操作，只会在excel中出现错误。<br></p>
+
+<p>
+在查阅了一些资料后，发现QClipboard不能在子线程或非GUI线程中使用。由于我是在插件中使用pyqt调用的这个接口，所以我首先考虑的是由于pyqt引入问题。我为python提供了C++接口，在C++代码中调用Qt接口，这样就能保证QClipboard是在GUI线程中使用的了。结果却让我失望，仍然会出现OLE错误。<br></p>
+
+<p>
+之后我编写了下面这样的代码辅助判断QClipboard是否是在GUI线程（主线程）中执行。<br></p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">QApplication</span><span class="o">::</span><span class="n">instance</span><span class="p">()</span><span class="o">-&gt;</span><span class="kr">thread</span><span class="p">()</span> <span class="o">==</span> <span class="n">QThread</span><span class="o">::</span><span class="n">currentThread</span><span class="p">())</span> <span class="p">{</span>
+    <span class="n">qDebug</span><span class="p">(</span><span class="s">"running in main thread"</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+结果是所有QClipboard都是在GUI线程中调用的，所以这个bug并不是由线程引起的。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">谨慎地在nativeEventFilter中过滤消息</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+我开始怀疑是自己使用QClipboard的方法不正确，于是新建了一个应用程序工程，在这个工程中只加入了一个简单界面，在控件的槽函数中使用QClipboard。结果是这个新应用程序能够成功完成与excel的复制粘粘的数据交互，然后我又将这个简单界面挪到Launchy中，发现在Launchy工程中使用这个界面就会出现OLE错误。这样以来，能够确定是问题并不是QClipboard的使用出现了错误，也不是由于界面部分引起的错误，问题被缩小到QApplication相关的的代码中。<br></p>
+
+<p>
+经过进一步的排查，问题最终被定位到 <code>nativeEventFilter</code> 函数中，原因是在 <code>nativeEventFilter</code> 中将Windows消息 <code>WM_HOTKEY</code> 处理后过滤拦截掉了，这样应用程序就无法正常收到被过滤的消息了，由此导致OLE操作无法完成。修复的方法很简单，将被拦截的消息放行就解决了。<br></p>
+
+<p>
+由此得到的教训是在过滤操作系统的原生消息时一定要谨慎，有可能由于过滤掉一些消息导致功能异常。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">参考资料</h2>
+<div class="outline-text-2" id="text-4">
+<ul class="org-ul">
+<li>
+<a href="https://windowsreport.com/excel-is-waiting-for-ole/">windowsreport.com - excel is waiting for ole</a><br>
+</li>
+<li>
+<a href="https://docs.microsoft.com/en-us/cpp/mfc/clipboard-using-the-ole-clipboard-mechanism?view=vs-2019">microsoft.com - ole clipboard</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  
+        <a href="https://github.com/samsonwang">
+        <img alt style="padding-bottom:10px;max-width:60%" src="https://avatars3.githubusercontent.com/u/11832311?s=460&amp;v=4"></a>
+        <div class="sidebar-aboutme">
+        <h4>About Me</h4>
+        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
+        </div>
+</div>
+
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/blog/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/blog/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/blog/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/blog/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+    <ul class="pager hidden-print">
+<li class="left">
+          <a href="/blog/posts/facade-design-pattern/" rel="prev">
+            <p class="title">软件设计模式-门面模式</p>
+            <p>Previous post</p>
+          </a>
+      </li>
+      <li class="right">
+          <div></div>
+      </li>
+    </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://samsonwang.github.io/blog/posts/debug-qt-ole-error/",
+        disqus_title="Qt\u7a0b\u5e8f\u4e2dOLE\u9519\u8bef\u7684\u8c03\u8bd5\u8bb0\u5f55",
+        disqus_identifier="cache/posts/debug-qt-ole-error.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2020 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.min.js"></script><script src="https://cdn.staticfile.org/jquery.colorbox/1.6.4/jquery.colorbox-min.js"></script><script src="https://cdn.staticfile.org/jquery_lazyload/1.9.7/jquery.lazyload.min.js"></script><script src="https://cdn.staticfile.org/popper.js/1.14.3/umd/popper.min.js"></script><script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/js/bootstrap.min.js"></script><script src="/blog/assets/js/moment-with-locales.min.js"></script><script src="/blog/assets/js/fancydates.js"></script><script src="/blog/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
