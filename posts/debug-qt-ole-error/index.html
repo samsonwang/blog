@@ -92,7 +92,7 @@
     </div>
   </header><div class="e-content entry-content" itemprop="articleBody text">
     <p>
-最近在解决Launchy的一个 <a href="https://github.com/samsonwang/LaunchyQt/issues/22">bug</a> ，这个bug出现在通过剪贴版向excel拷贝内容时会报OLE错误。我认为这个bug的排查过程比较有意义，在此记录下来。<br></p>
+最近解决了一个Launchy的 <a href="https://github.com/samsonwang/LaunchyQt/issues/22">bug</a> ，通过剪贴版向excel拷贝内容时会报OLE错误。我认为这个bug的排查过程比较有意义，在此记录下来。<br></p>
 
 <!-- TEASER_END -->
 
@@ -111,7 +111,7 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 出现这个问题，我首先想到的是Qt相关的bug，因为剪切版能够在一般的程序中正常完成复制和粘粘操作，只会在excel中出现错误。<br></p>
 
 <p>
-在查阅了一些资料后，发现QClipboard不能在子线程或非GUI线程中使用。由于我是在插件中使用pyqt调用的这个接口，所以我首先考虑的是由于pyqt引入问题。我为python提供了C++接口，在C++代码中调用Qt接口，这样就能保证QClipboard是在GUI线程中使用的了。结果却让我失望，仍然会出现OLE错误。<br></p>
+在查阅了一些资料后，发现QClipboard不能在子线程或非GUI线程中使用。由于我是在插件中使用pyqt调用的这个接口，所以我首先考虑可能是由于pyqt引入问题。我为python提供了原生的C++接口，在C++代码中调用Qt接口，这样就能保证QClipboard是在GUI线程中使用的了。结果却让我失望，仍然会出现OLE错误。<br></p>
 
 <p>
 之后我编写了下面这样的代码辅助判断QClipboard是否是在GUI线程（主线程）中执行。<br></p>
@@ -125,13 +125,16 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 </div>
 
 <div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">谨慎地在nativeEventFilter中过滤消息</h2>
+<h2 id="sec-3">在nativeEventFilter中过滤消息时需要格外紧慎</h2>
 <div class="outline-text-2" id="text-3">
 <p>
 我开始怀疑是自己使用QClipboard的方法不正确，于是新建了一个应用程序工程，在这个工程中只加入了一个简单界面，在控件的槽函数中使用QClipboard。结果是这个新应用程序能够成功完成与excel的复制粘粘的数据交互，然后我又将这个简单界面挪到Launchy中，发现在Launchy工程中使用这个界面就会出现OLE错误。这样以来，能够确定是问题并不是QClipboard的使用出现了错误，也不是由于界面部分引起的错误，问题被缩小到QApplication相关的的代码中。<br></p>
 
 <p>
-经过进一步的排查，问题最终被定位到 <code>nativeEventFilter</code> 函数中，原因是在 <code>nativeEventFilter</code> 中将Windows消息 <code>WM_HOTKEY</code> 处理后过滤拦截掉了，这样应用程序就无法正常收到被过滤的消息了，由此导致OLE操作无法完成。修复的方法很简单，将被拦截的消息放行就解决了。<br></p>
+经过进一步的排查，问题最终被定位到 <code>nativeEventFilter</code> 函数中，原因是在 <code>nativeEventFilter</code> 中将Windows消息 <code>WM_HOTKEY</code> 处理后过滤拦截掉了，这样应用程序就无法正常收到被过滤的消息了，由此导致OLE操作无法完成。<br></p>
+
+<p>
+修复的方法很简单，将被拦截的消息放行就解决了。重写 <code>nativeEventFilter</code> 虚函数时，要格外注意函数的返回值，当返回 <code>false</code> 时代表这个消息会再次进入应用程序的消息循环中，也就能够被其他消息处理函数捕获后进行处理，反之亦然。<br></p>
 
 <p>
 由此得到的教训是在过滤操作系统的原生消息时一定要谨慎，有可能由于过滤掉一些消息导致功能异常。<br></p>
