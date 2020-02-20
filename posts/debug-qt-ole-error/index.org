@@ -33,7 +33,7 @@ if (QApplication::instance()->thread() == QThread::currentThread()) {
 #+END_SRC
 结果是所有QClipboard都是在GUI线程中调用的，所以这个bug并不是由线程引起的。
 
-** 在nativeEventFilter中过滤消息时需要格外紧慎
+** 在nativeEventFilter中过滤消息时需要格外谨慎
 我开始怀疑是自己使用QClipboard的方法不正确，于是新建了一个应用程序工程，在这个工程中只加入了一个简单界面，在控件的槽函数中使用QClipboard。结果是这个新应用程序能够成功完成与excel的复制粘粘的数据交互，然后我又将这个简单界面挪到Launchy中，发现在Launchy工程中使用这个界面就会出现OLE错误。这样以来，能够确定是问题并不是QClipboard的使用出现了错误，也不是由于界面部分引起的错误，问题被缩小到QApplication相关的的代码中。
 
 经过进一步的排查，问题最终被定位到 ~nativeEventFilter~ 函数中，原因是在 ~nativeEventFilter~ 中将Windows消息 ~WM_HOTKEY~ 处理后过滤拦截掉了，这样应用程序就无法正常收到被过滤的消息了，由此导致OLE操作无法完成。
