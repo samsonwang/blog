@@ -21,7 +21,7 @@ BLOG_AUTHOR = "Samson Wang"  # (translatable)
 BLOG_TITLE = "Hack Note"  # (translatable)
 # This is the main URL for your site. It will be used
 # in a prominent link. Don't forget the protocol (http/https)!
-SITE_URL = "https://samsonwang.github.io/blog/"
+SITE_URL = "https://blog.wangzhl.com"
 # This is the URL where Nikola's output will be deployed.
 # If not set, defaults to SITE_URL
 #BASE_URL = "https://samsonwang.github.io/"
@@ -635,7 +635,7 @@ GITHUB_COMMIT_SOURCE = False
 # Where the output site should be located
 # If you don't use an absolute path, it will be considered as relative
 # to the location of conf.py
-OUTPUT_FOLDER = 'blog'
+OUTPUT_FOLDER = '__output'
 
 # where the "cache" of partial generated content should be located
 # default: 'cache'
