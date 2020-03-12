@@ -1201,6 +1201,7 @@ USE_BUNDLES = False
 # (translatable)
 # BODY_END = ""
 BODY_END = """
+<!-- baidu tongji -->
 <script>
 var _hmt = _hmt || [];
 (function() {
@@ -1209,6 +1210,15 @@ var _hmt = _hmt || [];
   var s = document.getElementsByTagName("script")[0];
   s.parentNode.insertBefore(hm, s);
 })();
+</script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
 </script>
 """
 
