@@ -1,0 +1,36 @@
+#+BEGIN_COMMENT
+.. title: 在git中撤回最后一次本地提交
+.. slug: git-undo-last-local-commit
+.. date: 2020-03-29 16:42:24 UTC+08:00
+.. tags: git, cheatsheet, tips
+.. category: git
+.. link: https://stackoverflow.com/questions/927358/how-do-i-undo-the-most-recent-local-commits-in-git
+.. description:
+.. type: text
+.. status:
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 在git中撤回最后一次本地提交
+
+有时候在git中进行了一次提交，这次提交还没有被推送到服务器上，如果这时发现了一些错误，想进行修正怎么办？本文记录了撤回这次提交的步骤，以备不时之需。
+
+{{{TEASER_END}}}
+
+** 操作步骤
+#+BEGIN_SRC shell
+$ git commit -m "Something terribly misguided"             # (1)
+$ git reset HEAD~                                          # (2)
+<< edit files as necessary >>                              # (3)
+$ git add ...                                              # (4)
+$ git commit -c ORIG_HEAD                                  # (5)
+#+END_SRC
+
+(1) 这个是需要被撤销的commit。
+(2) 这个命令是撤销操作，它不会更改本地文件状态，只会撤回最后一次提交操作。命令执行后，最后一次提交的文件会以unstaged状态出现在工作目录中。
+(3) 在这里进行文件修改，修正错误。
+(4) 将修改好的文件设置为staged状态，准备下一次commit。
+(5) 再次commit。通过 =ORIG_HEAD= 使用上一次的提交的message。
+
+** 参考资料
+- [[https://stackoverflow.com/questions/927358/how-do-i-undo-the-most-recent-local-commits-in-git][stackoverflow - undo most recent local commit]]
