@@ -14,23 +14,35 @@
 #+TITLE: 网络编程中的Reactor和Proactor模式
 
 ** Reactor模式简介
-Reactor模式是一种事件驱动的设计模式，用于处理多输入源的并发服务请求。服务处理者（service handler）将接收到的服务请求同步分发给每个请求处理者（request handler）。
+Reactor模式是一种事件驱动的设计模式，用于处理多输入源的并发服务请求。服务处理者（service handler）将接收到的服务请求同步地（synchronously）分发（demultiplex）给每个请求处理者（request handler）。
+D.C.shmidt提出了Reactor模式，并在他的ACE框架中广泛使用了该设计模式。
+在这里需要着重强调的一点是，在分发请求时是 *同步的* （synchronously）操作；与Reactor比较类似的另一种模式使用的是 *异步的* （asynchronously）操作，它的名字叫Proactor。
 
 ** Reactor模式的优缺点
 *** 优点
 节选自 DC.Shmidt 的论文
+- 关注点分离：将服务请求分发机制与具体的服务请求处理分离开，以实现代码的复用和解耦合。
 #+BEGIN_QUOTE
 - Separation of concerns: The Reactor pattern decouples application-independent demultiplexing and dispatching mechanisms from application-specific hook method functionality. The application-independent mechanisms become reusable components that know how to demultiplex events and dispatch the appropriate hook methods defined by Event Handlers. In contrast, the application-specific functionality in a hook method knows how to perform a particular type of service.
+#+END_QUOTE
 
+- 模块化、可重用性和可配置性：Reactor模式将应用程序功能分离为单独的类。
+#+BEGIN_QUOTE
 - Improve modularity, reusability, and configurability of event-driven applications: The pattern decouples application functionality into separate classes. For instance, there are two separate classes in the logging server: one for establishing connections and another for receiving and processing logging records. This decoupling enables the reuse of the connection establishment class for different types of connection-oriented services (such as file transfer, remote login, and video-on-demand). Therefore, modifying or extending the functionality of the logging server only affects the implementation of the logging handler class.
+#+END_QUOTE
 
+- 提高可移植性：分发接口是可重用的，它能够适配不同平台的解复用（demultiplex）系统调用。
+#+BEGIN_QUOTE
 - Improves application portability: The Initiation Dispatcher’s interface can be reused independently of the OS system calls that perform event demultiplexing. These system calls detect and report the occurrence of one or more events that may occur simultaneously on multiple sources of events. Common sources of events may include I/O handles, timers, and synchronization objects. On UNIX platforms, the event demultiplexing system calls are called select and poll. In the Win32 API, the WaitForMultipleObjects system call performs event demultiplexing.
+#+END_QUOTE
 
+- 提供粗粒度的并发控制：在分发层的序列化通常能够消除比较复杂的并发同步。
+#+BEGIN_QUOTE
 - Provides coarse-grained concurrency control: The Reactor pattern serializes the invocation of event handlers at the level of event demultiplexing and dispatching within a process or thread. Serialization at the Initiation Dispatcher level often eliminates the need for more complicated synchronization or locking within an application process.
 #+END_QUOTE
 
 *** 缺点
-节选的 DC.Schmidt 的论文
+节选自 DC.Schmidt 的论文
 #+BEGIN_QUOTE
 - Restricted applicability: The Reactor pattern can only be applied efficiently if the OS supports Handles. It is possible to emulate the semantics of the Reactor pattern using multiple threads within the Initiation Dispatcher, e.g. one thread for each Handle. Whenever there are events available on a handle, its associated thread will read the event and place it on a queue that is processed sequentially by the initiation dispatcher. However, this design is typically very inefficient since it serializes all Event Handlers, thereby increasing synchronization and context switching overhead without enhancing parallelism.
 
@@ -40,7 +52,7 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 #+END_QUOTE
 
 ** 使用Reactor模式的代码示例
-D.C.shmidt提出的Reactor模式，在他的ACE框架中广泛使用了该设计模式。
+
 libevent是否是使用Reactor模式进行设计编写的呢？
 
 
