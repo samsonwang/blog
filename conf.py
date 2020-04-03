@@ -902,7 +902,8 @@ FEED_LINKS_APPEND_QUERY = False
 # I recommend using the Creative Commons' wizard:
 # https://creativecommons.org/choose/
 LICENSE = """
-<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"><img alt="知识共享许可协议" style="padding-bottom:2px" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /></a>
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/">
+<img alt="cc-by-nc 4.0" style="padding-bottom:2px" src="/images/cc-by-nc.png" /></a>
 """
 
 # A small copyright notice for the page footer (in HTML).
@@ -1212,7 +1213,7 @@ var _hmt = _hmt || [];
 })();
 </script>
 
-<!-- Global site tag (gtag.js) - Google Analytics -->
+<!-- Google Analytics - Global site tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
