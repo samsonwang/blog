@@ -167,15 +167,19 @@ Provides coarse-grained concurrency control: The Reactor pattern serializes the 
 Restricted applicability: The Reactor pattern can only be applied efficiently if the OS supports Handles. It is possible to emulate the semantics of the Reactor pattern using multiple threads within the Initiation Dispatcher, e.g. one thread for each Handle. Whenever there are events available on a handle, its associated thread will read the event and place it on a queue that is processed sequentially by the initiation dispatcher. However, this design is typically very inefficient since it serializes all Event Handlers, thereby increasing synchronization and context switching overhead without enhancing parallelism.<br></p>
 </blockquote>
 
-<p>
-事件处理是非独占的：事件处理器不能进行阻塞I/O，不适合耗时较长的操作。如传输较大文件时更适合Active Object模式。<br></p>
+<ul class="org-ul">
+<li>事件处理是非独占的：事件处理器不能进行阻塞I/O，不适合耗时较长的操作。如传输较大文件时更适合Active Object模式。<br>
+</li>
+</ul>
 <blockquote>
 <p>
 Non-preemptive: In a single-threaded application process, Event Handlers are not preempted while they are executing. This implies that an Event Handler should not perform blocking I/O on an individual Handle since this will block the entire process and impede the responsiveness for clients connected to other Handles. Therefore, for long-duration operations, such as transferring multimegabyte medical images, the Active Object pattern may be more effective. An Active Object uses multithreading or multi-processing to complete its tasks in parallel with the Initiation Dispatcher’s main event-loop.<br></p>
 </blockquote>
 
-<p>
-难以调试：Reactor模式会打乱框架内部和事件处理接口的流程控制，这会导致程序难以单步调试。<br></p>
+<ul class="org-ul">
+<li>难以调试：Reactor模式会打乱框架内部和事件处理接口的流程控制，这会导致程序难以单步调试。<br>
+</li>
+</ul>
 <blockquote>
 <p>
 Hard to debug: Applications written with the Reactor pattern can be hard to debug since the inverted flow of control oscillates between the framework infrastructure and the method callbacks on application-specific handlers. This increases the difficulty of “single-stepping” through the runtime behavior of a framework within a debugger since application developers may not understand or have access to the framework code. This is similar to the problems encountered trying to debug a compiler lexical analyzer and parser written with LEX and YACC. In these applications, debugging is straightforward when the thread of control is within the user-defined action routines. Once the thread of control returns to the generated Deterministic Finite Automata (DFA) skeleton, however, it is hard to follow the program logic.<br></p>
