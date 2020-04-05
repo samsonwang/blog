@@ -122,10 +122,8 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 </li>
 </ul>
 <blockquote>
-<ul class="org-ul">
-<li>Separation of concerns: The Reactor pattern decouples application-independent demultiplexing and dispatching mechanisms from application-specific hook method functionality. The application-independent mechanisms become reusable components that know how to demultiplex events and dispatch the appropriate hook methods defined by Event Handlers. In contrast, the application-specific functionality in a hook method knows how to perform a particular type of service.<br>
-</li>
-</ul>
+<p>
+Separation of concerns: The Reactor pattern decouples application-independent demultiplexing and dispatching mechanisms from application-specific hook method functionality. The application-independent mechanisms become reusable components that know how to demultiplex events and dispatch the appropriate hook methods defined by Event Handlers. In contrast, the application-specific functionality in a hook method knows how to perform a particular type of service.<br></p>
 </blockquote>
 
 <ul class="org-ul">
@@ -133,10 +131,8 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 </li>
 </ul>
 <blockquote>
-<ul class="org-ul">
-<li>Improve modularity, reusability, and configurability of event-driven applications: The pattern decouples application functionality into separate classes. For instance, there are two separate classes in the logging server: one for establishing connections and another for receiving and processing logging records. This decoupling enables the reuse of the connection establishment class for different types of connection-oriented services (such as file transfer, remote login, and video-on-demand). Therefore, modifying or extending the functionality of the logging server only affects the implementation of the logging handler class.<br>
-</li>
-</ul>
+<p>
+Improve modularity, reusability, and configurability of event-driven applications: The pattern decouples application functionality into separate classes. For instance, there are two separate classes in the logging server: one for establishing connections and another for receiving and processing logging records. This decoupling enables the reuse of the connection establishment class for different types of connection-oriented services (such as file transfer, remote login, and video-on-demand). Therefore, modifying or extending the functionality of the logging server only affects the implementation of the logging handler class.<br></p>
 </blockquote>
 
 <ul class="org-ul">
@@ -144,10 +140,8 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 </li>
 </ul>
 <blockquote>
-<ul class="org-ul">
-<li>Improves application portability: The Initiation Dispatcher’s interface can be reused independently of the OS system calls that perform event demultiplexing. These system calls detect and report the occurrence of one or more events that may occur simultaneously on multiple sources of events. Common sources of events may include I/O handles, timers, and synchronization objects. On UNIX platforms, the event demultiplexing system calls are called select and poll. In the Win32 API, the WaitForMultipleObjects system call performs event demultiplexing.<br>
-</li>
-</ul>
+<p>
+Improves application portability: The Initiation Dispatcher’s interface can be reused independently of the OS system calls that perform event demultiplexing. These system calls detect and report the occurrence of one or more events that may occur simultaneously on multiple sources of events. Common sources of events may include I/O handles, timers, and synchronization objects. On UNIX platforms, the event demultiplexing system calls are called select and poll. In the Win32 API, the WaitForMultipleObjects system call performs event demultiplexing.<br></p>
 </blockquote>
 
 <ul class="org-ul">
@@ -155,10 +149,8 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 </li>
 </ul>
 <blockquote>
-<ul class="org-ul">
-<li>Provides coarse-grained concurrency control: The Reactor pattern serializes the invocation of event handlers at the level of event demultiplexing and dispatching within a process or thread. Serialization at the Initiation Dispatcher level often eliminates the need for more complicated synchronization or locking within an application process.<br>
-</li>
-</ul>
+<p>
+Provides coarse-grained concurrency control: The Reactor pattern serializes the invocation of event handlers at the level of event demultiplexing and dispatching within a process or thread. Serialization at the Initiation Dispatcher level often eliminates the need for more complicated synchronization or locking within an application process.<br></p>
 </blockquote>
 </div>
 </div>
@@ -171,28 +163,22 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 </li>
 </ul>
 <blockquote>
-<ul class="org-ul">
-<li>Restricted applicability: The Reactor pattern can only be applied efficiently if the OS supports Handles. It is possible to emulate the semantics of the Reactor pattern using multiple threads within the Initiation Dispatcher, e.g. one thread for each Handle. Whenever there are events available on a handle, its associated thread will read the event and place it on a queue that is processed sequentially by the initiation dispatcher. However, this design is typically very inefficient since it serializes all Event Handlers, thereby increasing synchronization and context switching overhead without enhancing parallelism.<br>
-</li>
-</ul>
+<p>
+Restricted applicability: The Reactor pattern can only be applied efficiently if the OS supports Handles. It is possible to emulate the semantics of the Reactor pattern using multiple threads within the Initiation Dispatcher, e.g. one thread for each Handle. Whenever there are events available on a handle, its associated thread will read the event and place it on a queue that is processed sequentially by the initiation dispatcher. However, this design is typically very inefficient since it serializes all Event Handlers, thereby increasing synchronization and context switching overhead without enhancing parallelism.<br></p>
 </blockquote>
 
 <p>
 事件处理是非独占的：事件处理器不能进行阻塞I/O，不适合耗时较长的操作。如传输较大文件时更适合Active Object模式。<br></p>
 <blockquote>
-<ul class="org-ul">
-<li>Non-preemptive: In a single-threaded application process, Event Handlers are not preempted while they are executing. This implies that an Event Handler should not perform blocking I/O on an individual Handle since this will block the entire process and impede the responsiveness for clients connected to other Handles. Therefore, for long-duration operations, such as transferring multimegabyte medical images, the Active Object pattern may be more effective. An Active Object uses multithreading or multi-processing to complete its tasks in parallel with the Initiation Dispatcher’s main event-loop.<br>
-</li>
-</ul>
+<p>
+Non-preemptive: In a single-threaded application process, Event Handlers are not preempted while they are executing. This implies that an Event Handler should not perform blocking I/O on an individual Handle since this will block the entire process and impede the responsiveness for clients connected to other Handles. Therefore, for long-duration operations, such as transferring multimegabyte medical images, the Active Object pattern may be more effective. An Active Object uses multithreading or multi-processing to complete its tasks in parallel with the Initiation Dispatcher’s main event-loop.<br></p>
 </blockquote>
 
 <p>
 难以调试：Reactor模式会打乱框架内部和事件处理接口的流程控制，这会导致程序难以单步调试。<br></p>
 <blockquote>
-<ul class="org-ul">
-<li>Hard to debug: Applications written with the Reactor pattern can be hard to debug since the inverted flow of control oscillates between the framework infrastructure and the method callbacks on application-specific handlers. This increases the difficulty of “single-stepping” through the runtime behavior of a framework within a debugger since application developers may not understand or have access to the framework code. This is similar to the problems encountered trying to debug a compiler lexical analyzer and parser written with LEX and YACC. In these applications, debugging is straightforward when the thread of control is within the user-defined action routines. Once the thread of control returns to the generated Deterministic Finite Automata (DFA) skeleton, however, it is hard to follow the program logic.<br>
-</li>
-</ul>
+<p>
+Hard to debug: Applications written with the Reactor pattern can be hard to debug since the inverted flow of control oscillates between the framework infrastructure and the method callbacks on application-specific handlers. This increases the difficulty of “single-stepping” through the runtime behavior of a framework within a debugger since application developers may not understand or have access to the framework code. This is similar to the problems encountered trying to debug a compiler lexical analyzer and parser written with LEX and YACC. In these applications, debugging is straightforward when the thread of control is within the user-defined action routines. Once the thread of control returns to the generated Deterministic Finite Automata (DFA) skeleton, however, it is hard to follow the program logic.<br></p>
 </blockquote>
 </div>
 </div>
