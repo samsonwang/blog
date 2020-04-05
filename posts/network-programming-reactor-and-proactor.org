@@ -1,32 +1,37 @@
 #+BEGIN_COMMENT
 .. title: 网络编程中的Reactor和Proactor模式
 .. slug: network-programming-reactor-and-proactor
-.. date: 2020-03-30 19:58:43 UTC+08:00
+.. date: 2020-03-15 19:58:43 UTC+08:00
 .. tags: design pattern, network, reactor, proactor
 .. category: design pattern
 .. link:
 .. description:
 .. type: text
-.. status: draft
+.. status:
 #+END_COMMENT
 #+OPTIONS: num:nil
 
 #+TITLE: 网络编程中的Reactor和Proactor模式
 
+本文介绍了两种常用的网络编程模式：Reactor模式和Proactor模式。这两种设计模式比较相似，它们的典型应用案例都是处理网络编程的并发请求，但是它们在具体的请求分派方式上又有区别。
+
+{{{TEASER_END}}}
+
 ** Reactor模式简介
-Reactor模式是一种事件驱动的设计模式，用于处理多输入源的并发服务请求。服务处理者（service handler）将接收到的服务请求同步地（synchronously）分发（demultiplex）给每个请求处理者（request handler）。
-D.C.shmidt提出了Reactor模式，并在他的ACE框架中广泛使用了该设计模式。
+Reactor模式是一种事件驱动的设计模式，用于处理多输入源的并发服务请求。D.C.shmidt提出了Reactor模式，并在他的ACE框架中广泛使用了该设计模式。
+服务处理者（service handler）将接收到的服务请求同步地（synchronously）分发（demultiplex）给每个请求处理者（request handler）。
 在这里需要着重强调的一点是，在分发请求时是 *同步的* （synchronously）操作；与Reactor比较类似的另一种模式使用的是 *异步的* （asynchronously）操作，它的名字叫Proactor。
 
 ** Reactor模式的优缺点
+这一节通过剖析Reactor模式的优缺点，详细地介绍了Reactor模式的设计思想。其中，英文内容节选自 DC.Shmidt 的论文，中文内容为我的翻译和总结。
+
 *** 优点
-节选自 DC.Shmidt 的论文
 - 关注点分离：将服务请求分发机制与具体的服务请求处理分离开，以实现代码的复用和解耦合。
 #+BEGIN_QUOTE
 - Separation of concerns: The Reactor pattern decouples application-independent demultiplexing and dispatching mechanisms from application-specific hook method functionality. The application-independent mechanisms become reusable components that know how to demultiplex events and dispatch the appropriate hook methods defined by Event Handlers. In contrast, the application-specific functionality in a hook method knows how to perform a particular type of service.
 #+END_QUOTE
 
-- 模块化、可重用性和可配置性：Reactor模式将应用程序功能分离为单独的类。
+- 模块化、可重用性和可配置性：Reactor模式将应用程序功能分离为单独的类，这些拆分的类都具有单一职责。
 #+BEGIN_QUOTE
 - Improve modularity, reusability, and configurability of event-driven applications: The pattern decouples application functionality into separate classes. For instance, there are two separate classes in the logging server: one for establishing connections and another for receiving and processing logging records. This decoupling enables the reuse of the connection establishment class for different types of connection-oriented services (such as file transfer, remote login, and video-on-demand). Therefore, modifying or extending the functionality of the logging server only affects the implementation of the logging handler class.
 #+END_QUOTE
@@ -42,24 +47,46 @@ D.C.shmidt提出了Reactor模式，并在他的ACE框架中广泛使用了该设
 #+END_QUOTE
 
 *** 缺点
-节选自 DC.Schmidt 的论文
+- 有限的应用场景：Recator模式只有操作系统支持描述符（handle）时才最有效率。
 #+BEGIN_QUOTE
 - Restricted applicability: The Reactor pattern can only be applied efficiently if the OS supports Handles. It is possible to emulate the semantics of the Reactor pattern using multiple threads within the Initiation Dispatcher, e.g. one thread for each Handle. Whenever there are events available on a handle, its associated thread will read the event and place it on a queue that is processed sequentially by the initiation dispatcher. However, this design is typically very inefficient since it serializes all Event Handlers, thereby increasing synchronization and context switching overhead without enhancing parallelism.
+#+END_QUOTE
 
+事件处理是非独占的：事件处理器不能进行阻塞I/O，不适合耗时较长的操作。如传输较大文件时更适合Active Object模式。
+#+BEGIN_QUOTE
 - Non-preemptive: In a single-threaded application process, Event Handlers are not preempted while they are executing. This implies that an Event Handler should not perform blocking I/O on an individual Handle since this will block the entire process and impede the responsiveness for clients connected to other Handles. Therefore, for long-duration operations, such as transferring multimegabyte medical images, the Active Object pattern may be more effective. An Active Object uses multithreading or multi-processing to complete its tasks in parallel with the Initiation Dispatcher’s main event-loop.
+#+END_QUOTE
 
+难以调试：Reactor模式会打乱框架内部和事件处理接口的流程控制，这会导致程序难以单步调试。
+#+BEGIN_QUOTE
 - Hard to debug: Applications written with the Reactor pattern can be hard to debug since the inverted flow of control oscillates between the framework infrastructure and the method callbacks on application-specific handlers. This increases the difficulty of “single-stepping” through the runtime behavior of a framework within a debugger since application developers may not understand or have access to the framework code. This is similar to the problems encountered trying to debug a compiler lexical analyzer and parser written with LEX and YACC. In these applications, debugging is straightforward when the thread of control is within the user-defined action routines. Once the thread of control returns to the generated Deterministic Finite Automata (DFA) skeleton, however, it is hard to follow the program logic.
 #+END_QUOTE
 
-** 使用Reactor模式的代码示例
-
-libevent是否是使用Reactor模式进行设计编写的呢？
-
+** 使用Reactor模式的网络通信库
+libevent库的设计中就使用了Reactor模式，这个库的使用教程和示例代码在它的官方网站上很容易找到。libevent库解决了不同操作系统IO复用器有差别的问题，能够在具体的系统上选用最合适的系统接口，并为库的使用者抽象出了一套统一的应用接口。
 
 ** Proactor模式简介
-Proactor模式是一种异步IO的方式。
+Proactor模式与Reactor模式相似，也是一种事件驱动的设计模式。与Reactor不同是，Proactor在分发请求时使用的是异步IO，所以需要为异步IO预先申请存储数据的缓存空间，并要指定异步IO完成是调用的回调函数。
+
+** Proactor模式的优缺点
+*** 优点
+- 关注点分离：这点与Reactor模式相同，事件分发框架提供事件调度的逻辑，具体的事件处理函数无需关注调度策略。
+- 可移植性：与Reactor模式相同，通过抽象的事件调度框架能够适应不同操作系统的接口。
+- 封装并发机制：异步接口允许在同一时刻有多个IO操作，各个IO操作之间不必互相等待。
+- 并发策略与线程策略独立：异步IO是由操作系统完成的，在系统内核态执行，可以与用户态的线程函数有不同的并发策略。
+- 提升性能：在处理耗时的操作时比Reactor有优势。
+- 简化程序的同步机制：一部分同步操作由操作系统接管了。
+*** 缺点
+- 无法控制事件顺序：这也是异步操作的特性，每个IO操作都由操作系统完成，相互并行的，无法控制顺序。
+- 性能依赖操作系统：需要操作系统提供高性能的异步操作接口。
+- 调试不方便：这与Reactor模式相同，事件处理框架会接管函数的调用操作，不利于程序的单步调试。
+
+** 使用Proactor模式的网络通信库
+Boost库的ASIO使用的Proactor模式，它同时提供同步操作接口和异步操作接口。
 
 ** 参考资料
-- https://en.wikipedia.org/wiki/Reactor_pattern
-- http://www.cs.wustl.edu/~schmidt/PDF/reactor-siemens.pdf
-- https://stackoverflow.com/questions/9138294/what-is-the-difference-between-event-driven-model-and-reactor-pattern
+- [[https://en.wikipedia.org/wiki/Reactor_pattern][wikipedia - reactor pattern]]
+- [[http://www.cs.wustl.edu/~schmidt/PDF/reactor-siemens.pdf][wustl.edu - schmidt reactor]]
+- [[https://stackoverflow.com/questions/9138294/what-is-the-difference-between-event-driven-model-and-reactor-pattern][stackoverflow.com - difference between event driven and reactor]]
+- [[https://en.wikipedia.org/wiki/Proactor_pattern][wikipedia - proactor pattern]]
+- [[https://www.boost.org/doc/libs/1_72_0/doc/html/boost_asio.html][boost.org - asio]]
