@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>网络编程中的Reactor和Proactor模式 | Hack Note</title>
+<link href="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
+<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
+<meta name="theme-color" content="#5670d4">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/network-programming-reactor-and-proactor/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
+<link rel="prev" href="/posts/debug-qt-ole-error/" title="Qt程序中OLE错误的调试记录" type="text/html">
+<link rel="next" href="/posts/git-undo-last-local-commit/" title="在git中撤回最后一次本地提交" type="text/html">
+</head>
+<body class="preload">
+<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+
+<!-- Menubar -->
+<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
+    <a class="navbar-brand" href="/">
+
+      <span id="blog-title">Hack Note</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar">
+      <ul class="navbar-nav ml-auto">
+<li class="nav-item">
+<a href="/archive/" class="nav-link">Archives</a>
+                </li>
+<li class="nav-item">
+<a href="/tags/" class="nav-link">Tags</a>
+                </li>
+<li class="nav-item">
+<a href="/rss.xml" class="nav-link">RSS Feed</a>
+
+        
+      </li>
+</ul>
+<ul class="navbar-nav navbar-right"></ul>
+</div>
+<!-- /.navbar-collapse -->
+  </div>
+<!-- /.container -->
+</nav><!-- End of Menubar --><div class="container" id="content" role="main">
+  <div class="body-content">
+    <!--Body content-->
+    <div class="row">
+
+      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+        
+        
+<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">网络编程中的Reactor和Proactor模式</h1>
+
+    <div class="metadata">
+      
+
+      
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2020-03-15T19:58:43+08:00" itemprop="datePublished" title="2020-03-15 19:58">Mar 15 2020</time>
+</div>
+
+      
+
+      
+    <div class="source blur-1">
+      <a href="/posts/network-programming-reactor-and-proactor/index.org" class="sourcelink">Source</a>
+    </div>
+
+      
+
+      
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/design-pattern/" rel="tag">design pattern</a></li>
+        <li><a class="tag p-category" href="/tags/network/" rel="tag">network</a></li>
+        <li><a class="tag p-category" href="/tags/proactor/" rel="tag">proactor</a></li>
+        <li><a class="tag p-category" href="/tags/reactor/" rel="tag">reactor</a></li>
+    </ul>
+</div>
+
+      
+
+    </div>
+  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <p>
+本文介绍了两种常用的网络编程模式：Reactor模式和Proactor模式。这两种设计模式比较相似，它们的典型应用案例都是处理网络编程的并发请求，但是它们在具体的请求分派方式上又有区别。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">Reactor模式简介</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Reactor模式是一种事件驱动的设计模式，用于处理多输入源的并发服务请求。D.C.shmidt提出了Reactor模式，并在他的ACE框架中广泛使用了该设计模式。<br>
+服务处理者（service handler）将接收到的服务请求同步地（synchronously）分发（demultiplex）给每个请求处理者（request handler）。<br>
+在这里需要着重强调的一点是，在分发请求时是 <b>同步的</b> （synchronously）操作；与Reactor比较类似的另一种模式使用的是 <b>异步的</b> （asynchronously）操作，它的名字叫Proactor。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">Reactor模式的优缺点</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+这一节通过剖析Reactor模式的优缺点，详细地介绍了Reactor模式的设计思想。其中，英文内容节选自 DC.Shmidt 的论文，中文内容为我的翻译和总结。<br></p>
+</div>
+
+<div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">优点</h3>
+<div class="outline-text-3" id="text-2-1">
+<ul class="org-ul">
+<li>关注点分离：将服务请求分发机制与具体的服务请求处理分离开，以实现代码的复用和解耦合。<br>
+</li>
+</ul>
+<blockquote>
+<ul class="org-ul">
+<li>Separation of concerns: The Reactor pattern decouples application-independent demultiplexing and dispatching mechanisms from application-specific hook method functionality. The application-independent mechanisms become reusable components that know how to demultiplex events and dispatch the appropriate hook methods defined by Event Handlers. In contrast, the application-specific functionality in a hook method knows how to perform a particular type of service.<br>
+</li>
+</ul>
+</blockquote>
+
+<ul class="org-ul">
+<li>模块化、可重用性和可配置性：Reactor模式将应用程序功能分离为单独的类，这些拆分的类都具有单一职责。<br>
+</li>
+</ul>
+<blockquote>
+<ul class="org-ul">
+<li>Improve modularity, reusability, and configurability of event-driven applications: The pattern decouples application functionality into separate classes. For instance, there are two separate classes in the logging server: one for establishing connections and another for receiving and processing logging records. This decoupling enables the reuse of the connection establishment class for different types of connection-oriented services (such as file transfer, remote login, and video-on-demand). Therefore, modifying or extending the functionality of the logging server only affects the implementation of the logging handler class.<br>
+</li>
+</ul>
+</blockquote>
+
+<ul class="org-ul">
+<li>提高可移植性：分发接口是可重用的，它能够适配不同平台的解复用（demultiplex）系统调用。<br>
+</li>
+</ul>
+<blockquote>
+<ul class="org-ul">
+<li>Improves application portability: The Initiation Dispatcher’s interface can be reused independently of the OS system calls that perform event demultiplexing. These system calls detect and report the occurrence of one or more events that may occur simultaneously on multiple sources of events. Common sources of events may include I/O handles, timers, and synchronization objects. On UNIX platforms, the event demultiplexing system calls are called select and poll. In the Win32 API, the WaitForMultipleObjects system call performs event demultiplexing.<br>
+</li>
+</ul>
+</blockquote>
+
+<ul class="org-ul">
+<li>提供粗粒度的并发控制：在分发层的序列化通常能够消除比较复杂的并发同步。<br>
+</li>
+</ul>
+<blockquote>
+<ul class="org-ul">
+<li>Provides coarse-grained concurrency control: The Reactor pattern serializes the invocation of event handlers at the level of event demultiplexing and dispatching within a process or thread. Serialization at the Initiation Dispatcher level often eliminates the need for more complicated synchronization or locking within an application process.<br>
+</li>
+</ul>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">缺点</h3>
+<div class="outline-text-3" id="text-2-2">
+<ul class="org-ul">
+<li>有限的应用场景：Recator模式只有操作系统支持描述符（handle）时才最有效率。<br>
+</li>
+</ul>
+<blockquote>
+<ul class="org-ul">
+<li>Restricted applicability: The Reactor pattern can only be applied efficiently if the OS supports Handles. It is possible to emulate the semantics of the Reactor pattern using multiple threads within the Initiation Dispatcher, e.g. one thread for each Handle. Whenever there are events available on a handle, its associated thread will read the event and place it on a queue that is processed sequentially by the initiation dispatcher. However, this design is typically very inefficient since it serializes all Event Handlers, thereby increasing synchronization and context switching overhead without enhancing parallelism.<br>
+</li>
+</ul>
+</blockquote>
+
+<p>
+事件处理是非独占的：事件处理器不能进行阻塞I/O，不适合耗时较长的操作。如传输较大文件时更适合Active Object模式。<br></p>
+<blockquote>
+<ul class="org-ul">
+<li>Non-preemptive: In a single-threaded application process, Event Handlers are not preempted while they are executing. This implies that an Event Handler should not perform blocking I/O on an individual Handle since this will block the entire process and impede the responsiveness for clients connected to other Handles. Therefore, for long-duration operations, such as transferring multimegabyte medical images, the Active Object pattern may be more effective. An Active Object uses multithreading or multi-processing to complete its tasks in parallel with the Initiation Dispatcher’s main event-loop.<br>
+</li>
+</ul>
+</blockquote>
+
+<p>
+难以调试：Reactor模式会打乱框架内部和事件处理接口的流程控制，这会导致程序难以单步调试。<br></p>
+<blockquote>
+<ul class="org-ul">
+<li>Hard to debug: Applications written with the Reactor pattern can be hard to debug since the inverted flow of control oscillates between the framework infrastructure and the method callbacks on application-specific handlers. This increases the difficulty of “single-stepping” through the runtime behavior of a framework within a debugger since application developers may not understand or have access to the framework code. This is similar to the problems encountered trying to debug a compiler lexical analyzer and parser written with LEX and YACC. In these applications, debugging is straightforward when the thread of control is within the user-defined action routines. Once the thread of control returns to the generated Deterministic Finite Automata (DFA) skeleton, however, it is hard to follow the program logic.<br>
+</li>
+</ul>
+</blockquote>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">使用Reactor模式的网络通信库</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+libevent库的设计中就使用了Reactor模式，这个库的使用教程和示例代码在它的官方网站上很容易找到。libevent库解决了不同操作系统IO复用器有差别的问题，能够在具体的系统上选用最合适的系统接口，并为库的使用者抽象出了一套统一的应用接口。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">Proactor模式简介</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+Proactor模式与Reactor模式相似，也是一种事件驱动的设计模式。与Reactor不同是，Proactor在分发请求时使用的是异步IO，所以需要为异步IO预先申请存储数据的缓存空间，并要指定异步IO完成是调用的回调函数。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5">Proactor模式的优缺点</h2>
+<div class="outline-text-2" id="text-5">
+</div>
+<div id="outline-container-sec-5-1" class="outline-3">
+<h3 id="sec-5-1">优点</h3>
+<div class="outline-text-3" id="text-5-1">
+<ul class="org-ul">
+<li>关注点分离：这点与Reactor模式相同，事件分发框架提供事件调度的逻辑，具体的事件处理函数无需关注调度策略。<br>
+</li>
+<li>可移植性：与Reactor模式相同，通过抽象的事件调度框架能够适应不同操作系统的接口。<br>
+</li>
+<li>封装并发机制：异步接口允许在同一时刻有多个IO操作，各个IO操作之间不必互相等待。<br>
+</li>
+<li>并发策略与线程策略独立：异步IO是由操作系统完成的，在系统内核态执行，可以与用户态的线程函数有不同的并发策略。<br>
+</li>
+<li>提升性能：在处理耗时的操作时比Reactor有优势。<br>
+</li>
+<li>简化程序的同步机制：一部分同步操作由操作系统接管了。<br>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-5-2" class="outline-3">
+<h3 id="sec-5-2">缺点</h3>
+<div class="outline-text-3" id="text-5-2">
+<ul class="org-ul">
+<li>无法控制事件顺序：这也是异步操作的特性，每个IO操作都由操作系统完成，相互并行的，无法控制顺序。<br>
+</li>
+<li>性能依赖操作系统：需要操作系统提供高性能的异步操作接口。<br>
+</li>
+<li>调试不方便：这与Reactor模式相同，事件处理框架会接管函数的调用操作，不利于程序的单步调试。<br>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-6" class="outline-2">
+<h2 id="sec-6">使用Proactor模式的网络通信库</h2>
+<div class="outline-text-2" id="text-6">
+<p>
+Boost库的ASIO使用的Proactor模式，它同时提供同步操作接口和异步操作接口。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-7" class="outline-2">
+<h2 id="sec-7">参考资料</h2>
+<div class="outline-text-2" id="text-7">
+<ul class="org-ul">
+<li>
+<a href="https://en.wikipedia.org/wiki/Reactor_pattern">wikipedia - reactor pattern</a><br>
+</li>
+<li>
+<a href="http://www.cs.wustl.edu/~schmidt/PDF/reactor-siemens.pdf">wustl.edu - schmidt reactor</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/9138294/what-is-the-difference-between-event-driven-model-and-reactor-pattern">stackoverflow.com - difference between event driven and reactor</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Proactor_pattern">wikipedia - proactor pattern</a><br>
+</li>
+<li>
+<a href="https://www.boost.org/doc/libs/1_72_0/doc/html/boost_asio.html">boost.org - asio</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+
+</article>
+</div>
+
+      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
+       
+<div class="sidebar-module sidebar-module-inset">
+  
+        <a href="https://github.com/samsonwang">
+        <img alt style="padding-bottom:10px;max-width:60%" src="https://avatars3.githubusercontent.com/u/11832311?s=460&amp;v=4"></a>
+        <div class="sidebar-aboutme">
+        <h4>About Me</h4>
+        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
+        </div>
+</div>
+
+       
+<div class="sidebar-module sidebar-module-inset">
+  <h4>Categories</h4>
+  
+        <ol class="list-unstyled sidebar-category">
+<li>
+<a href="/tags/category-cpp/">cpp</a>
+        </li>
+<li>
+<a href="/tags/category-emacs/">emacs</a>
+        </li>
+<li>
+<a href="/tags/category-linux/">linux</a>
+        </li>
+<li>
+<a href="/tags/category-windows/">windows</a>
+        </li>
+</ol>
+</div>
+
+      </div>
+<!--.sidebar-->
+    </div>
+<!--.row-->
+
+    
+
+    <ul class="pager hidden-print">
+<li class="left">
+          <a href="/posts/debug-qt-ole-error/" rel="prev">
+            <p class="title">Qt程序中OLE错误的调试记录</p>
+            <p>Previous post</p>
+          </a>
+      </li>
+      <li class="right">
+          <a href="/posts/git-undo-last-local-commit/" rel="next">
+            <p class="title">在git中撤回最后一次本地提交</p>
+            <p>Next post</p>
+          </a>
+      </li>
+    </ul>
+<section class="comments hidden-print"><h2>Comments</h2>
+    
+        
+        <div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/network-programming-reactor-and-proactor/",
+        disqus_title="\u7f51\u7edc\u7f16\u7a0b\u4e2d\u7684Reactor\u548cProactor\u6a21\u5f0f",
+        disqus_identifier="cache/posts/network-programming-reactor-and-proactor.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
+<p>Contents © 2017-2020 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
+ - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
+ - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
+ - 
+<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/">
+<img alt="cc-by-nc 4.0" style="padding-bottom:2px" src="/images/cc-by-nc.png"></a>
+</p>
+</div>
+
+      
+    </footer>
+</div>
+</div>
+
+<div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+            <script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.min.js"></script><script src="https://cdn.staticfile.org/jquery.colorbox/1.6.4/jquery.colorbox-min.js"></script><script src="https://cdn.staticfile.org/jquery_lazyload/1.9.7/jquery.lazyload.min.js"></script><script src="https://cdn.staticfile.org/popper.js/1.14.3/umd/popper.min.js"></script><script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
+  moment.locale("en");
+  fancydates(0, "YYYY-MM-DD HH:mm");
+</script><!-- end fancy dates --><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>
