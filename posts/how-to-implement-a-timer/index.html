@@ -116,7 +116,7 @@
 </pre></div>
 
 <p>
-需要注意的是这两个API在同时使用时可能会相互干扰，它们可能会共用同一个定时器。<br></p>
+需要 <b>注意</b> 的是这两个API在同时使用时可能会相互干扰，它们可能会共用同一个定时器。<br></p>
 </div>
 </div>
 
@@ -144,6 +144,32 @@ timerfd是linux独有的接口，可以在定时器超时后通过一个文件�
 <div class="outline-text-2" id="text-3">
 <p>
 在网络编程中，通常都会用到一套IO复用接口，如select/poll/epoll等，它们会帮你同时检查多个socket上是否有读写操作。这些接口都有一个等待时间，在这个指定时间是最大等待时间，即使在没有需要处理的IO操作时也会返回。这个时间是一般是个固定值，如10ms/20ms/50ms，它被称作网络库的基准频率。在这段空余时间中可以检查定时器是否超时，并执行超时定时器的回调函数。<br></p>
+
+<p>
+伪代码示例如下：<br></p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">update_events</span><span class="p">(</span><span class="n">milisec</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">milisec</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">fd</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+	<span class="n">do</span> <span class="n">something</span> <span class="k">with</span> <span class="n">socket</span> <span class="n">event</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">update_timer</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+
+<span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">WAIT_MILLISEC</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">update_events</span><span class="p">(</span><span class="n">WAIT_MILLISEC</span><span class="p">)</span>
+</pre></div>
+
+<p>
+在两次select的间隔中可以进行一些定时操作，关键就在 <code>update_timer</code> 中的实现：<br></p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">update_timer</span> <span class="p">(</span><span class="n">current</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">timer</span> <span class="ow">in</span> <span class="n">available_timers</span><span class="p">:</span>
+	 <span class="k">while</span> <span class="n">current</span> <span class="o">&gt;=</span> <span class="n">timer</span><span class="o">.</span><span class="n">expires</span><span class="p">:</span>
+	     <span class="n">timer</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+	     <span class="n">timer</span><span class="o">.</span><span class="n">expires</span> <span class="o">+=</span> <span class="n">timer</span><span class="o">.</span><span class="n">period</span>
+</pre></div>
+
+<p>
+<code>available_timers</code> 记录着当前所有的定时器， <code>timer.expires</code> 是他们需要被触发的时间，如果当前时间大于等于这个 <code>timer.expires</code> ，认为该定时器触发了。 <b>注意</b> <code>timer.expires</code> 更新的时候是 <code>+= period</code> ，而不是 <code>= current + period</code> ，后者会导致误差积累，长时间运行后偏差会越来越大。同时这里需要 <code>while</code> ，因为定时器的回调函数在执行时可能跨越两个以上周期，当然只触发一次的就不需要了。<br></p>
 
 <p>
 可以将定时器存在一个优先队列中，每次从队列的前面取出定时器进行超时判断，直到出现了一个没超时的就终止判断，这样可以避免每次都扫描全部定时器。<br></p>

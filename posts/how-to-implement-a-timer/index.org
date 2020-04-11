@@ -31,7 +31,7 @@ int setitimer(int which, const struct itimerval *new_value,
               struct itimerval *old_value);
 #+END_SRC
 
-需要注意的是这两个API在同时使用时可能会相互干扰，它们可能会共用同一个定时器。
+需要 *注意* 的是这两个API在同时使用时可能会相互干扰，它们可能会共用同一个定时器。
 
 ** 通过timerfd实现定时任务
 timerfd是linux独有的接口，可以在定时器超时后通过一个文件描述符通知程序。
@@ -49,6 +49,31 @@ int timerfd_gettime(int fd, struct itimerspec *curr_value);
 
 ** 在网络编程中借助事件的等待间隔执行定时任务
 在网络编程中，通常都会用到一套IO复用接口，如select/poll/epoll等，它们会帮你同时检查多个socket上是否有读写操作。这些接口都有一个等待时间，在这个指定时间是最大等待时间，即使在没有需要处理的IO操作时也会返回。这个时间是一般是个固定值，如10ms/20ms/50ms，它被称作网络库的基准频率。在这段空余时间中可以检查定时器是否超时，并执行超时定时器的回调函数。
+
+伪代码示例如下：
+#+BEGIN_SRC python
+def update_events(milisec = 10):
+    result = selector.select(milisec)
+    for fd, event in result:
+        do something with socket event
+    current = time.time()
+    update_timer(current)
+
+while 1:
+    WAIT_MILLISEC = 10
+    update_events(WAIT_MILLISEC)
+#+END_SRC
+
+在两次select的间隔中可以进行一些定时操作，关键就在 ~update_timer~ 中的实现：
+#+BEGIN_SRC python
+def update_timer (current):
+    for timer in available_timers:
+         while current >= timer.expires:
+             timer.callback(current)
+             timer.expires += timer.period
+#+END_SRC
+
+~available_timers~ 记录着当前所有的定时器， ~timer.expires~ 是他们需要被触发的时间，如果当前时间大于等于这个 ~timer.expires~ ，认为该定时器触发了。 *注意* ~timer.expires~ 更新的时候是 ~+= period~ ，而不是 ~= current + period~ ，后者会导致误差积累，长时间运行后偏差会越来越大。同时这里需要 ~while~ ，因为定时器的回调函数在执行时可能跨越两个以上周期，当然只触发一次的就不需要了。
 
 可以将定时器存在一个优先队列中，每次从队列的前面取出定时器进行超时判断，直到出现了一个没超时的就终止判断，这样可以避免每次都扫描全部定时器。
 
