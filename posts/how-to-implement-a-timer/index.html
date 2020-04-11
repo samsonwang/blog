@@ -95,7 +95,7 @@
     </div>
   </header><div class="e-content entry-content" itemprop="articleBody text">
     <p>
-在以前的一次面试中，我被问到该如何实现一个定时器，当时我并没有思考过这个问题，所以回答的并不令人满意。我认为这个问题比较有意义，也非常具有代表性。在日常的开发中，一个需要定时执行的任务是很常见的。我查阅了一些资料，并整理出这篇博客。<br></p>
+在以前的一次面试中，我被问到该如何实现一个定时器，当时我并没有思考过这个问题，所以回答的并不令人满意。在日常的开发中，一个需要定时执行的任务是很常见的。我认为这个问题比较有意义，也非常具有代表性。于是，我查阅了一些资料，并整理出这篇博客。<br></p>
 
 <!-- TEASER_END -->
 
@@ -109,7 +109,7 @@
 </pre></div>
 
 <p>
-这里值得一提的是另一个信号 <code>SIGVTALRM</code> ，可以使用 <code>setitimer</code> 系统接口进行设置。这个定时器计算的是程序在用户模式（user mode）消耗的时间。另外，这个定时器还可以通过修改传入的 <code>struct itimerval</code> 设置为循环触发。<br></p>
+这里值得一提的是另一个信号 <code>SIGVTALRM</code> ，可以使用 <code>setitimer</code> 系统接口进行设置。这个定时器计算的是程序在用户模式（user mode）消耗的时间。另外，这个定时器还可以通过传入的 <code>struct itimerval</code> 设置为循环触发。<br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;sys/time.h&gt;</span><span class="cp"></span>
 <span class="kt">int</span> <span class="nf">setitimer</span><span class="p">(</span><span class="kt">int</span> <span class="n">which</span><span class="p">,</span> <span class="k">const</span> <span class="k">struct</span> <span class="n">itimerval</span> <span class="o">*</span><span class="n">new_value</span><span class="p">,</span>
 	      <span class="k">struct</span> <span class="n">itimerval</span> <span class="o">*</span><span class="n">old_value</span><span class="p">);</span>
@@ -152,7 +152,7 @@ timerfd是linux独有的接口，可以在定时器超时后通过一个文件�
 在所有定时器的超时时间都相同时，可以将它们存放在一个单向队列中，每次增加时都放在最后，并从前面开始检查超时，这样只需要检查队列头部的那部分定时器了。<br></p>
 
 <p>
-另一种思路是动态调整等待的间隔，每次选出最先需要超时的定时器，计算它的超时时间，将这个时间作为select的等待时间。这样每次时间都不一样，每次都基本准确，同时不会占用多余的CPU。这种模式叫做 <code>TICKLESS</code> 。<br></p>
+另一种思路是动态调整等待的间隔，每次选出最先需要超时的定时器，计算它的超时时间，将这个时间作为select的等待时间。这样每次时间都不一样，每次都基本准确，同时不会占用多余的CPU，这种模式叫做 <code>TICKLESS</code> 。<br></p>
 </div>
 </div>
 
