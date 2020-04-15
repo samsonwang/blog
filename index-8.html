@@ -72,7 +72,100 @@
 <div class="postindex">
 
 
-  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/endianness-and-union-type/" class="u-url">字节序与union类型</a></h1>
+  <article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/c-style-and-cpp-style-file-api/" class="u-url">C风格和C++风格的文件操作库函数总结</a></h1>
+      <div class="metadata">
+        
+
+        
+  <div class="date blur-1">
+    <time class="published dt-published" datetime="2018-05-16T18:06:45+08:00" itemprop="datePublished" title="2018-05-16 18:06">May 16 2018</time>
+</div>
+
+        
+
+        
+    <div class="comment blur-1">
+      
+        
+    <a href="/posts/c-style-and-cpp-style-file-api/#disqus_thread" data-disqus-identifier="cache/archives/2018/c-style-and-cpp-style-file-api.html">Comments</a>
+
+
+    </div>
+
+        
+    <div class="tags blur-2">
+    <ul itemprop="keywords">
+<li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
+        <li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
+    </ul>
+</div>
+
+      </div>
+    </header><div class="p-summary entry-summary">
+      <p>
+由于C++是兼容C的，所以使用C++进行文件操作时，会发现有两套库函数可以使用，它们分别是C风格的和C++风格的。<br></p>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">C风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+<b>打开文件，关闭文件</b><br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="kt">FILE</span><span class="o">*</span> <span class="nf">fopen</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">mode</span><span class="p">);</span>
+<span class="kt">int</span> <span class="nf">fclose</span><span class="p">(</span><span class="kt">FILE</span><span class="o">*</span> <span class="n">fp</span><span class="p">);</span>
+</pre></div>
+
+<p>
+<b>读取文件，写入文件</b><br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="kt">size_t</span> <span class="nf">fread</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">ptr</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">nmemb</span><span class="p">,</span> <span class="kt">FILE</span><span class="o">*</span> <span class="n">stream</span><span class="p">);</span>
+<span class="kt">size_t</span> <span class="nf">fwrite</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">ptr</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">nmemb</span><span class="p">,</span> <span class="kt">FILE</span><span class="o">*</span> <span class="n">stream</span><span class="p">);</span>
+</pre></div>
+<p>
+关于fread中两个表示大小的参数，在这个 <a href="https://stackoverflow.com/questions/8589425/how-does-fread-really-work">stackoverflow</a> 问题中得到了比较好的解答。<br></p>
+
+
+<p>
+<b>改变文件指示器的位置</b><br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="kt">int</span> <span class="nf">fseek</span><span class="p">(</span><span class="kt">FILE</span><span class="o">*</span> <span class="n">stream</span><span class="p">,</span> <span class="kt">long</span> <span class="n">offset</span><span class="p">,</span> <span class="kt">int</span> <span class="n">whence</span><span class="p">);</span>
+<span class="kt">long</span> <span class="nf">ftell</span><span class="p">(</span><span class="kt">FILE</span><span class="o">*</span> <span class="n">stream</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">rewind</span><span class="p">(</span><span class="kt">FILE</span><span class="o">*</span> <span class="n">stream</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">C++风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件实际上就会对应一个 <code>fstream</code> 对象，一下函数都是 <code>fstream</code> 的成员函数。<br>
+文件打开和关闭<br></p>
+<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">open</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">filename</span><span class="p">,</span> <span class="n">ios_base</span><span class="o">::</span><span class="n">openmode</span> <span class="n">mode</span> <span class="o">=</span> <span class="n">ios_base</span><span class="o">::</span><span class="n">in</span><span class="o">|</span><span class="n">ios_base</span><span class="o">::</span><span class="n">out</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">open</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">filename</span><span class="p">,</span> <span class="n">ios_base</span><span class="o">::</span><span class="n">openmode</span> <span class="n">mode</span> <span class="o">=</span> <span class="n">ios_base</span><span class="o">::</span><span class="n">in</span><span class="o">|</span><span class="n">ios_base</span><span class="o">::</span><span class="n">out</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">close</span><span class="p">();</span>
+</pre></div>
+
+<p>
+对于文件的读写可以才采用流运算符重载的方法完成。<br></p>
+<div class="highlight"><pre><span></span><span class="k">friend</span> <span class="n">fstream</span><span class="o">&amp;</span> <span class="k">operator</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">fstream</span><span class="o">&amp;</span> <span class="n">ofs</span><span class="p">,</span> <span class="k">const</span> <span class="n">CRecord</span><span class="o">&amp;</span> <span class="n">objRecord</span><span class="p">);</span>
+<span class="k">friend</span> <span class="n">fstream</span><span class="o">&amp;</span> <span class="k">operator</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">fstream</span><span class="o">&amp;</span> <span class="n">ifs</span><span class="p">,</span> <span class="n">CRecord</span><span class="o">&amp;</span> <span class="n">objRecord</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">题外话</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。<br></p>
+</div>
+</div>
+    </div>
+
+  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/endianness-and-union-type/" class="u-url">字节序与union类型</a></h1>
       <div class="metadata">
         
 
@@ -1037,50 +1130,6 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 
 <p class="more"><a href="/posts/debug-with-gdb-on-linux-2/">Read more…</a></p>
 </div>
-    </div>
-
-  </article><article class="h-entry post-text"><header><h1 class="p-name entry-title"><a href="/posts/change-linux-timezone-with-cli/" class="u-url">使用命令行修改Linux系统的时区</a></h1>
-      <div class="metadata">
-        
-
-        
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2018-04-03T21:32:42+08:00" itemprop="datePublished" title="2018-04-03 21:32">Apr 03 2018</time>
-</div>
-
-        
-
-        
-    <div class="comment blur-1">
-      
-        
-    <a href="/posts/change-linux-timezone-with-cli/#disqus_thread" data-disqus-identifier="cache/archives/2018/change-linux-timezone-with-cli.html">Comments</a>
-
-
-    </div>
-
-        
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
-    </ul>
-</div>
-
-      </div>
-    </header><div class="p-summary entry-summary">
-      <p>
-<b>系统时区目录</b> 系统支持时区的配置文件存放在 <code>/usr/share/zoneinfo/</code> 目录下，可以进入到该目录下查看和搜索目标时区的相关配置文件。<br></p>
-
-<p>
-<b>时区配置文件</b> Linux系统的当前时区配置文件存放在 <code>/etc/localtime</code> , 可以将时区配置文件拷贝到该位置下，也可以建立一个软连接指向系统时区目录中的配置文件。<br></p>
-
-<p>
-<b>操作示例</b> 以将系统的时区改为中国时间为例，以下操作先将旧的时区配置文件删掉，然后建立新的时区配置文件的符号链接。<br></p>
-<div class="highlight"><pre><span></span>rm /etc/localtime
-ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-</pre></div>
-<p>
-完成以上操作后，可以执行 <code>date</code> 命令查看修改效果。<br></p>
     </div>
 
   </article>

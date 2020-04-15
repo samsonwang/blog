@@ -1,0 +1,43 @@
+#+BEGIN_COMMENT
+.. title: Windows平台下System32和SysWOW64文件夹
+.. slug: windows-system32-and-syswow64
+.. date: 2020-04-14 22:21:54 UTC+08:00
+.. tags: windows, system32, 64bit
+.. category: windows
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: Windows平台下System32和SysWOW64文件夹
+
+在64位的Windows操作系统下，你会发现在System32目录存放的是64位的程序，而SysWOW64目录存放的是32位的程序。本文围绕着这个知识点展开，介绍了相关的知识。
+
+{{{TEASER_END}}}
+
+** 为什么64位操作系统的System32目录存放的是64位程序
+从目录的名字上来看，这确实非常令人迷惑，也并不符合逻辑。
+这背后的原因主要是出于兼容性考虑。在64位操作系统还没有流行起来时，人们主要使用的是32位的操作系统，System32在用于存放操作系统相关的可执行程序和动态库等，有许多开发者直接将这个目录的路径写在了源代码中。所以，在向64位系统迁移时，为了保持兼容性，System32目录存放的是64位的程序和动态库。
+
+** 为什么32位程序能够跑在64位操作系统上
+众所周知，Windows系统的兼容性做的是非常好的，几年前的32位的程序大部分都能直接在64位系统上运行。当32位程序在64位操作系统上运行时，操作系统会模拟出一个32位的运行环境。程序所需要的32位运行时动态库也同样有一份在64位系统中，它们存放在SysWOW64目录下。当32位程序尝试调用System32目录中的程序或动态库时，会被重定向到SysWOW64目录中。
+
+** 如何通过32位程序启动64位的System32程序
+有些时候，我们确实需要在32位程序中启动64位的系统程序，是否能绕过系统的重定向呢？
+答案是肯定的，那就是使用Sysnative文件夹。Sysnative文件夹是一个虚拟文件夹，系统中的32位模拟器会把这个文件夹当作一个特殊路径，从而就绕过了重定向。在32位程序中使用时会被转换为System32文件夹，System32文件夹中存放的64位的可执行程序，这样就能够在32位程序中启动64位的操作系统程序了。
+注意，64位程序不能使用Sysnative，因为这是一个虚拟文件，在磁盘中并不存在。
+
+** 其他小技巧
+- 使用 =%windir%= 环境变量代替 =C:\Windows= 。大部分情况下操作系统被安装到C盘，但有些时候可能被安装到了其他盘符的磁盘上，使用 =%windir%= 是更加稳妥的方法。另外，还可以使用Windows提供的 =GetWindowsDirectory= 函数接口。
+
+
+
+** 参考资料
+- [[https://docs.microsoft.com/en-us/windows/win32/winprog64/running-32-bit-applications][microsoft docs - running 32 bit applications]]
+- [[https://docs.microsoft.com/en-us/windows/win32/winprog64/file-system-redirector][microsoft docs - file system redirector]]
+- [[https://www.samlogic.net/articles/32-64-bit-windows-folder-x86-syswow64.htm][samlogic - 32 bit and 64 bit windows folder]]
+- [[https://www.samlogic.net/articles/sysnative-folder-64-bit-windows.htm][samlogic - sysnative folder on 64 bit windows]]
+
+（全文完）
