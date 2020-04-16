@@ -1196,6 +1196,9 @@ USE_BUNDLES = False
 # before </head>
 # (translatable)
 # EXTRA_HEAD_DATA = ""
+EXTRA_HEAD_DATA = """
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+"""
 
 # Google Analytics or whatever else you use. Added to the bottom of <body>
 # in the default template (base.tmpl).
