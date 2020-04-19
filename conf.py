@@ -1182,7 +1182,7 @@ USE_CDN = True
 # If you are using custom themes, have configured the CSS properly and are
 # receiving warnings about incompatibility but believe they are incorrect, you
 # can set this to False.
-# USE_CDN_WARNING = False
+USE_CDN_WARNING = False
 
 # use custom.css to change default
 # HAS_CUSTOM_CSS = True
