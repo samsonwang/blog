@@ -2,7 +2,7 @@
 .. title: Tips on Linux Process and Subprocess
 .. slug: linux-process-and-subprocess
 .. date: 2019-01-25 16:50:23 UTC+08:00
-.. tags: linux, process, en
+.. tags: linux, process, exit, zombie process, orphan process, close on exec
 .. category: linux
 .. link:
 .. description:
@@ -154,10 +154,10 @@ int main(int argc, char* argv[]) {
 #+END_SRC
 
 
-** Close on exec flag
+** =close-on-exec= flag
 The =close-on-exec= flag is set on file descriptor to indicate that the descriptor should be closed when an ~exec~ function is invoked. The flag is initially disabled on new descriptors, the descriptor will survive into the new program after ~exec~ , and resource is leaked. This would happen unintentionally when parent process forks a child and the child calls ~exec~ .
 
-It is a good programming practice to use this flag in order to close the descriptor by default.
+It is a good programming practice to use this flag in order to close the descriptor automaticly by default.
 #+BEGIN_SRC c
 int fd1 = open(path, O_CLOEXEC | flags);
 int fd2 = socket(DOMAIN, SOCK_CLOEXEC | type, PROTOCOL);

@@ -1,8 +1,9 @@
 #+BEGIN_COMMENT
-.. title: 在linux的信号处理函数中不要进行锁相关操作
+.. title: 在Linux的信号处理函数中不要进行锁相关操作
 .. slug: linux-signal-handler-callback-mutex
 .. date: 2019-10-26 21:41:50 UTC+08:00
-.. tags: linux, signal handler, mutex, sigwait, sigtimedwait
+.. updated: 2020-4-21 9:30:00 UTC+08:00
+.. tags: linux, signal handler, mutex, sigwait, sigtimedwait, sigaction
 .. category: linux
 .. link:
 .. description:
@@ -11,14 +12,14 @@
 #+END_COMMENT
 #+OPTIONS: num:t
 
-#+TITLE: 在linux的信号处理函数中不要进行锁相关操作
+#+TITLE: 在Linux的信号处理函数中不要进行锁相关操作
 
 最近在写一个linux程序，其中一个逻辑是要等待信号（signal），我使用了条件变量（condition variable）来完成这个操作，但是实际效果却是整个程序卡住了，经过查阅资料后得知在信号处理函数中是不能进行锁操作的。
 
 {{{TEASER_END}}}
 
 ** 问题现象
-最初的情况是，我在信号处理函数中打印了日志，在收到信号时有时会导致整个程序卡死。使用 ~pstack~ 观察程序的运行状态，发现程序卡在写日志的加锁操作中。由于程序是多线程的，所以为了保证在输出日志时线程间能够同步，在写日志时进行了加锁操作。在将写日志的语句注释掉后，程序就能够正常运行了。一开始我怀疑是日志模块出了问题，经过反复排查后，并没有发现明显的问题。随着开发的推进，当我在信号处理函数中进行条件变量操作的时候，程序再一次卡死了，我开始怀疑是线程同步的相关操作中出现了问题。
+最初的情况是，我在信号处理函数中打印了日志，在收到信号时有机率会导致整个程序卡死。使用 ~pstack~ 观察程序的运行状态，发现程序卡在写日志的加锁操作中。由于程序是多线程的，所以为了保证在输出日志时线程间能够同步，在写日志时进行了加锁操作。然后我将写日志的语句注释掉后，程序就能够正常运行了。这样我开始怀疑是日志模块出了问题，但是经过反复排查后，并没有发现明显的问题，于是我选择暂时搁置这个问题。随着开发的推进，当我在信号处理函数中进行条件变量操作的时候，程序再一次卡死了，我开始怀疑是线程同步的相关操作中出现了问题。
 
 ** 信号处理函数中不进行锁操作
 信号处理函数将会在同一个线程中执行，如果在信号处理函数中进行加锁，则可能会引起互锁。
@@ -41,9 +42,12 @@ time         times         umask         uname          unlink        utime
 wait         waitpid       write
 #+END_SRC
 
-** 使用 ~sigwait~ 和 ~sigtimedwait~ 等待线程
-为了实现等待某个信号的操作，可以采用 ~sigwait~ 和 ~sigtimedwait~ 来做。这两个函数会阻塞当前线程的执行以等待即将到来的信号。
+** 题外话：使用 ~sigwait~ 和 ~sigtimedwait~ 等待信号
+在需要等待某个信号（Linux signal），可以采用 ~sigwait~ 和 ~sigtimedwait~ 来实现。这两个函数会阻塞当前线程的执行以等待即将到来的信号。
+
 思考： ~sigwait~ 如何应对有多个信号需要等待，每个信号的所对应的处理流程都不一样，而且信号接收的顺序可能有变化。
+
+解决方法：可以用 ~sigaction~ 接口指定处理每个信号的回调函数，这些回调函数可以使用同一个函数作为入口，在函数中对信号进行区分和处理。但是 ~sigaction~ 并不是阻塞函数，并不能达到等待信号的效果，所以我们需要使用其他的同步机制（如：条件变量）达到阻塞的目的。
 
 ** 参考资料
 - [[https://stackoverflow.com/questions/32413397/why-it-is-problematic-to-use-mutex-locks-within-signal-handers][stackoverflow - mutex locks within signal handler]]
