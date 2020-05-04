@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
-from confutil import ThemeUtil as ThemeUtil
+# from confutil import ThemeUtil as ThemeUtil
 
 # !! This is the configuration of Nikola. !! #
 # !!  You should edit it to your liking.  !! #
@@ -134,21 +134,24 @@ TRANSLATIONS_PATTERN = "{path}.{lang}.{ext}"
 
 NAVIGATION_LINKS = {
     DEFAULT_LANG: (
+        ("/", "Home"),
         ("/archive/", "Archives"),
         ("/tags/", "Tags"),
-        #        ("/listings/", "Listings"),
-        #        ("/galleries/", "Galleries"),
+        # ("/listings/", "Listings"),
+        # ("/galleries/", "Galleries"),
+        # ("/", "Profilio"),
         ("/rss.xml", "RSS Feed"),
     ),
 }
 
 # Name of the theme to use.
 #THEME = "bootstrap4"
-THEME = "cerulean"
+THEME = "minima"
 
 # Primary color of your theme. This will be used to customize your theme.
 # Must be a HEX value.
-THEME_COLOR = '#5670d4'
+# THEME_COLOR = '#5670d4'
+THEME_COLOR = '#04519b'
 
 # Theme configuration. Fully theme-dependent. (translatable)
 # Examples below are for bootblog4.
@@ -184,12 +187,16 @@ THEME_CONFIG = {
         <li><a href="/tags/category-linux/">linux</a>
         <li><a href="/tags/category-windows/">windows</a>
         </ol>''',
+        # copyright info in footer
+        'blog_copyright': 'Contents © %d, all rights reservered.' % time.gmtime().tm_year,
+        # github icon in footer
+        'github': 'samsonwang',
+        # twitter icon in footer
+        'twitter': 'samsonwangcn',
+        # facebook icon in footer
+        'facebook': 'samsonwangcn',
     }
 }
-
-# not indexed tags
-ThemeUtil.not_index_tags = ['leetcode', 'not-index']
-
 
 # POSTS and PAGES contains (wildcard, destination, template) tuples.
 # (translatable)
@@ -272,7 +279,7 @@ TIMEZONE = "Asia/Shanghai"
 # Used by babel.dates, CLDR style: http://cldr.unicode.org/translation/date-time
 # You can also use 'full', 'long', 'medium', or 'short'
 # DATE_FORMAT = 'YYYY-MM-dd HH:mm'
-DATE_FORMAT = {"en": "MMM dd yyyy",
+DATE_FORMAT = {"en": "MMM dd, yyyy",
                "pl": "dd MMMM yyyy 'o' HH:mm"}
 
 # Date format used to display post dates, if local dates are used. (translatable)
@@ -461,7 +468,7 @@ CATEGORY_PREFIX = "category-"
 # using a forward slash ('/') to separate paths. Use a backslash ('\') to escape
 # a forward slash or a backslash (i.e. '\//\\' is a path specifying the
 # subcategory called '\' of the top-level category called '/').
-CATEGORY_ALLOW_HIERARCHIES = False
+CATEGORY_ALLOW_HIERARCHIES = True
 # If CATEGORY_OUTPUT_FLAT_HIERARCHY is set to True, the output written to output
 # contains only the name of the leaf category and not the whole path.
 CATEGORY_OUTPUT_FLAT_HIERARCHY = False
@@ -635,11 +642,11 @@ GITHUB_COMMIT_SOURCE = False
 # Where the output site should be located
 # If you don't use an absolute path, it will be considered as relative
 # to the location of conf.py
-OUTPUT_FOLDER = '__output'
+OUTPUT_FOLDER = '_output'
 
 # where the "cache" of partial generated content should be located
 # default: 'cache'
-# CACHE_FOLDER = 'cache'
+CACHE_FOLDER = '_cache'
 
 # Filters to apply to the output.
 # A directory where the keys are either: a file extensions, or
@@ -883,7 +890,8 @@ INDEX_TEASERS = True
 # }}                            A literal } (U+007D RIGHT CURLY BRACKET)
 
 # 'Read more...' for the index page, if INDEX_TEASERS is True (translatable)
-INDEX_READ_MORE_LINK = '<p class="more"><a href="{link}">{read_more}…</a></p>'
+#INDEX_READ_MORE_LINK = '<p class="more"><a href="{link}">{read_more}…</a></p>'
+INDEX_READ_MORE_LINK = ''
 # 'Read more...' for the feeds, if FEED_TEASERS is True (translatable)
 FEED_READ_MORE_LINK = '<p><a href="{link}">{read_more}…</a> ({min_remaining_read})</p>'
 
@@ -1100,7 +1108,7 @@ MARKDOWN_EXTENSIONS = ['markdown.extensions.fenced_code', 'markdown.extensions.c
 
 # Modify the number of Post per Index Page
 # Defaults to 10
-INDEX_DISPLAY_POST_COUNT = 12
+INDEX_DISPLAY_POST_COUNT = 6
 
 # By default, Nikola generates RSS files for the website and for tags, and
 # links to it.  Set this to False to disable everything RSS-related.
@@ -1336,7 +1344,7 @@ GLOBAL_CONTEXT = {
     "context_demo1": BLOG_AUTHOR,
     "context_demo2": time.gmtime().tm_year,
 #    "not_index": not_index,
-    "theme_util": ThemeUtil,
+#    "theme_util": ThemeUtil,
 }
 
 # Add functions here and they will be called with template

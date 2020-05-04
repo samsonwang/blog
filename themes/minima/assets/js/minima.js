@@ -35,11 +35,17 @@ function modAnchorTarget () {
   });
 }
 
+function initLazyLoad () {
+  var lazyLoadInstance = new LazyLoad({
+    elements_selector: "img[data-src]"
+  });
+}
 
 // Handler when the DOM is fully loaded
 var onReady = function() {
   initScrollTop();
   modAnchorTarget();
+  initLazyLoad();
 };
 
 if (document.readyState === "complete"
