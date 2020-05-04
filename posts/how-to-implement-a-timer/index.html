@@ -1,100 +1,70 @@
 <!DOCTYPE html>
-<html prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#" lang="en">
+<html prefix="og: http://ogp.me/ns#" lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>如何实现一个定时器 | Hack Note</title>
-<link href="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-<link href="/assets/css/code.css" rel="stylesheet" type="text/css">
-<link href="/assets/css/colorbox.css" rel="stylesheet" type="text/css">
-<link href="/assets/css/highlight.css" rel="stylesheet" type="text/css">
-<link href="/assets/css/cerulean.css" rel="stylesheet" type="text/css">
-<meta name="theme-color" content="#5670d4">
+<meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" hreflang="en" href="/rss.xml">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/how-to-implement-a-timer/">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<script src="https://cdn.jsdelivr.net/gh/samsonwang/blog@master/assets/css/minima.css"></script><link rel="canonical" href="https://blog.wangzhl.com/posts/how-to-implement-a-timer/">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
-<!--[if lt IE 9]><script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><meta name="author" content="Samson Wang">
 <link rel="prev" href="/posts/git-undo-last-local-commit/" title="在git中撤回最后一次本地提交" type="text/html">
 <link rel="next" href="/posts/windows-system32-and-syswow64/" title="Windows平台下System32和SysWOW64文件夹" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="如何实现一个定时器">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/how-to-implement-a-timer/">
+<meta property="og:description" content="在以前的一次面试中，我被问到该如何实现一个定时器，当时我并没有思考过这个问题，所以回答的并不令人满意。在日常的开发中，一个需要定时执行的任务是很常见的。我认为这个问题比较有意义，也非常具有代表性。于是，我查阅了一些资料，并整理出这篇博客。
+
+
+
+
+
+使用linux信号触发定时任务
+
+
+可以使用操作系统API预订一个 SIGALRM 信号，在指定的时间后程序就能收到信号，在信号的处理函数中就能实现定">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2020-04-11T09:10:09+08:00">
+<meta property="article:tag" content="alarm">
+<meta property="article:tag" content="c">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="signal">
+<meta property="article:tag" content="timer">
+<meta property="article:tag" content="timerfd">
 </head>
 <body class="preload">
-<a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+  <header class="site-header"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archives</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/rss.xml">RSS Feed</a>
 
-<!-- Menubar -->
-<nav id="top-nav" class="navbar navbar-expand-md fixed-top mb-4 navbar-dark bg-dark"><div class="container">   <!-- This keeps the margins nice -->
-    <a class="navbar-brand" href="/">
-
-      <span id="blog-title">Hack Note</span>
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-controls="bs-navbar" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="bs-navbar">
-      <ul class="navbar-nav ml-auto">
-<li class="nav-item">
-<a href="/archive/" class="nav-link">Archives</a>
-                </li>
-<li class="nav-item">
-<a href="/tags/" class="nav-link">Tags</a>
-                </li>
-<li class="nav-item">
-<a href="/rss.xml" class="nav-link">RSS Feed</a>
-
-        
-      </li>
-</ul>
-<ul class="navbar-nav navbar-right"></ul>
+        </div>
+      </nav>
 </div>
-<!-- /.navbar-collapse -->
-  </div>
-<!-- /.container -->
-</nav><!-- End of Menubar --><div class="container" id="content" role="main">
-  <div class="body-content">
-    <!--Body content-->
-    <div class="row">
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
 
-      <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
-        
-        
-<article class="post-text h-entry hentry postpage" itemscope="itemscope" itemtype="http://schema.org/Article"><header><h1 class="p-name entry-title" itemprop="headline name">如何实现一个定时器</h1>
+    
 
-    <div class="metadata">
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">如何实现一个定时器</h1>
+
+    <p class="post-meta">
       
-
-      
-  <div class="date blur-1">
-    <time class="published dt-published" datetime="2020-04-11T09:10:09+08:00" itemprop="datePublished" title="2020-04-11 09:10">Apr 11 2020</time>
-</div>
-
-      
-
-      
-    <div class="source blur-1">
-      <a href="/posts/how-to-implement-a-timer/index.org" class="sourcelink">Source</a>
-    </div>
-
-      
-
-      
-    <div class="tags blur-2">
-    <ul itemprop="keywords">
-<li><a class="tag p-category" href="/tags/alarm/" rel="tag">alarm</a></li>
-        <li><a class="tag p-category" href="/tags/c/" rel="tag">c</a></li>
-        <li><a class="tag p-category" href="/tags/cpp/" rel="tag">cpp</a></li>
-        <li><a class="tag p-category" href="/tags/linux/" rel="tag">linux</a></li>
-        <li><a class="tag p-category" href="/tags/signal/" rel="tag">signal</a></li>
-        <li><a class="tag p-category" href="/tags/timer/" rel="tag">timer</a></li>
-        <li><a class="tag p-category" href="/tags/timerfd/" rel="tag">timerfd</a></li>
-    </ul>
-</div>
-
-      
-
-    </div>
-  </header><div class="e-content entry-content" itemprop="articleBody text">
+    <time class="dt-published" datetime="2020-04-11T09:10:09+08:00" itemprop="datePublished">Apr 11, 2020</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
     <p>
 在以前的一次面试中，我被问到该如何实现一个定时器，当时我并没有思考过这个问题，所以回答的并不令人满意。在日常的开发中，一个需要定时执行的任务是很常见的。我认为这个问题比较有意义，也非常具有代表性。于是，我查阅了一些资料，并整理出这篇博客。<br></p>
 
@@ -207,72 +177,46 @@ timerfd是linux独有的接口，可以在定时器超时后通过一个文件�
 </div>
   </div>
   
-
-</article>
-</div>
-
-      <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12 sidebar">
-       
-<div class="sidebar-module sidebar-module-inset">
-  
-        <a href="https://github.com/samsonwang">
-        <img alt style="padding-bottom:10px;max-width:60%" src="https://avatars3.githubusercontent.com/u/11832311?s=460&amp;v=4"></a>
-        <div class="sidebar-aboutme">
-        <h4>About Me</h4>
-        <p>Zeal for coding, C++ developer. Focused on Linux server develop. I use EMACS on a daily basis.</p>
-        </div>
-</div>
-
-       
-<div class="sidebar-module sidebar-module-inset">
-  <h4>Categories</h4>
-  
-        <ol class="list-unstyled sidebar-category">
+  <ul class="tags-list vertical-center">
 <li>
-<a href="/tags/category-cpp/">cpp</a>
-        </li>
-<li>
-<a href="/tags/category-emacs/">emacs</a>
-        </li>
-<li>
-<a href="/tags/category-linux/">linux</a>
-        </li>
-<li>
-<a href="/tags/category-windows/">windows</a>
-        </li>
-</ol>
-</div>
-
-      </div>
-<!--.sidebar-->
-    </div>
-<!--.row-->
-
-    
-
-    <ul class="pager hidden-print">
-<li class="left">
-          <a href="/posts/git-undo-last-local-commit/" rel="prev">
-            <p class="title">在git中撤回最后一次本地提交</p>
-            <p>Previous post</p>
-          </a>
-      </li>
-      <li class="right">
-          <a href="/posts/windows-system32-and-syswow64/" rel="next">
-            <p class="title">Windows平台下System32和SysWOW64文件夹</p>
-            <p>Next post</p>
-          </a>
-      </li>
-    </ul>
-<section class="comments hidden-print"><h2>Comments</h2>
-    
-        
-        <div id="disqus_thread"></div>
+      <a class="badge" href="/tags/alarm/" rel="tag">alarm</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/c/" rel="tag">c</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/signal/" rel="tag">signal</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/timer/" rel="tag">timer</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/timerfd/" rel="tag">timerfd</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/git-undo-last-local-commit/" rel="prev">Previous post
+        <br><span>在git中撤回最后一次本地提交</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/windows-system32-and-syswow64/" rel="next">Next post
+        <br><span>Windows平台下System32和SysWOW64文件夹</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
             disqus_url="https://blog.wangzhl.com/posts/how-to-implement-a-timer/",
         disqus_title="\u5982\u4f55\u5b9e\u73b0\u4e00\u4e2a\u5b9a\u65f6\u5668",
-        disqus_identifier="cache/posts/how-to-implement-a-timer.html",
+        disqus_identifier="_cache/posts/how-to-implement-a-timer.html",
         disqus_config = function () {
             this.language = "en";
         };
@@ -286,31 +230,45 @@ timerfd是linux独有的接口，可以在定时器超时后通过一个文件�
     <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
 
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script><!--End of body content--><footer id="footer"><div class="text-center">
-<p>Contents © 2017-2020 <a href="mailto:wangzhilv@gmail.com">Samson Wang</a>
- - Powered by <a href="https://getnikola.com/" rel="nofollow">Nikola</a>
- - Hosted on <a href="https://pages.github.com/" rel="nofollow">Github Pages</a>
- - 
-<a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/">
-<img alt="cc-by-nc 4.0" style="padding-bottom:2px" src="/images/cc-by-nc.png"></a>
-</p>
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="u-email"><a href="mailto:wangzhilv@gmail.com">wangzhilv@gmail.com</a></div>
+          <div class="copyright">Contents © 2020, all rights reservered.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
 </div>
 
-      
-    </footer>
-</div>
-</div>
+        </div>
 
-<div id="scroll-top" title="back to top">
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
   <div id="scroll-top-arrow"></div>
   <div id="scroll-top-stick"></div>
 </div>
 
 
-            <script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.min.js"></script><script src="https://cdn.staticfile.org/jquery.colorbox/1.6.4/jquery.colorbox-min.js"></script><script src="https://cdn.staticfile.org/jquery_lazyload/1.9.7/jquery.lazyload.min.js"></script><script src="https://cdn.staticfile.org/popper.js/1.14.3/umd/popper.min.js"></script><script src="https://cdn.staticfile.org/twitter-bootstrap/4.1.1/js/bootstrap.min.js"></script><script src="/assets/js/moment-with-locales.min.js"></script><script src="/assets/js/fancydates.js"></script><script src="/assets/js/cerulean.js"></script><!-- fancy dates --><script>
-  moment.locale("en");
-  fancydates(0, "YYYY-MM-DD HH:mm");
-</script><!-- end fancy dates --><!-- baidu tongji --><script>
+      <script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@15.1.1/dist/lazyload.min.js"></script><script src="https://cdn.jsdelivr.net/gh/samsonwang/blog@master/assets/js/minima.js"></script><!-- baidu tongji --><script>
 var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
