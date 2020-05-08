@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="https://cdn.jsdelivr.net/gh/samsonwang/blog@master/assets/css/minima.min.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://blog.wangzhl.com/posts/cpp-python-hybird-programming/">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
 <link rel="prev" href="/posts/linux-process-and-subprocess/" title="Tips on Linux Process and Subprocess" type="text/html">
@@ -34,6 +34,7 @@ Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌
 <meta property="article:tag" content="launchy">
 <meta property="article:tag" content="python">
 <meta property="article:tag" content="qt">
+<meta property="article:tag" content="windows">
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
@@ -61,7 +62,11 @@ Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌
 
     <p class="post-meta">
       
-    <time class="dt-published" datetime="2019-02-01T08:53:37+08:00" itemprop="datePublished">Feb 01, 2019</time></p>
+    <time class="dt-published" datetime="2019-02-01T08:53:37+08:00" itemprop="datePublished">Feb 01, 2019</time><span class="dt-updated"> • updated <time datetime="2020-05-08T21:45:37+08:00" itemprop="dateUpdated">May 08, 2020</time></span>
+
+      
+
+    </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
     <p>
 在Launchy的开发中，我使用了Python作为Qt程序的插件开发语言，最近有朋友问我Qt和Python结合使用的一些细节。结合我之前踩坑的经历，C++（Qt）和Python的混合编程可以从几个方面进行考虑。<br></p>
@@ -72,7 +77,9 @@ Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌
 <h2 id="sec-1">基础概念</h2>
 <div class="outline-text-2" id="text-1">
 <p>
-Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌入到C++程序中，C++代码借助Pyhton解释器完成对Python代码的调用。<br>
+Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌入到C++程序中，C++代码借助Pyhton解释器完成对Python代码的调用。<br></p>
+
+<p>
 Python代码中调用C++代码以实现数据交互和运行速度提升，实际上是用C++写Python拓展（extension），Python通过调用拓展以实现对C++代码的调用。<br></p>
 </div>
 </div>
@@ -81,7 +88,9 @@ Python代码中调用C++代码以实现数据交互和运行速度提升，实�
 <h2 id="sec-2">实现方案的选择</h2>
 <div class="outline-text-2" id="text-2">
 <p>
-C++和Python混合编程的解决方法有很多，需要根据需求和实际情况综合考虑来选择适合的方案。<br>
+C++和Python混合编程的解决方法有很多，需要根据需求和实际情况综合考虑来选择适合的方案。<br></p>
+
+<p>
 我目前了解到的有：CPython，Boost Python，SWIG，pybind11，ctypes，cffi等等。这个在后面会结合我的使用情况进行详细阐述。<br></p>
 </div>
 </div>
@@ -90,9 +99,16 @@ C++和Python混合编程的解决方法有很多，需要根据需求和实际�
 <h2 id="sec-3">编译器的选择</h2>
 <div class="outline-text-2" id="text-3">
 <p>
-在选择C++编译器时需要考虑Python的版本和Qt的版本。Python和Qt都有官方发布的二进制文件，最好选用与官方发版时相同的编译环境，这样可以省去自行编译的麻烦。<br>
-例如：在windows平台下，Qt5.11官方发布的二进制文件包括VS2015和VS2017版本，Python3.6官方发布的二进制文件是VS2015版本，所以我选用了VS2015作为开发编译环境。如果选用VS2017，为防止可能出现二进制兼容性问题，我就需要自行编译VS2017版本的Python3.6的二进制文件（python3.lib）。<br>
+在选择C++编译器时需要考虑Python的版本和Qt的版本。Python和Qt都有官方发布的二进制文件，最好选用与官方发版时相同的编译环境，这样可以省去自行编译的麻烦。<br></p>
+
+<p>
+例如：在windows平台下，Qt5.11官方发布的二进制文件包括VS2015和VS2017版本，Python3.6官方发布的二进制文件是VS2015版本，所以我选用了VS2015作为开发编译环境。如果选用VS2017，为防止可能出现二进制兼容性问题，我可能就需要自行编译VS2017版本的Python3.6的二进制文件（python3.lib）。<br></p>
+
+<p>
 另外，有的实现方案需要特定编译版本的支持，如pybind11就要求兼容C++11的编译器。<br></p>
+
+<p>
+<b>更新</b> : 我后面将launchy的开发环境换到VS2017了，幸运的是Python3.6的库文件仍能正常使用，这让我非常意外。不过我猜测可能原因是VS2017沿用了VS2015的cruntime。<br></p>
 </div>
 </div>
 
@@ -100,9 +116,13 @@ C++和Python混合编程的解决方法有很多，需要根据需求和实际�
 <h2 id="sec-4">Qt和Python的版本</h2>
 <div class="outline-text-2" id="text-4">
 <p>
-32/64bit：在windows下，Qt和Python都有32位和64位版本的库文件，使用时要统一。<br>
-embeddable/install：对于Python在windows平台而言，有官方推荐的embeddable版本，专门用于集成在其他程序中使用。在开发时可以使用installed版，在发版时将对应的模块替换为embeddable版的文件即可，installed版和embeddable版的数字版本号要相同。<br>
-debug/release：这个与开发调试有关，Python默认只包含release版的库文件，如果整个C++程序编译为debug版就会报错，因为在链接阶段需要debug版的Python库。而Qt默认包含了debug和release版本的库文件，不存在这个问题。<br></p>
+32/64bit：在windows下，Qt和Python都有32位和64位版本的库文件，使用时要统一。<br></p>
+
+<p>
+embeddable/installed：对于Python在windows平台而言，有官方推荐的embeddable版本，专门用于集成在其他程序中使用。在开发时可以使用installed版，在发版时将对应的模块替换为embeddable版的文件即可，installed版和embeddable版的数字版本号要相同。<br></p>
+
+<p>
+debug/release：这个与开发调试有关，Python默认安装时只包含release版的库文件，如果整个C++程序编译为debug版就会报错，提示没有需要的python库（因为在链接阶段需要debug版的Python库）。所以如果需要编译debug版，就要额外下载debug版本的python库。而Qt默认包含了debug和release版本的库文件，不存在这个问题。<br></p>
 </div>
 </div>
 
@@ -115,16 +135,19 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 
 <div id="outline-container-sec-6" class="outline-2">
-<h2 id="sec-6">我尝试过的一些方案，以及这些方案给我的感受：</h2>
+<h2 id="sec-6">实现方案</h2>
 <div class="outline-text-2" id="text-6">
+<p>
+下面是我尝试过的一些方案，以及这些方案给我的感受。<br></p>
 </div>
+
 <div id="outline-container-sec-6-1" class="outline-3">
 <h3 id="sec-6-1"><a href="https://docs.python.org/3/c-api/">CPython</a></h3>
 <div class="outline-text-3" id="text-6-1">
 <p>
 这是Python官方的标准方案，实际上后来的其他方案也大都是基于这个方案进行开发的。<br>
-优点：全方位精细化的控制，文档和教程比较详细，没有额外的依赖<br>
-缺点：学习曲线陡峭，需要自行控制很多细节<br></p>
+优点：全方位精细化的控制，文档和教程比较详细，没有额外的依赖。<br>
+缺点：学习曲线陡峭，需要自行控制很多细节。<br></p>
 </div>
 </div>
 
@@ -133,8 +156,8 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 <div class="outline-text-3" id="text-6-2">
 <p>
 这是Boost库的一部分，提供了C++与Python的交叉编程很好支持。<br>
-优点：对众多编译器都有很好的兼容，是一个比较成熟的方案<br>
-缺点：Boost库太厚重了，Boost本身就很复杂<br></p>
+优点：对众多编译器都有很好的兼容，是一个比较成熟的方案。<br>
+缺点：Boost库太厚重了，Boost本身就很复杂。<br></p>
 </div>
 </div>
 
@@ -143,8 +166,8 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 <div class="outline-text-3" id="text-6-3">
 <p>
 支持C/C++与多种编程语言进行交叉编程的解决方案。<br>
-优点：同时支持多种编程语言，如C#等等<br>
-缺点：需要额外编写接口定义文件<br></p>
+优点：同时支持多种编程语言，如C#等等。<br>
+缺点：需要额外编写接口定义文件。<br></p>
 </div>
 </div>
 
@@ -153,12 +176,23 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 <div class="outline-text-3" id="text-6-4">
 <p>
 大量使用C++11的新特性，代码风格与Boost.Python很相似。<br>
-优点：轻量级，只有头文件，无需引入其他二进制库文件依赖<br>
-缺点：要求编译器支持C++11，相对于其他方案成熟度略低，很多功能要自己摸索<br></p>
+优点：轻量级，只有头文件，无需引入其他二进制库文件依赖。<br>
+缺点：要求编译器支持C++11，相对于其他方案成熟度略低，很多功能要自己摸索。<br></p>
+</div>
+</div>
+</div>
 
+
+<div id="outline-container-sec-7" class="outline-2">
+<h2 id="sec-7">参考资料</h2>
+<div class="outline-text-2" id="text-7">
+<ul class="org-ul">
+<li>
+<a href="https://docs.microsoft.com/en-us/visualstudio/python/working-with-c-cpp-python-in-visual-studio">microsoft docs - working with cpp and python in visual studio</a><br>
+</li>
+</ul>
 <p>
 (全文完)<br></p>
-</div>
 </div>
 </div>
   </div>
@@ -175,6 +209,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
     </li>
     <li>
       <a class="badge" href="/tags/qt/" rel="tag">qt</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
@@ -245,7 +282,7 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- baidu tongji --><script>
+      <script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@15.1.1/dist/lazyload.min.js"></script><script src="https://cdn.jsdelivr.net/gh/samsonwang/blog@master/assets/js/minima.min.js"></script><!-- baidu tongji --><script>
 var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
