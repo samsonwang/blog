@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note (Posts about ipc)</title><link>https://blog.wangzhl.com/</link><description></description><atom:link href="https://blog.wangzhl.com/tag/ipc.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2020 &lt;a href="mailto:wangzhilv@gmail.com"&gt;Samson Wang&lt;/a&gt; 
+&lt;a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"&gt;
+&lt;img alt="cc-by-nc 4.0" style="padding-bottom:2px" src="/images/cc-by-nc.png" /&gt;&lt;/a&gt;
+</copyright><lastBuildDate>Mon, 11 May 2020 14:12:44 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>Linux常用命令行指令 - ipcs</title><link>https://blog.wangzhl.com/posts/linux-command-examples-ipcs/</link><dc:creator>Samson Wang</dc:creator><description>&lt;p&gt;
+&lt;code&gt;IPC&lt;/code&gt; 是 &lt;code&gt;inter process communication&lt;/code&gt; 的缩写，这项技术能够让进程间相互通信。&lt;br&gt;
+Q：每个进程都有自己的地址空间和独立的用户空间，那么进程间是如何通信的呢？&lt;br&gt;
+A：内核，也就是操作系统的心脏，它能够访问整个操作系统的内存。我们可以要求内核分配一块用于进程间交互的空间。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;div id="outline-container-sec-1" class="outline-2"&gt;
+&lt;h2 id="sec-1"&gt;几种进程间通信的方法&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-1"&gt;
+&lt;p&gt;
+进程间通信的方法有很多，有些支持同机器上进程的信息交互，有些支持跨机器的进程交互。&lt;br&gt;
+&lt;/p&gt;
+&lt;ul class="org-ul"&gt;
+&lt;li&gt;&lt;b&gt;管道&lt;/b&gt; ： pipes，管道提供了进程间交换信息的方法。&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;共享内存&lt;/b&gt; ： shared memory，一个进程创建一块其他进程能够访问的内存空间，多个进程可以通过共享内存进行数据交换。&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;消息队列&lt;/b&gt; ： message queue，消息队列是一个固定结构、有序的内存段，多个进程可以存放和取回数据。&lt;br&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;b&gt;信号量&lt;/b&gt; ： semaphores，信号量提供了多进程访问同一资源的同步机制，信号量不负责传递数据，它协调对共享资源的访问。&lt;br&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="outline-container-sec-2" class="outline-2"&gt;
+&lt;h2 id="sec-2"&gt;常用ipcs指令&lt;/h2&gt;
+&lt;div class="outline-text-2" id="text-2"&gt;
+&lt;p&gt;
+&lt;b&gt;列出所有的IPC设备&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ipcs -a
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;列出所有的消息队列&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ipcs -q
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;列出所有的信号量&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ipcs -s
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;列出所有的共享内存&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ipcs -m
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;获取与IPC设备信息&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ipcs -q -i msq_id
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;列出IPC设备的限制&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ipcs -l
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;列出IPC设备的创建者和拥有者&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ipcs -m -c
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;列出最近使用IPC设备的进程id&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ipcs -m -p
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;列出IPC设备的最后访问时间&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ipcs -s -t
+&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;
+&lt;b&gt;列出IPC设备的当前使用状态&lt;/b&gt;&lt;br&gt;
+&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ipcs -u
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description><category>ipc</category><category>linux</category><guid>https://blog.wangzhl.com/posts/linux-command-examples-ipcs/</guid><pubDate>Wed, 25 Apr 2018 13:37:51 GMT</pubDate></item><item><title>Linux下的FIFO、pipe、unix domain socket漫谈</title><link>https://blog.wangzhl.com/posts/fifo-pipe-unix-domain-socket/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;p&gt;
+在做Linux开发时，经常会接触 &lt;code&gt;管道&lt;/code&gt; 、 &lt;code&gt;AF_UNIX&lt;/code&gt; 等相关词汇，为了弄清他们之间的关系，查阅了一些资料，将结果整理并记录下来。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://blog.wangzhl.com/posts/fifo-pipe-unix-domain-socket/"&gt;Read more…&lt;/a&gt; (5 min remaining to read)&lt;/p&gt;&lt;/div&gt;</description><category>fifo</category><category>ipc</category><category>linux</category><category>pipe</category><category>socket</category><guid>https://blog.wangzhl.com/posts/fifo-pipe-unix-domain-socket/</guid><pubDate>Wed, 11 Apr 2018 05:03:25 GMT</pubDate></item></channel></rss>
