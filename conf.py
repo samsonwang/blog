@@ -135,12 +135,12 @@ TRANSLATIONS_PATTERN = "{path}.{lang}.{ext}"
 NAVIGATION_LINKS = {
     DEFAULT_LANG: (
         ("/", "Home"),
-        ("/archive/", "Archives"),
-        ("/tags/", "Tags"),
+        ("/archive/", "Archive"),
+        ("/tag/", "Tag"),
         # ("/listings/", "Listings"),
         # ("/galleries/", "Galleries"),
         # ("/", "Profilio"),
-        ("/rss.xml", "RSS Feed"),
+        ("/about/", "About"),
     ),
 }
 
@@ -248,6 +248,7 @@ POSTS = (
 
 PAGES = (
     ("pages/404.*", "", "story.tmpl"),
+    ("pages/about.*", "", "story.tmpl"),
 
     ("pages/*.rst", "pages", "page.tmpl"),
     ("pages/*.md", "pages", "page.tmpl"),
@@ -394,7 +395,7 @@ COMPILERS = {
 # output / TRANSLATION[lang] / TAG_PATH / tag.html (list of posts for a tag)
 # output / TRANSLATION[lang] / TAG_PATH / tag.xml (RSS feed for a tag)
 # (translatable)
-TAG_PATH = "tags"
+TAG_PATH = "tag"
 
 # By default, the list of tags is stored in
 #     output / TRANSLATION[lang] / TAG_PATH / index.html
