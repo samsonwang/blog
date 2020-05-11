@@ -1,0 +1,63 @@
+#+BEGIN_COMMENT
+.. title: 栈溢出问题和chkstk
+.. slug: stackoverflow-and-chkstk
+.. date: 2020-05-10 14:08:32 UTC+08:00
+.. tags: stack overflow, chkstk, c, cpp, windows
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 栈溢出问题和chkstk
+
+最近在调试程序时遇到了一个栈溢出的问题，栈溢出通常是由程序错误引起的，通过修正程序的bug就能解决问题。但是这次的栈溢出，从代码上看并没有错误，经过一番排查和调试，我找到了解决问题的方法，同时也加深了对操作系统中一些概念的理解。
+
+{{{TEASER_END}}}
+
+** 栈溢出的一般情况
+在我之前的编程经验中，在递归调用层次过深时会出现栈溢出（stack overflow）错误。由于函数在调用时会将当前的运行状态压入栈（stack）中，当没有设置好递归函数的退出条件时，函数会出现无限次递归调用，但是栈的空间是有限的，在递归到一定次数时程序就栈溢出了。
+
+解决这种问题的方法比较直观，由于是程序错误引起的栈溢出，修正程序错误就好。
+
+** 这次的栈溢出的现象
+这次的现象出比较隐蔽，导致我一开始并没有意识到这是个栈溢出的错误。
+
+我当时在测试某个库的功能，写了一些测试函数，整体的运行逻辑也比较简单，并没有很复杂的调用关系，并且所有的测试代码都放在一个源文件中。代码能够正常编译链接，但是在运行时异常退出。
+
+一开始，我认为是代码逻辑的问题，但在我仔细检查后并没发现问题。后来，我开始使用开发工具（MSVC2017）调试代码，程序在进入 ~main~ 函数后立刻崩溃了。更准确地讲，程序出现异常的位置在 ~main~ 函数入口之后，在 ~main~ 函数第一个语句之前，出现异常的代码叫 ~chkstk.asm~ ，在调用堆栈（callstack）中可以看到异常时的所执行的函数名称为 ~test.exe!__chkstk()~ 。
+
+** chkstk
+在查阅了一些资料后，我意识到这是个栈溢出错误。
+
+~_chkstk~ 函数在函数中的栈区变量（local variable）超过一个内存页（one page）时调用。这个大小在x86编译器中是4k字节，在x64编译器中是8k字节。
+
+~_chkstk~ 用于保证有足够的空间存放栈区变量。在windows系统中有内存页的概念，当程序需要更大的栈空间时， ~_chkstk~ 会按页申请内存，这些都是由操作系统完成的。
+
+** 提高栈区空间的上限
+在windows系统下，可以通过调整链接参数提高这个上限。
+
+#+BEGIN_SRC org
+/STACK:reserve[,commit]
+#+END_SRC
+
+- ~reserve~ 值规定了栈区的总大小，对于ARM、x86和x64，默认值为1MB。
+- ~commit~ 值规定了栈区内单个存页的大小，即每次申请内存的大小。当程序需要更大栈内存时，更大的 ~commit~ 有助于加快程序的运行速度，但会增加程序的内存用量，并却可能会降低程序的启动时间。对于ARM、x86和x64，默认值为4kB。
+- 在MSVC中提供了图形化的配置界面，在 =Property Page= -> =Linker= -> =System= 中能够找到对应的配置项。
+
+** 最终的解决方法
+当然，我尝试了通过调整编译参数来增大栈区的方法。这种虽然有效，但是总感觉不是那么的优雅。
+
+真正漂亮的解决方法是对代码进行优化。我的代码需要有一块buffer存放临时数据，这个buffer的大小超过了1MB（系统默认值）。原来我是在栈上申请的这块内存，即声明了一个 ~unsigned char~ 数组；后来我将这块buffer改为放在堆区就没有问题了，即用 ~new~ 的方式申请一块内存。
+
+所以，在需要一个较大缓存区时，使用堆区内存是更合适的。
+
+** 参考资料
+- [[https://docs.microsoft.com/zh-cn/windows/win32/devnotes/-win32-chkstk][microsoft docs - win32 chkstk]]
+- [[https://stackoverflow.com/questions/8400118/what-is-the-purpose-of-the-chkstk-function][stackoverflow - purpose of chkstk]]
+- [[https://stackoverflow.com/questions/51885838/stack-overflow-on-stepping-into-a-function][stackoverflow - crash on stepping into a function]]
+- [[https://docs.microsoft.com/en-us/cpp/build/reference/stack-stack-allocations][microsoft docs - stack allocation]]
+
+（全文完）
