@@ -136,7 +136,7 @@ NAVIGATION_LINKS = {
     DEFAULT_LANG: (
         ("/", "Home"),
         ("/archive/", "Archive"),
-        ("/tag/", "Tag"),
+        ("/tags/", "Tags"),
         # ("/listings/", "Listings"),
         # ("/galleries/", "Galleries"),
         # ("/", "Profilio"),
@@ -188,7 +188,7 @@ THEME_CONFIG = {
         <li><a href="/tags/category-windows/">windows</a>
         </ol>''',
         # copyright info in footer
-        'blog_copyright': 'Contents © %d, all rights reservered.' % time.gmtime().tm_year,
+        'blog_copyright': 'Copyright %d, all rights reserved.' % time.gmtime().tm_year,
         # github icon in footer
         'github': 'samsonwang',
         # twitter icon in footer
@@ -395,7 +395,7 @@ COMPILERS = {
 # output / TRANSLATION[lang] / TAG_PATH / tag.html (list of posts for a tag)
 # output / TRANSLATION[lang] / TAG_PATH / tag.xml (RSS feed for a tag)
 # (translatable)
-TAG_PATH = "tag"
+TAG_PATH = "tags"
 
 # By default, the list of tags is stored in
 #     output / TRANSLATION[lang] / TAG_PATH / index.html
