@@ -1,0 +1,99 @@
+#+BEGIN_COMMENT
+.. title: MSVC的stdio版本适配问题
+.. slug: msvc-legacy-stdio
+.. date: 2020-05-03 09:54:38 UTC+08:00
+.. tags: msvc, c, cpp, windows, vcrt, ucrt
+.. category: windows
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: MSVC的stdio版本适配问题
+
+windows系统的向下兼容性一直是做的比较好的，一些老旧软件不需要修改就能跑在最新版的windows上。这篇文章主要讨论的是库（library）的向下兼容性，在开发中某些库可能是由较老的编译器生成的，当使用新版本的编译器进行链接时可能需要对stdio相关库进行适配。
+
+{{{TEASER_END}}}
+
+** 链接旧版本库时遇到的问题
+有个库是由MSVC2008编译的，我在MSVC2017中使用这个库进行链接时出现错误，提示我缺少一些函数（如： ~sprintf~ 、 ~_snprintf~ 、 ~__iob_func~ 等）。
+
+
+** 为什么会出现这个问题
+在查阅了一些资料后发现，从MSVC2015开始，微软修改了C运行时库（C runtime），将其拆分为Universal CRT( ~ucrtbase~ ) 和 VC Runtime Library ( ~vcruntime~ )。其中，UCRT包含大部分的标准功能，VCRT包含与编译相关的功能（如异常处理等内部功能）。一些函数从UCRT中删掉了，导致链接时无法找到对应的符号（unresolved external symbol）。下面是微软官方的原文。
+
+#+BEGIN_QUOTE
+The CRT Library has been refactored into a two different binaries: a Universal CRT (ucrtbase), which contains most of the standard functionality, and a VC Runtime Library (vcruntime). The vcruntime library contains the compiler-related functionality such as exception handling, and intrinsics.
+#+END_QUOTE
+
+从软件的设计上来讲，将少量核心的功能抽出来，也是对变化的一种隔离方法。UCRT将不会标上版本号，每次更新直接替换旧的，而VCRT会不断迭代出新的版本，常见的库名称就是 ~vcruntimexxx.dll~ ，其中 ~xxx~ 就是版本号。
+
+#+BEGIN_QUOTE
+For the CRT, mixing-and-matching was never supported, but it often just worked, at least until Visual Studio 2015 and the Universal CRT, because the API surface did not change much over time. The Universal CRT broke backwards compatibility so that in the future we can maintain backwards compatibility. In other words, we have no plans to introduce new, versioned Universal CRT binaries in the future. Instead, the existing Universal CRT is now updated in-place.
+#+END_QUOTE
+
+
+** 官方推荐的解决方案
+微软在MSVC2015后提供了 =legacy_stdio_definitions.lib= 库，能够提供大部分缺失的链接符号（symbol）。但仍有一些无法提供兼容的链接符号，如一些函数定义 ~__iob_func~ 或导出的数据 ~__imp___iob~ 、 ~__imp___pctype~ 、 ~__imp___mb_cur_max~ 。
+
+
+** 那 ~__iob_func~ 怎么处理呢？
+微软官方没有提供 ~__iob_func~ 的适配方案，但是我找到了另外的方法，即可以自己实现一个同名函数。
+
+#+BEGIN_SRC cpp
+#if defined(_MSC_VER) && (_MSC_VER >= 1900)
+#if defined(__cplusplus)
+extern "C" FILE* __iob_func(void) {
+    static FILE iob[] = {*stdin, *stdout, *stderr};
+    return iob;
+}
+#else
+FILE* __cdecl __iob_func(void) {
+    static FILE iob[3];
+    static bool initialized = false;
+    if (!initialized) {
+        initialized = true;
+        iob[0] = *stdin;
+        iob[1] = *stdout;
+        iob[2] = *stderr;
+    }
+    return iob;
+}
+#endif // __cplusplus
+#endif // _MSC_VER
+#+END_SRC
+
+值得注意的是对编译器的版本进行了判断，并且为C编译器和C++编译器提供了不同的实现方法，主要是C++编译器会为函数换名，且C编译器不支持数据初始化列表。
+
+另外，也有其他的开发者反馈这种“旁门左道”并不奏效，我猜测可能是由于那些库对 ~FILE~ 结构体进行了直接操作，但是在MSVC2015中结构体的内部成员变量发生了变化，由此产生了内存越界访问，引起程序异常。在这种情况，比较稳妥的方法是用最新的编译器重新编译源码。
+
+MSVC2015中的 ~FILE~ 结构体定义：
+#+BEGIN_SRC c
+typedef struct _iobuf {
+    void* _Placeholder;
+} FILE;
+#+END_SRC
+
+MSVC2008中的 ~FILE~ 结构体定义：
+#+BEGIN_SRC c
+struct _iobuf {
+    char *_ptr;
+    int   _cnt;
+    char *_base;
+    int   _flag;
+    int   _file;
+    int   _charbuf;
+    int   _bufsiz;
+    char *_tmpfname;
+};
+typedef struct _iobuf FILE;
+#+END_SRC
+
+** 参考资料
+- [[https://docs.microsoft.com/en-us/cpp/porting/overview-of-potential-upgrade-issues-visual-cpp][microsoft docs - potential upgrade issues]]
+- [[https://docs.microsoft.com/en-us/cpp/porting/visual-cpp-change-history-2003-2015][microsoft docs - visual cpp change history]]
+- [[https://stackoverflow.com/questions/30412951/unresolved-external-symbol-imp-fprintf-and-imp-iob-func-sdl2][stackoverflow - unresolved external symbol]]
+
+（全文完）
