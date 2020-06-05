@@ -2,10 +2,11 @@
 .. title: 云服务器安全相关配置
 .. slug: cloud-server-security
 .. date: 2018-06-07 14:12:38 UTC+08:00
-.. tags: linux
+.. updated: 2020-06-05 9:05:38 UTC+08:00
+.. tags: linux, denyhosts, last, lastb, lastlog, sshd
 .. category: linux
-.. link: 
-.. description: 
+.. link:
+.. description:
 .. type: text
 #+END_COMMENT
 
@@ -13,48 +14,125 @@
 
 我所租用的云服务器操作系统为CentOS Linux，在使用云服务器的过程中为了保证服务器的安全，进行了一些简单的配置，这样能够增加服务器被破解的难度。
 
+{{{TEASER_END}}}
+
 ** 使用denyhosts防止暴力破解登录密码
 登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，屏蔽该登录ip，限制密码的尝试次数。
 
-*安装denyhosts*
+*** 安装denyhosts
+**** 使用包管理器安装
 可以使用自带的包管理器安装denyhost，这样是比较方便的，后续的配置工作也会简单一些。
 #+BEGIN_SRC shell
 yum install denyhosts
 #+END_SRC
 
-*编辑配置文件*
-安装好denyhosts之后，它的默认配置文件为 =/etc/denyhosts.conf= 。该配置文件有很好的注释，对于每个配置项的作用都有很好的说明。可能需要修改的相关配置项有如下几个。denyhosts可以分别配置root用户、普通用户、无效用户用户名的尝试次数。
+**** 手动安装
+update: 2020-6-5
+在包管理器中没有找到denyhosts，于是按照官方文档进行手动安装，使用的denyhost版本为3.1.2beta。
+
+目前CentOS7中自带的还是python2，所以下面的操作都仍然是基于python2的。但是需要注意的是python2已经从2020年开始就不再维护了，在以后的安装中使用python3可能更好。
+
+安装依赖的python包（ipaddr）。我使用了pip进行安装，但是python2的pip需要安装 =epel-release= 之后才能通过包管理器安装。
+#+BEGIN_SRC sh
+yum install epel-release
+yum install python-pip
+pip install ipaddr
+#+END_SRC
+
+安装denyhosts，运行以下命令会将软件包安装到python2中的 =site-package= 目录中，，执行时需要root权限。
+#+BEGIN_SRC sh
+python setup.py install
+#+END_SRC
+
+修改守护进程脚本，在手动安装的时需要修改守护进程脚本，即 =daemon-control-dist= 文件，需要根据系统情况修改其中的配置项。以下是CentOS7对应的目录配置。
+#+BEGIN_SRC sh
+DENYHOSTS_BIN   = "/usr/bin/denyhosts.py"
+DENYHOSTS_LOCK  = "/var/lock/subsys/denyhosts"
+DENYHOSTS_CFG   = "/etc/denyhosts.conf"
+#+END_SRC
+
+*** 编辑配置文件
+安装好denyhosts之后，它的默认配置文件为 =/etc/denyhosts.conf= 。该配置文件有很好的注释，对于每个配置项的作用都有很好的说明。可能需要修改的相关配置项有如下几个。
+
+可以分别配置root用户、普通用户、无效用户用户名的尝试次数。
 #+BEGIN_SRC conf
 DENY_THRESHOLD_INVALID = 5
 DENY_THRESHOLD_VALID = 10
 DENY_THRESHOLD_ROOT = 5
 #+END_SRC
 
-*启动denyhosts*
+修改 =SECURE_LOG= 配置项，将其调整为如下配置。
+#+BEGIN_SRC conf
+SECURE_LOG = /var/log/secure
+#+END_SRC
+
+*** 启动denyhosts
 使用以下命令启动denyhosts，查看denyhosts的运行状态。
-#+BEGIN_SRC shell
+#+BEGIN_SRC sh
 service denyhosts start
 service denyhosts status
 #+END_SRC
 
 使用以下命令让denyhosts能够随系统自启动。
-#+BEGIN_SRC shell
+#+BEGIN_SRC sh
 chkconfig denyhosts on
 #+END_SRC
 
-** 更改sshd的端口号
-sshd的默认端口号为22，很多暴力破解程序会直接对该端口进行登录尝试，通过修改默认的sshd的端口号，可以增加破解难度。需要注意的是，在修改sshd端口号之后，自己使用shell工具登录服务器也需要端口号进行修改。
+update: 2020-6-5
+在手动安装时需要将守护进程脚本的软连接放在 =/etc/init.d= 目录中。
+#+BEGIN_SRC sh
+cd /etc/init.d
+ln -s /usr/bin/daemon-control-dist denyhosts
+#+END_SRC
 
-*编辑配置文件*
-sshd的配置文件为 =/etc/ssh/sshd_config= ，端口号配置为这一行 =# Port 22= ，删去井号然后将22改为需要的端口号。
+如果系统中安装了 =chkconfig= ，可以用以下命令确保denyhosts会在开机时自动启动。
+#+BEGIN_SRC sh
+chkconfig --add denyhosts
+#+END_SRC
 
-*重启sshd服务*
+
+** 加固sshd的配置
+sshd的默认端口号为22，很多暴力破解程序会直接对该端口进行登录尝试，通过修改默认的sshd端口号，可以增加破解难度。
+
+注意：在修改sshd端口号之后，自己使用shell工具登录服务器也需要对端口号进行修改。
+
+由于所有Linux系统都必然有root用户，所以在暴力破解时最容易被攻击的就是root用户，可以通过禁用远程root用户登录的方式增加攻击难度。因为如果root用户可用，攻击者只需要对root用户的密码进行暴力破解；而禁用远程root登录后，攻击者需要同时猜测用户名和密码。
+
+*** 编辑配置文件
+sshd的配置文件为 =/etc/ssh/sshd_config= 。
+
+#+BEGIN_SRC conf
+Port 22
+#+END_SRC
+这一行配置了端口号，将22改为需要的端口号。
+
+#+BEGIN_SRC conf
+PermitRootLogin yes
+#+END_SRC
+这一行配置了是否允许远程root用户登录，将配置由 =yes= 改为 =no= 即可。
+
+*** 重启sshd服务
 更改配置文件后，需要重启服务使配置文件生效。
+
 #+BEGIN_SRC shell
 service sshd restart
 #+END_SRC
 
-** 使用 ~last~ 和 ~lastb~ 查看系统登录记录
-~last~ 指令能够查看登录成功的记录，而 ~lastb~ 指令能够查看登录失败的记录。通过查看登录失败的记录，能够判断出服务器是否有被暴力破解的记录。需要注意的是这两个命令均需要管理员权限才能够执行。
+注意：如果你正使用远程shell工具登录到服务器，重启sshd服务会使shell工具失去连接。
 
 
+** 查看系统登录记录
+~last~ 指令能够查看登录成功的记录，记录保存位置为 =/var/log/wtmp= 。
+
+~lastb~ 指令能够查看登录失败的记录，记录保存位置为 =/var/log/btmp= 。
+
+~lastlog~ 指令能够查看用户的最近登录记录，记录保存位置为 =/var/log/lastlog= 。
+
+通过查看登录失败的记录，能够判断出服务器是否有被暴力破解的记录。需要注意的是这两个命令均需要管理员权限才能够执行。
+
+
+** 参考资料
+- [[https://github.com/denyhosts/denyhosts][github - denyhosts]]
+- [[https://www.shellhacks.com/clear-remove-last-login-history-linux/][shellhacks - remove last login history]]
+
+（全文完）
