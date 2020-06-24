@@ -1,0 +1,86 @@
+#+BEGIN_COMMENT
+.. title: C++11中的内存顺序
+.. slug: cpp11-memory-model
+.. date: 2020-06-23 09:13:12 UTC+08:00
+.. tags: cpp, cpp11, atomic, memory order
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: C++11中的内存顺序
+
+在C++11中引入了内存顺序(memory order)这一概念，我查阅资料进行了一番研究，把认为有用的知识点整理记录下来，方便以后查阅。
+
+{{{TEASER_END}}}
+
+** C++11引入的几种内存顺序
+它们以枚举定义的方式被定义出来，有以下几种：
+- =memory_order_relaxed=
+- =memory_order_consume=
+- =memory_order_acquire=
+- =memory_order_release=
+- =memory_order_acq_rel=
+- =memory_order_seq_cst=
+
+内存顺序规定了在原子操作前后是否能够进行内存访问重排序，这里的内存访问包括原子化和非原子化的内存访问。
+
+
+** 松散顺序（relaxed ordering）
+使用 ~memory_order_relaxed~ 作为参数的原子化操作并不进行同步，它不强调对并发内存访问的顺序限制，它只保证原子性和修改顺序的一致性。
+
+例如，以下代码中 ~x~ 和 ~y~ 的初始值为0，最终的运行结果可能是 ~r1==r2==42~ 。
+#+BEGIN_SRC cpp
+// Thread 1:
+r1 = y.load(std::memory_order_relaxed); // A
+x.store(r1, std::memory_order_relaxed); // B
+// Thread 2:
+r2 = x.load(std::memory_order_relaxed); // C
+y.store(42, std::memory_order_relaxed); // D
+#+END_SRC
+
+松散顺序（relaxed memory ordering）典型应用场景是增长型计数器。例如智能指针 ~std::shared_ptr~ 的引用计数器，因为在增加计数时只对原子性有要求，且对顺序或同步性无要求。注意，在减少引用计数时，需要进行 =获取-释放= 同步（ =acquire-release= synchronization）。
+
+
+** 释放-获得顺序（release-acquire ordering）
+当在线程A中进行原子化的存储（store）操作时使用 ~memory_order_release~ 作为参数，并且在线程B中进行原子化的加载（load）操作时使用 ~memory_order_acquire~ 作为参数，在线程A中所有写入内存的数据（包括非原子变量和松散的原子变量）在存储操作完成后，在线程B中执行完加载操作后能够获取到。
+
+只有在释放和获取同一个原子变量的两个线程之间才有同步关系，在其他的线程中可能会看到不同的内存访问顺序。
+
+互斥锁是 =获取-释放= 同步的典型范例，当互斥锁在线程A中进行解锁（释放），在线程B中进行加锁（获取）后，在线程A中的进行的修改操作就能够在线程B中获取到。
+
+
+** 释放-消耗顺序（release-consume ordering）
+当在线程A中进行原子化的存储（store）操作时使用 ~memory_order_release~ 作为参数，并且在线程B中进行原子化的加载（load）操作时使用 ~memory_order_consume~ 作为参数，在线程A中所有写入内存的原子变量数据在存储操作完成后，在线程B中执行完加载操作后能够获取到。
+
+注意：与 =释放-获得= 顺序不同的是， =释放-消耗= 顺序并不会保证非原子变量的一致性。
+
+=释放-消耗= 顺序适用于修改概率较小的并发数据结构，例如路由表、配置项、安全策略、防火墙规则等。
+
+从C++17开始，对 =释放-消耗= 顺序进行了修订，暂时不推荐使用 ~memory_order_consume~ 。
+
+
+** 顺序一致性(sequentially-consistent ordering)
+顺序一致性同时满足以下特点：
+1. 每个线程中的执行顺序与代码中的先后顺序一致
+2. 所有线程中的各个执行步骤之间都是原子化的（操作之间不会重叠）
+
+例如有T1和T2两个线程，在T1线程中执行A和B原子操作，在T2线程中执行C和D原子操作，如下图所示。
+
+[[img-url://images/post-cpp11-memory-order-1.png]]
+
+在顺序一致性条件下，允许出现前5种执行结果，不允许出现第6种执行结果。
+
+[[img-url://images/post-cpp11-memory-order-2.png]]
+
+顺序一致性是最保守的，潜在的性能损耗也是最高的。
+
+
+** 参考资料
+- [[https://en.cppreference.com/w/cpp/atomic/memory_order][cppreference - memory order]]
+
+
+（全文完）
