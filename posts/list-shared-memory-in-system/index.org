@@ -1,0 +1,93 @@
+#+BEGIN_COMMENT
+.. title: 查看操作系统中所有的共享内存
+.. slug: list-shared-memory-in-system
+.. date: 2020-08-14 10:40:12 UTC+08:00
+.. tags: shared memory, windows, linux
+.. category:
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 查看操作系统中所有的共享内存
+
+最近在开发一个基于共享内存的跨平台数据缓存组件，核心思想是将数据存放在共享内存中以实现多进程间数据交换。在开发和调试过程中需要借助工具查看系统中的共享内存。本文记录了Linux和Windows下查看共享内存状态信息的方法。
+
+{{{TEASER_END}}}
+
+** Linux系统
+
+使用 ipcs 能够查看系统中进程间交互所使用的共享资源。这个命令不仅能够查看共享内存信息，还能够查看Linux系统的消息队列（message queue）和信号量（semaphore）。
+
+这个软件一般是随系统附带安装好的，直接在shell中输入命令即可使用。
+
+*** 查看所有的共享内存信息
+
+#+BEGIN_SRC sh
+ipcs -m
+#+END_SRC
+
+以上命令能够输出当前系统中的共享内存信息，包括共享内存的id、创建用户、访问权限、空间大小、连接数量和状态。结果以表格形式输出，十分直观。
+
+*** 查看某个共享内存信息
+
+#+BEGIN_SRC sh
+ipcs -m -i <shmid>
+#+END_SRC
+
+通过指定共享内存id，以上命令能够查看这个id对应共享内存的更详细信息，包括连接时间、断开连接时间等。
+
+
+*** 查看系统对共享内存的限制
+
+#+BEGIN_SRC sh
+ipcs -m -l
+#+END_SRC
+
+以上命令能够查看操作系统中共享内存的限制，包括共享内存的最大数量、单块共享内存的最大大小和最小大小、所有共享内存的总大小。
+
+
+*** 以列表的格式展示共享内存的详细信息
+
+#+BEGIN_SRC sh
+ipcs -m -c
+#+END_SRC
+
+以上命令能够列出所有的共享内存和它们对应的创建用户id、用户组id和所有者用户id和用户组id。结果以表格的形式展现出来，方面比较和查找。
+
+
+#+BEGIN_SRC sh
+ipcs -m -p
+#+END_SRC
+
+以上命令能够列出所有的共享内存和它们对应的所有者、创建进程id、最后访问进程id。结果以表格形式展现出来。
+
+
+
+** Windows系统
+
+在Windows下可以借助accesschk程序获取共享内存信息，但是需要自己对结果进行筛选和分析，不如Linux那样方便。
+
+使用以下命令能够将查询结果保存在 =objects.txt= 文件中。
+
+#+BEGIN_SRC sh
+accesschk.exe -osv > objects.txt
+#+END_SRC
+
+建议使用一个高级文本编辑器将其打开并搜索 =Type: Section= ，搜索结果对应的条目就是共享内存信息。在Windows下，共享内存被称作section(handle)。
+
+目前从我的实践结果来看，能够从结果中找到 =Type: Section= 对应的条目。可以通过搜索共享内存的名字找到对应的共享内存，能够查到共享内存的访问权限等信息，但是无法获取共享内存的大小。
+
+accesschk并不是windows的自带软件，需要额外下载，下载地址见文末的参考资料。acssesschk是一款便携绿色软件，下载后无需安装直接运行即可。
+
+
+
+** 参考资料
+- [[https://www.geeksforgeeks.org/ipcs-command-linux-examples/][geeksforgeeks - ipcs example]]
+- [[https://stackoverflow.com/questions/465378/program-to-view-shared-memory-in-windows][stackoverflow - view shared memory in windows]]
+- [[https://docs.microsoft.com/zh-cn/sysinternals/downloads/accesschk][microsoft docs - accesschk download]]
+
+
+（全文完）

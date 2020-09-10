@@ -50,6 +50,242 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Sep 18, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/algorithm-weekly-letter-combinations-of-a-phone-number/">每周算法：拨号键盘上的字符组合</a>
+    </h3>
+
+    <div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">Description</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Given a string containing digits from <code>2-9</code> inclusive, return all possible letter combinations that the number could represent.<br></p>
+
+<p>
+A mapping of digit to letters (just like on the telephone buttons) is given below. Note that 1 does not map to any letters.<br></p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<colgroup>
+<col class="left">
+<col class="left">
+<col class="left">
+</colgroup>
+<tbody>
+<tr>
+<td class="left">1</td>
+<td class="left">2abc</td>
+<td class="left">3def</td>
+</tr>
+<tr>
+<td class="left">4ghi</td>
+<td class="left">5jkl</td>
+<td class="left">6mno</td>
+</tr>
+<tr>
+<td class="left">7pqrs</td>
+<td class="left">8tuv</td>
+<td class="left">9wxyz</td>
+</tr>
+</tbody>
+</table>
+<p>
+<b>Example:</b><br></p>
+<pre class="example">
+Input: "23"
+Output: ["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"].
+</pre>
+
+<p>
+<b>Note:</b><br>
+Although the above answer is in lexicographical order, your answer could be in any order you want.<br></p>
+
+<p>
+来源：<a href="https://leetcode.com/problems/letter-combinations-of-a-phone-number/description/">leetcode 17 letter combinations of a phone number</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">Solution</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">Approach 1</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+借助加法计算进位的思想，下面是我的解法。我首次提交时并没有注意输入字符串为空的情况，对于输入参数的检查还是太容易忽略了。<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">letterCombinations</span><span class="p">(</span><span class="n">string</span> <span class="n">digits</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">ans</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">digits</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">letters</span> <span class="p">{</span><span class="s">""</span><span class="p">,</span>  <span class="s">""</span><span class="p">,</span> <span class="s">"abc"</span><span class="p">,</span> <span class="s">"def"</span><span class="p">,</span> <span class="s">"ghi"</span><span class="p">,</span>
+	    <span class="s">"jkl"</span><span class="p">,</span> <span class="s">"mno"</span><span class="p">,</span> <span class="s">"pqrs"</span><span class="p">,</span> <span class="s">"tuv"</span><span class="p">,</span> <span class="s">"wxyz"</span><span class="p">};</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">carry</span><span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">nums</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">char</span> <span class="nl">ch</span> <span class="p">:</span> <span class="n">digits</span><span class="p">)</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">ch</span> <span class="o">-</span> <span class="sc">'0'</span><span class="p">;</span>
+	<span class="n">nums</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">do</span><span class="p">{</span>
+	<span class="n">string</span> <span class="n">str</span><span class="p">;</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">carry</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">str</span> <span class="o">+=</span> <span class="n">letters</span><span class="p">[</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="p">[</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]];</span>
+	<span class="p">}</span>
+	<span class="n">ans</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">str</span><span class="p">);</span>
+
+	<span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="n">carry</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="o">--</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="kt">int</span> <span class="n">d</span> <span class="o">=</span> <span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">;</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">d</span> <span class="o">&gt;=</span> <span class="n">letters</span><span class="p">[</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]].</span><span class="n">size</span><span class="p">())</span> <span class="p">{</span>
+		<span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+		<span class="n">c</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="p">{</span>
+		<span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">;</span>
+		<span class="n">c</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+		<span class="k">break</span><span class="p">;</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+
+	<span class="k">if</span> <span class="p">(</span> <span class="mi">1</span> <span class="o">==</span> <span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="k">break</span><span class="p">;</span>
+	<span class="p">}</span>
+
+    <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+我在想的是这个算法的时间复杂度是多少，感觉它的时间复杂度应该是O(n<sup>2</sup>)。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">Approach 2 recursive</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+使用递归完成字符串的拼接，在每次递归，都会增加一个字符。终止递归的条件是字符串长度达到输入参数的长度。递归方法符合生活中的使用场景，还是比较容易理解的。<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">mMap</span><span class="p">[</span><span class="mi">8</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="p">{</span><span class="sc">'a'</span><span class="p">,</span> <span class="sc">'b'</span><span class="p">,</span> <span class="sc">'c'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'d'</span><span class="p">,</span> <span class="sc">'e'</span><span class="p">,</span> <span class="sc">'f'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'g'</span><span class="p">,</span> <span class="sc">'h'</span><span class="p">,</span> <span class="sc">'i'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'j'</span><span class="p">,</span> <span class="sc">'k'</span><span class="p">,</span> <span class="sc">'l'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'m'</span><span class="p">,</span> <span class="sc">'n'</span><span class="p">,</span> <span class="sc">'o'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'p'</span><span class="p">,</span> <span class="sc">'q'</span><span class="p">,</span> <span class="sc">'r'</span><span class="p">,</span> <span class="sc">'s'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'t'</span><span class="p">,</span> <span class="sc">'u'</span><span class="p">,</span> <span class="sc">'v'</span><span class="p">,</span> <span class="sc">'#'</span><span class="p">},</span>
+	<span class="p">{</span><span class="sc">'w'</span><span class="p">,</span> <span class="sc">'x'</span><span class="p">,</span> <span class="sc">'y'</span><span class="p">,</span> <span class="sc">'z'</span><span class="p">},</span>
+    <span class="p">};</span>
+
+<span class="k">public</span><span class="o">:</span>
+    <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">letterCombinations</span><span class="p">(</span><span class="n">string</span> <span class="n">digits</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">result</span><span class="p">;</span>
+	<span class="n">backTrack</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="s">""</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+	<span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="n">backTrack</span><span class="p">(</span><span class="n">string</span> <span class="o">&amp;</span><span class="n">digits</span><span class="p">,</span> <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">result</span><span class="p">,</span> <span class="n">string</span> <span class="n">combination</span><span class="p">,</span> <span class="kt">int</span> <span class="n">index</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">digits</span><span class="p">.</span><span class="n">length</span><span class="p">())</span> <span class="p">{</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">combination</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+		<span class="k">return</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">combination</span><span class="p">);</span>
+	    <span class="k">return</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">char</span> <span class="nl">c</span> <span class="p">:</span> <span class="n">mMap</span><span class="p">[</span><span class="n">digits</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">-</span> <span class="sc">'2'</span><span class="p">])</span> <span class="p">{</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">c</span> <span class="o">==</span> <span class="sc">'#'</span><span class="p">)</span>
+		<span class="k">continue</span><span class="p">;</span>
+
+	    <span class="n">combination</span> <span class="o">+=</span> <span class="n">c</span><span class="p">;</span>
+	    <span class="n">backTrack</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">combination</span><span class="p">,</span> <span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+
+	    <span class="c1">// 这里为什么要删去最后一个呢？</span>
+	    <span class="c1">// 因为之前在尾部追加了一个c</span>
+	    <span class="n">combination</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">combination</span><span class="p">.</span><span class="n">end</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+<del>如何评估递归算法的时间复杂度和空间复杂度呢？</del><br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2-3" class="outline-3">
+<h3 id="sec-2-3">Approach 3 BFS</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+宽度优先搜索，breadth-first search（BFS）,是一种对树（tree）或图（graph）的遍历算法，下面就是这种算法的解法，代码使用java编写。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">letterCombinations</span><span class="p">(</span><span class="n">String</span> <span class="n">digits</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">ans</span> <span class="o">=</span> <span class="k">new</span> <span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="p">();</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">digits</span><span class="p">.</span><span class="na">isEmpty</span><span class="p">())</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">String</span><span class="o">[]</span> <span class="n">mapping</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">[]</span> <span class="p">{</span><span class="s">"0"</span><span class="p">,</span> <span class="s">"1"</span><span class="p">,</span> <span class="s">"abc"</span><span class="p">,</span> <span class="s">"def"</span><span class="p">,</span>
+				     <span class="s">"ghi"</span><span class="p">,</span> <span class="s">"jkl"</span><span class="p">,</span> <span class="s">"mno"</span><span class="p">,</span> <span class="s">"pqrs"</span><span class="p">,</span> <span class="s">"tuv"</span><span class="p">,</span> <span class="s">"wxyz"</span><span class="p">};</span>
+
+    <span class="n">ans</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">""</span><span class="p">);</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digits</span><span class="p">.</span><span class="na">length</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n">Character</span><span class="p">.</span><span class="na">getNumericValue</span><span class="p">(</span><span class="n">digits</span><span class="p">.</span><span class="na">charAt</span><span class="p">(</span><span class="n">i</span><span class="p">));</span>
+
+	<span class="k">while</span><span class="p">(</span><span class="n">ans</span><span class="p">.</span><span class="na">peek</span><span class="p">().</span><span class="na">length</span><span class="p">()</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">String</span> <span class="n">t</span> <span class="o">=</span> <span class="n">ans</span><span class="p">.</span><span class="na">remove</span><span class="p">();</span> <span class="c1">// remove是从头部删去一个元素</span>
+	    <span class="k">for</span><span class="p">(</span><span class="kt">char</span> <span class="n">s</span> <span class="p">:</span> <span class="n">mapping</span><span class="o">[</span><span class="n">x</span><span class="o">]</span><span class="p">.</span><span class="na">toCharArray</span><span class="p">())</span> <span class="p">{</span>
+		<span class="n">ans</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="n">s</span><span class="p">);</span> <span class="c1">// add是向尾部添加一个元素</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+下面是另外一种使用BFS算法实现的解法<br></p>
+<div class="highlight"><pre><span></span><span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">letterCombinations</span><span class="p">(</span><span class="n">String</span> <span class="n">digits</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">ans</span> <span class="o">=</span> <span class="k">new</span> <span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="p">();</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">digits</span><span class="p">.</span><span class="na">isEmpty</span><span class="p">())</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">String</span><span class="o">[]</span> <span class="n">mapping</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">[]</span> <span class="p">{</span><span class="s">"0"</span><span class="p">,</span> <span class="s">"1"</span><span class="p">,</span> <span class="s">"abc"</span><span class="p">,</span> <span class="s">"def"</span><span class="p">,</span>
+				     <span class="s">"ghi"</span><span class="p">,</span> <span class="s">"jkl"</span><span class="p">,</span> <span class="s">"mno"</span><span class="p">,</span> <span class="s">"pqrs"</span><span class="p">,</span> <span class="s">"tuv"</span><span class="p">,</span> <span class="s">"wxyz"</span><span class="p">};</span>
+    <span class="n">ans</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">""</span><span class="p">);</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">ans</span><span class="p">.</span><span class="na">peek</span><span class="p">().</span><span class="na">length</span><span class="p">()</span> <span class="o">!=</span> <span class="n">digits</span><span class="p">.</span><span class="na">length</span><span class="p">()){</span>
+	<span class="n">String</span> <span class="n">remove</span> <span class="o">=</span> <span class="n">ans</span><span class="p">.</span><span class="na">remove</span><span class="p">();</span>
+	<span class="n">String</span> <span class="n">map</span> <span class="o">=</span> <span class="n">mapping</span><span class="o">[</span><span class="n">digits</span><span class="p">.</span><span class="na">charAt</span><span class="p">(</span><span class="n">remove</span><span class="p">.</span><span class="na">length</span><span class="p">())</span><span class="o">-</span><span class="sc">'0'</span><span class="o">]</span><span class="p">;</span>
+	<span class="k">for</span><span class="p">(</span><span class="kt">char</span> <span class="n">c</span><span class="p">:</span> <span class="n">map</span><span class="p">.</span><span class="na">toCharArray</span><span class="p">()){</span>
+	    <span class="n">ans</span><span class="p">.</span><span class="na">addLast</span><span class="p">(</span><span class="n">remove</span><span class="o">+</span><span class="n">c</span><span class="p">);</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">Reference</h2>
+<div class="outline-text-2" id="text-3">
+<ul class="org-ul">
+<li>
+<a href="https://en.wikipedia.org/wiki/Breadth-first_search">wikipedia - breadth-first search</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Sep 16, 2018</span>
     <h3>
       <a class="post-link" href="/posts/algorithm-weekly-three-sum-closest/">每周算法：最接近的三数之和</a>
@@ -906,294 +1142,6 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
     <span class="k">return</span> <span class="n">sum</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
-</div>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Sep 05, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/algorithm-weekly-integer-to-roman/">每周算法：阿拉伯数字转换罗马数字</a>
-    </h3>
-
-    <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">Description</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-Roman numerals are represented by seven different symbols: <code>I</code> , <code>V</code> , <code>X</code> , <code>L</code> , <code>C</code> , <code>D</code> and <code>M</code>.<br></p>
-<pre class="example">
-Symbol       Value
-I             1
-V             5
-X             10
-L             50
-C             100
-D             500
-M             1000
-</pre>
-
-<p>
-For example, two is written as <code>II</code> in Roman numeral, just two one's added together. Twelve is written as, <code>XII</code> , which is simply <code>X</code> + <code>II</code> . The number twenty seven is written as <code>XXVII</code> , which is <code>XX</code> + <code>V</code> + <code>II</code> .<br></p>
-
-<p>
-Roman numerals are usually written largest to smallest from left to right. However, the numeral for four is not <code>IIII</code> . Instead, the number four is written as <code>IV</code> . Because the one is before the five we subtract it making four. The same principle applies to the number nine, which is written as <code>IX</code>. There are six instances where subtraction is used:<br></p>
-
-<ul class="org-ul">
-<li>
-<code>I</code> can be placed before <code>V</code> (5) and <code>X</code> (10) to make 4 and 9.<br>
-</li>
-<li>
-<code>X</code> can be placed before <code>L</code> (50) and <code>C</code> (100) to make 40 and 90.<br>
-</li>
-<li>
-<code>C</code> can be placed before <code>D</code> (500) and <code>M</code> (1000) to make 400 and 900.<br>
-</li>
-</ul>
-<p>
-Given an integer, convert it to a roman numeral. Input is guaranteed to be within the range from 1 to 3999.<br></p>
-
-<p>
-<b>Example 1:</b><br></p>
-<pre class="example">
-Input: 3
-Output: "III"
-</pre>
-
-<p>
-<b>Example 2:</b><br></p>
-<pre class="example">
-Input: 4
-Output: "IV"
-</pre>
-
-<p>
-<b>Example 3:</b><br></p>
-<pre class="example">
-Input: 9
-Output: "IX"
-</pre>
-
-<p>
-<b>Example 4:</b><br></p>
-<pre class="example">
-Input: 58
-Output: "LVIII"
-Explanation: C = 100, L = 50, XXX = 30 and III = 3.
-</pre>
-
-<p>
-<b>Example 5:</b><br></p>
-<pre class="example">
-Input: 1994
-Output: "MCMXCIV"
-Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
-</pre>
-
-<p>
-来源：<a href="https://leetcode.com/problems/integer-to-roman/description/">leetcode 12 integer to roman</a><br></p>
-</div>
-</div>
-
-<div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">Solution</h2>
-<div class="outline-text-2" id="text-2">
-</div>
-<div id="outline-container-sec-2-1" class="outline-3">
-<h3 id="sec-2-1">Approach 1</h3>
-<div class="outline-text-3" id="text-2-1">
-<p>
-这道题并不难，方法也很容易想到，这道题被归为 <code>medium</code> 难度反而让我感到有些奇怪，下面的代码就是我的解法。<br></p>
-<div class="highlight"><pre><span></span><span class="n">string</span> <span class="nf">intToRoman</span><span class="p">(</span><span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
-
-    <span class="c1">// digit1 ~ 4 分别代表个十百千</span>
-    <span class="kt">int</span> <span class="n">digit1</span> <span class="o">=</span> <span class="n">num</span><span class="o">%</span><span class="mi">10</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">digit2</span> <span class="o">=</span> <span class="n">num</span><span class="o">/</span><span class="mi">10</span><span class="o">%</span><span class="mi">10</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">digit3</span> <span class="o">=</span> <span class="n">num</span><span class="o">/</span><span class="mi">100</span><span class="o">%</span><span class="mi">10</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">digit4</span> <span class="o">=</span> <span class="n">num</span><span class="o">/</span><span class="mi">1000</span><span class="o">%</span><span class="mi">10</span><span class="p">;</span>
-
-    <span class="n">string</span> <span class="n">ans</span><span class="p">;</span>
-
-    <span class="c1">// 千</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit4</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="sc">'M'</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="c1">// 百</span>
-    <span class="k">switch</span> <span class="p">(</span><span class="n">digit3</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">3</span><span class="o">:</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit3</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-	    <span class="n">ans</span> <span class="o">+=</span> <span class="sc">'C'</span><span class="p">;</span>
-	<span class="p">}</span>
-	<span class="k">break</span><span class="p">;</span>
-
-    <span class="k">case</span> <span class="mi">4</span><span class="o">:</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"CD"</span><span class="p">;</span>
-	<span class="k">break</span><span class="p">;</span>
-
-    <span class="k">case</span> <span class="mi">5</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">6</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">7</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">8</span><span class="o">:</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="sc">'D'</span><span class="p">;</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit3</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-	    <span class="n">ans</span> <span class="o">+=</span> <span class="sc">'C'</span><span class="p">;</span>
-	<span class="p">}</span>
-	<span class="k">break</span><span class="p">;</span>
-
-    <span class="k">case</span> <span class="mi">9</span><span class="o">:</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"CM"</span><span class="p">;</span>
-	<span class="k">break</span><span class="p">;</span>
-    <span class="k">default</span><span class="o">:</span>
-	<span class="k">break</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="c1">// 十</span>
-    <span class="k">switch</span> <span class="p">(</span><span class="n">digit2</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">3</span><span class="o">:</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit2</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">){</span>
-	    <span class="n">ans</span> <span class="o">+=</span> <span class="sc">'X'</span><span class="p">;</span>
-	<span class="p">}</span>
-	<span class="k">break</span><span class="p">;</span>
-
-    <span class="k">case</span> <span class="mi">4</span><span class="o">:</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"XL"</span><span class="p">;</span>
-	<span class="k">break</span><span class="p">;</span>
-
-    <span class="k">case</span> <span class="mi">5</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">6</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">7</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">8</span><span class="o">:</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="sc">'L'</span><span class="p">;</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit2</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-	    <span class="n">ans</span> <span class="o">+=</span> <span class="s">"X"</span><span class="p">;</span>
-	<span class="p">}</span>
-	<span class="k">break</span><span class="p">;</span>
-
-    <span class="k">case</span> <span class="mi">9</span><span class="o">:</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"XC"</span><span class="p">;</span>
-	<span class="k">break</span><span class="p">;</span>
-
-    <span class="k">default</span><span class="o">:</span>
-	<span class="k">break</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="c1">// 个</span>
-    <span class="k">switch</span> <span class="p">(</span><span class="n">digit1</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">3</span><span class="o">:</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit1</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-	    <span class="n">ans</span> <span class="o">+=</span> <span class="sc">'I'</span><span class="p">;</span>
-	<span class="p">}</span>
-	<span class="k">break</span><span class="p">;</span>
-
-    <span class="k">case</span> <span class="mi">4</span><span class="o">:</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"IV"</span><span class="p">;</span>
-	<span class="k">break</span><span class="p">;</span>
-
-    <span class="k">case</span> <span class="mi">5</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">6</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">7</span><span class="o">:</span>
-    <span class="k">case</span> <span class="mi">8</span><span class="o">:</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="sc">'V'</span><span class="p">;</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">5</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">digit1</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-	    <span class="n">ans</span> <span class="o">+=</span> <span class="sc">'I'</span><span class="p">;</span>
-	<span class="p">}</span>
-	<span class="k">break</span><span class="p">;</span>
-
-    <span class="k">case</span> <span class="mi">9</span><span class="o">:</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="s">"IX"</span><span class="p">;</span>
-	<span class="k">break</span><span class="p">;</span>
-
-    <span class="k">default</span><span class="o">:</span>
-	<span class="k">break</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-<p>
-这样做感觉有点简单粗暴，而且代码看起来不够优雅。<br></p>
-</div>
-</div>
-
-<div id="outline-container-sec-2-2" class="outline-3">
-<h3 id="sec-2-2">Approach 2</h3>
-<div class="outline-text-3" id="text-2-2">
-<p>
-下面代码是从leetcode上找的，这样的打表法，看起来至少从形式上会更加美观，而且也非常好理解。<br></p>
-<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-    <span class="k">const</span> <span class="k">static</span> <span class="n">string</span> <span class="n">THOUS</span><span class="p">[];</span>
-    <span class="k">const</span> <span class="k">static</span> <span class="n">string</span> <span class="n">HUNDS</span><span class="p">[];</span>
-    <span class="k">const</span> <span class="k">static</span> <span class="n">string</span> <span class="n">TENS</span><span class="p">[];</span>
-    <span class="k">const</span> <span class="k">static</span> <span class="n">string</span> <span class="n">ONES</span><span class="p">[];</span>
-    <span class="n">string</span> <span class="nf">intToRoman</span><span class="p">(</span><span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
-	<span class="n">string</span> <span class="n">result</span><span class="p">;</span>
-	<span class="n">result</span> <span class="o">+=</span> <span class="n">THOUS</span><span class="p">[(</span><span class="kt">int</span><span class="p">)(</span><span class="n">num</span><span class="o">/</span><span class="mi">1000</span><span class="p">)</span><span class="o">%</span><span class="mi">10</span><span class="p">];</span>
-	<span class="n">result</span> <span class="o">+=</span> <span class="n">HUNDS</span><span class="p">[(</span><span class="kt">int</span><span class="p">)(</span><span class="n">num</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span><span class="o">%</span><span class="mi">10</span><span class="p">];</span>
-	<span class="n">result</span> <span class="o">+=</span> <span class="n">TENS</span><span class="p">[(</span><span class="kt">int</span><span class="p">)(</span><span class="n">num</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span><span class="o">%</span><span class="mi">10</span><span class="p">];</span>
-	<span class="n">result</span> <span class="o">+=</span> <span class="n">ONES</span><span class="p">[</span><span class="n">num</span><span class="o">%</span><span class="mi">10</span><span class="p">];</span>
-	<span class="k">return</span> <span class="n">result</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">};</span>
-
-<span class="k">const</span> <span class="n">string</span> <span class="n">Solution</span><span class="o">::</span><span class="n">THOUS</span><span class="p">[]</span>  <span class="o">=</span> <span class="p">{</span><span class="s">""</span><span class="p">,</span><span class="s">"M"</span><span class="p">,</span><span class="s">"MM"</span><span class="p">,</span><span class="s">"MMM"</span><span class="p">};</span>
-<span class="k">const</span> <span class="n">string</span> <span class="n">Solution</span><span class="o">::</span><span class="n">HUNDS</span><span class="p">[]</span>  <span class="o">=</span> <span class="p">{</span><span class="s">""</span><span class="p">,</span><span class="s">"C"</span><span class="p">,</span><span class="s">"CC"</span><span class="p">,</span><span class="s">"CCC"</span><span class="p">,</span><span class="s">"CD"</span><span class="p">,</span><span class="s">"D"</span><span class="p">,</span><span class="s">"DC"</span><span class="p">,</span><span class="s">"DCC"</span><span class="p">,</span><span class="s">"DCCC"</span><span class="p">,</span><span class="s">"CM"</span><span class="p">};</span>
-<span class="k">const</span> <span class="n">string</span> <span class="n">Solution</span><span class="o">::</span><span class="n">TENS</span><span class="p">[]</span>   <span class="o">=</span> <span class="p">{</span><span class="s">""</span><span class="p">,</span><span class="s">"X"</span><span class="p">,</span><span class="s">"XX"</span><span class="p">,</span><span class="s">"XXX"</span><span class="p">,</span><span class="s">"XL"</span><span class="p">,</span><span class="s">"L"</span><span class="p">,</span><span class="s">"LX"</span><span class="p">,</span><span class="s">"LXX"</span><span class="p">,</span><span class="s">"LXXX"</span><span class="p">,</span><span class="s">"XC"</span><span class="p">};</span>
-<span class="k">const</span> <span class="n">string</span> <span class="n">Solution</span><span class="o">::</span><span class="n">ONES</span><span class="p">[]</span>   <span class="o">=</span> <span class="p">{</span><span class="s">""</span><span class="p">,</span><span class="s">"I"</span><span class="p">,</span><span class="s">"II"</span><span class="p">,</span><span class="s">"III"</span><span class="p">,</span><span class="s">"IV"</span><span class="p">,</span><span class="s">"V"</span><span class="p">,</span><span class="s">"VI"</span><span class="p">,</span><span class="s">"VII"</span><span class="p">,</span><span class="s">"VIII"</span><span class="p">,</span><span class="s">"IX"</span><span class="p">};</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-2-3" class="outline-3">
-<h3 id="sec-2-3">Approach 3</h3>
-<div class="outline-text-3" id="text-2-3">
-<p>
-下面这段代码也是leetcode上的答案，这个答案的通用性要好一些，最起码找到了规律，这有助于算法的后续拓展。<br></p>
-<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-    <span class="n">string</span> <span class="n">intToRoman</span><span class="p">(</span><span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
-	<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">base</span><span class="p">{</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">};</span>
-	<span class="n">string</span> <span class="n">roman</span> <span class="o">=</span> <span class="s">"MDCLXVI"</span><span class="p">;</span>
-	<span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">r</span><span class="p">;</span>
-	<span class="n">string</span> <span class="n">ret</span> <span class="o">=</span> <span class="s">""</span><span class="p">;</span>
-	<span class="k">while</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="p">{</span>
-	    <span class="n">r</span> <span class="o">=</span> <span class="n">num</span><span class="o">/</span><span class="n">base</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
-	    <span class="n">num</span> <span class="o">=</span> <span class="n">num</span> <span class="o">-</span> <span class="n">r</span><span class="o">*</span><span class="n">base</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
-	    <span class="k">if</span><span class="p">(</span><span class="n">r</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">ret</span> <span class="o">+=</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span><span class="p">];</span>
-		<span class="n">ret</span> <span class="o">+=</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span><span class="o">-</span><span class="mi">1</span><span class="p">];</span>
-	    <span class="p">}</span>
-	    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">r</span> <span class="o">==</span> <span class="mi">9</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">ret</span> <span class="o">+=</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span><span class="p">];</span>
-		<span class="n">ret</span> <span class="o">+=</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span> <span class="o">-</span><span class="mi">2</span><span class="p">];</span>
-	    <span class="p">}</span>
-	    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">r</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">ret</span> <span class="o">+=</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
-		<span class="c1">// 下面这个string的用法值得学习</span>
-		<span class="n">string</span> <span class="nf">tmp</span><span class="p">(</span><span class="n">r</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span><span class="p">]);</span>
-		<span class="n">ret</span> <span class="o">+=</span> <span class="n">tmp</span><span class="p">;</span>
-	    <span class="p">}</span>
-	    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">r</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">string</span> <span class="n">tmp</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">roman</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">index</span><span class="p">]);</span>
-		<span class="n">ret</span> <span class="o">+=</span> <span class="n">tmp</span><span class="p">;</span>
-	    <span class="p">}</span>
-	    <span class="n">index</span><span class="o">++</span><span class="p">;</span>
-	<span class="p">}</span>
-	<span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">};</span>
-</pre></div>
-<p>
-此外，我还学到了 <code>string tmp(num, ch)</code> 这样的创建具有重复字符的字符串的方法。<br></p>
 </div>
 </div>
 </div>
