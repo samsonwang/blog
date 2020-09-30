@@ -1,0 +1,60 @@
+#+BEGIN_COMMENT
+.. title: char的符号特性
+.. slug: signed-char-and-unsigned-char
+.. date: 2020-09-28 22:45:18 UTC+08:00
+.. tags: cpp, unsigned, signed, char
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: char的符号特性
+
+在C++中char类型用来表示字符，其数据宽度为一个字节，所以可以将char用作占一个字节的整数。但是，在C++中整数类型又分为无符号整数和有符号整数，对于具有相同数据宽度的有符号整数和无符号整数，它们的允许的取值范围是不同的。所以在将char当作整型数据来用时，要格外注意其符号特性。
+
+{{{TEASER_END}}}
+
+** ~char~ 类型的符号特性
+
+最近在移植一个数据压缩算法时遇到这样的问题：原始代码是在x86架构的windows操作系统上运行的，移植目标是ARM架构的linux操作系统，在移植后发现某个解压缩算法的处理结果不正确。
+
+经过一番调试，最终将问题定位在 ~char~ 类型的符号特性上。原算法在windows系统的MSVC编译环境中使用了 ~char~ 作为单字节有符号整数，而在ARM架构的linux系统上使用gcc编译 ~char~ 却是无符号的。
+
+#+BEGIN_QUOTE
+~char~ 类型的符号特性在不同的编译器下是不同的。
+#+END_QUOTE
+
+曾经我也想当然地认为char是有符号的，即 ~signed~ 关键字是被省略掉了。但实际上，在C++标准中， ~char~ 类型是作为字符类型与整数类型分开描述的。
+
+#+BEGIN_QUOTE
+The type ~char~ , ~signed char~ and ~unsigned char~ are collectively called the character types. The implementation shall define ~char~ to have the same range, representation, and behavior as either ~signed char~ or ~unsigned char~ .
+
+~CHAR_MIN~ , defined in ~<limits.h>~ , will have one of the values 0 or ~SCHAR_MIN~ , and this can be used to distinguish the two options. Irrespective of the choice made, ~char~ is separate type from the other two and is not compatible with either.
+#+END_QUOTE
+
+以上两段摘自C11标准（n1587），可见标准中并未规定 ~char~ 类型的符号特性，即 ~char~ 可以是 ~signed~ 或 ~unsigned~ ，这是由具体的实现（implementation）决定的。某些处理器和指令集或应用程序二进制接口更喜欢使用有符号的字符类型，这样能够完美地映射一些机器码指令。
+
+
+** 使用 ~uint8_t~ 表示单字节无符号整数
+
+通常，当我们把 ~char~ 作为字符类型使用时并不需要考虑它的符号特性，因为字符类型变量存储的ASCII码在显示时会转化为英文字母。这时， ~char~ 是有符号的或无符号的并不影响它所存储的ASCII码。
+
+由于 ~char~ 类型只占一个字节（8bit），并且又是基本类型，用它来表示单字节整数是非常方便的。但是，符号特性的不确定性又使它不适合作为一种整数类型。更推荐使用 ~uint8_t~ 表示无符号单字节整数， ~int8_t~ 表示有符号单字节整数，这种写法代码可读性更好，也更利于移植。
+
+
+** 编译器选项
+
+gcc 提供了 =-fsigned-char= 和 =-funsigned-char= 编译选项，用于修改 ~char~ 类型的默认符号特性。但是大多数情况下并不推荐使用使用这两个参数。因为修改后可能在极端情况下破坏调用约定和应用程序二进制接口（ABI, application binary interface）。
+
+msvc 提供了 =/J= 参数，用于将默认的 ~char~ 类型从 ~signed char~ 变更为 ~unsigned char~ 。
+
+
+** 参考资料
+- [[https://stackoverflow.com/questions/2054939/is-char-signed-or-unsigned-by-default][stackoverflow - char signed or unsigned by default]]
+- [[http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf][open std - n1570]]
+- [[https://docs.microsoft.com/en-us/cpp/build/reference/j-default-char-type-is-unsigned][microsoft docs - default char type is unsigned]]
+
+（全文完）
