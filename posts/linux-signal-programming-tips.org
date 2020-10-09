@@ -1,0 +1,50 @@
+#+BEGIN_COMMENT
+.. title: 处理Linux信号需要注意的几个问题
+.. slug: linux-signal-programming-tips
+.. date: 2020-10-01 10:01:35 UTC+08:00
+.. tags: linux, signal, tips, multi-thread
+.. category: linux
+.. link:
+.. description:
+.. type: text
+.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 处理Linux信号需要注意的几个问题
+
+Linux中的信号（signal）是一个非常实用的功能，进程间能发送信号，内核也能向进程发送信号。本文总结了在进行信号编程时容易忽略的几个问题，方便后续查阅。
+
+
+{{{TEASER_END}}}
+
+** 在信号回调函数中操作互斥锁
+
+信号回调函数是用户自定义的一个函数，但它在运行时既不是内核态也不是用户态。当程序运行在内核态时信号不会响应，在用户态时所有的信号都已经处理完成。
+
+在信号回调函数中是不能操作互斥锁的，若在信号回调函数中操作了互斥锁，可能会导致程序卡死。
+
+这涉及到信号处理函数安全（signal handler safe）的概念，它与线程安全（thread safe）概念相似，也列举了所有能够在信号处理函数中执行的函数。
+
+如果真的需要在信号回调函数中操作互斥锁，妥协的方法是在回调函数中创建一个线程，在这个新创建出的线程中操作互斥锁。这个方案的缺陷是线程可能会创建失败，如需高频地接收和处理信号就需要频繁地创建和销毁线程，可能会由于超过电脑的处理性能，最终导致线程创建失败。
+
+相关博文：[[post-url://linux-signal-handler-callback-mutex/][在Linux的信号处理函数中不要进行锁相关操作]]
+
+
+** sigprocmask 和多线程中的信号处理
+可以通过设置signal mask暂停信号，
+
+
+#+BEGIN_QUOTE
+Signal handlers are per process, signal masks are per thread.
+#+END_QUOTE
+
+在取消signal mask时，信号会在 ~sigprocmask~ 函数返回之前被处理。
+
+
+
+** 参考资料
+- https://www.gnu.org/software/libc/manual/html_node/Process-Signal-Mask.html
+- https://man7.org/linux/man-pages/man7/signal-safety.7.html
+
+（全文完）
