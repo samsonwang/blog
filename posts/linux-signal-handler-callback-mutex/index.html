@@ -33,6 +33,7 @@
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="mutex">
 <meta property="article:tag" content="sigaction">
+<meta property="article:tag" content="signal">
 <meta property="article:tag" content="signal handler">
 <meta property="article:tag" content="sigtimedwait">
 <meta property="article:tag" content="sigwait">
@@ -63,7 +64,7 @@
 
     <p class="post-meta">
       
-    <time class="dt-published" datetime="2019-10-26T21:41:50+08:00" itemprop="datePublished">Oct 26, 2019</time><span class="dt-updated"> • updated <time datetime="2020-04-21T09:30:00+08:00" itemprop="dateUpdated">Apr 21, 2020</time></span>
+    <time class="dt-published" datetime="2019-10-26T21:41:50+08:00" itemprop="datePublished">Oct 26, 2019</time><span class="dt-updated"> • updated <time datetime="2020-10-09T22:30:00+08:00" itemprop="dateUpdated">Oct 09, 2020</time></span>
 
       
 
@@ -82,6 +83,7 @@
 最初的情况是，我在信号处理函数中打印了日志，在收到信号时有机率会导致整个程序卡死。使用 <code>pstack</code> 观察程序的运行状态，发现程序卡在写日志的加锁操作中。由于程序是多线程的，所以为了保证在输出日志时线程间能够同步，在写日志时进行了加锁操作。然后我将写日志的语句注释掉后，程序就能够正常运行了。这样我开始怀疑是日志模块出了问题，但是经过反复排查后，并没有发现明显的问题，于是我选择暂时搁置这个问题。随着开发的推进，当我在信号处理函数中进行条件变量操作的时候，程序再一次卡死了，我开始怀疑是线程同步的相关操作中出现了问题。<br></p>
 </div>
 </div>
+
 
 <div id="outline-container-sec-2" class="outline-2">
 <h2 id="sec-2">
@@ -110,6 +112,7 @@ wait         waitpid       write
 </div>
 </div>
 
+
 <div id="outline-container-sec-3" class="outline-2">
 <h2 id="sec-3">
 <span class="section-number-2">3</span> 题外话：使用 <code>sigwait</code> 和 <code>sigtimedwait</code> 等待信号</h2>
@@ -122,8 +125,13 @@ wait         waitpid       write
 
 <p>
 解决方法：可以用 <code>sigaction</code> 接口指定处理每个信号的回调函数，这些回调函数可以使用同一个函数作为入口，在函数中对信号进行区分和处理。但是 <code>sigaction</code> 并不是阻塞函数，并不能达到等待信号的效果，所以我们需要使用其他的同步机制（如：条件变量）达到阻塞的目的。<br></p>
+
+<p>
+<b>updated 2020/10/09:</b><br>
+其他问题：可以使用 <code>sigtimedwait</code> 等待即将到来的信号，但问题是有可能在开始等待之前已经错过等待的信号。特别是在一些异步流程中，例如在进行一些操作后需要等待某个信号，在等待时需要考虑信号到来时机的问题。可以考虑单独启动一个线程处理指定的信号，但在信号到来时会随机选择一个线程执行信号处理，这就需要为每个线程设置合理的 signal mask。<br></p>
 </div>
 </div>
+
 
 <div id="outline-container-sec-4" class="outline-2">
 <h2 id="sec-4">
@@ -149,6 +157,8 @@ wait         waitpid       write
 <a href="https://linux.die.net/man/3/sigwait">linux man - sigwait</a><br>
 </li>
 </ul>
+<p>
+（全文完）<br></p>
 </div>
 </div>
   </div>
@@ -162,6 +172,9 @@ wait         waitpid       write
     </li>
     <li>
       <a class="badge" href="/tags/sigaction/" rel="tag">sigaction</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/signal/" rel="tag">signal</a>
     </li>
     <li>
       <a class="badge" href="/tags/signal-handler/" rel="tag">signal handler</a>
