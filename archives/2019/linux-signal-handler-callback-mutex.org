@@ -2,8 +2,9 @@
 .. title: 在Linux的信号处理函数中不要进行锁相关操作
 .. slug: linux-signal-handler-callback-mutex
 .. date: 2019-10-26 21:41:50 UTC+08:00
-.. updated: 2020-4-21 9:30:00 UTC+08:00
-.. tags: linux, signal handler, mutex, sigwait, sigtimedwait, sigaction
+/.. updated: 2020-4-21 9:30:00 UTC+08:00
+.. updated: 2020-10-09 22:30:00 UTC+08:00
+.. tags: linux, signal, signal handler, mutex, sigwait, sigtimedwait, sigaction
 .. category: linux
 .. link:
 .. description:
@@ -20,6 +21,7 @@
 
 ** 问题现象
 最初的情况是，我在信号处理函数中打印了日志，在收到信号时有机率会导致整个程序卡死。使用 ~pstack~ 观察程序的运行状态，发现程序卡在写日志的加锁操作中。由于程序是多线程的，所以为了保证在输出日志时线程间能够同步，在写日志时进行了加锁操作。然后我将写日志的语句注释掉后，程序就能够正常运行了。这样我开始怀疑是日志模块出了问题，但是经过反复排查后，并没有发现明显的问题，于是我选择暂时搁置这个问题。随着开发的推进，当我在信号处理函数中进行条件变量操作的时候，程序再一次卡死了，我开始怀疑是线程同步的相关操作中出现了问题。
+
 
 ** 信号处理函数中不进行锁操作
 信号处理函数将会在同一个线程中执行，如果在信号处理函数中进行加锁，则可能会引起互锁。
@@ -42,12 +44,17 @@ time         times         umask         uname          unlink        utime
 wait         waitpid       write
 #+END_SRC
 
+
 ** 题外话：使用 ~sigwait~ 和 ~sigtimedwait~ 等待信号
 在需要等待某个信号（Linux signal），可以采用 ~sigwait~ 和 ~sigtimedwait~ 来实现。这两个函数会阻塞当前线程的执行以等待即将到来的信号。
 
 思考： ~sigwait~ 如何应对有多个信号需要等待，每个信号的所对应的处理流程都不一样，而且信号接收的顺序可能有变化。
 
 解决方法：可以用 ~sigaction~ 接口指定处理每个信号的回调函数，这些回调函数可以使用同一个函数作为入口，在函数中对信号进行区分和处理。但是 ~sigaction~ 并不是阻塞函数，并不能达到等待信号的效果，所以我们需要使用其他的同步机制（如：条件变量）达到阻塞的目的。
+
+*updated 2020/10/09:*
+其他问题：可以使用 ~sigtimedwait~ 等待即将到来的信号，但问题是有可能在开始等待之前已经错过等待的信号。特别是在一些异步流程中，例如在进行一些操作后需要等待某个信号，在等待时需要考虑信号到来时机的问题。可以考虑单独启动一个线程处理指定的信号，但在信号到来时会随机选择一个线程执行信号处理，这就需要为每个线程设置合理的 signal mask。
+
 
 ** 参考资料
 - [[https://stackoverflow.com/questions/32413397/why-it-is-problematic-to-use-mutex-locks-within-signal-handers][stackoverflow - mutex locks within signal handler]]
@@ -56,3 +63,5 @@ wait         waitpid       write
 - [[https://www.ibm.com/support/pages/mutex-bad-signal-context][ibm support - mutex bad signal context]]
 - [[https://linux.die.net/man/2/sigtimedwait][linux man - sigtimedwait]]
 - [[https://linux.die.net/man/3/sigwait][linux man - sigwait]]
+
+（全文完）
