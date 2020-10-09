@@ -61,7 +61,11 @@
 
     <p class="post-meta">
       
-    <time class="dt-published" datetime="2020-06-11T13:37:16+08:00" itemprop="datePublished">Jun 11, 2020</time></p>
+    <time class="dt-published" datetime="2020-06-11T13:37:16+08:00" itemprop="datePublished">Jun 11, 2020</time><span class="dt-updated"> • updated <time datetime="2020-10-08T10:21:16+08:00" itemprop="dateUpdated">Oct 08, 2020</time></span>
+
+      
+
+    </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
     <p>
 在最近的开发中，我使用了智能指针来管理一个对象，但是这个对象需要调用特定的函数完成内存释放。用编程的专业术语来讲，就是为智能指针提供一个自定义的deleter。我很好奇的是，这个自定义资源回收函数是否需要在入口处对参数进行空指针检查呢？<br></p>
@@ -204,14 +208,26 @@ Unlike <code>std::unique_ptr</code> , the deleter of <code>std::shared_ptr</code
 <code>defer</code> 关键字的这个特性与智能指针所提供的功能很相似，我们可以用 <code>std::unique_ptr</code> 完成类似的功能，示例代码如下。<br></p>
 
 <div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">test_defer</span><span class="p">()</span> <span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">d</span><span class="p">(</span><span class="k">nullptr</span><span class="p">,</span> <span class="p">[](...)</span> <span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">",World"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">});</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span> <span class="n">d</span><span class="p">(</span><span class="k">nullptr</span><span class="p">,</span> <span class="p">[](...)</span> <span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">", World"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">});</span>
     <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Hello"</span><span class="p">;</span>
     <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 
 <p>
-上面的代码实际上是为一个 <code>void</code> 类型的空指针（ <code>nullptr</code> ）设置了一个自定义deleter，由于 <code>std::shared_ptr</code> 即使在空指针的情况下也会调用deleter，所以在离开作用域后，预先设定好的匿名函数被调用，预期的输出结果为“Hello,World”。<br></p>
+上面的代码实际上是为一个 <code>void</code> 类型的空指针（ <code>nullptr</code> ）设置了一个自定义deleter，由于 <code>std::shared_ptr</code> 即使在空指针的情况下也会调用deleter，所以在离开作用域后，预先设定好的匿名函数被调用，预期的输出结果为“Hello,  World”。<br></p>
+
+<p>
+UPDATE 2020/10/09:<br>
+这种 <code>std::shared_ptr</code> 形成的简易 <code>defer</code> 在使用时还是有些限制的：<br></p>
+<ol class="org-ol">
+<li>已经设定好的 <code>defer</code> 函数是不能取消的，调用 <code>reset</code> 接口或使用 <code>nullptr</code> 替代原有指针都会导致原对象销毁，从而触发 <code>defer</code> 函数调用。换言之，只能将 <code>defer</code> 回调函数提前，而不能将其取消。<br>
+</li>
+<li>若需要 <code>defer</code> 函数能够取消，可以通过增加一个 <code>bool</code> 变量，在 <code>defer</code> 函数的开始通过检查这个 <code>bool</code> 变量决定是否执行后续的操作。这相当于给 <code>defer</code> 回调函数增加了一个开关，通过调整开关能控制函数逻辑是否执行。需要注意匿名函数（lambda表达式）在捕获这个 <code>bool</code> 变量时需要以引用的方式（ <code>&amp;</code> 符号），而不能使用拷贝的方式（ <code>=</code> 符号 ），在VS2017中测试结果为使用拷贝方式捕获的变量并没有反映变量值的修改结果。<br>
+</li>
+<li>在 <code>defer</code> 函数执行时，其形式参数可能存在生存期问题，即由于跳出作用域而被销毁。这其实涉及到对象的析构顺序，所以在使用时一定要仔细考虑参数对象的生存期问题。<br>
+</li>
+</ol>
 </div>
 </div>
 

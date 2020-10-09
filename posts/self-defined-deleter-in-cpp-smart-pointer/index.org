@@ -2,6 +2,7 @@
 .. title: 在C++智能指针中使用自定义的deleter
 .. slug: self-defined-deleter-in-cpp-smart-pointer
 .. date: 2020-06-11 13:37:16 UTC+08:00
+.. updated: 2020-10-08 10:21:16 UTC+08:00
 .. tags: cpp, smart pointer, deleter, defer
 .. category: cpp
 .. link:
@@ -137,13 +138,19 @@ func CopyFile(dstName, srcName string) (written int64, err error) {
 
 #+BEGIN_SRC cpp
 int test_defer() {
-    std::shared_ptr<void> d(nullptr, [](...) {std::cout << ",World" << std::endl; });
+    std::shared_ptr<void> d(nullptr, [](...) {std::cout << ", World" << std::endl; });
     std::cout << "Hello";
     return 1;
 }
 #+END_SRC
 
-上面的代码实际上是为一个 ~void~ 类型的空指针（ ~nullptr~ ）设置了一个自定义deleter，由于 ~std::shared_ptr~ 即使在空指针的情况下也会调用deleter，所以在离开作用域后，预先设定好的匿名函数被调用，预期的输出结果为“Hello,World”。
+上面的代码实际上是为一个 ~void~ 类型的空指针（ ~nullptr~ ）设置了一个自定义deleter，由于 ~std::shared_ptr~ 即使在空指针的情况下也会调用deleter，所以在离开作用域后，预先设定好的匿名函数被调用，预期的输出结果为“Hello,  World”。
+
+UPDATE 2020/10/09:
+这种 ~std::shared_ptr~ 形成的简易 ~defer~ 在使用时还是有些限制的：
+1. 已经设定好的 ~defer~ 函数是不能取消的，调用 ~reset~ 接口或使用 ~nullptr~ 替代原有指针都会导致原对象销毁，从而触发 ~defer~ 函数调用。换言之，只能将 ~defer~ 回调函数提前，而不能将其取消。
+2. 若需要 ~defer~ 函数能够取消，可以通过增加一个 ~bool~ 变量，在 ~defer~ 函数的开始通过检查这个 ~bool~ 变量决定是否执行后续的操作。这相当于给 ~defer~ 回调函数增加了一个开关，通过调整开关能控制函数逻辑是否执行。需要注意匿名函数（lambda表达式）在捕获这个 ~bool~ 变量时需要以引用的方式（ =&= 符号），而不能使用拷贝的方式（ === 符号 ），在VS2017中测试结果为使用拷贝方式捕获的变量并没有反映变量值的修改结果。
+3. 在 ~defer~ 函数执行时，其形式参数可能存在生存期问题，即由于跳出作用域而被销毁。这其实涉及到对象的析构顺序，所以在使用时一定要仔细考虑参数对象的生存期问题。
 
 
 ** 参考资料
