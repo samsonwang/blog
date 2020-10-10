@@ -1,0 +1,74 @@
+#+BEGIN_COMMENT
+.. title: 使用迭代器和下标访问C++容器的比较
+.. slug: cpp-access-container-by-iterator-or-position
+.. date: 2020-10-09 16:25:52 UTC+08:00
+.. tags: cpp, iterator
+.. Category: cpp
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 使用迭代器和下标访问C++容器的比较
+
+C++的迭代器提供了一个非常方便的访问容器元素的方式。有一种设计模式就叫做迭代器模式，它是一个行为（behavioral）设计模式，提供了复杂数据结构的顺序遍历方法，同时不会暴露内部数据结构的细节。下标访问是从C语言数组传承而来的，在C++标准库的数组类中也同时提供了下标访问的操作符重载。本文从运行效率和代码风格两方面比较了二者的差异。
+
+{{{TEASER_END}}}
+
+** 运行效率
+由于STL在不同平台的编译器上的拥有各自独立的实现，对于不同的操作系统版本和编译器版本，它们的运行效率比较结果可能是不同的。
+
+但是在经过编译器优化之后，二者在运行效率上的差别非常小，小到可以忽略。所以在大多数情况下，选用那种访问方式时都不需要考虑运行效率的因素。
+
+如果这点运行效率差异对你真的很重要，不妨在你的目标机器上编译运行测试代码，在比较了性能测试结果之后再选择合适的方案。下面提供了一个简易的性能测试代码。
+
+#+BEGIN_SRC cpp
+#include <vector>
+#include <iostream>
+#include <ctime>
+using namespace std;
+
+int main() {
+    const int BIG = 20000000;
+    vector <int> v;
+    for ( int i = 0; i < BIG; i++ ) {
+        v.push_back( i );
+    }
+
+    int now = time(0);
+    cout << "start" << endl;
+    int n = 0;
+    for(vector<int>::iterator it = v.begin(); it != v.end(); ++it) {
+        n += *it;
+    }
+
+    cout << time(0) - now << endl;
+    now = time(0);
+    for(size_t i = 0; i < v.size(); ++i) {
+        n += v[i];
+    }
+    cout << time(0) - now << endl;
+
+    return n != 0;
+}
+#+END_SRC
+
+
+题外话：STL容器在Debug和Release下的性能差距还是非常大的（在MSVC中尤其明显），这是由于Debug模式会进行更严格的边界检查。所以在性能测试时记得选用Release模式并打开编译优化。
+
+
+** 代码风格
+鉴于二者实现的功能一致，并且在运行效率上相差不大，选用那种方式更多的受到编码者喜好的影响。
+
+STL提供的所有容器类（container）都有迭代器的概念，可以通过迭代器方便地找到下一个需要访问的元素；而下标访问只适用于 ~std::vector~ 和 ~std::dequeue~ 。当代码重构时需要替换容器类型时，使用迭代器编写的代码需要进行修改适配的工作量更小。
+
+标准库提供的其他算法函数，如 ~std::sort~ 和 ~std::transform~ 等，需要配合迭代器一起使用，在这些情况下就只能选用迭代器了。
+
+
+** 参考资料
+- [[https://stackoverflow.com/questions/776624/whats-faster-iterating-an-stl-vector-with-vectoriterator-or-with-at][stackoverflow - which is faster between iterator and index]]
+- [[https://stackoverflow.com/questions/14373934/iterator-loop-vs-index-loop][stackoverflow - iterator loop vs index loop]]
+
+（全文完）
