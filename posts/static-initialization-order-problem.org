@@ -1,13 +1,14 @@
 #+BEGIN_COMMENT
 .. title: 静态初始化顺序问题
 .. slug: static-initialization-order-problem
-.. date: 2020-11-05 22:54:26 UTC+08:00
+.. date: 2020-10-21 22:54:26 UTC+08:00
+.. updated: 2020-11-11 23:50:26 UTC+08:00
 .. tags: cpp, static, singleton
 .. category: cpp
 .. link:
 .. description:
 .. type: text
-.. status: draft
+/.. status: draft
 #+END_COMMENT
 #+OPTIONS: num:nil
 
@@ -64,21 +65,84 @@ Singleton& Instance() {
 
 
 ** 终极形式的单例模式
-那么是否有一种单例模式的范例能够同时解决内存泄漏问题和析构顺序问题呢？答案是有的，只不过写法稍微复杂，并且存在一定的性能损失。
+那么是否有一种单例模式的范例能够同时解决内存泄漏问题和析构顺序问题呢？答案是有的，只不过写法稍微复杂，并且存在一定的性能损失。示例代码如下：
 
 #+BEGIN_COMMENT
 C++ FAQ chapter 16.16, 16.17
 #+END_COMMENT
 
+~singleton.h~ 文件内容：
 #+BEGIN_SRC cpp
-class Singleton
+class Singleton {
+public:
+    static Singleton& Instance();
+    class Init;
+private:
+    Singleton();
+    Singleton(const Singleton&) = delete;
+private:
+    friend Init;
+    static Singleton* s_pObj;
+};
+
+class Singleton::Init {
+public:
+    Init();
+    ~Init();
+private:
+    static unsigned s_count;
+};
+
+static Singleton::Init s_init; // 关键变量
 #+END_SRC
 
+~singleton.cpp~ 文件内容如下
+#+BEGIN_SRC cpp
+Singleton* Singleton::s_pObj = nullptr;
+unsigned Singleton::Init::s_count = 0;
 
+Singleton& Singleton::Instance() {
+    return *s_pObj;
+}
+Singleton::Singleton() {
+    printf("Singleton::Singleton\n");
+}
+void Singleton::Foo() {
+    printf("Singleton::Foo\n");
+}
 
+Singleton::Init::Init() {
+    if (s_count++ == 0) {
+        Singleton::s_pObj = new Singleton;
+    }
+}
+Singleton::Init::~Init() {
+    if (--s_count == 0) {
+        delete Singleton::s_pObj;
+    }
+}
+#+END_SRC
+
+每个使用了 =singleton.h= 头文件的 =*.cpp= 源文件都有其单独的 ~s_init~ 静态对象。由于这个静态对象出现在源文件比较靠前的位置，它会比其他的静态变量先初始化。准确地讲，它能够保证在源文件中其他的静态变量调用 ~Singleton::Instance~ 函数之前初始化完成（因为必须先引用头文件才能使用头文件中声明的函数）。
+
+单例对象 ~s_pObj~ 在第一个 ~s_init~ 静态对象初始化时被创建出来，在最后一个 ~s_init~ 静态对象销毁时被销毁，这样同时解决了前节遇到的问题。
+
+这种写法的问题是每次引用 ~singleton.h~ 头文件都会产生一个产生一个 ~s_init~ 静态对象，这意味这程序启动期间需要更多的内存。如果 ~singleton.h~ 这样的头文件被大量引用，这会显著增加程序的启动时间。
 
 ** 总结
-以上介绍的几种写法分别适用于什么情况。
+下面对这几种方案进行了比较：
+
+使用静态指针的单例模式：
+- 优点：容易记忆，使用方便，程序启动时效率高、安全，程序结束时安全。
+- 缺点：单例对象被遗弃在堆上，因此产生了内存泄漏。如果单例对象的析构函数必须执行，那么这个方法不适用。
+
+使用静态对象的单例模式：
+- 优点：容易记忆，使用方便，程序启动时效率高、安全，并且单例对象最终被析构。
+- 缺点：在程序结束时不安全。如果多个单例对象在析构时相互依赖就会出现问题。
+
+使用计数器的单例模式：
+- 优点：使用方便，程序启动时安全，程序结束时安全，并且单例对象最终被析构。
+- 缺点：写法复杂，不容易记忆。可能在程序启动和结束时产生性能问题。
 
 
 ** 参考资料
