@@ -66,7 +66,11 @@
 
     <p class="post-meta">
       
-    <time class="dt-published" datetime="2020-11-09T22:01:35+08:00" itemprop="datePublished">Nov 09, 2020</time></p>
+    <time class="dt-published" datetime="2020-11-09T22:01:35+08:00" itemprop="datePublished">Nov 09, 2020</time><span class="dt-updated"> • updated <time datetime="2020-12-10T12:39:35+08:00" itemprop="dateUpdated">Dec 10, 2020</time></span>
+
+      
+
+    </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
     <p>
 Linux中的信号（signal）是一个非常实用的功能，进程间能发送信号，内核也能向进程发送信号。本文总结了在进行信号编程时容易忽略的几个问题，方便后续开发过程中查阅。<br></p>
@@ -102,7 +106,14 @@ Linux中的信号（signal）是一个非常实用的功能，进程间能发送
 如果不希望处理某个信号，可以通过设置信号屏蔽字（signal mask）暂停信号。<br></p>
 
 <p>
-可以使用 <code>sigprocmask</code> 查看和修改当前程序的信号屏蔽字。信号屏蔽字可以根据需要增加和取消。如果在取消信号屏蔽字时，程序有待处理的（pending）信号，这个信号会在 <code>sigprocmask</code> 函数返回之前就被发送到程序了。所以，希望通过组合 <code>sigprocmask</code> 和 <code>sigtimedwait</code> 两个函数实现信号延迟处理的方案是行不通的，原因是在 <code>sigprocmask</code> 取消信号屏蔽字后，信号会在 <code>sigtimedwait</code> 开始等待之前就已经发送过来了。<br></p>
+可以使用 <code>sigprocmask</code> 函数查看和修改当前程序的信号屏蔽字，信号屏蔽字可以根据需要增加和取消。<br></p>
+
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;signal.h&gt;</span><span class="cp"></span>
+<span class="kt">int</span> <span class="nf">sigprocmask</span><span class="p">(</span><span class="kt">int</span> <span class="n">how</span><span class="p">,</span> <span class="k">const</span> <span class="kt">sigset_t</span><span class="o">*</span> <span class="n">set</span><span class="p">,</span> <span class="kt">sigset_t</span><span class="o">*</span> <span class="n">oset</span><span class="p">);</span>
+</pre></div>
+
+<p>
+如果在取消信号屏蔽字时，程序有待处理的（pending）信号，这个信号会在 <code>sigprocmask</code> 函数返回之前就被发送到程序了。所以，希望通过组合 <code>sigprocmask</code> 和 <code>sigtimedwait</code> 两个函数实现信号延迟处理的方案是行不通的，原因是在 <code>sigprocmask</code> 取消信号屏蔽字后，信号会在 <code>sigtimedwait</code> 开始等待之前就已经发送过来了。<br></p>
 
 <blockquote>
 <p>
@@ -110,20 +121,38 @@ Signal handlers are per process, signal masks are per thread.<br></p>
 </blockquote>
 
 <p>
-上面这句话摘自 stackoverflow 上的某个回答，我认为说的很好。在多线程程序中每个线程有各自的信号屏蔽字，每个线程的信号屏蔽字只对本线程生效。多线程程序没有一个统一的程序级（process level）的信号屏蔽字，并且在多线程程序中使用 <code>sigprocmask</code> 是未定义行为（undefined behaviour），应该使用对应 <code>pthread_sigmask</code> 函数。<br></p>
+上面这句话摘自 stackoverflow 上的某个回答，我认为说的很好。在多线程程序中每个线程有各自的信号屏蔽字，每个线程的信号屏蔽字只对本线程生效。多线程程序没有一个统一的程序级（process level）的信号屏蔽字，并且在多线程程序中使用 <code>sigprocmask</code> 函数是未定义行为（undefined behaviour），而应该使用对应多线程版本的 <code>pthread_sigmask</code> 函数。<br></p>
 </div>
 </div>
 
 
 <div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">参考资料</h2>
+<h2 id="sec-3">查看待处理的信号 pending signal</h2>
 <div class="outline-text-2" id="text-3">
+<p>
+可以使用 <code>sigpending</code> 函数读取当前线程的未决（待处理）信号集。未决信号就是被发送到程序中并处于屏蔽（blocked）状态的信号。<br></p>
+
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;signal.h&gt;</span><span class="cp"></span>
+<span class="kt">int</span> <span class="nf">sigpending</span><span class="p">(</span><span class="kt">sigset_t</span><span class="o">*</span> <span class="n">set</span><span class="p">);</span>
+</pre></div>
+
+<p>
+<b>注意</b> ：对于有些信号，在多次触发后有可能只记录一个 pending 状态。例如：当已经收到了 <code>SIGINT</code> 信号并且该信号处于待处理状态，后续又收到了新的 <code>SIGINT</code> 信号。在取消屏蔽这个信号时，有可能只会感知到一次 <code>SIGINT</code> 信号。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">参考资料</h2>
+<div class="outline-text-2" id="text-4">
 <ul class="org-ul">
 <li>
 <a href="https://www.gnu.org/software/libc/manual/html_node/Process-Signal-Mask.html">gnu manual - process signal mask</a><br>
 </li>
 <li>
 <a href="https://man7.org/linux/man-pages/man7/signal-safety.7.html">linux man page - signal safety</a><br>
+</li>
+<li>
+<a href="http://akaedu.github.io/book/ch33s03.html">github pages - akaedu</a><br>
 </li>
 </ul>
 <p>
