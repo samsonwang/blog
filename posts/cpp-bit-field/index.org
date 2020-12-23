@@ -1,14 +1,15 @@
 #+BEGIN_COMMENT
 .. title: C/C++中的位域
-.. slug: bit-field
+.. slug: cpp-bit-field
 .. date: 2018-07-11 18:03:37 UTC+08:00
-.. tags: cpp
+.. updated: 2020-12-22 23:01:00 UTC+08:00
+.. tags: cpp, bit field, union, struct
 .. category: cpp
-.. link: 
-.. description: 
+.. link:
+.. description:
 .. type: text
 #+END_COMMENT
-#+OPTIONS: num:t
+#+OPTIONS: num:nil
 
 #+TITLE: C/C++中的位域
 
@@ -26,17 +27,22 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 这种数据结构的好处：
 - 可以使数据单元节省储存空间，当程序需要成千上万个数据单元时，这种方法就显得尤为重要。
 - 位段可以很方便的访问一个整数值的部分内容从而可以简化程序源代码。
-而位域这种数据结构的缺点在于，其内存分配与内存对齐的实现方式依赖于具体的机器和系统，在不同的平台可能有不同的结果，这导致了位段在本质上是不可移植的。
+
+而位域这种数据结构的缺点在于，其内存分配与内存对齐的实现方式依赖于具体的机器和系统，在不同的平台可能有不同的结果，这导致了位域在本质上是不可移植的。
+
 
 ** 位域的语法
+下面就是位域的语法格式。
 #+BEGIN_SRC c
 identifier(optional) attr(optional) : size
 #+END_SRC
 
-注意：
-- size的大小不能超过identifier所包含最大比特位个数。
-- identifier为空时表示对应的size个数的比特位不使用
-- size为0时表示根据前类型强制补齐
+*注意* ：
+- =size= 的大小不能超过 =identifier= 所包含最大比特位个数。
+- =identifier= 为空时表示对应的 =size= 个数的比特位不使用
+- =size= 为0时表示根据前类型强制补齐
+
+以下为代码示例。
 
 #+BEGIN_SRC c
 struct S1 {
@@ -62,11 +68,12 @@ struct S2 {
 };
 #+END_SRC
 
-*** 在size取0时如何理解
-对于size取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。
+
+*** 在 =size= 取0时如何理解
+对于 =size= 取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。
 如下所示，定义了如下几种情况。
 
-**** case1
+*case1*
 #+BEGIN_SRC c
 union un1 {
     int n1;
@@ -77,6 +84,7 @@ union un1 {
     } st;
 };
 #+END_SRC
+
 对联合体中的结构体位段进行赋值，并将联合体中的内容打印出来。
 #+BEGIN_SRC c
 union un1 u1;
@@ -84,12 +92,13 @@ u1.st.nn1 = 1;
 u1.st.nn2 = 1;
 printf("union u1.n1=0x%08x sizeof(un1)=%zu\n", u1.n1, sizeof(un1));
 #+END_SRC
+
 输出结果为
 #+BEGIN_SRC c
 union un1.n1=0x00000001 sizeof(un1)=8
 #+END_SRC
 
-**** case2
+*case2*
 #+BEGIN_SRC c
 union un1 {
     int n1;
@@ -100,12 +109,13 @@ union un1 {
     } st;
 };
 #+END_SRC
+
 输出结果为
 #+BEGIN_SRC c
 union un1.n1=0x00000101 sizeof(un1)=4
 #+END_SRC
 
-**** case3
+*case3*
 #+BEGIN_SRC c
 union un1 {
     int n1;
@@ -116,13 +126,14 @@ union un1 {
     } st;
 };
 #+END_SRC
+
 输出结果为
 #+BEGIN_SRC c
 union un1.n1=0x00010001 sizeof(un1)=4
 #+END_SRC
 
 
-**** case4
+*case4*
 #+BEGIN_SRC c
 union un1 {
     int n1;
@@ -133,27 +144,35 @@ union un1 {
     } st;
 };
 #+END_SRC
+
 输出结果为
 #+BEGIN_SRC c
 union un1.n1=0x00000101 sizeof(un1)=4
 #+END_SRC
 
-*** =struct= 标识符
-多数例子都是以 =struct= 作为位域的组织标识，在C++中能否使用 =class= 作为位域的标识符。
-经过测试，是可以使用 =class= 的，但是需要注意 =class= 的默认访问控制属性为 =private=
+
+*** =struct= 与 =class= 关键字
+多数例子都是以 =struct= 作为位域的组织标识，在C++中能否使用 =class= 作为位域的标识符呢？
+经过测试，是可以使用 =class= 关键字的，但是需要注意 =class= 的默认访问控制属性为 =private= 。
+
 
 ** 位域的常见应用场景
-*为什么要使用位域？位域适合那些情况？*
+为什么要使用位域？位域适合那些情况？
+
 位域的主要使用目的是节省对象的内存使用。在存放一些比较小的数据时，使用位域能够使字节中的每个比特位合理地利用起来，避免内存浪费。
+
 比较典型的应用是描述硬件寄存器。如果有32个一组的寄存器，每个寄存器代表一个比特位，就可以使用位域表示这组寄存器。
+
 
 ** C++中的位操作接口
 C++中也提供了一套位操作的接口 =std::bitset= ，这套接口提供了指定比特位数据的操作接口。
 
-** 参考资料
-- [[https://zh.wikipedia.org/wiki/%25E4%25BD%258D%25E6%25AE%25B5][wikipedia bit-field]]
-- [[https://en.cppreference.com/w/cpp/language/bit_field][cppreference bit-field]]
-- [[https://msdn.microsoft.com/zh-cn/library/ewwyfdbe.aspx][microsoft msdn]]
-- [[https://stackoverflow.com/questions/24933242/when-to-use-bit-fields-in-c][stackoverflow]]
-- [[https://en.cppreference.com/w/cpp/utility/bitset][cppreference std::bitset]]
 
+** 参考资料
+- [[https://zh.wikipedia.org/wiki/位段][wikipedia - bit field]]
+- [[https://en.cppreference.com/w/cpp/language/bit_field][cppreference - bit field]]
+- [[https://msdn.microsoft.com/zh-cn/library/ewwyfdbe.aspx][microsoft msdn - C++ bit fileds]]
+- [[https://stackoverflow.com/questions/24933242/when-to-use-bit-fields-in-c][stackoverflow - how to use bit field]]
+- [[https://en.cppreference.com/w/cpp/utility/bitset][cppreference - ~std::bitset~]]
+
+（全文完）
