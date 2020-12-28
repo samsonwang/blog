@@ -43,6 +43,7 @@ var modAnchorTarget = function () {
     if (!pattern.test(item.href)) {
       // console.log("modAnchortarget, outer link", item);
       item.target = "_blank";
+      item.rel = "noreferer";
     }
   });
 };
