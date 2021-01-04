@@ -244,6 +244,7 @@ POSTS = (
 
     ("archives/2018/*.org", "posts", "post.tmpl"),
     ("archives/2019/*.org", "posts", "post.tmpl"),
+    ("archives/2020/*.org", "posts", "post.tmpl"),
 )
 
 PAGES = (
