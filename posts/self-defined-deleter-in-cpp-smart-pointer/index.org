@@ -2,7 +2,7 @@
 .. title: 在C++智能指针中使用自定义的deleter
 .. slug: self-defined-deleter-in-cpp-smart-pointer
 .. date: 2020-06-11 13:37:16 UTC+08:00
-.. updated: 2020-10-08 10:21:16 UTC+08:00
+.. updated: 2021-03-02 09:21:16 UTC+08:00
 .. tags: cpp, smart pointer, deleter, defer
 .. category: cpp
 .. link:
@@ -14,7 +14,7 @@
 
 #+TITLE: 在C++智能指针中使用自定义的deleter
 
-在最近的开发中，我使用了智能指针来管理一个对象，但是这个对象需要调用特定的函数完成内存释放。用编程的专业术语来讲，就是为智能指针提供一个自定义的deleter。我很好奇的是，这个自定义资源回收函数是否需要在入口处对参数进行空指针检查呢？
+在最近的开发中，我使用了智能指针来管理一个动态申请的对象，但是这个对象需要调用特定的函数完成内存释放。以编程的专业术语来讲，就是为智能指针提供一个自定义的deleter。我很好奇的是，这个自定义资源回收函数是否需要在入口处对参数进行空指针检查呢？
 
 {{{TEASER_END}}}
 
@@ -27,16 +27,16 @@ std::unique_ptr<char, void(*)(char*)> pBuf(new char[10],
                                            [](char* p){delete[] p;});
 #+END_SRC
 
+在上面的写法中， ~std::unique_ptr~ 会使用 ~delete[]~ 完成内存释放，这样就满足了释放数组内存的语法要求。
+
 其实 ~std::unique_ptr~ 是支持管理由 ~new~ 申请的 *数组* 的，写法如下：
 
 #+BEGIN_SRC cpp
 std::unique_ptr<char[]> buf(new char[10]);
 #+END_SRC
 
-在上面的写法中， ~std::unique_ptr~ 会使用 ~delete[]~ 完成内存释放，这样就满足了释放数组内存的语法要求。
 
-
-让我来举个离实际开发更近一些的例子。在使用libevent库时，它使用 ~evbuffer~ 结构体来缓存网络通信中的数据，并提供了如下的函数接口来申请和释放 ~evbuffer~ 。
+让我来举个离实际开发更近一些的例子。在使用libevent库时，它使用 ~evbuffer~ 结构体来缓存网络通信中的数据，并提供了如下的函数接口来申请和释放 ~evbuffer~ 对象。
 
 #+BEGIN_SRC c
 struct evbuffer* evbuffer_new();
@@ -49,7 +49,7 @@ void evbuffer_free(struct evbuffer* buf);
 std::unique_ptr<evbuffer, void(*)(evbuffer*)> pBuf(evbuffer_new(), evbuffer_free);
 #+END_SRC
 
-这样就能够在跳出作用域时由 ~std::unique_ptr~ 自动释放 ~evbuffer~ 。
+这样就能够在跳出作用域时由 ~std::unique_ptr~ 自动释放 ~evbuffer~ 对象。
 
 
 ** 自定义deleter要进行空指针判断吗？
@@ -97,7 +97,9 @@ std::shared_ptr<char> buf(nullptr, [](char* p) {
 });
 #+END_SRC
 
-值得注意的是，在 ~std::shared_ptr~ 使用自定义deleter时并不需要在方括号中提供函数类型，这与 ~std::unique_ptr~ 不同。
+*总结* ：在 ~std::unique_ptr~ 的自定义deleter函数是 *不需要* 在入口进行空指针判断。在 ~std::shared_ptr~ 的自定义deleter函数 *需要* 在入口进行空指针判断。
+
+另外值得注意的是，在 ~std::shared_ptr~ 使用自定义deleter时并不需要在方括号中提供函数类型，这也与 ~std::unique_ptr~ 不同。
 
 我比较好奇，在查阅并比较了标准后，发现他们在定义和声明的时候就有区别，详细代码比较如下。
 
@@ -148,9 +150,10 @@ int test_defer() {
 
 *updated 2020/10/09:*
 这种 ~std::shared_ptr~ 形成的简易 ~defer~ 在使用时还是有些限制的：
-1. 已经设定好的 ~defer~ 函数是不能取消的，调用 ~reset~ 接口或使用 ~nullptr~ 替代原有指针都会导致原对象销毁，从而触发 ~defer~ 函数调用。换言之，只能将 ~defer~ 回调函数提前，而不能将其取消。
+1. 已经设定好的 ~defer~ 函数是不能取消的，调用 ~reset~ 接口或使用 ~nullptr~ 替代原有指针都会导致原对象销毁，从而触发 ~defer~ 函数调用。换言之，只能通过手动调用 ~reset~ 将 ~defer~ 的回调函数提前，而不能将其取消。
 2. 若需要 ~defer~ 函数能够取消，可以通过增加一个 ~bool~ 变量，在 ~defer~ 函数的开始通过检查这个 ~bool~ 变量决定是否执行后续的操作。这相当于给 ~defer~ 回调函数增加了一个开关，通过调整开关能控制函数逻辑是否执行。需要注意匿名函数（lambda表达式）在捕获这个 ~bool~ 变量时需要以引用的方式（ =&= 符号），而不能使用拷贝的方式（ === 符号 ），在VS2017中测试结果为使用拷贝方式捕获的变量并没有反映变量值的修改结果。
-3. 在 ~defer~ 函数执行时，其形式参数可能存在生存期问题，即由于跳出作用域而被销毁。这其实涉及到对象的析构顺序，所以在使用时一定要仔细考虑参数对象的生存期问题。
+3. 在 ~defer~ 函数执行时，其形式参数可能存在生存期问题，即函数形式参数由于跳出作用域而被销毁。这其实涉及到对象的析构顺序，所以在使用时一定要仔细考虑参数对象的生存期。
+4. 这种 ~defer~ 写法并不是一种常规写法，其可读性不高，容易让阅读代码的人产生误解。
 
 
 ** 参考资料
