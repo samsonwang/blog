@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>谈谈自己在开发launchy时的一些收获 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/launchy/launchy-dev-note-1/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2019/cpp-time-cheatsheet/" title="C++常用的时间接口" type="text/html">
+<link rel="next" href="/posts/2019/thread-api-cheatsheet/" title="线程API总结" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="谈谈自己在开发launchy时的一些收获">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/launchy/launchy-dev-note-1/">
+<meta property="og:description" content="在开发launchy时，我学到了很多开发相关的技巧，对于如何做好一款软件也有了更加全面的认识。
+
+
+
+
+
+1 将目标拆分成小的任务
+
+
+在开发python插件模块时，对于这样的陌生任务，我找不到任何切入点。停滞的状态持续了一周，我不断地查找相关技术资料，学习C++和python跨语言开发的各种知识，但仍然感觉无从下手。因为做一个内嵌在C++软件的python插件系统是一个非常大的概念，我也没有相关">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2019-01-09T11:54:32+08:00">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="launchy">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">谈谈自己在开发launchy时的一些收获</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2019-01-09T11:54:32+08:00" itemprop="datePublished">Jan 09, 2019</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+在开发launchy时，我学到了很多开发相关的技巧，对于如何做好一款软件也有了更加全面的认识。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">
+<span class="section-number-2">1</span> 将目标拆分成小的任务</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+在开发python插件模块时，对于这样的陌生任务，我找不到任何切入点。停滞的状态持续了一周，我不断地查找相关技术资料，学习C++和python跨语言开发的各种知识，但仍然感觉无从下手。因为做一个内嵌在C++软件的python插件系统是一个非常大的概念，我也没有相关的经验，对于这类任务想要一步到位是非常难的。<br></p>
+
+<p>
+之后我改变了思路，将所需要实现的功能都列出来，拆分为多个较小的功能点，从一个最基础的demo开始入手，在demo的基础上增加新的功能点，逐渐完善出整体构架。这样我就可以有一个相对容易的小目标摆在面前，对于每一次功能改进，我都只需要关注具体的某一个要点，在完成一个个小任务后对于下一个阶段的开发能够起到一定的激励作用。<br></p>
+</div>
+</div>
+
+
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">
+<span class="section-number-2">2</span> 从用户的角度去思考</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+作为一个开发人员，我常常思考的问题是软件的构架、代码的健壮性等一些与开发密切相关的问题。这可能是软件工程师的天性，我一直向往更加优雅的代码实现，更加漂亮的代码风格，更加灵活的代码结构。但是不得不说的是，对源码级别的欣赏仅限于同行之间，而且得是愿意深入研究源码的人才有可能体会到程序编码之美。软件是有灵魂的，我认为每一款成功软件都是一件艺术品，但能够欣赏到软件内在美的人很少。<br></p>
+
+<p>
+当我将launchy介绍给别人时，我得到的反馈通常是软件功能相关的问题。一般用户并不关心软件设计的精巧，通常他们只关心软件的功能是否能够满足使用需求。作为用户来说，软件是否稳定可靠、软件的界面是否美观、软件会不会占用过多的系统资源等等一些比较直观的问题才是他们最关心的。<br></p>
+
+<p>
+认识到这一点后，在思考launchy的开发方向时，我就会尝试以用户的身份去分析软件的功能，因为用户才是软件的最终受众。<br></p>
+</div>
+</div>
+
+
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">
+<span class="section-number-2">3</span> 在思考产品时做减法</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+在一开始接手Launchy时，我总是想把所有部分都做好，这样实际上增加了很多不必要的功能，有些功能随着开发进度的推进变得冗余，有些功能从一开始就是不必要的。下面就这两点展开详细说：<br></p>
+
+<p>
+Launchy有两个计算器插件，最开始用 <code>exprtk</code> 计算库实现的Calcy，这个是用C++写的。之后将python插件功能做好之后，又出现了基于python的CalcyPy。我发现python版计算器才是真正合适的，或者说，用python开发插件是更加方便的。使用python做插件开发不需要考虑二进制兼容性，在新增插件接口后不需要像C++一样重新编译。在综合考虑后，我决定只保留一个CalcyPy这一个计算器插件就足够了。<br></p>
+
+<p>
+在Launchy最开始维护的时候，我搜集了一些旧版插件的源码，并尝试将它们移植到新版中。这其中就包括Tasky，Tasky是帮助windows用户进行窗口切换的插件。在我移植完成后就发现这款插件实际上很鸡肋，因为windows自带的窗口切换已经很方便了，所以在使用过程中我也慢慢发现，这款插件的利用率真的非常低。<br></p>
+
+<p>
+作为业余的开发项目，我能够投入的时间本身就很有限，所以也就要思考真正对这款软件有用的功能是什么，要把时间用在真正有价值的地方。<br></p>
+
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/launchy/" rel="tag">launchy</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2019/cpp-time-cheatsheet/" rel="prev">Previous post
+        <br><span>C++常用的时间接口</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2019/thread-api-cheatsheet/" rel="next">Next post
+        <br><span>线程API总结</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/launchy/launchy-dev-note-1/",
+        disqus_title="\u8c08\u8c08\u81ea\u5df1\u5728\u5f00\u53d1launchy\u65f6\u7684\u4e00\u4e9b\u6536\u83b7",
+        disqus_identifier="_cache/archives/launchy/launchy-dev-note-1.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="u-email"><a href="mailto:wangzhilv@gmail.com">wangzhilv@gmail.com</a></div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

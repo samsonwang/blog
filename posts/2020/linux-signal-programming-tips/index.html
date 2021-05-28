@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>处理Linux信号需要注意的几个问题 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2020/linux-signal-programming-tips/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2020/static-initialization-order-problem/" title="静态初始化顺序问题" type="text/html">
+<link rel="next" href="/posts/2020/gtags-for-specified-files-and-directories/" title="为指定目录和文件创建gtags" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="处理Linux信号需要注意的几个问题">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2020/linux-signal-programming-tips/">
+<meta property="og:description" content="Linux中的信号（signal）是一个非常实用的功能，进程间能发送信号，内核也能向进程发送信号。本文总结了在进行信号编程时容易忽略的几个问题，方便后续开发过程中查阅。
+
+
+
+
+
+
+在信号回调函数中操作互斥锁
+
+
+信号回调函数是用户自定义的一个函数，它在程序中有需要处理的信号时被调用，但它在运行时既不是内核态也不是用户态。因为当程序运行在内核态时信号不会响应，运行在用户态时所有的信号都已经处理完成">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2020-11-09T22:01:35+08:00">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="multi-thread">
+<meta property="article:tag" content="sigmask">
+<meta property="article:tag" content="signal">
+<meta property="article:tag" content="tips">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">处理Linux信号需要注意的几个问题</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2020-11-09T22:01:35+08:00" itemprop="datePublished">Nov 09, 2020</time><span class="dt-updated"> • updated <time datetime="2020-12-17T09:39:35+08:00" itemprop="dateUpdated">Dec 17, 2020</time></span>
+
+      
+
+    </p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+Linux中的信号（signal）是一个非常实用的功能，进程间能发送信号，内核也能向进程发送信号。本文总结了在进行信号编程时容易忽略的几个问题，方便后续开发过程中查阅。<br></p>
+
+
+<!-- TEASER_END -->
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">在信号回调函数中操作互斥锁</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+信号回调函数是用户自定义的一个函数，它在程序中有需要处理的信号时被调用，但它在运行时既不是内核态也不是用户态。因为当程序运行在内核态时信号不会响应，运行在用户态时所有的信号都已经处理完成。<br></p>
+
+<p>
+这个特性使得信号回调函数在编写时需要额外小心。例如在信号回调函数中是不能操作互斥锁的，若在信号回调函数中操作了互斥锁，可能会导致程序卡死。<br></p>
+
+<p>
+这涉及到信号处理函数安全（signal safe）的概念，它与线程安全（thread safe）概念相似，<a href="https://man7.org/linux/man-pages/man7/signal-safety.7.html">这里</a> 列举了所有能够在信号处理函数中执行的系统函数。<br></p>
+
+<p>
+如果真的需要在信号回调函数中操作互斥锁，妥协的方法是在回调函数中创建一个线程，在这个新创建出的线程中操作互斥锁。这个方案的缺陷是线程可能会创建失败，如需高频地接收和处理信号就需要频繁地创建和销毁线程，可能会由于超过电脑的处理性能，最终导致线程创建失败。<br></p>
+
+<p>
+相关博文：<a href="/posts/linux-signal-handler-callback-mutex/" class="post-url">在Linux的信号处理函数中不要进行锁相关操作</a><br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">信号屏蔽字 signal mask</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+如果不希望处理某个信号，可以通过设置信号屏蔽字（signal mask）暂停信号。<br></p>
+
+<p>
+可以使用 <code>sigprocmask</code> 函数查看和修改当前程序的信号屏蔽字，信号屏蔽字可以根据需要增加和取消。<br></p>
+
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;signal.h&gt;</span><span class="cp"></span>
+<span class="kt">int</span> <span class="nf">sigprocmask</span><span class="p">(</span><span class="kt">int</span> <span class="n">how</span><span class="p">,</span> <span class="k">const</span> <span class="kt">sigset_t</span><span class="o">*</span> <span class="n">set</span><span class="p">,</span> <span class="kt">sigset_t</span><span class="o">*</span> <span class="n">oset</span><span class="p">);</span>
+</pre></div>
+
+<p>
+如果在取消信号屏蔽字时，程序有待处理的（pending）信号，这个信号会在 <code>sigprocmask</code> 函数返回之前就被发送到程序了。所以，希望通过组合 <code>sigprocmask</code> 和 <code>sigtimedwait</code> 两个函数实现信号延迟处理的方案是行不通的，原因是在 <code>sigprocmask</code> 取消信号屏蔽字后，信号会在 <code>sigtimedwait</code> 开始等待之前就已经发送过来了。<br></p>
+
+<blockquote>
+<p>
+Signal handlers are per process, signal masks are per thread.<br></p>
+</blockquote>
+
+<p>
+上面这句话摘自 stackoverflow 上的某个回答，我认为说的很好。在多线程程序中每个线程有各自的信号屏蔽字，每个线程的信号屏蔽字只对本线程生效。多线程程序没有一个统一的程序级（process level）的信号屏蔽字，并且在多线程程序中使用 <code>sigprocmask</code> 函数是未定义行为（undefined behaviour），而应该使用对应多线程版本的 <code>pthread_sigmask</code> 函数。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">查看待处理的信号 pending signal</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+可以使用 <code>sigpending</code> 函数读取当前线程的未决（待处理）信号集。未决信号就是被发送到程序中并处于屏蔽（blocked）状态的信号。<br></p>
+
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;signal.h&gt;</span><span class="cp"></span>
+<span class="kt">int</span> <span class="nf">sigpending</span><span class="p">(</span><span class="kt">sigset_t</span><span class="o">*</span> <span class="n">set</span><span class="p">);</span>
+</pre></div>
+
+<p>
+<b>注意</b> ：对于有些信号，在多次触发后有可能只记录一个 pending 状态。例如：当已经收到了 <code>SIGINT</code> 信号并且该信号处于待处理状态，后续又收到了新的 <code>SIGINT</code> 信号。在取消屏蔽这个信号时，有可能只会感知到一次 <code>SIGINT</code> 信号。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">参考资料</h2>
+<div class="outline-text-2" id="text-4">
+<ul class="org-ul">
+<li>
+<a href="https://www.gnu.org/software/libc/manual/html_node/Process-Signal-Mask.html">gnu manual - process signal mask</a><br>
+</li>
+<li>
+<a href="https://man7.org/linux/man-pages/man7/signal-safety.7.html">linux man page - signal safety</a><br>
+</li>
+<li>
+<a href="http://akaedu.github.io/book/ch33s03.html">github pages - akaedu</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/multi-thread/" rel="tag">multi-thread</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/sigmask/" rel="tag">sigmask</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/signal/" rel="tag">signal</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/tips/" rel="tag">tips</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2020/static-initialization-order-problem/" rel="prev">Previous post
+        <br><span>静态初始化顺序问题</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2020/gtags-for-specified-files-and-directories/" rel="next">Next post
+        <br><span>为指定目录和文件创建gtags</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2020/linux-signal-programming-tips/",
+        disqus_title="\u5904\u7406Linux\u4fe1\u53f7\u9700\u8981\u6ce8\u610f\u7684\u51e0\u4e2a\u95ee\u9898",
+        disqus_identifier="_cache/archives/2020/linux-signal-programming-tips.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="u-email"><a href="mailto:wangzhilv@gmail.com">wangzhilv@gmail.com</a></div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TCP协议（RFC793）-1- | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/transmission-control-protocol-1/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/algorithm/algorithm-weekly-find-first-and-last-position-of-element-in-sorted-array/" title="每周算法：从有序数组中找到目标出现的第一次和最后一次的位置" type="text/html">
+<link rel="next" href="/posts/algorithm/algorithm-weekly-valid-sudoku/" title="每周算法：验证数独有效性" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="TCP协议（RFC793）-1-">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/transmission-control-protocol-1/">
+<meta property="og:description" content="传输控制协议（TCP协议）是因特网协议栈中很重要的一个协议，它是IP协议的补充。TCP协议提供基于IP网络的可靠的、有序的、查错的（error checked）节流传输。主流网络应大多基于TCP协议的。TCP协议格式由RFC793定义，本文是RFC793概述部分的要点摘录，阐述了基础概念和实现原理。
+
+
+
+
+
+概述
+
+
+本节主要讲述了TCP协议的定义，阐述了核心功能的实现原理。
+
+
+
+TCP是基于">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-11-01T09:56:05+08:00">
+<meta property="article:tag" content="ip">
+<meta property="article:tag" content="network">
+<meta property="article:tag" content="tcp">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">TCP协议（RFC793）-1-</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-11-01T09:56:05+08:00" itemprop="datePublished">Nov 01, 2018</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+传输控制协议（TCP协议）是因特网协议栈中很重要的一个协议，它是IP协议的补充。TCP协议提供基于IP网络的可靠的、有序的、查错的（error checked）节流传输。主流网络应大多基于TCP协议的。TCP协议格式由RFC793定义，本文是RFC793概述部分的要点摘录，阐述了基础概念和实现原理。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">概述</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+本节主要讲述了TCP协议的定义，阐述了核心功能的实现原理。<br></p>
+
+<p>
+TCP是基于连接的、端对端的、可靠的通信协议，TCP在设计时考虑了与其他层通信协议的兼容性。<br></p>
+<blockquote>
+<p>
+TCP is a connection-oriented, end-to-end reliable protocol designed to fit into a layered hierarchy of protocols which support multi-network applications.<br></p>
+</blockquote>
+
+<p>
+TCP提供可靠的进程间通信方式。<br></p>
+<blockquote>
+<p>
+The TCP is intended to provide a reliable process-to-process communication service in a multinetwork environment. The TCP is intended to be a host-to-host protocol in common use in multiple networks.<br></p>
+</blockquote>
+
+<p>
+TCP包含下列功能特性:<br></p>
+<ul class="org-ul">
+<li>Basic Data Transfer<br>
+</li>
+<li>Reliability<br>
+</li>
+<li>Flow Control<br>
+</li>
+<li>Multiplexing<br>
+</li>
+<li>Connections<br>
+</li>
+<li>Precedence and Security<br>
+</li>
+</ul>
+<p>
+TCP协议是传输层通讯协议。<br></p>
+
+<p>
+不要求数据传输可靠性的应用程序可以使用UDP协议，UDP协议是一种无连接的协议，UDP协议更注重低延迟。<br></p>
+<blockquote>
+<p>
+Applications that do not require reliable data stream service may use the User Datagram Protocol (UDP), which provides a connectionless datagram service that emphasizes reduced latency over reliability.<br></p>
+</blockquote>
+</div>
+
+<div id="outline-container-sec-1-1" class="outline-3">
+<h3 id="sec-1-1">基础概念</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+本节内容主要是TCP协议中的相关基础概念，对基础概念的准确理解是TCP协议展开论述的前提。<br></p>
+
+<blockquote>
+<ul class="org-ul">
+<li>The internetwork environment consists of hosts connected to networks which are in turn interconnected via gateways. It is assumed that the network is based on packet switching technology.<br>
+</li>
+
+<li>The term packet is used generically here to mean the data of one transaction between a host and its network.<br>
+</li>
+
+<li>Hosts are computers attached to a network, and from the communication network’s point of view, are the sources and destinations of packets.<br>
+</li>
+
+<li>Processes are viewed as the active elements in host computers (in accordance with the fairly common definition of a process as a program in execution).<br>
+</li>
+
+<li>Since a process may need to distinguish among several communication streams between itself and another process (or processes), we imagine that each process may have a number of ports through which it communicates with the ports of other processes.<br>
+</li>
+</ul>
+</blockquote>
+
+<p>
+TCP作为操作系统的一个模块，用户可以像操作文件系统一样来操作TCP。<br></p>
+<blockquote>
+<p>
+The TCP is assumed to be a module in an operating system. The users access the TCP much like they would access the file system.<br></p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-sec-1-2" class="outline-3">
+<h3 id="sec-1-2">通信可靠性（Reliable Communication）</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+使用TCP进行传输的数据是有序的、可靠的。<br></p>
+<blockquote>
+<p>
+A stream of data sent on a TCP connection is delivered reliably and in order at the destination.<br></p>
+</blockquote>
+
+<p>
+传输的可靠性通过序列号的应答机制来保证。<br></p>
+<blockquote>
+<p>
+Transmission is made reliable via the use of sequence numbers and acknowledgments.<br>
+An acknowledgment by TCP does not guarantee that the data has been delivered to the end user, but only that the receiving TCP has taken the responsibility to do so.<br></p>
+</blockquote>
+
+<p>
+TCP的拥塞控制的实现原理为滑动窗口。<br></p>
+<blockquote>
+<p>
+To govern the flow of data between TCPs, a flow control mechanism is employed. The receiving TCP reports a "window" to the sending TCP. This window specifies the number of octets, starting with the acknowledgment number, that the receiving TCP is currently prepared to receive.<br></p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-sec-1-3" class="outline-3">
+<h3 id="sec-1-3">连接的建立和断开（Connection Establishment and Clearing）</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+通过IP地址和端口号来创建唯一的 <code>socket</code> 。<br></p>
+<blockquote>
+<p>
+To identify the separate data streams that a TCP may handle, the TCP provides a port identifier. Since port identifiers are selected independently by each TCP they might not be unique. To provide for unique addresses within each TCP, we concatenate an internet address identifying the TCP with a port identifier to create a socket which will be unique throughout all networks connected together.<br></p>
+</blockquote>
+
+<p>
+A connection is fully specified by the pair of sockets at the ends. A local socket may participate in many connections to different foreign sockets. A connection can be used to carry data in both directions, that is, it is "full duplex".<br></p>
+
+<p>
+A connection is specified in the OPEN call by the local port and foreign socket arguments. In return, the TCP supplies a (short) local connection name by which the user refers to the connection in subsequent calls. To store this information we imagine that there is a data structure called a Transmission Control Block (TCB).<br></p>
+
+<p>
+A passive OPEN request means that the process wants to accept incoming connection requests rather than attempting to initiate a connection. A service process that wished to provide services for unknown other processes would issue a passive OPEN request with an unspecified foreign socket. Processes can issue passive OPENs and wait for matching active OPENs from other processes and be informed by the TCP when connections have been established.<br></p>
+
+<p>
+The procedures to establish connections utilize the synchronize (SYN) control flag and involves an exchange of three messages. This exchange has been termed a three-way hand shake.<br></p>
+
+<p>
+A connection is initiated by the rendezvous of an arriving segment containing a SYN and a waiting TCB entry each created by a user OPEN command. The matching of local and foreign sockets determines when a connection has been initiated. The connection becomes "established" when sequence numbers have been synchronized in both directions.<br></p>
+
+<p>
+The clearing of a connection also involves the exchange of segments, in this case carrying the FIN control flag.<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-1-4" class="outline-3">
+<h3 id="sec-1-4">数据传输（Data Communication）</h3>
+<div class="outline-text-3" id="text-1-4">
+<p>
+The data that flows on a connection may be thought of as a stream of octets. The sending user indicates in each SEND call whether the data in that call (and any preceeding calls) should be immediately pushed through to the receiving user by the setting of the PUSH flag.<br></p>
+
+<p>
+A sending TCP is allowed to collect data from the sending user and to send that data in segments at its own convenience, until the push function is signaled, then it must send all unsent data. When a receiving TCP sees the PUSH flag, it must not wait for more data from the sending TCP before passing the data to the receiving process.<br></p>
+
+<p>
+There is a coupling between the push function and the use of buffers of data that cross the TCP/user interface. Each time a PUSH flag is associated with data placed into the receiving user’s buffer, the buffer is returned to the user for processing even if the buffer is not filled. If data arrives that fills the user’s buffer before a PUSH is seen, the data is passed to the user in buffer size units.<br></p>
+
+<p>
+TCP also provides a means to communicate to the receiver of data that at some point further along in the data stream than the receiver is currently reading there is urgent data. TCP does not attempt to define what the user specifically does upon being notified of pending urgent data, but the general notion is that the receiving process will take action to process the urgent data quickly.<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-1-5" class="outline-3">
+<h3 id="sec-1-5">优先性和安全性（Precedence and Security）</h3>
+<div class="outline-text-3" id="text-1-5">
+<p>
+The TCP makes use of the internet protocol type of service field and security option to provide precedence and security on a per connection basis to TCP users. Not all TCP modules will necessarily function in a multilevel secure environment; some may be limited to unclassified use only, and others may operate at only one security level and compartment. Consequently, some TCP implementations and services to users may be limited to a subset of the multilevel secure case.<br></p>
+
+<p>
+TCP modules which operate in a multilevel secure environment must properly mark outgoing segments with the security, compartment, and precedence. Such TCP modules must also provide to their users or higher level protocols such as Telnet or THP an interface to allow them to specify the desired security level, compartment, and precedence of connections.<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-1-6" class="outline-3">
+<h3 id="sec-1-6">鲁棒性原则（Robustness Principle）</h3>
+<div class="outline-text-3" id="text-1-6">
+<p>
+TCP implementations will follow a general principle of robustness: be conservative in what you do, be liberal in what you accept from others.<br></p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">参考资料</h2>
+<div class="outline-text-2" id="text-2">
+<ul class="org-ul">
+<li>
+<a href="https://tools.ietf.org/html/rfc793">https://tools.ietf.org/html/rfc793</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Transmission_Control_Protocol">https://en.wikipedia.org/wiki/Transmission_Control_Protocol</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/ip/" rel="tag">ip</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/network/" rel="tag">network</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/tcp/" rel="tag">tcp</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/algorithm/algorithm-weekly-find-first-and-last-position-of-element-in-sorted-array/" rel="prev">Previous post
+        <br><span>每周算法：从有序数组中找到目标出现的第一次和最后一次的位置</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/algorithm/algorithm-weekly-valid-sudoku/" rel="next">Next post
+        <br><span>每周算法：验证数独有效性</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2018/transmission-control-protocol-1/",
+        disqus_title="TCP\u534f\u8bae\uff08RFC793\uff09-1-",
+        disqus_identifier="_cache/archives/2018/transmission-control-protocol-1.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="u-email"><a href="mailto:wangzhilv@gmail.com">wangzhilv@gmail.com</a></div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

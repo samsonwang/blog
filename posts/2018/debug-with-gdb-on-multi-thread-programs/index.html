@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>使用gdb调试多线程程序 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/debug-with-gdb-on-multi-thread-programs/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2018/gdb-ignore-received-signal/" title="在gdb调试时忽略系统信号（signal）" type="text/html">
+<link rel="next" href="/posts/2018/linux-command-examples-ipcs/" title="Linux常用命令行指令 - ipcs" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="使用gdb调试多线程程序">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/debug-with-gdb-on-multi-thread-programs/">
+<meta property="og:description" content="查看当前线程信息
+
+
+将进程中的各个线程信息显示出来
+
+(gdb) info threads
+
+
+
+切换到指定进程
+
+(gdb) thread tid
+
+
+
+向指定的线程发送自定的指令
+
+(gdb) thread apply tid/all args
+
+
+常用的指定是查看所有线程的调用堆栈 thread apply all bt ，这个指令与 pstack 命令有些相似。
+
+
+
+gdb默认会自动捕">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-04-20T21:25:09+08:00">
+<meta property="article:tag" content="gdb">
+<meta property="article:tag" content="linux">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">使用gdb调试多线程程序</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-04-20T21:25:09+08:00" itemprop="datePublished">Apr 20, 2018</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">查看当前线程信息</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+<b>将进程中的各个线程信息显示出来</b><br></p>
+<div class="highlight"><pre><span></span>(gdb) info threads
+</pre></div>
+
+<p>
+<b>切换到指定进程</b><br></p>
+<div class="highlight"><pre><span></span>(gdb) thread tid
+</pre></div>
+
+<p>
+<b>向指定的线程发送自定的指令</b><br></p>
+<div class="highlight"><pre><span></span>(gdb) thread apply tid/all args
+</pre></div>
+<p>
+常用的指定是查看所有线程的调用堆栈 <code>thread apply all bt</code> ，这个指令与 <code>pstack</code> 命令有些相似。<br></p>
+
+<p>
+<b>gdb默认会自动捕捉新产生线程</b><br>
+会在产生一个新的线程时会显示出LWP的字样提示用户，LWP = light weight process<br>
+可以设置gdb是否提示线程相关的事件<br></p>
+<div class="highlight"><pre><span></span>(gdb) set print thread-events on/off
+(gdb) show print thread-events
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">为指定的线程设置断点</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+含有多线程的程序，可以为单独的线程设置断点<br></p>
+<div class="highlight"><pre><span></span>(gdb) break linespec thread tid
+</pre></div>
+
+<p>
+任何时候当你的程序在GDB模式下停止的时候，包括当前调试线程的所有线程都会停下来，不会对继续对当前进程造成更改。这时你可以在线程间进行切换，查看整个进程的执行状况。<br></p>
+<blockquote>
+<p>
+Whenever your program stops under GDB for any reason, all threads of execution stop, not just the current thread. This allows you to examine the overall state of the program, including switching between threads, without worrying that things may change underfoot.<br></p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">防止gdb自动切换线程</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+在调试gdb程序时，在单步执行时，会出现线程间跳转切换，这样对跟踪代码执行状态十分不方便。<br>
+可以通过设置 <code>scheduler-locking</code> 让gdb在所调试的线程中运行，防止线程的自动切换。<br></p>
+<div class="highlight"><pre><span></span>(gdb) set scheduler-locking step
+</pre></div>
+<p>
+可以执行以下命令查看当前 <code>scheduler-locking</code> 的设置<br></p>
+<div class="highlight"><pre><span></span>(gdb) show scheduler-locking
+</pre></div>
+<p>
+<code>scheduler-locking</code> 有三种模式<br></p>
+<ol class="org-ol">
+<li>
+<code>off</code> 任何线程在任何时候都能执行<br>
+</li>
+<li>
+<code>on</code> 只有当前线程能够执行<br>
+</li>
+<li>
+<code>step</code> 为单步执行优化的模式，比较适合一般的调试<br>
+</li>
+</ol>
+<blockquote>
+<p>
+Set the scheduler locking mode. If it is off, then there is no locking and any thread may run at any time. If on, then only the current thread may run when the inferior is resumed. The step mode optimizes for single-stepping. It stops other threads from "seizing the prompt" by preempting the current thread while you are stepping. Other threads will only rarely (or never) get a chance to run when you step. They are more likely to run when you `next' over a function call, and they are completely free to run when you use commands like `continue', `until', or `finish'. However, unless another thread hits a breakpoint during its timeslice, they will never steal the GDB prompt away from the thread that you are debugging.<br></p>
+</blockquote>
+</div>
+</div>
+
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">参考资料</h2>
+<div class="outline-text-2" id="text-4">
+<ol class="org-ol">
+<li>
+<a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_39.html">gnu manual 1</a><br>
+</li>
+<li>
+<a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_24.html">gun manual 2</a><br>
+</li>
+<li>
+<a href="https://sourceware.org/gdb/onlinedocs/gdb/Threads.html">sourceware gdb onlinedocs</a><br>
+</li>
+<li>
+<a href="http://www.drdobbs.com/cpp/multithreaded-debugging-techniques/199200938?pgno=1">drdobbs.com</a><br>
+</li>
+</ol>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/gdb/" rel="tag">gdb</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2018/gdb-ignore-received-signal/" rel="prev">Previous post
+        <br><span>在gdb调试时忽略系统信号（signal）</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2018/linux-command-examples-ipcs/" rel="next">Next post
+        <br><span>Linux常用命令行指令 - ipcs</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2018/debug-with-gdb-on-multi-thread-programs/",
+        disqus_title="\u4f7f\u7528gdb\u8c03\u8bd5\u591a\u7ebf\u7a0b\u7a0b\u5e8f",
+        disqus_identifier="_cache/archives/2018/debug-with-gdb-on-multi-thread-programs.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="u-email"><a href="mailto:wangzhilv@gmail.com">wangzhilv@gmail.com</a></div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>每周算法：搜索有序的回环数组 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-search-in-rotated-sorted-array/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2018/brief-intro-to-gateway/" title="网关简介" type="text/html">
+<link rel="next" href="/posts/2018/linux-run-program-nohup/" title="[转]Linux 技巧：让进程在后台可靠运行的几种方法" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="每周算法：搜索有序的回环数组">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-search-in-rotated-sorted-array/">
+<meta property="og:description" content="leetcode第33道，难度为medium，数组搜索问题，是二分查找的升级版。
+
+
+
+
+
+Description
+
+
+Suppose an array sorted in ascending order is rotated at some pivot unknown to you beforehand.
+(i.e., [0,1,2,4,5,6,7] might become [4,5,6,7,">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-10-22T22:05:09+08:00">
+<meta property="article:tag" content="algorithm">
+<meta property="article:tag" content="leetcode">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">每周算法：搜索有序的回环数组</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-10-22T22:05:09+08:00" itemprop="datePublished">Oct 22, 2018</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+leetcode第33道，难度为medium，数组搜索问题，是二分查找的升级版。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">Description</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Suppose an array sorted in ascending order is rotated at some pivot unknown to you beforehand.<br>
+(i.e., [0,1,2,4,5,6,7] might become [4,5,6,7,0,1,2]).<br></p>
+
+<p>
+You are given a target value to search. If found in the array return its index, otherwise return -1.<br>
+You may assume no duplicate exists in the array.<br>
+Your algorithm's runtime complexity must be in the order of O(log n).<br></p>
+
+<p>
+<b>Example 1:</b><br></p>
+<pre class="example">
+Input: nums = [4,5,6,7,0,1,2], target = 0
+Output: 4
+</pre>
+
+<p>
+<b>Example 2:</b><br></p>
+<pre class="example">
+Input: nums = [4,5,6,7,0,1,2], target = 3
+Output: -1
+</pre>
+
+<p>
+来源：<a href="https://leetcode.com/problems/search-in-rotated-sorted-array/description/">leetcode 33 search in rotated sorted array</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">Solution</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">Apporach 1 recursive</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+通过题目的要求，不难想到需要使用二分查找，只是在二分查找时，需要注意在数组中间会出现转折点。我的方法是使用递归，将数组分割成为多段，其中每段都是不具有拐点的。这样就能用常规的二分查找法进行搜索了。<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">binarySearch</span><span class="p">(</span><span class="k">const</span> <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">,</span> <span class="kt">int</span> <span class="n">left</span><span class="p">,</span> <span class="kt">int</span> <span class="n">right</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">left</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">nums</span><span class="p">[</span><span class="n">right</span><span class="p">])</span> <span class="p">{</span> <span class="c1">// ascend</span>
+	<span class="k">while</span> <span class="p">(</span><span class="n">left</span> <span class="o">&lt;=</span> <span class="n">right</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="kt">int</span> <span class="n">mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">left</span><span class="o">+</span><span class="n">right</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">left</span> <span class="o">=</span> <span class="n">mid</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">right</span> <span class="o">=</span> <span class="n">mid</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">mid</span><span class="p">;</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span> <span class="c1">// descend</span>
+	<span class="k">while</span> <span class="p">(</span><span class="n">left</span> <span class="o">&lt;=</span> <span class="n">right</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="kt">int</span> <span class="n">mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">left</span><span class="o">+</span><span class="n">right</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">right</span> <span class="o">=</span> <span class="n">mid</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">left</span> <span class="o">=</span> <span class="n">mid</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">mid</span><span class="p">;</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="mi">-1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">searchHelper</span><span class="p">(</span><span class="k">const</span> <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">,</span> <span class="kt">int</span> <span class="n">left</span><span class="p">,</span> <span class="kt">int</span> <span class="n">right</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">front</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">left</span><span class="p">];</span>
+    <span class="kt">int</span> <span class="n">back</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">right</span><span class="p">];</span>
+    <span class="kt">int</span> <span class="n">mid</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[(</span><span class="n">left</span><span class="o">+</span><span class="n">right</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">];</span>
+
+    <span class="k">if</span> <span class="p">((</span><span class="n">front</span> <span class="o">&lt;=</span> <span class="n">mid</span> <span class="o">&amp;&amp;</span> <span class="n">mid</span> <span class="o">&lt;=</span> <span class="n">back</span><span class="p">)</span>
+	<span class="o">||</span> <span class="p">(</span><span class="n">front</span> <span class="o">&gt;=</span> <span class="n">mid</span> <span class="o">&amp;&amp;</span> <span class="n">mid</span> <span class="o">&gt;=</span> <span class="n">back</span><span class="p">))</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">binarySearch</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kt">int</span> <span class="n">posMid</span> <span class="o">=</span> <span class="p">(</span><span class="n">left</span> <span class="o">+</span> <span class="n">right</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">int</span> <span class="n">ans1</span> <span class="o">=</span> <span class="n">searchHelper</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">posMid</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ans1</span> <span class="o">!=</span> <span class="mi">-1</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">ans1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">int</span> <span class="n">ans2</span> <span class="o">=</span> <span class="n">searchHelper</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">posMid</span><span class="p">,</span> <span class="n">right</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ans2</span> <span class="o">!=</span> <span class="mi">-1</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">ans2</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="mi">-1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">search</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="mi">-1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">searchHelper</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+我在解题的过程中，还是有些地方没有注意到：<br></p>
+<ul class="org-ul">
+<li>二分查找时，需要注意数组可能是升序或降序<br>
+</li>
+<li>输入数组为空的边界条件<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">Approach 2</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+这种解法截取自solution sample中最快的那一档。直接在循环中查找求解，这样的解法简练很多。<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">search</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">,</span> <span class="kt">int</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="k">return</span> <span class="mi">-1</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">low</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">low</span> <span class="o">&lt;=</span> <span class="n">high</span><span class="p">)</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="n">mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">low</span><span class="p">;</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="o">==</span> <span class="n">nums</span><span class="p">[</span><span class="n">mid</span><span class="p">])</span> <span class="k">return</span> <span class="n">mid</span><span class="p">;</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">low</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">nums</span><span class="p">[</span><span class="n">mid</span><span class="p">])</span> <span class="p">{</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">low</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">target</span> <span class="n">and</span> <span class="n">target</span> <span class="o">&lt;=</span> <span class="n">nums</span><span class="p">[</span><span class="n">mid</span><span class="p">])</span>
+		<span class="n">high</span> <span class="o">=</span> <span class="n">mid</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="k">else</span> <span class="n">low</span> <span class="o">=</span> <span class="n">mid</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">else</span> <span class="p">{</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">target</span> <span class="n">and</span> <span class="n">target</span> <span class="o">&lt;=</span> <span class="n">nums</span><span class="p">[</span><span class="n">high</span><span class="p">])</span>
+		<span class="n">low</span> <span class="o">=</span> <span class="n">mid</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="k">else</span> <span class="n">high</span> <span class="o">=</span> <span class="n">mid</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="mi">-1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+分析了这种解法后，我发现我漏掉了题目中的 <code>ascending</code> 条件。不过还是需要考虑 <code>{3, 1}</code> 这样的情况出现。<br></p>
+</div>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/algorithm/" rel="tag">algorithm</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/leetcode/" rel="tag">leetcode</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2018/brief-intro-to-gateway/" rel="prev">Previous post
+        <br><span>网关简介</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2018/linux-run-program-nohup/" rel="next">Next post
+        <br><span>[转]Linux 技巧：让进程在后台可靠运行的几种方法</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-search-in-rotated-sorted-array/",
+        disqus_title="\u6bcf\u5468\u7b97\u6cd5\uff1a\u641c\u7d22\u6709\u5e8f\u7684\u56de\u73af\u6570\u7ec4",
+        disqus_identifier="_cache/archives/algorithm/algorithm-weekly-search-in-rotated-sorted-array.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="u-email"><a href="mailto:wangzhilv@gmail.com">wangzhilv@gmail.com</a></div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>
