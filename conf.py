@@ -239,12 +239,7 @@ POSTS = (
     ("posts/*.html", "posts", "post.tmpl"),
     ("posts/*.org", "posts", "post.tmpl"),
 
-    ("archives/algorithm/*.org", "posts", "post.tmpl"),
-    ("archives/launchy/*.org", "posts", "post.tmpl"),
-
-    ("archives/2018/*.org", "posts", "post.tmpl"),
-    ("archives/2019/*.org", "posts", "post.tmpl"),
-    ("archives/2020/*.org", "posts", "post.tmpl"),
+    ("archives/*.org", "posts", "post.tmpl"),
 )
 
 PAGES = (
