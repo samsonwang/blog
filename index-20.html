@@ -52,6 +52,20 @@
 <li>
     <span class="post-meta">Apr 03, 2018</span>
     <h3>
+      <a class="post-link" href="/posts/2018/debug-with-gdb-on-linux-2/">Linux下使用gdb的调试技巧（2）</a>
+    </h3>
+
+    <p>
+本文重点介绍在gdb模式下的常用命令。<br></p>
+
+
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Apr 03, 2018</span>
+    <h3>
       <a class="post-link" href="/posts/2018/change-linux-timezone-with-cli/">使用命令行修改Linux系统的时区</a>
     </h3>
 
@@ -420,132 +434,6 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </pre></div>
 </div>
 </div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Mar 19, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/2018/differences-among-overload-override-and-hide/">重载、覆盖和隐藏的区别</a>
-    </h3>
-
-    <p>
-<b>重载（overload）</b> ：就是函数或者方法有相同的名称，但是参数列表不相同的情形，这样的同名不同参数的函数或者方法之间，互相称之为重载函数或者方法。<br>
-多个重载函数在调用的时候根据函数的参数来区别不同的函数。<br>
-关键点：函数名相同，参数表不同<br></p>
-
-<p>
-<b>覆盖（override）</b> ：是指在派生类中重新对基类中的虚函数重新实现，即函数名和参数都一样，只是函数的实现体不一样。<br>
-关键词：派生类中，虚函数，函数名和参数表完全相同<br></p>
-
-<p>
-<b>隐藏（hide）</b> ：派生类中的函数把基类中相同名字的函数屏蔽掉了。<br>
-隐藏一词可以这么理解:在调用一个类的成员函数的时候,编译器会沿着类的继承链逐级的向上查找函数的定义,如果找到了那么就停止查找了,所以如果一个派生类和一个基类都有同一个同名(暂且不论参数是否相同)的函数,而编译器最终选择了在派生类中的函数,那么我们就说这个派生类的成员函数"隐藏"了基类的成员函数,也就是说它阻止了编译器继续向上查找函数的定义.<br></p>
-
-
-<p>
-关于这三种情况的示例代码如下<br></p>
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;iostream.h&gt;</span><span class="cp"></span>
-<span class="k">class</span> <span class="nc">Base</span>
-<span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::f(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::g(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">h</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Base::h(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-
-<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span>
-<span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">f</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::f(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">g</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::g(int) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="kt">void</span> <span class="n">h</span><span class="p">(</span><span class="kt">float</span> <span class="n">x</span><span class="p">)</span>
-  <span class="p">{</span>
-    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Derived::h(float) "</span> <span class="o">&lt;&lt;</span> <span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-</pre></div>
-
-<p>
-从以上代码能够看出：<br>
-（1）函数Derived::f(float)覆盖了Base::f(float)。<br>
-（2）函数Derived::g(int)隐藏了Base::g(float)，而不是重载。<br>
-（3）函数Derived::h(float)隐藏了Base::h(float)，而不是覆盖。<br></p>
-
-<p>
-考虑代码在运行时的结果：<br></p>
-<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="n">Derived</span>  <span class="n">d</span><span class="p">;</span>
-  <span class="n">Base</span> <span class="o">*</span><span class="n">pb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
-  <span class="n">Derived</span> <span class="o">*</span><span class="n">pd</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
-
-  <span class="c1">// Good : behavior depends solely on type of the object</span>
-  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14</span>
-  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::f(float) 3.14</span>
-
-  <span class="c1">// Bad : behavior depends on type of the pointer</span>
-  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::g(float) 3.14</span>
-  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">g</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::g(int) 3        (surprise!)</span>
-
-  <span class="c1">// Bad : behavior depends on type of the pointer</span>
-  <span class="n">pb</span><span class="o">-&gt;</span><span class="n">h</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Base::h(float) 3.14      (surprise!)</span>
-  <span class="n">pd</span><span class="o">-&gt;</span><span class="n">h</span><span class="p">(</span><span class="mf">3.14f</span><span class="p">);</span> <span class="c1">// Derived::h(float) 3.14</span>
-<span class="p">}</span>
-</pre></div>
-
-<p>
-在第一种调用中，函数的行为取决于指针所指向的对象。在第二第三种调用中，函数的行为取决于指针的类型。所以说，隐藏破坏了面向对象编程中多态这一特性，会使得开发人员产生混乱。<br></p>
-
-
-<p>
-<b>函数接口设计注意要点</b><br>
-在设计基类的函数接口时，不要出现既是虚函数，又对该虚函数进行了重载的情况。这样会对派生类的多态函数实现造成不便。<br>
-示例代码如下<br></p>
-<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Base</span>
-<span class="p">{</span>
-  <span class="k">virtual</span> <span class="n">foo</span><span class="p">();</span>
-  <span class="k">virtual</span> <span class="n">foo</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="k">class</span> <span class="nc">Derived</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Base</span>
-<span class="p">{</span>
-  <span class="k">virtual</span> <span class="n">foo</span><span class="p">();</span>
-<span class="p">}</span>
-</pre></div>
-<p>
-从以上代码能够看出：<br></p>
-<ol class="org-ol">
-<li>
-<code>Derived::foo()</code> 与 <code>Base::foo()</code> 构成了多态关系<br>
-</li>
-<li>
-<code>Derived::foo()</code> 隐藏了 <code>Base::foo(int)</code><br>
-</li>
-</ol>
-<p>
-所以，如果派生类希望实现 <code>foo()</code> 函数的多态，也就必须实现 <code>foo(int)</code> 的多态，否则就会出现隐藏。<br>
-如果在现有代码中已经发生了上述 <code>Base</code> 的情况，在不改变原有代码的情况下，可以使用在派生类中使用这样的语法 <code>using Base::foo;</code> ，这会将基类中所有的名为 <code>foo</code> 的函数引入到派生类中来。<br></p>
 
   </li>
 

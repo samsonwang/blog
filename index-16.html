@@ -50,6 +50,35 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Aug 11, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/2018/using-keyboard-marcos-in-emacs/">emacs的键盘宏（keyboard macro）</a>
+    </h3>
+
+    <p>
+对于一些有规律且重复性的编辑任务, 手动完成十分无聊, 并且需要耗费较长的时间。我在youtube上看到一个使用keyboard marco的 <a href="https://youtu.be/wFCO__0prCM">视频</a> 后, 受到很大的启发, 在以后的使用中也会尝试使用宏。我总结了一下视频中的技巧要点，并查阅资料对相关知识点进行了补充和完善。<br></p>
+
+<p>
+有梯子的同学可以去看看，视频地址：<a href="https://youtu.be/wFCO__0prCM">https://youtu.be/wFCO__0prCM</a><br></p>
+
+<p>
+<b>操作指令</b><br>
+开始记录宏: 命令名称 <code>kmacro-start-macro</code> , 快捷键 <code>C-x-(</code> 或 <code>&lt;f3&gt;</code><br>
+结束记录宏: 命令名称 <code>kmacro-end-macro</code> , 快捷键 <code>C-x-)</code> 或 <code>&lt;f4&gt;</code><br>
+执行宏: 命令名称 <code>kmacro-end-and-call-macro</code> , 快捷键 <code>C-x-e</code> , 可以使用 <code>C-u</code> 指定这个宏的执行次数<br>
+清除多余的空格: 命令名称 <code>fixup-whitespace</code> , 这个命令我是第一次见到, 以后可以尝试多用用。<br></p>
+
+<p>
+<b>参考资料</b><br></p>
+<ul class="org-ul">
+<li>
+<a href="https://www.emacswiki.org/emacs/KeyboardMacros">emacs wiki</a><br>
+</li>
+</ul>
+</li>
+
+
+  <li>
     <span class="post-meta">Aug 07, 2018</span>
     <h3>
       <a class="post-link" href="/posts/algorithm/algorithm-weekly-longest-palindromic-substring/">每周算法：最长对称子串</a>
@@ -827,243 +856,6 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 <div class="outline-text-2" id="text-6">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Jul 11, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/2018/cpp-bit-field/">C/C++中的位域</a>
-    </h3>
-
-    <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">什么是位域</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-<a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">维基百科</a> 给出了以下解释<br></p>
-<blockquote>
-<p>
-位域（或称“位段”，bit field）为一种数据结构，可以把数据以位的形式紧凑的储存，并允许程序员对此结构的位进行操作。<br></p>
-</blockquote>
-
-<p>
-<a href="https://en.cppreference.com/w/cpp/language/bit_field">cppreference</a> 给出了以下定义<br></p>
-<blockquote>
-<p>
-Declares a class data member with explicit size, in bits. Adjacent bit field members may be packed to share and straddle the individual bytes.<br></p>
-</blockquote>
-
-<p>
-这种数据结构的好处：<br></p>
-<ul class="org-ul">
-<li>可以使数据单元节省储存空间，当程序需要成千上万个数据单元时，这种方法就显得尤为重要。<br>
-</li>
-<li>位段可以很方便的访问一个整数值的部分内容从而可以简化程序源代码。<br>
-</li>
-</ul>
-<p>
-而位域这种数据结构的缺点在于，其内存分配与内存对齐的实现方式依赖于具体的机器和系统，在不同的平台可能有不同的结果，这导致了位域在本质上是不可移植的。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">位域的语法</h2>
-<div class="outline-text-2" id="text-2">
-<p>
-下面就是位域的语法格式。<br></p>
-<div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="o">:</span> <span class="n">size</span>
-</pre></div>
-
-<p>
-<b>注意</b> ：<br></p>
-<ul class="org-ul">
-<li>
-<code>size</code> 的大小不能超过 <code>identifier</code> 所包含最大比特位个数。<br>
-</li>
-<li>
-<code>identifier</code> 为空时表示对应的 <code>size</code> 个数的比特位不使用<br>
-</li>
-<li>
-<code>size</code> 为0时表示根据前类型强制补齐<br>
-</li>
-</ul>
-<p>
-以下为代码示例。<br></p>
-
-<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">S1</span> <span class="p">{</span>
-    <span class="c1">// will usually occupy 2 bytes:</span>
-    <span class="c1">// 3 bits: value of b1</span>
-    <span class="c1">// 2 bits: unused</span>
-    <span class="c1">// 6 bits: value of b2</span>
-    <span class="c1">// 2 bits: value of b3</span>
-    <span class="c1">// 3 bits: unused</span>
-    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">b1</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="o">:</span> <span class="mi">2</span><span class="p">,</span> <span class="nl">b2</span> <span class="p">:</span> <span class="mi">6</span><span class="p">,</span> <span class="nl">b3</span> <span class="p">:</span> <span class="mi">2</span><span class="p">;</span>
-<span class="p">};</span>
-
-<span class="k">struct</span> <span class="nc">S2</span> <span class="p">{</span>
-    <span class="c1">// will usually occupy 2 bytes:</span>
-    <span class="c1">// 3 bits: value of b1</span>
-    <span class="c1">// 5 bits: unused</span>
-    <span class="c1">// 6 bits: value of b2</span>
-    <span class="c1">// 2 bits: value of b3</span>
-    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">b1</span> <span class="p">:</span> <span class="mi">3</span><span class="p">;</span>
-    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">:</span><span class="mi">0</span><span class="p">;</span> <span class="c1">// start a new byte</span>
-    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">b2</span> <span class="p">:</span> <span class="mi">6</span><span class="p">;</span>
-    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">b3</span> <span class="p">:</span> <span class="mi">2</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-</div>
-
-
-<div id="outline-container-sec-2-1" class="outline-3">
-<h3 id="sec-2-1">在 <code>size</code> 取0时如何理解</h3>
-<div class="outline-text-3" id="text-2-1">
-<p>
-对于 <code>size</code> 取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。<br>
-如下所示，定义了如下几种情况。<br></p>
-
-<p>
-<b>case1</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span> <span class="p">{</span>
-    <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="p">{</span>
-	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">4</span><span class="p">;</span>
-	<span class="kt">int</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
-	<span class="kt">int</span> <span class="nl">nn2</span> <span class="p">:</span> <span class="mi">16</span><span class="p">;</span>
-    <span class="p">}</span> <span class="n">st</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-
-<p>
-对联合体中的结构体位段进行赋值，并将联合体中的内容打印出来。<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span> <span class="n">u1</span><span class="p">;</span>
-<span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn2</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="n">printf</span><span class="p">(</span><span class="s">"union u1.n1=0x%08x sizeof(un1)=%zu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">u1</span><span class="p">.</span><span class="n">n1</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">));</span>
-</pre></div>
-
-<p>
-输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000001</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">8</span>
-</pre></div>
-
-<p>
-<b>case2</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span> <span class="p">{</span>
-    <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="p">{</span>
-	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">4</span><span class="p">;</span>
-	<span class="kt">char</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
-	<span class="kt">int</span> <span class="nl">nn2</span> <span class="p">:</span> <span class="mi">16</span><span class="p">;</span>
-    <span class="p">}</span> <span class="n">st</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-
-<p>
-输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
-</pre></div>
-
-<p>
-<b>case3</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span> <span class="p">{</span>
-    <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="p">{</span>
-	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">4</span><span class="p">;</span>
-	<span class="kt">short</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
-	<span class="kt">int</span> <span class="nl">nn2</span> <span class="p">:</span> <span class="mi">16</span><span class="p">;</span>
-    <span class="p">}</span> <span class="n">st</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-
-<p>
-输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00010001</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
-</pre></div>
-
-
-<p>
-<b>case4</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span> <span class="p">{</span>
-    <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="p">{</span>
-	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">8</span><span class="p">;</span>
-	<span class="kt">char</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
-	<span class="kt">int</span> <span class="nl">nn2</span> <span class="p">:</span> <span class="mi">16</span><span class="p">;</span>
-    <span class="p">}</span> <span class="n">st</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div>
-
-<p>
-输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-sec-2-2" class="outline-3">
-<h3 id="sec-2-2">
-<code>struct</code> 与 <code>class</code> 关键字</h3>
-<div class="outline-text-3" id="text-2-2">
-<p>
-多数例子都是以 <code>struct</code> 作为位域的组织标识，在C++中能否使用 <code>class</code> 作为位域的标识符呢？<br>
-经过测试，是可以使用 <code>class</code> 关键字的，但是需要注意 <code>class</code> 的默认访问控制属性为 <code>private</code> 。<br></p>
-</div>
-</div>
-</div>
-
-
-<div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">位域的常见应用场景</h2>
-<div class="outline-text-2" id="text-3">
-<p>
-为什么要使用位域？位域适合那些情况？<br></p>
-
-<p>
-位域的主要使用目的是节省对象的内存使用。在存放一些比较小的数据时，使用位域能够使字节中的每个比特位合理地利用起来，避免内存浪费。<br></p>
-
-<p>
-比较典型的应用是描述硬件寄存器。如果有32个一组的寄存器，每个寄存器代表一个比特位，就可以使用位域表示这组寄存器。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-sec-4" class="outline-2">
-<h2 id="sec-4">C++中的位操作接口</h2>
-<div class="outline-text-2" id="text-4">
-<p>
-C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接口提供了指定比特位数据的操作接口。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-sec-5" class="outline-2">
-<h2 id="sec-5">参考资料</h2>
-<div class="outline-text-2" id="text-5">
-<ul class="org-ul">
-<li>
-<a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">wikipedia - bit field</a><br>
-</li>
-<li>
-<a href="https://en.cppreference.com/w/cpp/language/bit_field">cppreference - bit field</a><br>
-</li>
-<li>
-<a href="https://msdn.microsoft.com/zh-cn/library/ewwyfdbe.aspx">microsoft msdn - C++ bit fileds</a><br>
-</li>
-<li>
-<a href="https://stackoverflow.com/questions/24933242/when-to-use-bit-fields-in-c">stackoverflow - how to use bit field</a><br>
-</li>
-<li>
-<a href="https://en.cppreference.com/w/cpp/utility/bitset">cppreference - <code>std::bitset</code></a><br>
-</li>
-</ul>
-<p>
-（全文完）<br></p>
 </div>
 </div>
 

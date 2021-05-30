@@ -50,6 +50,324 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Sep 07, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/algorithm/algorithm-weekly-roman-to-integer/">每周算法：罗马数字转阿拉伯数字</a>
+    </h3>
+
+    <div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">Description</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Roman numerals are represented by seven different symbols: I, V, X, L, C, D and M.<br></p>
+
+<pre class="example">
+Symbol       Value
+I             1
+V             5
+X             10
+L             50
+C             100
+D             500
+M             1000
+</pre>
+
+<p>
+For example, two is written as <code>II</code> in Roman numeral, just two one's added together. Twelve is written as, <code>XII</code> , which is simply <code>X</code> + <code>II</code> . The number twenty seven is written as <code>XXVII</code> , which is <code>XX</code> + <code>V</code> + <code>II</code> .<br></p>
+
+<p>
+Roman numerals are usually written largest to smallest from left to right. However, the numeral for four is not <code>IIII</code> . Instead, the number four is written as <code>IV</code> . Because the one is before the five we subtract it making four. The same principle applies to the number nine, which is written as <code>IX</code> . There are six instances where subtraction is used:<br></p>
+
+<p>
+<code>I</code> can be placed before <code>V</code> (5) and <code>X</code> (10) to make 4 and 9.<br><code>X</code> can be placed before <code>L</code> (50) and <code>C</code> (100) to make 40 and 90.<br><code>C</code> can be placed before <code>D</code> (500) and <code>M</code> (1000) to make 400 and 900.<br>
+Given a roman numeral, convert it to an integer. Input is guaranteed to be within the range from 1 to 3999.<br></p>
+
+<p>
+<b>Example 1:</b><br></p>
+<pre class="example">
+Input: "III"
+Output: 3
+</pre>
+
+<p>
+<b>Example 2:</b><br></p>
+<pre class="example">
+Input: "IV"
+Output: 4
+</pre>
+
+<p>
+<b>Example 3:</b><br></p>
+<pre class="example">
+Input: "IX"
+Output: 9
+</pre>
+
+<p>
+<b>Example 4:</b><br></p>
+<pre class="example">
+Input: "LVIII"
+Output: 58
+Explanation: C = 100, L = 50, XXX = 30 and III = 3.
+</pre>
+
+<p>
+<b>Example 5:</b><br></p>
+<pre class="example">
+Input: "MCMXCIV"
+Output: 1994
+Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
+</pre>
+
+<p>
+来源：<a href="https://leetcode.com/problems/roman-to-integer/description/">leetcode 13 roman to integer</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">Solution</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">Approach 1</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+这道题不是很难，很容易就能想到解法，需要注意好边界条件问题，下面就是我的解法。<br></p>
+<div class="highlight"><pre><span></span><span class="n">pint</span> <span class="nf">romanToInt</span><span class="p">(</span><span class="n">string</span> <span class="n">str</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">ans</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">const</span> <span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">();</span>
+
+    <span class="c1">// 千位</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">pos</span> <span class="o">&lt;</span> <span class="n">len</span> <span class="o">&amp;&amp;</span> <span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'M'</span><span class="p">)</span> <span class="p">{</span>
+	<span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">ans</span> <span class="o">+=</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">pos</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">pos</span> <span class="o">==</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 百位</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">])</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="sc">'C'</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="mi">100</span><span class="p">;</span>
+	<span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+
+	<span class="k">if</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'D'</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="mi">300</span><span class="p">;</span>
+	    <span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'M'</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="mi">800</span><span class="p">;</span>
+	    <span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">else</span> <span class="p">{</span>
+	    <span class="k">while</span> <span class="p">(</span><span class="n">pos</span> <span class="o">&lt;</span> <span class="n">len</span> <span class="o">&amp;&amp;</span> <span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'C'</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">ans</span> <span class="o">+=</span> <span class="mi">100</span><span class="p">;</span>
+		<span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="sc">'D'</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="mi">500</span><span class="p">;</span>
+	<span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="k">while</span> <span class="p">(</span><span class="n">pos</span> <span class="o">&lt;</span> <span class="n">len</span> <span class="o">&amp;&amp;</span> <span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'C'</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="mi">100</span><span class="p">;</span>
+	    <span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">default</span><span class="o">:</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">pos</span> <span class="o">==</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 十位</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">])</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="sc">'X'</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="mi">10</span><span class="p">;</span>
+	<span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+
+	<span class="k">if</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'C'</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="mi">80</span><span class="p">;</span>
+	    <span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'L'</span><span class="p">){</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="mi">30</span><span class="p">;</span>
+	    <span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">else</span> <span class="p">{</span>
+	    <span class="k">while</span> <span class="p">(</span><span class="n">pos</span> <span class="o">&lt;</span> <span class="n">len</span> <span class="o">&amp;&amp;</span> <span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'X'</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">ans</span> <span class="o">+=</span> <span class="mi">10</span><span class="p">;</span>
+		<span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="sc">'L'</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="mi">50</span><span class="p">;</span>
+	<span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="k">while</span> <span class="p">(</span><span class="n">pos</span> <span class="o">&lt;</span> <span class="n">len</span> <span class="o">&amp;&amp;</span> <span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'X'</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="mi">10</span><span class="p">;</span>
+	    <span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">break</span><span class="p">;</span>
+
+    <span class="k">default</span><span class="o">:</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">pos</span> <span class="o">==</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 个位</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">])</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="sc">'I'</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+	<span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'X'</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="mi">8</span><span class="p">;</span>
+	    <span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'V'</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ans</span> <span class="o">+=</span> <span class="mi">3</span><span class="p">;</span>
+	    <span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">else</span> <span class="p">{</span>
+	    <span class="k">while</span> <span class="p">(</span><span class="n">pos</span> <span class="o">&lt;</span> <span class="n">len</span> <span class="o">&amp;&amp;</span> <span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'I'</span><span class="p">)</span> <span class="p">{</span>
+		<span class="o">++</span><span class="n">ans</span><span class="p">;</span>
+		<span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	    <span class="p">}</span>
+	<span class="p">}</span>
+
+	<span class="k">break</span><span class="p">;</span>
+    <span class="k">case</span> <span class="sc">'V'</span><span class="o">:</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="mi">5</span><span class="p">;</span>
+	<span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="k">while</span> <span class="p">(</span><span class="n">pos</span> <span class="o">&lt;</span> <span class="n">len</span> <span class="o">&amp;&amp;</span> <span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'I'</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="o">++</span><span class="n">ans</span><span class="p">;</span>
+	    <span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="k">default</span><span class="o">:</span>
+	<span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+不得不说，这样的代码比较丑，这是真的，就算解出来了成就感也不强。<br></p>
+</div>
+</div>
+
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">Approach 2</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+这个解法是leetcode上最快的解法之一，只使用一个循环就完成了计算，代码整体上很简洁，也比较好理解。只需要针对6种特殊情况做特殊处理就好。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">romanToInt</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">switch</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="p">{</span>
+	<span class="k">case</span> <span class="sc">'M'</span><span class="o">:</span>
+	    <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'C'</span><span class="p">)</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">800</span><span class="p">;</span>
+	    <span class="k">else</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">1000</span><span class="p">;</span>
+	    <span class="k">break</span><span class="p">;</span>
+
+	<span class="k">case</span> <span class="sc">'D'</span><span class="o">:</span>
+	    <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'C'</span><span class="p">)</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">300</span><span class="p">;</span>
+	    <span class="k">else</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">500</span><span class="p">;</span>
+	    <span class="k">break</span><span class="p">;</span>
+
+	<span class="k">case</span> <span class="sc">'C'</span><span class="o">:</span>
+	    <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'X'</span><span class="p">)</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">80</span><span class="p">;</span>
+	    <span class="k">else</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">100</span><span class="p">;</span>
+	    <span class="k">break</span><span class="p">;</span>
+
+	<span class="k">case</span> <span class="sc">'L'</span><span class="o">:</span>
+	    <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'X'</span><span class="p">)</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">30</span><span class="p">;</span>
+	    <span class="k">else</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">50</span><span class="p">;</span>
+	    <span class="k">break</span><span class="p">;</span>
+
+	<span class="k">case</span> <span class="sc">'X'</span><span class="o">:</span>
+	    <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'I'</span><span class="p">)</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">8</span><span class="p">;</span>
+	    <span class="k">else</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">10</span><span class="p">;</span>
+	    <span class="k">break</span><span class="p">;</span>
+
+	<span class="k">case</span> <span class="sc">'V'</span><span class="o">:</span>
+	    <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'I'</span><span class="p">)</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">3</span><span class="p">;</span>
+	    <span class="k">else</span>
+		<span class="n">result</span> <span class="o">+=</span> <span class="mi">5</span><span class="p">;</span>
+	    <span class="k">break</span><span class="p">;</span>
+
+	<span class="k">case</span> <span class="sc">'I'</span><span class="o">:</span>
+	    <span class="n">result</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+	    <span class="k">break</span><span class="p">;</span>
+
+	<span class="k">default</span><span class="o">:</span><span class="p">;</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-sec-2-3" class="outline-3">
+<h3 id="sec-2-3">Approach 3</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+下面这个是我在看该问题的discuss板块的时候发现的。不得不说，结题思路实在新奇，这点是值得学习的。不过我比较担心它的时间复杂度。该方法使用Java编写。<br></p>
+<div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kt">int</span> <span class="nf">romanToInt</span><span class="p">(</span><span class="n">String</span> <span class="n">s</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">sum</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="na">indexOf</span><span class="p">(</span><span class="s">"IV"</span><span class="p">)</span><span class="o">!=-</span><span class="mi">1</span><span class="p">){</span><span class="n">sum</span><span class="o">-=</span><span class="mi">2</span><span class="p">;}</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="na">indexOf</span><span class="p">(</span><span class="s">"IX"</span><span class="p">)</span><span class="o">!=-</span><span class="mi">1</span><span class="p">){</span><span class="n">sum</span><span class="o">-=</span><span class="mi">2</span><span class="p">;}</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="na">indexOf</span><span class="p">(</span><span class="s">"XL"</span><span class="p">)</span><span class="o">!=-</span><span class="mi">1</span><span class="p">){</span><span class="n">sum</span><span class="o">-=</span><span class="mi">20</span><span class="p">;}</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="na">indexOf</span><span class="p">(</span><span class="s">"XC"</span><span class="p">)</span><span class="o">!=-</span><span class="mi">1</span><span class="p">){</span><span class="n">sum</span><span class="o">-=</span><span class="mi">20</span><span class="p">;}</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="na">indexOf</span><span class="p">(</span><span class="s">"CD"</span><span class="p">)</span><span class="o">!=-</span><span class="mi">1</span><span class="p">){</span><span class="n">sum</span><span class="o">-=</span><span class="mi">200</span><span class="p">;}</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="na">indexOf</span><span class="p">(</span><span class="s">"CM"</span><span class="p">)</span><span class="o">!=-</span><span class="mi">1</span><span class="p">){</span><span class="n">sum</span><span class="o">-=</span><span class="mi">200</span><span class="p">;}</span>
+
+    <span class="kt">char</span> <span class="n">c</span><span class="o">[]=</span><span class="n">s</span><span class="p">.</span><span class="na">toCharArray</span><span class="p">();</span>
+    <span class="kt">int</span> <span class="n">count</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">for</span><span class="p">(;</span><span class="n">count</span><span class="o">&lt;=</span><span class="n">s</span><span class="p">.</span><span class="na">length</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="n">count</span><span class="o">++</span><span class="p">){</span>
+	<span class="k">if</span><span class="p">(</span><span class="n">c</span><span class="o">[</span><span class="n">count</span><span class="o">]==</span><span class="sc">'M'</span><span class="p">)</span> <span class="n">sum</span><span class="o">+=</span><span class="mi">1000</span><span class="p">;</span>
+	<span class="k">if</span><span class="p">(</span><span class="n">c</span><span class="o">[</span><span class="n">count</span><span class="o">]==</span><span class="sc">'D'</span><span class="p">)</span> <span class="n">sum</span><span class="o">+=</span><span class="mi">500</span><span class="p">;</span>
+	<span class="k">if</span><span class="p">(</span><span class="n">c</span><span class="o">[</span><span class="n">count</span><span class="o">]==</span><span class="sc">'C'</span><span class="p">)</span> <span class="n">sum</span><span class="o">+=</span><span class="mi">100</span><span class="p">;</span>
+	<span class="k">if</span><span class="p">(</span><span class="n">c</span><span class="o">[</span><span class="n">count</span><span class="o">]==</span><span class="sc">'L'</span><span class="p">)</span> <span class="n">sum</span><span class="o">+=</span><span class="mi">50</span><span class="p">;</span>
+	<span class="k">if</span><span class="p">(</span><span class="n">c</span><span class="o">[</span><span class="n">count</span><span class="o">]==</span><span class="sc">'X'</span><span class="p">)</span> <span class="n">sum</span><span class="o">+=</span><span class="mi">10</span><span class="p">;</span>
+	<span class="k">if</span><span class="p">(</span><span class="n">c</span><span class="o">[</span><span class="n">count</span><span class="o">]==</span><span class="sc">'V'</span><span class="p">)</span> <span class="n">sum</span><span class="o">+=</span><span class="mi">5</span><span class="p">;</span>
+	<span class="k">if</span><span class="p">(</span><span class="n">c</span><span class="o">[</span><span class="n">count</span><span class="o">]==</span><span class="sc">'I'</span><span class="p">)</span> <span class="n">sum</span><span class="o">+=</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">sum</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Sep 05, 2018</span>
     <h3>
       <a class="post-link" href="/posts/algorithm/algorithm-weekly-integer-to-roman/">每周算法：阿拉伯数字转换罗马数字</a>
@@ -790,179 +1108,6 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 <a href="https://scotch.io/@anitashah/what-problems-does-reactjs-solve-when-must-you-select-reactjs">what problems does reactjs solve</a><br>
 </li>
 </ol>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Aug 26, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/2018/javascript-object-oriented-programming/">javscript中的OOP特性</a>
-    </h3>
-
-    <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">
-<span class="section-number-2">1</span> 引言</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-js也是具有OOP（object oriented programming）特性的，OOP在构建一些大型应用程序还是有一套成熟理论的。作为C++的使用者在学习js中的OOP特性的过程中，能够较快地理解其中的各种术语和概念，也能比较两种语言的异同，深化知识理解。通过js的OOP特性的学习也让我开始从语言层面考虑程序设计问题。<br>
-本篇文章主要介绍了js中的一些OOP特性，并且比较了js与C++的语言特性。如果你能熟练掌握C++的OOP特性，本文能帮助你快速地对js中的OOP特性建立整体的认识。<br></p>
-</div>
-</div>
-
-<div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">
-<span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
-<div class="outline-text-2" id="text-2">
-</div>
-<div id="outline-container-sec-2-1" class="outline-3">
-<h3 id="sec-2-1">
-<span class="section-number-3">2.1</span> 创建对象（object）</h3>
-<div class="outline-text-3" id="text-2-1">
-<p>
-js中创建object的代码，示例如下：<br></p>
-<div class="highlight"><pre><span></span>let duck = {
-  name: "Aflac",
-  numLegs: 2,
-  sayName: function() {
-    return "The name of this duck is " + this.name + ".";
-  }
-};
-</pre></div>
-<p>
-js直接通过 <code>{}</code> 就可以创建出对象示例来，不需要对该对象（object）的类（class）进行声明。这点和C++不是很相同，C++需要先声明一个class再创建object。<br>
-这个object有两个成员变量和一个成员函数，需要注意的是这两个成员变量都是公有（public）的，他们是可以直接用 <code>.</code> 符号访问的。<br>
-js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关键字用于表示当前实例。<br></p>
-</div>
-</div>
-
-<div id="outline-container-sec-2-2" class="outline-3">
-<h3 id="sec-2-2">
-<span class="section-number-3">2.2</span> 类（class）的声明</h3>
-<div class="outline-text-3" id="text-2-2">
-<p>
-js中声明一个类的操作实际上就是声明一个构造函数。<br></p>
-<div class="highlight"><pre><span></span>let Bird = function(name, color) {
-  this.name = name;
-  this.color = color;
-  this.numLegs = 2;
-}
-
-let crow = new Bird("Alexis", "black");
-
-crow instanceof Bird; // =&gt; true
-</pre></div>
-<p>
-上面的代码声明了Bird类，在js中通常类的名字都是由首字母大写的单词表示的。类的构造函数也能接受参数用于对实例的初始化，这点与C++非常相似，使用 <code>new</code> 关键字就能够创建该类的实例。<br>
-使用 <code>instanceof</code> 关键字用于检查对象是否属于某个类，也可通过验证 <code>constructor</code> 属性来判断一个对象是否属于一个类 <code>crow.constructor == Bird</code> 。<br></p>
-</div>
-</div>
-
-<div id="outline-container-sec-2-3" class="outline-3">
-<h3 id="sec-2-3">
-<span class="section-number-3">2.3</span> 类的共有成员</h3>
-<div class="outline-text-3" id="text-2-3">
-<p>
-js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还不太合适）能够实现C++中静态成员变量和静态成员函数的特性。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype.numLegs = 2;
-</pre></div>
-<p>
-上面的代码就给Bird类增加了一个静态成员变量。这个 <code>prototype</code> 可以是一个对象，这样类的共有成员就能方便地承载更多的属性了，示例代码如下。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype = {
-  constructor: Bird,
-  numLegs: 2,
-  eat: function() {
-    console.log("nom nom nom");
-  },
-  describe: function() {
-    console.log("My name is " + this.name);
-  }
-};
-</pre></div>
-<p>
-需要注意的是需要设置好 <code>constructor</code> 属性，这样是为了保证代码逻辑的一致性。<br>
-对象会获得类的 <code>prototype</code> 属性，可以通过 <code>isPrototypeof</code> 方法来验证。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype.isPrototypeOf(duck);
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-2-4" class="outline-3">
-<h3 id="sec-2-4">
-<span class="section-number-3">2.4</span> 类的私有成员</h3>
-<div class="outline-text-3" id="text-2-4">
-<p>
-js与C++一样，也可以有私有成员变量，代码如下所示。 <code>hatchedEgg</code> 就相当与是Bird的私有成员变量，并且提供了修改这个成员变量的方法 <code>getHatchedEggCount</code> 。<br></p>
-<div class="highlight"><pre><span></span>function Bird() {
-  let hatchedEgg = 10; // private property
-
-  this.getHatchedEggCount = function() {
-    // publicly available method that a bird object can use
-    return hatchedEgg;
-  };
-}
-let ducky = new Bird();
-ducky.getHatchedEggCount(); // returns 10
-</pre></div>
-<p>
-这种形式在js中被称作闭包（closure），函数能够访问到与他处在同一个作用域（context）中的变量。<br></p>
-</div>
-</div>
-
-<div id="outline-container-sec-2-5" class="outline-3">
-<h3 id="sec-2-5">
-<span class="section-number-3">2.5</span> 类的继承和派生</h3>
-<div class="outline-text-3" id="text-2-5">
-<p>
-js中的派生主要通过 <code>prototype</code> 体现，下面的代码表示Bird派生自Object。同样，需要注意将 <code>constructor</code> 属性设置好。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype = Object.create(Animal.prototype);
-Bird.prototype.constructor = Bird;
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-sec-2-6" class="outline-3">
-<h3 id="sec-2-6">
-<span class="section-number-3">2.6</span> 类的覆盖</h3>
-<div class="outline-text-3" id="text-2-6">
-<p>
-js中可以重写基类中的方法，代码如下所示，这点与C++中的 <code>override</code> 相同。<br></p>
-<div class="highlight"><pre><span></span>function Animal() { }
-Animal.prototype.eat = function() {
-  return "nom nom nom";
-};
-function Bird() { }
-
-// Inherit all methods from Animal
-Bird.prototype = Object.create(Animal.prototype);
-
-// Bird.eat() overrides Animal.eat()
-Bird.prototype.eat = function() {
-  return "peck peck peck";
-};
-
-Bird.prototype.fly = function() {
-  console.log("I'm flying!");
-};
-</pre></div>
-<p>
-通样也在派生之后也可以通过修改派生类的 <code>prototype</code> 以达到特化派生类的作用，上面的 <code>fly</code> 方法就是在Bird完成派生之后新增的方法。现在Bird有两个方法，它们分别是 <code>eat</code> 和 <code>fly</code> 。<br></p>
-</div>
-</div>
-</div>
-
-
-<div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">
-<span class="section-number-2">3</span> 参考资料</h2>
-<div class="outline-text-2" id="text-3">
-<ul class="org-ul">
-<li>
-<a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/object-oriented-programming/">FCC javascript oop tutorial</a><br>
-</li>
-</ul>
 </div>
 </div>
 
