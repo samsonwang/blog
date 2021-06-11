@@ -1,0 +1,83 @@
+#+BEGIN_COMMENT
+.. title: 在运行时获取动态库的路径
+.. slug: get-runtime-dll-path
+.. date: 2021-06-11 18:19:06 UTC+08:00
+.. tags: windows, linux, cpp, c
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 在运行时获取动态库的路径
+
+最近在开发一个动态库，这个动态库需要在运行时动态地加载另一个动态库。在库发布时会同时提供这两个动态库。库的使用者会主动加载第一个动态库，问题出现在第一个动态库加载第二个动态库时，如何确定第二个动态库的位置。
+
+{{{TEASER_END}}}
+
+** 相似应用场景
+
+在发布一个动态库时将这个动态库所需要的数据文件与动态库放在一起。在这个动态库执行时能够通过其自身的路径找到对应的数据文件。
+
+其实，这个开发需求也可以交给库的调用者解决，因为库的调用者更容易获得库的路径，动态库可以提供一个用于接收其自身路径的函数接口。但是这样就显得接口不够简洁，如果能在动态库内部获得其自身的路径是最好的。
+
+
+** Windows平台
+借助WIN32的 =GetModuleFilename= 接口[fn:1]获得动态库的路径，示例代码如下：
+
+#+begin_src cpp
+void test_dll_func() {
+  HMODULE hModule = NULL;
+  if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT
+                        | GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                        (LPCSTR)test_dll_func,
+                        &hModule) != 0) {
+    char szPath[MAX_PATH];
+    if (GetModuleFileName(hModule, szPath, sizeof(szPath)) != 0) {
+      printf("loaded from path = %s\n", szPath);
+    }
+  }
+}
+#+end_src
+
+从上面的代码容易看出，先（调用 =GetModuleHandleEx= 函数[fn:2]）用动态库中的函数指针获取动态库的句柄，再（调用 =GetModuleFileName= 函数）用动态库句柄获取动态库路径。
+
+也可以通过动态库的名字获得动态库句柄，调用 =GetModuleHandle= 函数[fn:3]即可，但是动态库的文件名称可以被修改，所以这个方法有可能会失效。
+
+
+** Linux平台
+借助 =dladdr= 函数[fn:4]获得动态库路径，示例代码如下：
+
+#+begin_src c
+#include <stdio.h>
+#include <dlfcn.h>
+void test_so_func() {
+  Dl_info info;
+  if (dladdr(test_so_func, &info)) {
+    printf("loaded from path = %s\n", info.dli_fname);
+  }
+}
+#+end_src
+
+需要注意 =dladdr= 的第一个参数需要提供一个在动态库中实现的函数。
+
+
+** 开源库
+
+在检索相关资料时，我在Github上发现已经有开源库[fn:5]提供这样的功能。这个开源库还提供了MACOS和Android等多个平台的获取当前程序路径和动态库（共享库）路径的支持。
+
+
+
+[fn:1] https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulefilenamea
+
+[fn:2] https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandleexa
+
+[fn:3] https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandlea
+
+[fn:4] https://man7.org/linux/man-pages/man3/dladdr1.3.html
+
+[fn:5] https://github.com/gpakosz/whereami
+
+（全文完）
