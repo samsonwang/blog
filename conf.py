@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import time
-# from confutil import ThemeUtil as ThemeUtil
-
 # !! This is the configuration of Nikola. !! #
 # !!  You should edit it to your liking.  !! #
 
+import time
 
 # ! Some settings can be different in different languages.
 # ! A comment stating (translatable) is used to denote those.
@@ -14,7 +12,6 @@ import time
 # ! (b) BLOG_TITLE = {"en": "My Blog", "es": "Mi Blog"}
 # ! Option (a) is used when you don't want that setting translated.
 # ! Option (b) is used for settings that are different in different languages.
-
 
 # Data about this site
 BLOG_AUTHOR = "Samson Wang"  # (translatable)
@@ -1070,7 +1067,9 @@ DEPLOY_DRAFTS = False
 # Note: most Nikola-specific extensions are done via the Nikola plugin system,
 #       with the MarkdownExtension class and should not be added here.
 # The default is ['fenced_code', 'codehilite']
-MARKDOWN_EXTENSIONS = ['markdown.extensions.fenced_code', 'markdown.extensions.codehilite', 'markdown.extensions.extra']
+MARKDOWN_EXTENSIONS = ['markdown.extensions.fenced_code',
+                       'markdown.extensions.codehilite',
+                       'markdown.extensions.extra']
 
 # Extra options to pass to the pandoc command.
 # by default, it's empty, is a list of strings, for example
@@ -1337,11 +1336,20 @@ FILE_METADATA_UNSLUGIFY_TITLES = True
 
 # Put in global_context things you want available on all your templates.
 # It can be anything, data, functions, modules, etc.
+class ThemeUtil:
+    not_index_tags = ['not-index']
+    @staticmethod
+    def not_index(tags):
+        for tag in tags:
+            if tag in ThemeUtil.not_index_tags:
+                return True
+        return False
+
 GLOBAL_CONTEXT = {
     "context_demo1": BLOG_AUTHOR,
     "context_demo2": time.gmtime().tm_year,
 #    "not_index": not_index,
-#    "theme_util": ThemeUtil,
+    "theme_util": ThemeUtil,
 }
 
 # Add functions here and they will be called with template
