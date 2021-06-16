@@ -91,22 +91,22 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 
 <p>
 纵观所有项目代码，我感受比较深的就是使用结构体中嵌套匿名结构体，这样做能够增强数据结构的层次感，示例代码如下：<br></p>
-<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">shmcache_context</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">shmcache_context</span> <span class="p">{</span>
     <span class="kt">pid_t</span> <span class="n">pid</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">lock_fd</span><span class="p">;</span>    <span class="c1">//for file lock</span>
     <span class="kt">int</span> <span class="n">detect_deadlock_clocks</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="nc">shmcache_config</span> <span class="n">config</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="nc">shm_memory_info</span> <span class="o">*</span><span class="n">memory</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">shmcache_config</span> <span class="n">config</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">shm_memory_info</span> <span class="o">*</span><span class="n">memory</span><span class="p">;</span>
     <span class="k">struct</span> <span class="p">{</span>
-	<span class="k">struct</span> <span class="nc">shmcache_segment_info</span> <span class="n">hashtable</span><span class="p">;</span>
+	<span class="k">struct</span> <span class="n">shmcache_segment_info</span> <span class="n">hashtable</span><span class="p">;</span>
 	<span class="k">struct</span> <span class="p">{</span>
 	    <span class="kt">int</span> <span class="n">count</span><span class="p">;</span>
-	    <span class="k">struct</span> <span class="nc">shmcache_segment_info</span> <span class="o">*</span><span class="n">items</span><span class="p">;</span>
+	    <span class="k">struct</span> <span class="n">shmcache_segment_info</span> <span class="o">*</span><span class="n">items</span><span class="p">;</span>
 	<span class="p">}</span> <span class="n">values</span><span class="p">;</span>
     <span class="p">}</span> <span class="n">segments</span><span class="p">;</span>
 
-    <span class="k">struct</span> <span class="nc">shmcache_value_allocator_context</span> <span class="n">value_allocator</span><span class="p">;</span>
-    <span class="k">struct</span> <span class="nc">shmcache_list</span> <span class="n">list</span><span class="p">;</span>   <span class="c1">//for value recycle</span>
+    <span class="k">struct</span> <span class="n">shmcache_value_allocator_context</span> <span class="n">value_allocator</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">shmcache_list</span> <span class="n">list</span><span class="p">;</span>   <span class="c1">//for value recycle</span>
     <span class="kt">bool</span> <span class="n">create_segment</span><span class="p">;</span>  <span class="c1">//if check segment size                                  </span>
 <span class="p">};</span>
 </pre></div>
@@ -115,7 +115,7 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 
 <p>
 另外对于联合体和位域这两种技术也是我在之前开发中使用比较少的，通过阅读源码能够让我对其有了更深刻的理解。示例代码如下：<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">shm_hentry_offset</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">shm_hentry_offset</span> <span class="p">{</span>
     <span class="kt">int64_t</span> <span class="n">offset</span><span class="p">;</span>
     <span class="k">struct</span> <span class="p">{</span>
 	<span class="kt">int</span> <span class="nl">index</span> <span class="p">:</span><span class="mi">16</span><span class="p">;</span>
@@ -232,7 +232,7 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 <p>
 以下为代码示例。<br></p>
 
-<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">S1</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">S1</span> <span class="p">{</span>
     <span class="c1">// will usually occupy 2 bytes:</span>
     <span class="c1">// 3 bits: value of b1</span>
     <span class="c1">// 2 bits: unused</span>
@@ -242,7 +242,7 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
     <span class="kt">unsigned</span> <span class="kt">char</span> <span class="nl">b1</span> <span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="o">:</span> <span class="mi">2</span><span class="p">,</span> <span class="nl">b2</span> <span class="p">:</span> <span class="mi">6</span><span class="p">,</span> <span class="nl">b3</span> <span class="p">:</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">};</span>
 
-<span class="k">struct</span> <span class="nc">S2</span> <span class="p">{</span>
+<span class="k">struct</span> <span class="n">S2</span> <span class="p">{</span>
     <span class="c1">// will usually occupy 2 bytes:</span>
     <span class="c1">// 3 bits: value of b1</span>
     <span class="c1">// 5 bits: unused</span>
@@ -266,7 +266,7 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 
 <p>
 <b>case1</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
     <span class="k">struct</span> <span class="p">{</span>
 	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">4</span><span class="p">;</span>
@@ -278,7 +278,7 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 
 <p>
 对联合体中的结构体位段进行赋值，并将联合体中的内容打印出来。<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span> <span class="n">u1</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="n">u1</span><span class="p">;</span>
 <span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn2</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="n">printf</span><span class="p">(</span><span class="s">"union u1.n1=0x%08x sizeof(un1)=%zu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">u1</span><span class="p">.</span><span class="n">n1</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">));</span>
@@ -286,12 +286,12 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 
 <p>
 输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000001</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">8</span>
+<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000001</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">8</span>
 </pre></div>
 
 <p>
 <b>case2</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
     <span class="k">struct</span> <span class="p">{</span>
 	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">4</span><span class="p">;</span>
@@ -303,12 +303,12 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 
 <p>
 输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
+<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
 </pre></div>
 
 <p>
 <b>case3</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
     <span class="k">struct</span> <span class="p">{</span>
 	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">4</span><span class="p">;</span>
@@ -320,13 +320,13 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 
 <p>
 输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00010001</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
+<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00010001</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
 </pre></div>
 
 
 <p>
 <b>case4</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">n1</span><span class="p">;</span>
     <span class="k">struct</span> <span class="p">{</span>
 	<span class="kt">int</span> <span class="nl">nn1</span> <span class="p">:</span> <span class="mi">8</span><span class="p">;</span>
@@ -338,7 +338,7 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 
 <p>
 输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span> <span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
+<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
 </pre></div>
 </div>
 </div>
@@ -474,22 +474,22 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 <p>
 <b>函数接口</b><br>
 异步写操作<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_read</span><span class="p">(</span><span class="k">struct</span> <span class="nc">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_read</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
 </pre></div>
 
 <p>
 异步读操作<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_write</span><span class="p">(</span><span class="k">struct</span> <span class="nc">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_write</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
 </pre></div>
 
 <p>
 获取异步操作结果<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_return</span><span class="p">(</span><span class="k">struct</span> <span class="nc">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_return</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
 </pre></div>
 
 <p>
 获取异步操作中的错误<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_error</span><span class="p">(</span><span class="k">struct</span> <span class="nc">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_error</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
 </pre></div>
 
 <p>
@@ -516,12 +516,12 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </pre></div>
 <p>
 提交异步操作<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">io_submit</span><span class="p">(</span><span class="n">aio_context_t</span> <span class="n">ctx</span><span class="p">,</span> <span class="kt">long</span> <span class="n">nr</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">iocb</span><span class="o">**</span> <span class="n">iocbpp</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">io_submit</span><span class="p">(</span><span class="n">aio_context_t</span> <span class="n">ctx</span><span class="p">,</span> <span class="kt">long</span> <span class="n">nr</span><span class="p">,</span> <span class="k">struct</span> <span class="n">iocb</span><span class="o">**</span> <span class="n">iocbpp</span><span class="p">);</span>
 </pre></div>
 <p>
 获取异步操作结果<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">io_getevents</span><span class="p">(</span><span class="n">aio_context_t</span> <span class="n">ctx</span><span class="p">,</span> <span class="kt">long</span> <span class="n">min_nr</span><span class="p">,</span> <span class="kt">long</span> <span class="n">max_nr</span><span class="p">,</span>
-		 <span class="n">io_event</span><span class="o">*</span> <span class="n">events</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">timespec</span><span class="o">*</span> <span class="n">timeout</span><span class="p">);</span>
+		 <span class="n">io_event</span><span class="o">*</span> <span class="n">events</span><span class="p">,</span> <span class="k">struct</span> <span class="n">timespec</span><span class="o">*</span> <span class="n">timeout</span><span class="p">);</span>
 </pre></div>
 
 <p>
