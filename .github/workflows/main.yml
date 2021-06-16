@@ -1,0 +1,26 @@
+on:
+  push:
+    branches:
+      source
+
+jobs:
+  nikola_build:
+    runs-on: ubuntu-latest
+    name: 'Deploy to GitHub Pages'
+    steps:
+    - name: check out
+      uses: actions/checkout@v2
+    - name: setup emacs
+      uses: purcell/setup-emacs@master
+      with:
+        version: 25.3
+    - name: setup nikola
+      run: pip3 install --upgrade Nikola[extras]
+    - name: build and deploy
+      run: nikola build && nikola github_deploy -m 'nikola auto deploy by gh action'
+
+#      run: 'chmod +x .github/workflows/test-emacs.sh && .github/workflows/test-emacs.sh'
+#    - name: Build and Deploy Nikola
+#      uses: getnikola/nikola-action@v3
+#      with:
+#        dry_run: false
