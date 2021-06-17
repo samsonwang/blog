@@ -61,7 +61,7 @@
 
     <p class="post-meta">
       
-    <time class="dt-published" datetime="2020-04-18T09:58:19+08:00" itemprop="datePublished">Apr 18, 2020</time><span class="dt-updated"> • updated <time datetime="2020-05-08T20:45:19+08:00" itemprop="dateUpdated">May 08, 2020</time></span>
+    <time class="dt-published" datetime="2020-04-18T09:58:19+08:00" itemprop="datePublished">Apr 18, 2020</time><span class="dt-updated"> / updated <time datetime="2020-05-08T20:45:19+08:00" itemprop="dateUpdated">May 08, 2020</time></span>
 
       
 
@@ -72,9 +72,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org186a8a7" class="outline-2">
-<h2 id="org186a8a7">为什么要使用时间轮算法</h2>
-<div class="outline-text-2" id="text-org186a8a7">
+<div id="outline-container-org43ca5d1" class="outline-2">
+<h2 id="org43ca5d1">为什么要使用时间轮算法</h2>
+<div class="outline-text-2" id="text-org43ca5d1">
 <p>
 时间轮算法是为了应对定时器的数量越来越多的情况，在待处理定时器的总数达到几千个甚至上万个时，我们希望定时器的性能仍有保证，定时器的性能要从时间复杂度和空间复杂度两方面考虑。<br></p>
 
@@ -96,9 +96,9 @@
 </div>
 </div>
 
-<div id="outline-container-org89d20a1" class="outline-2">
-<h2 id="org89d20a1">基础时间轮算法</h2>
-<div class="outline-text-2" id="text-org89d20a1">
+<div id="outline-container-orgc9daf87" class="outline-2">
+<h2 id="orgc9daf87">基础时间轮算法</h2>
+<div class="outline-text-2" id="text-orgc9daf87">
 <p>
 在实现前需要假定所有定时器的超时时间（周期数量）都不会超过某个最大值 <code>N</code> ，这样我们可以用一个容量为 <code>N</code> 的环形链表存放定i时器，每个链表节点对应一个超时时间，将所有超时时间相同的定时器存放在同一个链表节点中。链表中有一个节点代表当前时间 <code>i</code> ，在每次执行检查时将当前时间 <code>i</code> 向前移动移动一个节点变成 <code>i+1</code> 节点， 这样 <code>i+1</code> 节点中的所有定时器就需要超时触发了。在添加一个超时时间为 <code>t</code> 新的定时器时，需要将其放在第 <code>(i+t)%N</code> 个节点中。<br></p>
 
@@ -111,9 +111,9 @@
 </div>
 </div>
 
-<div id="outline-container-org651bdc5" class="outline-2">
-<h2 id="org651bdc5">哈希时间轮算法</h2>
-<div class="outline-text-2" id="text-org651bdc5">
+<div id="outline-container-orge9d3128" class="outline-2">
+<h2 id="orge9d3128">哈希时间轮算法</h2>
+<div class="outline-text-2" id="text-orge9d3128">
 <p>
 当最大超时时间 <code>N</code> 很大时，基础时间轮中的节点增多，这样会消耗很多内存。我们可以将相邻的定时器归为一组，将这一组作为一个时间轮节点。每次在定时器超时判断时只需关注当前节点中的那一组定时器。这种方法借鉴了哈希运算的思想，可以看作是一种广义上的哈希运算，就是将变化范围大的对象经过哈希函数映射到一个较小的范围。<br></p>
 
@@ -122,25 +122,25 @@
 </div>
 </div>
 
-<div id="outline-container-org148ac91" class="outline-2">
-<h2 id="org148ac91">分层时间轮算法</h2>
-<div class="outline-text-2" id="text-org148ac91">
+<div id="outline-container-orgaa6b2b7" class="outline-2">
+<h2 id="orgaa6b2b7">分层时间轮算法</h2>
+<div class="outline-text-2" id="text-orgaa6b2b7">
 <p>
 分层时间轮算法可以看作是哈希时间轮算法的一个特例，即哈希时间轮中的每个节点中存放的仍然是时间轮。以我们生活中的常见的钟表为例：有24个节点表示小时，每个节点表示1小时；小时节点中有60个分钟节点，每个分钟节点表示1分钟；分钟节点中有60个秒节点，每个秒节点表示1秒。其中的时、分、秒就是将时间轮分为了3个层次。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org2e968ff" class="outline-2">
-<h2 id="org2e968ff">算法演进的思路分析</h2>
-<div class="outline-text-2" id="text-org2e968ff">
+<div id="outline-container-org20f1b0f" class="outline-2">
+<h2 id="org20f1b0f">算法演进的思路分析</h2>
+<div class="outline-text-2" id="text-org20f1b0f">
 <p>
 上面提到的时间轮算法的几个变体是空间与时间转换的典型案例。为了使每次超时判断处理的速度变快，将定时器按照超时时间分开，这样每次只需要关注那一小部分快要超时的定时器，这是空间换时间。为了减少存储定时器所需要内存，将超时时间接近的放在一个节点中，这是时间换空间。而分层时间轮其实就是每层的节点中仍然是时间轮，这又使用是递归思想。仔细品味算法的设计思路，还真的是蛮有意思的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0008c17" class="outline-2">
-<h2 id="org0008c17">时间轮算法的实现</h2>
-<div class="outline-text-2" id="text-org0008c17">
+<div id="outline-container-org934bde7" class="outline-2">
+<h2 id="org934bde7">时间轮算法的实现</h2>
+<div class="outline-text-2" id="text-org934bde7">
 <p>
 我找了几个时间轮算法的实现代码，不过没有深入研究，等以后有时间的时候再仔细看看：<br></p>
 <ul class="org-ul">
@@ -154,9 +154,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgc0bcd9e" class="outline-2">
-<h2 id="orgc0bcd9e">参考资料</h2>
-<div class="outline-text-2" id="text-orgc0bcd9e">
+<div id="outline-container-org0d98e6d" class="outline-2">
+<h2 id="org0d98e6d">参考资料</h2>
+<div class="outline-text-2" id="text-org0d98e6d">
 <ul class="org-ul">
 <li>
 <a href="http://www.cs.columbia.edu/~nahum/w6998/papers/sosp87-timing-wheels.pdf">columbia edu - timing wheel</a><br>
