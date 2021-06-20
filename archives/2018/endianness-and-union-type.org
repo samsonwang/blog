@@ -2,7 +2,7 @@
 .. title: 字节序与union类型
 .. slug: endianness-and-union-type
 .. date: 2018-05-11 09:55:34 UTC+08:00
-.. updated: 2019-01-17 15:51:34 UTC+08:00
+.. updated: 2021-06-20 15:51:34 UTC+08:00
 .. tags: cpp, computer science, endian, union
 .. category: computer science
 .. link:
@@ -11,18 +11,101 @@
 #+END_COMMENT
 #+TITLE: 字节序与union类型
 
-** 字节序
-字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。
-字节序分为大端字节序和小端字节序，两种字节序不能混用。
-*大端字节序* ：高位字节保存在较低位地址的内存中
-*小端字节序* ：高位字节保存在较高位地址的内存中
+** 字节序是什么
+字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。字节序分为大端字节序和小端字节序，两种字节序不能混用。
 
-以 =int n = 0x12345678= 为例，大端字节序内存中的存储的顺序为 =0x12 0x34 0x56 0x78= ，小端字节序内存中的存储顺序为 =0x78 0x56 0x34 0x12= 。很明显可以看出大端字节序更符合人类的阅读习惯。
+- 大端字节序 ：高位字节保存在较低位地址的内存中
+- 小端字节序 ：高位字节保存在较高位地址的内存中
 
-常见的大端系统CPU：IBM z/Atchitecture
-常见的小端系统CPU：intel x86
+以 ~int n = 0x12345678;~ 为例，大端字节序内存中的存储的顺序为 =0x12 0x34 0x56 0x78= ，小端字节序内存中的存储顺序为 =0x78 0x56 0x34 0x12= 。很明显可以看出大端字节序更符合人类的阅读习惯。
 
-网络字节序使用的大端字节序，常用网络协议如IPv4、IPv6、TCP和UDP协议都是使用大端字节序完成数据传输的。
+- 常见的大端系统CPU：IBM z/Atchitecture
+- 常见的小端系统CPU：intel x86
+
+网络字节序使用的大端字节序，常用网络协议如IPv4、IPv6、TCP和UDP协议都是使用大端字节序进行数据传输的。
+
+
+
+** 提供字节序转换功能的函数接口
+在网络通信接口中提供了转换主机字节序和网络字节序之间的函数接口，如下所示。
+#+BEGIN_SRC c
+uint32_t htonl(uint32_t hostlong);
+uint16_t htons(uint16_t hostshort);
+uint32_t ntohl(uint32_t netlong);
+uint16_t ntohs(uint16_t netshort);
+#+END_SRC
+
+有些时候，我们需要手动转换内存字节流，可以使用以下接口帮助实现指定字节序的转换。
+
+小端字节序的函数实现如下：
+#+BEGIN_SRC cpp
+// small endian
+inline std::uint16_t SE_GetStreamU16(const void* p) {
+    const std::uint8_t* pTemp = static_cast<const std::uint8_t*>(p);
+
+    return std::uint16_t(pTemp[0] | (pTemp[1] << 8));
+}
+
+inline std::uint32_t SE_GetStreamU32(const void* p) {
+    const std::uint8_t* pTemp = static_cast<const std::uint8_t*>(p);
+
+    return std::uint32_t(pTemp[0]
+                         | (pTemp[1] << 8)
+                         | (pTemp[2] << 16)
+                         | (pTemp[3] << 24));
+}
+
+inline void SE_SetStreamU16(void* p, std::uint16_t n) {
+    std::uint8_t* pTemp = static_cast<std::uint8_t*>(p);
+
+    pTemp[0] = std::uint8_t(n);
+    pTemp[1] = std::uint8_t(n >> 8);
+}
+
+inline void SE_SetStreamU32(void* p, std::uint32_t n) {
+    std::uint8_t* pTemp = static_cast<std::uint8_t*>(p);
+
+    pTemp[0] = std::uint8_t(n);
+    pTemp[1] = std::uint8_t(n >> 8);
+    pTemp[2] = std::uint8_t(n >> 16);
+    pTemp[3] = std::uint8_t(n >> 24);
+}
+#+END_SRC
+
+大端字节序的函数实现如下：
+#+BEGIN_SRC cpp
+// big endian
+inline std::uint16_t BE_GetStreamU16(const void* p) {
+    const std::uint8_t* pTemp = static_cast<const std::uint8_t*>(p);
+
+    return std::uint16_t(pTemp[1] | pTemp[0] << 8);
+}
+
+inline std::uint32_t BE_GetStreamU32(const void* p) {
+    const std::uint8_t* pTemp = static_cast<const std::uint8_t*>(p);
+
+    return std::uint32_t(pTemp[3]
+                         | (pTemp[2] << 8)
+                         | (pTemp[1] << 16)
+                         | (pTemp[0] << 24));
+}
+
+inline void BE_SetStreamU16(void* p, std::uint16_t n) {
+    std::uint8_t* pTemp = static_cast<std::uint8_t*>(p);
+
+    pTemp[0] = std::uint8_t(n >> 8);
+    pTemp[1] = std::uint8_t(n);
+}
+
+inline void BE_SetStreamU32(void* p, std::uint32_t n) {
+    std::uint8_t* pTemp = static_cast<std::uint8_t*>(p);
+
+    pTemp[0] = std::uint8_t(n >> 24);
+    pTemp[1] = std::uint8_t(n >> 16);
+    pTemp[2] = std::uint8_t(n >> 8);
+    pTemp[3] = std::uint8_t(n);
+}
+#+END_SRC
 
 
 
@@ -51,11 +134,7 @@ xxd -c 1 -l 6 /bin/bash
 hexdump -n 6 -C /bin/bash
 #+END_SRC
 
-
-
-** union类型
 可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。
-
 #+BEGIN_SRC cpp
 #include <stdio.h>
 #include <inttypes.h>
@@ -63,7 +142,7 @@ hexdump -n 6 -C /bin/bash
 typedef union un {
     int32_t x;
     char ch[4];
-}un;
+} un;
 
 int main() {
     un u;
