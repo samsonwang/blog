@@ -18,17 +18,19 @@
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="字节序与union类型">
 <meta property="og:url" content="https://blog.wangzhl.com/posts/2018/endianness-and-union-type/">
-<meta property="og:description" content="字节序
+<meta property="og:description" content="字节序是什么
 
 
-字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。
-字节序分为大端字节序和小端字节序，两种字节序不能混用。
+字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。字节序分为大端字节序和小端字节序，两种字节序不能混用。
+
+
+
 大端字节序 ：高位字节保存在较低位地址的内存中
 小端字节序 ：高位字节保存在较高位地址的内存中
 
 
 
-以 int n = 0x12345678 为例，大端字节序内存中的存储的顺序为 0x12 0x34 0x56 0x78 ，小端字节序内存中的存储顺序为 0x">
+以 int n = 0x12345678; 为例，大端字节序内存中的存储的顺序为 0x12 0x34 0x56 0x78 ，小端字节序内存中的存储">
 <meta property="og:type" content="article">
 <meta property="article:published_time" content="2018-05-11T09:55:34+08:00">
 <meta property="article:tag" content="computer science">
@@ -63,36 +65,131 @@
 
     <p class="post-meta">
       
-    <time class="dt-published" datetime="2018-05-11T09:55:34+08:00" itemprop="datePublished">May 11, 2018</time><span class="dt-updated"> / updated <time datetime="2019-01-17T15:51:34+08:00" itemprop="dateUpdated">Jan 17, 2019</time></span>
+    <time class="dt-published" datetime="2018-05-11T09:55:34+08:00" itemprop="datePublished">May 11, 2018</time><span class="dt-updated"> / updated <time datetime="2021-06-20T15:51:34+08:00" itemprop="dateUpdated">Jun 20, 2021</time></span>
 
       
 
     </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orgf2632dd" class="outline-2">
-<h2 id="orgf2632dd">字节序</h2>
-<div class="outline-text-2" id="text-orgf2632dd">
+    <div id="outline-container-org8c3d4a4" class="outline-2">
+<h2 id="org8c3d4a4">字节序是什么</h2>
+<div class="outline-text-2" id="text-org8c3d4a4">
 <p>
-字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。<br>
-字节序分为大端字节序和小端字节序，两种字节序不能混用。<br><b>大端字节序</b> ：高位字节保存在较低位地址的内存中<br><b>小端字节序</b> ：高位字节保存在较高位地址的内存中<br></p>
+字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。字节序分为大端字节序和小端字节序，两种字节序不能混用。<br></p>
 
+<ul class="org-ul">
+<li>大端字节序 ：高位字节保存在较低位地址的内存中<br>
+</li>
+<li>小端字节序 ：高位字节保存在较高位地址的内存中<br>
+</li>
+</ul>
 <p>
-以 <code>int n = 0x12345678</code> 为例，大端字节序内存中的存储的顺序为 <code>0x12 0x34 0x56 0x78</code> ，小端字节序内存中的存储顺序为 <code>0x78 0x56 0x34 0x12</code> 。很明显可以看出大端字节序更符合人类的阅读习惯。<br></p>
+以 <code>int n = 0x12345678;</code> 为例，大端字节序内存中的存储的顺序为 <code>0x12 0x34 0x56 0x78</code> ，小端字节序内存中的存储顺序为 <code>0x78 0x56 0x34 0x12</code> 。很明显可以看出大端字节序更符合人类的阅读习惯。<br></p>
 
+<ul class="org-ul">
+<li>常见的大端系统CPU：IBM z/Atchitecture<br>
+</li>
+<li>常见的小端系统CPU：intel x86<br>
+</li>
+</ul>
 <p>
-常见的大端系统CPU：IBM z/Atchitecture<br>
-常见的小端系统CPU：intel x86<br></p>
-
-<p>
-网络字节序使用的大端字节序，常用网络协议如IPv4、IPv6、TCP和UDP协议都是使用大端字节序完成数据传输的。<br></p>
+网络字节序使用的大端字节序，常用网络协议如IPv4、IPv6、TCP和UDP协议都是使用大端字节序进行数据传输的。<br></p>
 </div>
 </div>
 
 
 
-<div id="outline-container-org772abef" class="outline-2">
-<h2 id="org772abef">查看当前系统的字节序</h2>
-<div class="outline-text-2" id="text-org772abef">
+<div id="outline-container-orgd8daa51" class="outline-2">
+<h2 id="orgd8daa51">提供字节序转换功能的函数接口</h2>
+<div class="outline-text-2" id="text-orgd8daa51">
+<p>
+在网络通信接口中提供了转换主机字节序和网络字节序之间的函数接口，如下所示。<br></p>
+<div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="nf">htonl</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">hostlong</span><span class="p">);</span>
+<span class="kt">uint16_t</span> <span class="nf">htons</span><span class="p">(</span><span class="kt">uint16_t</span> <span class="n">hostshort</span><span class="p">);</span>
+<span class="kt">uint32_t</span> <span class="nf">ntohl</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">netlong</span><span class="p">);</span>
+<span class="kt">uint16_t</span> <span class="nf">ntohs</span><span class="p">(</span><span class="kt">uint16_t</span> <span class="n">netshort</span><span class="p">);</span>
+</pre></div>
+
+<p>
+有些时候，我们需要手动转换内存字节流，可以使用以下接口帮助实现指定字节序的转换。<br></p>
+
+<p>
+小端字节序的函数实现如下：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// small endian</span>
+<span class="kr">inline</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span> <span class="n">SE_GetStreamU16</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span> <span class="n">SE_GetStreamU32</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="kt">void</span> <span class="n">SE_SetStreamU16</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="kt">void</span> <span class="n">SE_SetStreamU32</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+大端字节序的函数实现如下：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// big endian</span>
+<span class="kr">inline</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span> <span class="n">BE_GetStreamU16</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">|</span> <span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span> <span class="n">BE_GetStreamU32</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="kt">void</span> <span class="n">BE_SetStreamU16</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="kt">void</span> <span class="n">BE_SetStreamU32</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+
+<div id="outline-container-org27966d2" class="outline-2">
+<h2 id="org27966d2">查看当前系统的字节序</h2>
+<div class="outline-text-2" id="text-org27966d2">
 <p>
 通过 <code>lscpu</code> 命令，能得到cpu的大端和小端信息。<br></p>
 <div class="highlight"><pre><span></span>lscpu <span class="p">|</span> grep -i endian
@@ -116,24 +213,16 @@ python -c <span class="s2">"import sys;sys.exit(0 if sys.byteorder=='big' else 1
 <span class="c1"># or</span>
 hexdump -n <span class="m">6</span> -C /bin/bash
 </pre></div>
-</div>
-</div>
 
-
-
-<div id="outline-container-orgd62850f" class="outline-2">
-<h2 id="orgd62850f">union类型</h2>
-<div class="outline-text-2" id="text-orgd62850f">
 <p>
 可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。<br></p>
-
 <div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;inttypes.h&gt;</span><span class="cp"></span>
 
 <span class="k">typedef</span> <span class="k">union</span> <span class="n">un</span> <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>
     <span class="kt">char</span> <span class="n">ch</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
-<span class="p">}</span><span class="n">un</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">un</span><span class="p">;</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">un</span> <span class="n">u</span><span class="p">;</span>
@@ -149,9 +238,9 @@ hexdump -n <span class="m">6</span> -C /bin/bash
 </div>
 
 
-<div id="outline-container-org82882d0" class="outline-2">
-<h2 id="org82882d0">参考资料</h2>
-<div class="outline-text-2" id="text-org82882d0">
+<div id="outline-container-org14c2a48" class="outline-2">
+<h2 id="org14c2a48">参考资料</h2>
+<div class="outline-text-2" id="text-org14c2a48">
 <ul class="org-ul">
 <li>
 <a href="https://en.wikipedia.org/wiki/Endianness">wikipedia.com - endianness</a><br>
