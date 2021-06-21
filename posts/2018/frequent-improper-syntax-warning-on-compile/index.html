@@ -44,7 +44,6 @@ int printf(const char* format, ...">
 <meta property="article:published_time" content="2018-01-04T00:45:52+08:00">
 <meta property="article:tag" content="cpp">
 <meta property="article:tag" content="gcc">
-<script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
@@ -74,9 +73,9 @@ int printf(const char* format, ...">
       
     <time class="dt-published" datetime="2018-01-04T00:45:52+08:00" itemprop="datePublished">Jan 04, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org176c383" class="outline-2">
-<h2 id="org176c383">1 引言</h2>
-<div class="outline-text-2" id="text-org176c383">
+    <div id="outline-container-org88182ff" class="outline-2">
+<h2 id="org88182ff">1 引言</h2>
+<div class="outline-text-2" id="text-org88182ff">
 <p>
 本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。<br>
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
@@ -85,13 +84,13 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-org380eff3" class="outline-2">
-<h2 id="org380eff3">2 代码缺陷总结</h2>
-<div class="outline-text-2" id="text-org380eff3">
+<div id="outline-container-orgaa0e61f" class="outline-2">
+<h2 id="orgaa0e61f">2 代码缺陷总结</h2>
+<div class="outline-text-2" id="text-orgaa0e61f">
 </div>
-<div id="outline-container-org8f44c83" class="outline-3">
-<h3 id="org8f44c83">2.1 格式化字符串与后续参数不匹配</h3>
-<div class="outline-text-3" id="text-org8f44c83">
+<div id="outline-container-orgcbb7754" class="outline-3">
+<h3 id="orgcbb7754">2.1 格式化字符串与后续参数不匹配</h3>
+<div class="outline-text-3" id="text-orgcbb7754">
 <p>
 函数原型如下<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">printf</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">format</span><span class="p">,</span> <span class="p">...);</span>
@@ -99,9 +98,9 @@ int printf(const char* format, ...">
 </pre></div>
 </div>
 
-<div id="outline-container-org0366f8b" class="outline-4">
-<h4 id="org0366f8b">2.1.1 <code>size_t</code> 类型</h4>
-<div class="outline-text-4" id="text-org0366f8b">
+<div id="outline-container-orgdee83e8" class="outline-4">
+<h4 id="orgdee83e8">2.1.1 <code>size_t</code> 类型</h4>
+<div class="outline-text-4" id="text-orgdee83e8">
 <p>
 由于 <code>size_t</code> 在不同平台上会有不同的类型定义，合适的做法是使用 <code>z</code> 对 <code>size_t</code> 进行格式化。<br>
 变量宽度标识符 <code>z</code> 需要编译器支持C++11或C99特性。<br>
@@ -113,9 +112,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-orgf39d2df" class="outline-4">
-<h4 id="orgf39d2df">2.1.2 <code>int64_t</code> 及其相关类型</h4>
-<div class="outline-text-4" id="text-orgf39d2df">
+<div id="outline-container-org405b5f7" class="outline-4">
+<h4 id="org405b5f7">2.1.2 <code>int64_t</code> 及其相关类型</h4>
+<div class="outline-text-4" id="text-org405b5f7">
 <p>
 <code>int64_t</code> 是固定宽度为8字节的整形定义，在文件 <code>&lt;cstdint&gt;</code> 中有定义。<br>
 类似的还有 <code>int8_t</code>, <code>int16_t</code>, <code>int32_t</code> 分对应1，2，4字节的整形定义。<br>
@@ -140,9 +139,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-orgcd85f8b" class="outline-4">
-<h4 id="orgcd85f8b">2.1.3 <code>%x</code> 对应无符号整数</h4>
-<div class="outline-text-4" id="text-orgcd85f8b">
+<div id="outline-container-org6c59a35" class="outline-4">
+<h4 id="org6c59a35">2.1.3 <code>%x</code> 对应无符号整数</h4>
+<div class="outline-text-4" id="text-org6c59a35">
 <p>
 在使用 <code>sscanf</code> 函数对取16进制数据时需要注意传入的需要是无符号类型的地址。<br>
 示例代码如下：<br></p>
@@ -155,9 +154,9 @@ int printf(const char* format, ...">
 </div>
 
 
-<div id="outline-container-org5af00d4" class="outline-3">
-<h3 id="org5af00d4">2.2 多个逻辑表达式之间在 <code>&amp;&amp;</code> 和 <code>||</code> 之间的运算符优先级</h3>
-<div class="outline-text-3" id="text-org5af00d4">
+<div id="outline-container-org664f0d1" class="outline-3">
+<h3 id="org664f0d1">2.2 多个逻辑表达式之间在 <code>&amp;&amp;</code> 和 <code>||</code> 之间的运算符优先级</h3>
+<div class="outline-text-3" id="text-org664f0d1">
 <p>
 先看以下示例代码：<br></p>
 <div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">EXPR1</span> <span class="o">||</span> <span class="n">EXPR2</span> <span class="o">||</span> <span class="n">EXPR3</span> <span class="o">&amp;&amp;</span> <span class="n">EXPR4</span><span class="p">)</span>
@@ -181,9 +180,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-org6a83220" class="outline-3">
-<h3 id="org6a83220">2.3 有符号整数和无符号整数之间的大小比较</h3>
-<div class="outline-text-3" id="text-org6a83220">
+<div id="outline-container-org600ff68" class="outline-3">
+<h3 id="org600ff68">2.3 有符号整数和无符号整数之间的大小比较</h3>
+<div class="outline-text-3" id="text-org600ff68">
 <p>
 有符号整数和无符号整数在进行大小比较时，有符号数会被转化为无符号数。<br>
 这样会引起一些不必要误解，所以应该避免这种用法。<br>
@@ -208,9 +207,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-org0f909e9" class="outline-3">
-<h3 id="org0f909e9">2.4 函数的重载和覆盖</h3>
-<div class="outline-text-3" id="text-org0f909e9">
+<div id="outline-container-orgf13dc82" class="outline-3">
+<h3 id="orgf13dc82">2.4 函数的重载和覆盖</h3>
+<div class="outline-text-3" id="text-orgf13dc82">
 <p>
 在进行虚函数多态实现时，注意检查函数的一致性。<br>
 出现相同函数名称但是积累为非 <code>const</code> 版本，而派生类为 <code>const</code> 时，这时并不会导致多态，而会导致基类函数被隐藏。<br></p>
@@ -295,7 +294,12 @@ int printf(const char* format, ...">
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- baidu tongji --><script>
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
 var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
@@ -303,11 +307,6 @@ var _hmt = _hmt || [];
   var s = document.getElementsByTagName("script")[0];
   s.parentNode.insertBefore(hm, s);
 })();
-</script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'UA-108507797-1');
 </script>
 </body>
 </html>

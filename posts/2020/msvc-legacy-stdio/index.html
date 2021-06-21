@@ -36,7 +36,6 @@
 <meta property="article:tag" content="ucrt">
 <meta property="article:tag" content="vcrt">
 <meta property="article:tag" content="windows">
-<script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
@@ -71,18 +70,18 @@ windows系统的向下兼容性一直是做的比较好的，一些老旧软件�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org7861d5d" class="outline-2">
-<h2 id="org7861d5d">链接旧版本库时遇到的问题</h2>
-<div class="outline-text-2" id="text-org7861d5d">
+<div id="outline-container-orgcb0273d" class="outline-2">
+<h2 id="orgcb0273d">链接旧版本库时遇到的问题</h2>
+<div class="outline-text-2" id="text-orgcb0273d">
 <p>
 有个库是由MSVC2008编译的，我在MSVC2017中使用这个库进行链接时出现错误，提示我缺少一些函数（如： <code>sprintf</code> 、 <code>_snprintf</code> 、 <code>__iob_func</code> 等）。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org88114eb" class="outline-2">
-<h2 id="org88114eb">为什么会出现这个问题</h2>
-<div class="outline-text-2" id="text-org88114eb">
+<div id="outline-container-orgef1d0d6" class="outline-2">
+<h2 id="orgef1d0d6">为什么会出现这个问题</h2>
+<div class="outline-text-2" id="text-orgef1d0d6">
 <p>
 在查阅了一些资料后发现，从MSVC2015开始，微软修改了C运行时库（C runtime），将其拆分为Universal CRT( <code>ucrtbase</code> ) 和 VC Runtime Library ( <code>vcruntime</code> )。其中，UCRT包含大部分的标准功能，VCRT包含与编译相关的功能（如异常处理等内部功能）。一些函数从UCRT中删掉了，导致链接时无法找到对应的符号（unresolved external symbol）。下面是微软官方的原文。<br></p>
 
@@ -102,18 +101,18 @@ For the CRT, mixing-and-matching was never supported, but it often just worked, 
 </div>
 
 
-<div id="outline-container-org06c99dd" class="outline-2">
-<h2 id="org06c99dd">官方推荐的解决方案</h2>
-<div class="outline-text-2" id="text-org06c99dd">
+<div id="outline-container-org9a43979" class="outline-2">
+<h2 id="org9a43979">官方推荐的解决方案</h2>
+<div class="outline-text-2" id="text-org9a43979">
 <p>
 微软在MSVC2015后提供了 <code>legacy_stdio_definitions.lib</code> 库，能够提供大部分缺失的链接符号（symbol）。但仍有一些无法提供兼容的链接符号，如一些函数定义 <code>__iob_func</code> 或导出的数据 <code>__imp___iob</code> 、 <code>__imp___pctype</code> 、 <code>__imp___mb_cur_max</code> 。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgc7dc212" class="outline-2">
-<h2 id="orgc7dc212">那 <code>__iob_func</code> 怎么处理呢？</h2>
-<div class="outline-text-2" id="text-orgc7dc212">
+<div id="outline-container-org019cd8f" class="outline-2">
+<h2 id="org019cd8f">那 <code>__iob_func</code> 怎么处理呢？</h2>
+<div class="outline-text-2" id="text-org019cd8f">
 <p>
 微软官方没有提供 <code>__iob_func</code> 的适配方案，但是我找到了另外的方法，即可以自己实现一个同名函数。<br></p>
 
@@ -169,9 +168,9 @@ MSVC2008中的 <code>FILE</code> 结构体定义：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org302edb5" class="outline-2">
-<h2 id="org302edb5">参考资料</h2>
-<div class="outline-text-2" id="text-org302edb5">
+<div id="outline-container-orgd71c7e1" class="outline-2">
+<h2 id="orgd71c7e1">参考资料</h2>
+<div class="outline-text-2" id="text-orgd71c7e1">
 <ul class="org-ul">
 <li>
 <a href="https://docs.microsoft.com/en-us/cpp/porting/overview-of-potential-upgrade-issues-visual-cpp">microsoft docs - potential upgrade issues</a><br>
@@ -277,7 +276,12 @@ MSVC2008中的 <code>FILE</code> 结构体定义：<br></p>
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- baidu tongji --><script>
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
 var _hmt = _hmt || [];
 (function() {
   var hm = document.createElement("script");
@@ -285,11 +289,6 @@ var _hmt = _hmt || [];
   var s = document.getElementsByTagName("script")[0];
   s.parentNode.insertBefore(hm, s);
 })();
-</script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'UA-108507797-1');
 </script>
 </body>
 </html>
