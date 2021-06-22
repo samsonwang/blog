@@ -3,7 +3,7 @@
 # !! This is the configuration of Nikola. !! #
 # !!  You should edit it to your liking.  !! #
 
-import time
+import os, time
 
 # ! Some settings can be different in different languages.
 # ! A comment stating (translatable) is used to denote those.
@@ -235,9 +235,14 @@ POSTS = (
     ("posts/*.txt", "posts", "post.tmpl"),
     ("posts/*.html", "posts", "post.tmpl"),
     ("posts/*.org", "posts", "post.tmpl"),
-
-    ("archives/*.org", "posts", "post.tmpl"),
+#    ("archives/*.org", "posts", "post.tmpl"),
 )
+
+for d in os.scandir("archives"):
+    if d.is_dir():
+        POSTS += ((d.path+"/*.org", "posts", "post.tmpl"),)
+# print (POSTS)
+
 
 PAGES = (
     ("pages/404.*", "", "story.tmpl"),
@@ -1206,7 +1211,6 @@ USE_BUNDLES = False
 # (translatable)
 # BODY_END = ""
 BODY_END = """
-
 <!-- google adsense -->
 <script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 
