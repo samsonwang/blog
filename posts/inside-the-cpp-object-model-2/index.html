@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>深入探索C++内存模型（2） | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/inside-the-cpp-object-model-2/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/inside-the-cpp-object-model-1/" title="深入探索C++内存模型（1）" type="text/html">
+<link rel="next" href="/posts/branch-prediction-optimization/" title="分支预测技术" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="深入探索C++内存模型（2）">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/inside-the-cpp-object-model-2/">
+<meta property="og:description" content="构造函语意学是本书的第二章，这一章节主要针对构造函数在不同情况的底层实现细节进行的全面的讨论。阐述了在类对象（class object）的构造期间，编译器进行的额外操作的原理。针对默认构造函数（default constructor）和拷贝构造函数（copy constructor）分别展开了细致的讨论，引出了编译器 NRV 优化的概念，揭示了成员初始化列表的作用机理。
+
+
+
+
+
+第二章 构造函数">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2019-03-25T15:52:36+08:00">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="digest">
+<meta property="article:tag" content="Lippman">
+<meta property="article:tag" content="memory layout">
+<meta property="article:tag" content="object model">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">深入探索C++内存模型（2）</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2019-03-25T15:52:36+08:00" itemprop="datePublished">Mar 25, 2019</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+构造函语意学是本书的第二章，这一章节主要针对构造函数在不同情况的底层实现细节进行的全面的讨论。阐述了在类对象（class object）的构造期间，编译器进行的额外操作的原理。针对默认构造函数（default constructor）和拷贝构造函数（copy constructor）分别展开了细致的讨论，引出了编译器 NRV 优化的概念，揭示了成员初始化列表的作用机理。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org31b73a7" class="outline-2">
+<h2 id="org31b73a7">第二章 构造函数语意学 （the semantics of constructors）</h2>
+<div class="outline-text-2" id="text-org31b73a7">
+</div>
+<div id="outline-container-org4387ca6" class="outline-3">
+<h3 id="org4387ca6">2.1 default constructor 的构建操作</h3>
+<div class="outline-text-3" id="text-org4387ca6">
+<p>
+关键词 <code>explicit</code> 之所以被导入这个语言，就是为了提供给程序员一种方法，使他们能够制止“单一参数的 constructor ”被当作一个 conversion 运算符。<br></p>
+
+<p>
+默认构造函数在需要的时候被编译器产生出来。但是这个需要有两层含义，一个是程序员的需要，另一个是编译器的需要。<br>
+只有在编译器需要的时候，才会合成默认构造函数（default constructor）。此外，被合成出来的 constructor 只执行编译器所需的行动。<br></p>
+</div>
+
+<div id="outline-container-org215f555" class="outline-4">
+<h4 id="org215f555">带有 default constructor 的 member class object</h4>
+<div class="outline-text-4" id="text-org215f555">
+<p>
+如果一个 class 没有任何 constructor，但它内含一个有 default constructor 的 member object，那么这个 class 的 implicit default constructor 就是 “nontrivial” ，编译器需要为此 class 合成出一个 default constructor。不过这个合成操作只有在 constructor 真正需要被调用时才会发生。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgd3780de" class="outline-4">
+<h4 id="orgd3780de">带有 default constructor 的 base class</h4>
+<div class="outline-text-4" id="text-orgd3780de">
+<p>
+如果一个没有任何 constructor 的 class 派生自一个“带有 default constructor”的 base class，那么这个 derived class 的 default constructor 会被视为 nontrivial，因此需要被合成出来。它将调用上一层 base classes 的 default consturctor（根据他们的声明顺序）。对于一个后继派生的class而言，这个合成的 constructor 和一个 “被明确提供的 default constructor” 没有什么异常。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org6d79967" class="outline-4">
+<h4 id="org6d79967">带有 virtual function 的 class</h4>
+<div class="outline-text-4" id="text-org6d79967">
+<p>
+另有两种情况，也需要合成出 default constructor：<br></p>
+<ol class="org-ol">
+<li>class 声明（或继承）一个 virtual function；<br>
+</li>
+<li>class 派生自一个继承串链，其中有一个或更多的 virtual base classes。<br>
+</li>
+</ol>
+<p>
+以下两个扩张会在编译期间发生：<br></p>
+<ol class="org-ol">
+<li>一个 virtual function table（vtbl） 会被编译器产生出来，用于存放 class 的 virtual functions 地址；<br>
+</li>
+<li>在每一个 class object 中， 一个额外的 pointer member（vptr）会被编译器合成出来，内含相关的 class vtbl 的地址。<br>
+</li>
+</ol>
+<p>
+注意：虚函数表（vtbl）属于一个 class，而每个 object 中存放的是虚函数表的地址（vptr）。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org9a087aa" class="outline-4">
+<h4 id="org9a087aa">带有 virtual base class 的 class</h4>
+<div class="outline-text-4" id="text-org9a087aa">
+<p>
+virtual base class 的实现方法在不同的编译器之间有极大的差异。然而，每一种实现方法的共通点在于必须使 virtual base class 在其每一个 derived class object 中的位置能够于执行期准备妥当。（书中举出了cfront编译器的做法：在derived class object 的每一个 virtual base classes 安插一个指针。）对于 class 所定义的每一个 constructor，编译器会安插那些“允许每一个 virtual base class 的执行期存取操作”的代码。如果 class 没有声明任何 constructors，编译器必须为它合成一个 default constructor。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org4dd4333" class="outline-4">
+<h4 id="org4dd4333">总结</h4>
+<div class="outline-text-4" id="text-org4dd4333">
+<p>
+有四种情况，会导致“编译器必须为未声明 constructor 的 class 合成一个 default constructor”。C++ Standard 把那些合成物称为 implicit nontrivial default constructors。被合成出来的 constructor 只能满足编译器（而非程序）的需要。<br></p>
+
+<p>
+在合成的 default constructor 中，只有 base class subobjects 和 member class objects 会被初始化，所有其他的 nonstatic data member，如整数、指针、数组等等都不会被初始化。这些初始化操作对程序而言或许有需要，但对编译器则并非必要。<br></p>
+
+<p>
+C++新手一般有两个常见的误解：<br></p>
+<ol class="org-ol">
+<li>任何 class 如果没有定义 default constructor，就会被合成出一个来；<br>
+</li>
+<li>编译器合成出来的 default constructor 会明确设定“class 内每一个 data member 的默认值”。<br>
+</li>
+</ol>
+<p>
+如你所见，没有一个是真的。<br></p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org55c3dc1" class="outline-3">
+<h3 id="org55c3dc1">2.2 copy constructor 的构建操作</h3>
+<div class="outline-text-3" id="text-org55c3dc1">
+<p>
+有三种情况，会以一个 object 的内容作为另一个 class object 的初值：<br></p>
+<ol class="org-ol">
+<li>使用等号（“=”）明确地使用另一个object进行赋值<br>
+</li>
+<li>object 被当作参数交给（传递给）某个函数<br>
+</li>
+<li>函数传回一个 class object （函数返回对象）<br>
+</li>
+</ol>
+</div>
+
+<div id="outline-container-org3b16aea" class="outline-4">
+<h4 id="org3b16aea">default memberwise initialization</h4>
+<div class="outline-text-4" id="text-org3b16aea">
+<p>
+如果 class 没有提供一个 explicit copy constructor 时，当 class object 以“相同 class 的另一个 object”作为初值时，其内部都是以所谓的 default memberwise initialization 手法完成的，也就是把每一个内建的或派生的 data member 的值，从某个 object 拷贝一份到另一个 object 身上，不过它并不会拷贝其中的 member class object，而是以递归的方式施行 memberwise initialization。<br></p>
+
+<p>
+和以前一样，C++ Standard 把 copy constructor 区分为 trivial 和 nontrivial 两种，只有 nontrivial 的实体才会被合成于程序之中。而决定一个 copy constructor 是否为 trivial 的标准在于 class 是否展现初所谓的“bitwise copy semantics”。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgefe9446" class="outline-4">
+<h4 id="orgefe9446">bitwise copy semantics （位逐次拷贝）</h4>
+<div class="outline-text-4" id="text-orgefe9446">
+<p>
+一个 class 不展现出 “bitwise copy semantics” 的四种情况：<br></p>
+<ol class="org-ol">
+<li>当 class 内含一个 member object 而后者的 class 声明有一个 copy constructor 时 （不论时被 class 设计者明确地声明，或是被编译器合成）；<br>
+</li>
+<li>当 class 继承一个 base class， 而后者存在有一个 copy constructor 时（不论是被声明或是被合成而得）；<br>
+</li>
+<li>当 class 声明了一个或多个 virtual function 时；<br>
+</li>
+<li>当 class 派生自一个继承串链，其中有一个或多个 virtual base class 时。<br>
+</li>
+</ol>
+<p>
+前面两种情况，编译器必须将 member 或 base class 的 copy constructor 调用操作安插到被合成的 copy constructor 中。而后面两种情况有点复杂，会在接下来的章节讨论。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org9e9f5c7" class="outline-4">
+<h4 id="org9e9f5c7">重新设定 virtual table 的指针</h4>
+<div class="outline-text-4" id="text-org9e9f5c7">
+<p>
+虚函数表的相关初始化要在构造函数中完成，如果编译器对于新产生的 class object 的 vptr 不能正确地设置到其初值，将导致可怕的后果。因此，当编译器导入一个 vptr 到 class 之中时，该 class 就不再展现 bitwise semantics 了。现在，编译器需要需要合成出一个 copy constructor，以求将 vptr 适当地初始化。<br></p>
+
+<p>
+当在拷贝构造时，如果发生切割（sliced）行为（使用派生类对象初始化基类对象），则需要注意 vptr 需要被设置为基类的虚函数表。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org4348023" class="outline-4">
+<h4 id="org4348023">处理 virtual base class subobject</h4>
+<div class="outline-text-4" id="text-org4348023">
+<p>
+一个 class object 如果以另一个 object 作为初值，而后者有一个 virtual base class subobject， 那么也会使“bitwise copy semantics”失效。<br></p>
+
+<p>
+每一个编译器对于虚拟继承的支持承诺，都表示必须让“derived class object 中的 virtual base class subobject 位置” 在执行期间就准备妥当，维护“位置的完整性”是编译器的责任。“bitwise copy semantics”可能会破坏这个位置，所以编译器必须在它自己合成出来的 copy constructor 中作出仲裁。<br></p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0fb413c" class="outline-3">
+<h3 id="org0fb413c">2.3 程序转化语意学（program transformation semantics）</h3>
+<div class="outline-text-3" id="text-org0fb413c">
+<p>
+在 class object 的初始化定义语句会经历两个阶段的程序转换：<br></p>
+<ol class="org-ol">
+<li>重写定义语句，其中的初始化操作会被剥除，这里所谓的“定义”是指“占用内存”的行为；<br>
+</li>
+<li>class 的 copy constructor 调用操作会被安插进去。<br>
+</li>
+</ol>
+</div>
+
+<div id="outline-container-org4206a05" class="outline-4">
+<h4 id="org4206a05">返回值的初始化（return value initialization）</h4>
+<div class="outline-text-4" id="text-org4206a05">
+<p>
+编译器层面的优化操作，有时候被称为 named return value（NRV）优化。<br></p>
+
+<p>
+考虑对如下定义函数定义进行优化。<br></p>
+<div class="highlight"><pre><span></span><span class="n">X</span> <span class="nf">bar</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">X</span> <span class="n">xx</span><span class="p">;</span>
+  <span class="c1">// ...</span>
+  <span class="k">return</span> <span class="n">xx</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+编译器把其中的 <code>xx</code> 以 <code>__result</code> 取代：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">bar</span> <span class="p">(</span><span class="n">X</span><span class="o">&amp;</span> <span class="n">__result</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// default constructor</span>
+  <span class="n">__result</span><span class="p">.</span><span class="n">X</span><span class="o">::</span><span class="n">X</span><span class="p">();</span>
+  <span class="c1">// ... 直接操作 __result</span>
+  <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+虽然 NRV 优化提供了重要的效率改善，它还是饱受批评。有以下3点原因：<br></p>
+<ol class="org-ol">
+<li>优化由编译器默默完成，而它是否真的被完成，并不十分清楚；<br>
+</li>
+<li>一旦函数变得比较复杂，优化也就变得比较难以施行；<br>
+</li>
+<li>某些情况下，程序员不喜欢应用程序被优化。<br>
+</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-org75b3c05" class="outline-4">
+<h4 id="org75b3c05">摘要</h4>
+<div class="outline-text-4" id="text-org75b3c05">
+<p>
+copy constructor 的应用，迫使编译器多多稍稍对你的程序代码做部分转化。尤其是当一个函数以传值（by value）的方式传回一个 class object，而该 class 有一个 copy constructor（不论时明确定义出来的，或是合成的）时。这将导致深奥的程序转化（不论在函数的定义或使用上）。<br>
+此外编译器也将 copy constructor 的调用操作优化，以一个额外的第一参数（数值被直接存放于其中）取代 NRV。<br></p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orga18d3e3" class="outline-3">
+<h3 id="orga18d3e3">2.4 成员们的初始化队伍（member initialization list）</h3>
+<div class="outline-text-3" id="text-orga18d3e3">
+<p>
+下列情况中，为了让你的程序能够被顺利编译，你必须使用 member initialization list:<br></p>
+<ol class="org-ol">
+<li>当初始化一个 reference member 时；<br>
+</li>
+<li>当初始化一个 const member 时；<br>
+</li>
+<li>当调用一个 base class 的 constructor，而它拥有一组参数时；<br>
+</li>
+<li>当调用一个 member class 的 constructor， 而它拥有一组参数时。<br>
+</li>
+</ol>
+<p>
+注意成员变量在初始化过程中的顺序，初始化列表中的项目次序是由 class 中的 members 声明次序决定，不是由 initialization list 中的排列次序决定。<br></p>
+
+<p>
+编译器会对 initialization list 依次处理并可能重新排序，以反映出 members 的声明次序。它会安插一些代码到 constructor 体内，并置于任何 explicit user code 之前。<br></p>
+
+
+<p>
+（全文完）<br></p>
+</div>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/digest/" rel="tag">digest</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/lippman/" rel="tag">Lippman</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/memory-layout/" rel="tag">memory layout</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/object-model/" rel="tag">object model</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/inside-the-cpp-object-model-1/" rel="prev">Previous post
+        <br><span>深入探索C++内存模型（1）</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/branch-prediction-optimization/" rel="next">Next post
+        <br><span>分支预测技术</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/inside-the-cpp-object-model-2/",
+        disqus_title="\u6df1\u5165\u63a2\u7d22C++\u5185\u5b58\u6a21\u578b\uff082\uff09",
+        disqus_identifier="_cache/archives/2019/inside-the-cpp-object-model-2.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linux下的FIFO、pipe、unix domain socket漫谈 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/fifo-pipe-unix-domain-socket/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/debug-with-gdb-on-linux-2/" title="Linux下使用gdb的调试技巧（2）" type="text/html">
+<link rel="next" href="/posts/cpp11-automatic-deduction-and-decltype/" title="C++11新特性：自动类型推导" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="Linux下的FIFO、pipe、unix domain socket漫谈">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/fifo-pipe-unix-domain-socket/">
+<meta property="og:description" content="在做Linux开发时，经常会接触 管道 、 AF_UNIX 等相关词汇，为了弄清他们之间的关系，查阅了一些资料，将结果整理并记录下来。
+
+
+
+
+
+1. FIFO 与 pipe 的比较
+
+
+FIFO可以通过 mkfifo &lt;fifo_file&gt; 在本地创建一个文件用来表示一个管道，数据的交换是在操作系统内核完成的，所以在该文件中没有内容。
+FIFO可以看做是一个带有名字的管道，我们通常在命令行中使用">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-04-11T13:03:25+08:00">
+<meta property="article:tag" content="fifo">
+<meta property="article:tag" content="ipc">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="pipe">
+<meta property="article:tag" content="socket">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">Linux下的FIFO、pipe、unix domain socket漫谈</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-04-11T13:03:25+08:00" itemprop="datePublished">Apr 11, 2018</time><span class="dt-updated"> / updated <time datetime="2018-12-24T09:23:25+08:00" itemprop="dateUpdated">Dec 24, 2018</time></span>
+
+      
+
+    </p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+在做Linux开发时，经常会接触 <code>管道</code> 、 <code>AF_UNIX</code> 等相关词汇，为了弄清他们之间的关系，查阅了一些资料，将结果整理并记录下来。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org72ddf5a" class="outline-2">
+<h2 id="org72ddf5a">1. <code>FIFO</code> 与 <code>pipe</code> 的比较</h2>
+<div class="outline-text-2" id="text-org72ddf5a">
+<p>
+FIFO可以通过 <code>mkfifo &lt;fifo_file&gt;</code> 在本地创建一个文件用来表示一个管道，数据的交换是在操作系统内核完成的，所以在该文件中没有内容。<br>
+FIFO可以看做是一个带有名字的管道，我们通常在命令行中使用的管道（符号 <code>|</code> ）是匿名管道。<br></p>
+
+<blockquote>
+<p>
+A FIFO special file (a named pipe) is similar to a pipe, except that it is accessed as part of the file system. It can be opened by multiple processes for reading or writing. When processes are exchanging data via the FIFO, the kernel passes all data internally without writing it to the file system. Thus, the FIFO special file has no contents on the file system; the file system entry merely serves as a reference point so that processes can access the pipe using a name in the file system.<br></p>
+</blockquote>
+<p>
+以上内容截取自Linux帮助文档（ 在Linux的terminal中输入 <code>man fifo</code> 查看）<br></p>
+</div>
+</div>
+
+<div id="outline-container-org263f109" class="outline-2">
+<h2 id="org263f109">2. <code>FIFO</code> 与 <code>unix domain socket</code> 的比较</h2>
+<div class="outline-text-2" id="text-org263f109">
+<p>
+FIFO与unix domain socket在他们的实现方式上有相似之处，但它们是完全不同的两个概念。<br>
+FIFO是更底层的进程间通信方式，允许一端写入数据，另外一端读取数据；unix domain socket与 <code>TCP/IP</code> 的套接字很相似。<br>
+socket是双工的，支持多个进程同时访问，一个进程的socket允许多个客户端进程同时接入。在每次有新的 <code>connect</code> 或 <code>accept</code> 时， 操作系统内核会分配一个新的文件描述符，通信数据包会送达正确的进程。<br>
+FIFO并不支持以上特性，需要两个FIFO才能完成双工通信，对于每个客户端都需要一对FIFO才能完成双向通信交互。<br></p>
+
+<blockquote>
+<p>
+UNIX domain sockets and FIFO may share some part of their implementation but they are conceptually very different. FIFO functions at a very low level. One process writes bytes into the pipe and another one reads from it. A UNIX domain socket has the same behaviour as a TCP/IP socket.<br></p>
+
+<p>
+A socket is bidirectional and can be used by a lot of processes simultaneously. A process can accept many connections on the same socket and attend several clients simultaneously. The kernel delivers a new file descriptor each time connect(2) or accept(2) is called on the socket. The packets will always go to the right process.<br>
+On a FIFO, this would be impossible. For bidirectional comunication, you need two FIFOs, and you need a pair of FIFOs for each of your clients. There is no way of writing or reading in a selective way, because they are a much more primitive way to communicate.<br></p>
+
+<p>
+Anonymous pipes and FIFOs are very similar. The difference is that anonymous pipes don't exist as files on the filesystem so no process can open(2) it. They are used by processes that share them by another method. If a process opens a FIFOs and then performs, for example, a fork(2), its child will inherit its file descriptors and, among them, the pipe.<br></p>
+
+<p>
+The UNIX domain sockets, anonymous pipes and FIFOs are similar in the fact they use shared memory segments. The details of implementation may vary from one system to another but the idea is always the same: attach the same portion of memory in two distinct processes memory mapping to have them sharing data<br>
+(edit: that would one obvious way to implement it but that is not how it is actually done in Linux, which simply uses the kernel memory for the buffers, see answer by @tjb63 below).<br>
+The kernel then handles the system calls and abstracts the mechanism.<br></p>
+</blockquote>
+<p>
+以上内容截取自 <a href="https://unix.stackexchange.com/questions/75904/are-fifo-pipe-unix-domain-socket-the-same-thing-in-linux-kernel">unix stackexchange</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-orge7d8542" class="outline-2">
+<h2 id="orge7d8542">3. <code>unix-domain-socket</code> 与 <code>ip socket</code> 的比较</h2>
+<div class="outline-text-2" id="text-orge7d8542">
+<p>
+unix domain socket是一种进程间通信方式，支持跑在同一个机器上的两个进程的双向数据交互。<br>
+ip socket是一种网络通信方式，能够让两个进程通过网络完成数据交互。<br>
+unix domain socket针对于文件系统限制访问权限，而ip socket在过滤包的级别完成访问控制。<br>
+unix domain socket比ip socket的效率更高，因为省去了校验检查、路由等操作步骤。<br></p>
+
+<blockquote>
+<p>
+There are a few differences that might be of interest, in addition to the already pointed out difference that if you start out using IP sockets, you don't have to migrate to them later when you want inter-machine connectivity:<br></p>
+
+<ul class="org-ul">
+<li>UNIX domain sockets use the file system as the address name space.  This means you can use UNIX file permissions to control access to communicate with them.  I.e., you can limit what other processes can connect to the daemon – maybe one user can, but the web server can't, or the like. With IP sockets, the ability to connect to your daemon is exposed off the current system, so additional steps may have to be taken for security.  On the other hand, you get network transparency.  With UNIX domain sockets, you can actually retrieve the credential of the process that created the remote socket, and use that for access control also, which can be quite convenient on multi-user systems.<br>
+</li>
+
+<li>IP sockets over localhost are basically looped back network on-the-wire IP. There is intentionally "no special knowledge" of the fact that the connection is to the same system, so no effort is made to bypass the normal IP stack mechanisms for performance reasons. For example, transmission over TCP will always involve two context switches to get to the remote socket, as you have to switch through the netisr, which occurs following the "loopback" of the packet through the synthetic loopback interface. Likewise, you get all the overhead of ACKs, TCP flow control, encapsulation/decapsulation, etc. Routing will be performed in order to decide if the packets go to the localhost. Large sends will have to be broken down into MTU-size datagrams, which also adds overhead for large writes.  It's really TCP, it just goes over a loopback interface by virtue of a special address, or discovering that the address requested is served locally rather than over an ethernet (etc).<br>
+</li>
+
+<li>UNIX domain sockets have explicit knowledge that they're executing on the same system. They avoid the extra context switch through the netisr, and a sending thread will write the stream or datagrams directly into the receiving socket buffer. No checksums are calculated, no headers are inserted, no routing is performed, etc. Because they have access to the remote socket buffer, they can also directly provide feedback to the sender when it is filling, or more importantly, emptying, rather than having the added overhead of explicit acknowledgement and window changes. The one piece of functionality that UNIX domain sockets don't provide that TCP does is out-of-band data. In practice, this is an issue for almost noone.<br>
+</li>
+</ul>
+<p>
+In general, the argument for implementing over TCP is that it gives you location independence and immediate portability – you can move the client or the daemon, update an address, and it will "just work".  The sockets layer provides a reasonable abstraction of communications services, so it's not hard to write an application so that the connection/binding portion knows about TCP and UNIX domain sockets, and all the rest just uses the socket it's given.  So if you're looking for performance locally, I think UNIX domain sockets probably best meet your need.  Many people will code to TCP anyway because performance is often less critical, and the network portability benefit is substantial.<br></p>
+
+<p>
+Right now, the UNIX domain socket code is covered by a subsystem lock; I have a version that used more fine-grain locking, but have not yet evaluated the performance impact of those changes.  I've you're running in an SMP environment with four processors, it could be that those changes might positively impact performance, so if you'd like the patches, let me know.  Right now they're on my schedule to start testing, but not on the path for inclusion in FreeBSD 5.4.  The primary benefit of greater granularity would be if you had many pairs of threads/processes communicating across processors using UNIX domain sockets, and as a result there was substantial contention on the UNIX domain socket subsystem lock. The patches don't increase the cost of normal send/receive operations, but due add extra mutex operations in the listen/accept/connect/bind paths.<br></p>
+
+<p>
+Robert N M Watson<br></p>
+</blockquote>
+<p>
+以上内容摘抄自 <a href="https://lists.freebsd.org/pipermail/freebsd-performance/2005-February/001143.html">freebsd lists</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-orgce9cdb8" class="outline-2">
+<h2 id="orgce9cdb8">4. 参考资料</h2>
+<div class="outline-text-2" id="text-orgce9cdb8">
+<ul class="org-ul">
+<li>
+<a href="https://unix.stackexchange.com/questions/236983/differences-between-unix-domain-sockets-and-network-sockets">unix stackexchange - Differences between Unix Domain Sockets and Network Sockets</a><br>
+</li>
+<li>
+<a href="https://unix.stackexchange.com/questions/75904/are-fifo-pipe-unix-domain-socket-the-same-thing-in-linux-kernel">unix stackexchange - Are FIFO, pipe &amp; Unix domain socket the same thing in Linux kernel</a><br>
+</li>
+<li>
+<a href="https://lists.freebsd.org/pipermail/freebsd-performance/2005-February/001143.html">freebsd lists</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/fifo/" rel="tag">fifo</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/ipc/" rel="tag">ipc</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/pipe/" rel="tag">pipe</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/socket/" rel="tag">socket</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/debug-with-gdb-on-linux-2/" rel="prev">Previous post
+        <br><span>Linux下使用gdb的调试技巧（2）</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/cpp11-automatic-deduction-and-decltype/" rel="next">Next post
+        <br><span>C++11新特性：自动类型推导</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/fifo-pipe-unix-domain-socket/",
+        disqus_title="Linux\u4e0b\u7684FIFO\u3001pipe\u3001unix domain socket\u6f2b\u8c08",
+        disqus_identifier="_cache/archives/2018/fifo-pipe-unix-domain-socket.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>写在launchy3.0.3发布之后 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/launchy-maintain-303/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/algorithm-weekly-combination-sum/" title="每周算法：找出指定求和的组合" type="text/html">
+<link rel="next" href="/posts/smart-pointers-in-cpp/" title="C++中的智能指针" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="写在launchy3.0.3发布之后">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/launchy-maintain-303/">
+<meta property="og:description" content="维护launchy也有一段时间了，目前已经发了4个版本，整体功能也趋于稳定。在维护launchy的过程中有很多思考，今天集中写下来，算是里程碑样的记录。
+
+
+
+
+
+代码迁移 - 3.0.0初版
+
+
+从原始代码fork， 迁移到qt5，完成核心功能的编译。这是我做的第一步，是整个项目的起点，我开始慢慢阅读源码，不断了解各个模块的结构。
+
+
+
+在这一阶段的目标是让launchy在qt5的基础上跑起来，">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-11-26T21:04:04+08:00">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="launchy">
+<meta property="article:tag" content="python">
+<meta property="article:tag" content="qt">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">写在launchy3.0.3发布之后</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-11-26T21:04:04+08:00" itemprop="datePublished">Nov 26, 2018</time><span class="dt-updated"> / updated <time datetime="2018-11-30T10:36:30+08:00" itemprop="dateUpdated">Nov 30, 2018</time></span>
+
+      
+
+    </p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+维护launchy也有一段时间了，目前已经发了4个版本，整体功能也趋于稳定。在维护launchy的过程中有很多思考，今天集中写下来，算是里程碑样的记录。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org9ce7aed" class="outline-2">
+<h2 id="org9ce7aed">代码迁移 - 3.0.0初版</h2>
+<div class="outline-text-2" id="text-org9ce7aed">
+<p>
+从原始代码fork， 迁移到qt5，完成核心功能的编译。这是我做的第一步，是整个项目的起点，我开始慢慢阅读源码，不断了解各个模块的结构。<br></p>
+
+<p>
+在这一阶段的目标是让launchy在qt5的基础上跑起来，主要涉及到qt4向qt5的移植，有些qt4函数在qt5变换了形式，不过整体上变化并不大。<br></p>
+
+<p>
+在这阶段完成后，我发布了第一版程序3.0.0版，这一版程序有好多功能缺失，所有的插件都没有移植过来。<br></p>
+
+<p>
+从一开始，我的想法就是避免使用boost库，一方面是由于boost库过于庞大，另一方面是C++11已经提供了很多boost中的特性。这使得launchy在迁移的过程可以摆脱boost的依赖。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org2471a79" class="outline-2">
+<h2 id="org2471a79">第二版 - 3.0.1</h2>
+<div class="outline-text-2" id="text-org2471a79">
+<p>
+在这个版本的开发过程中，我不断打磨代码风格和代码结构，不断将旧的功能一点点迁移过来。主要改动如下：<br></p>
+
+<p>
+使用第三方的qt模块 <code>singleapplication</code> ，实现了程序的单例启动。能够在第二次launchy启动时向第一次启动的进程发送通知。在windows下使用了管道进行通信，在通信的时由于分两次进行数据发送，导致概率性数据发送失败。在对该第三方模块进行调试修改后，使其能够顺利完成IPC交互。<br></p>
+
+<p>
+calcy的移植，原版calcy中使用了boost中的phinex作为数值运算库。我使用了另一个更轻量级的数值运算库exprtk进行了替代，因为exprtk是header only的。<br></p>
+
+<p>
+在移植插件的过程中，我发现出现了代码重复编译的情况，也就是说插件和主界面公用的代码是在各自的模块中分别编译的。这就是代码结构设计问题，将公共代码提取出来，很明显是更好的选择。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org287d9bd" class="outline-2">
+<h2 id="org287d9bd">第三版 - 3.0.2</h2>
+<div class="outline-text-2" id="text-org287d9bd">
+<p>
+这一版对calcy增加了额外的功能，这个主要是方便日常生活中的数值转换操作。verby插件也移植了过来，这个插件的功能还是比较实用的。<br></p>
+
+<p>
+这一次发版让我意识到需要将额外的qt和vcredist文件一起打包。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orga70487c" class="outline-2">
+<h2 id="orga70487c">第四版3.0.3</h2>
+<div class="outline-text-2" id="text-orga70487c">
+<p>
+这一版主要是增加python插件功能，经过了不断的摸索，我终于将这个功能迁移过来了。原先的pylaunchy采用的是boost.python，还是老原因，我不想引入这样厚重的依赖，使用类似的pybind11完成了功能迁移。<br></p>
+
+<p>
+在这个功能的移植过程中，我经历了很长一段时间迷茫期，因为之前没有做过C++和python的混合开发。我最终的方法是将目标拆分为多个小目标，这些小目标是相对容易实现的，通过一步步完成每个小目标，最终完成大目标。这样做让我有个相对较小的切入点，而且在完成小目标后，会形成一个具有激励作用的正反馈，不断推动我走下去。<br></p>
+
+<p>
+另一个改动就是移植了tasky插件，这个插件使用了大量的windows系统函数。不过在我后来的使用经历来看，这个插件的使用率很低，因为windows的 <code>ALT+TAB</code> 已经够用了。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgbb914ea" class="outline-2">
+<h2 id="orgbb914ea">目前的想法</h2>
+<div class="outline-text-2" id="text-orgbb914ea">
+<p>
+所以目前的状态是，我没有了改进的方向，不知道下一步该开发什么功能。有用户向我反应有关python包管理相关的问题，但是python embedded不支持pip，我又不喜欢使用安装版的python，因为这样会让软件的目录看起来很乱。再者python embedded也是官方推荐的集成方法，所以我有点不想对这块逻辑做出改动。<br></p>
+
+<p>
+另外，我慢慢发现，在github上尝试维护这个项目的人有很多，但最后都没有坚持下来。另一个知名度比较高的类似产品wox也好久没有更新了。这也让我慢慢意识到作为个人开发者，热情会慢慢消退。这种开源软件的盈利模式也是值得探索的，从我现在的感受是，没有经济上的回报作为反馈，开发动力将会逐步减少。<br></p>
+
+<p>
+在我维护的过程中，也会发现类似功能的软件，如keypiranha。keypiranha使用C++作为内核，使用python3作为作为它插件系统，它的插件模式很大程度上模仿了sublime text。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org47377e9" class="outline-2">
+<h2 id="org47377e9">相关链接</h2>
+<div class="outline-text-2" id="text-org47377e9">
+<ul class="org-ul">
+<li>
+<a href="https://github.com/samsonwang/LaunchyQt">https://github.com/samsonwang/LaunchyQt</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/launchy/" rel="tag">launchy</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/python/" rel="tag">python</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/qt/" rel="tag">qt</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/algorithm-weekly-combination-sum/" rel="prev">Previous post
+        <br><span>每周算法：找出指定求和的组合</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/smart-pointers-in-cpp/" rel="next">Next post
+        <br><span>C++中的智能指针</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/launchy-maintain-303/",
+        disqus_title="\u5199\u5728launchy3.0.3\u53d1\u5e03\u4e4b\u540e",
+        disqus_identifier="_cache/archives/launchy/launchy-maintain-303.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C++中的智能指针 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/smart-pointers-in-cpp/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/launchy-maintain-303/" title="写在launchy3.0.3发布之后" type="text/html">
+<link rel="next" href="/posts/sorting-algorithm/" title="常见排序算法总结" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="C++中的智能指针">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/smart-pointers-in-cpp/">
+<meta property="og:description" content="C++中有很多智能指针如 unique_ptr 和 shared_ptr ，本篇文章主要介绍这些指针的功能和应用场景。
+
+
+
+
+
+unique_ptr
+
+
+unique_ptr 用于保证作用域范围内的指针能够被释放，有效避免一些情况下跳出作用域而没有对动态内存进行释放引起的内存泄漏。
+
+
+
+unique_ptr 对象支持移动（move），不支持拷贝（copy）。 unique_ptr 在移动后（m">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-11-28T23:51:57+08:00">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="shared_ptr">
+<meta property="article:tag" content="smart pointer">
+<meta property="article:tag" content="unique_ptr">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">C++中的智能指针</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-11-28T23:51:57+08:00" itemprop="datePublished">Nov 28, 2018</time><span class="dt-updated"> / updated <time datetime="2019-05-16T10:12:00+08:00" itemprop="dateUpdated">May 16, 2019</time></span>
+
+      
+
+    </p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+C++中有很多智能指针如 <code>unique_ptr</code> 和 <code>shared_ptr</code> ，本篇文章主要介绍这些指针的功能和应用场景。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org5d38e20" class="outline-2">
+<h2 id="org5d38e20"><code>unique_ptr</code></h2>
+<div class="outline-text-2" id="text-org5d38e20">
+<p>
+<code>unique_ptr</code> 用于保证作用域范围内的指针能够被释放，有效避免一些情况下跳出作用域而没有对动态内存进行释放引起的内存泄漏。<br></p>
+
+<p>
+<code>unique_ptr</code> 对象支持移动（move），不支持拷贝（copy）。 <code>unique_ptr</code> 在移动后（move）第一个会失效（变为空指针），这是move的特性。<br></p>
+
+<p>
+<code>unique_ptr</code> 作为函数参数进行传递时需要使用move完成，示例代码如下。<br></p>
+
+<div class="highlight"><pre><span></span><span class="c1">// a function consuming a unique_ptr can take it by value or by rvalue reference</span>
+<span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span> <span class="n">pass_through</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">p</span><span class="o">-&gt;</span><span class="n">bar</span><span class="p">();</span>
+    <span class="k">return</span> <span class="n">p</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">auto</span> <span class="n">p</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">D</span><span class="o">&gt;</span><span class="p">();</span> <span class="c1">// p is a unique_ptr that owns a D</span>
+<span class="k">auto</span> <span class="n">q</span> <span class="o">=</span> <span class="n">pass_through</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">p</span><span class="p">));</span>
+<span class="n">assert</span><span class="p">(</span><span class="o">!</span><span class="n">p</span><span class="p">);</span> <span class="c1">// now p owns nothing and holds a null pointer</span>
+<span class="n">q</span><span class="o">-&gt;</span><span class="n">bar</span><span class="p">();</span>   <span class="c1">// and q owns the D object</span>
+</pre></div>
+
+<p>
+<code>unique_ptr</code> 所管理对象被销毁的时机：<br>
+The object is disposed of using the associated deleter when either of the following happens:<br></p>
+<ul class="org-ul">
+<li>the managing <code>unique_ptr</code> object is destroyed<br>
+</li>
+<li>the managing <code>unique_ptr</code> object is assigned another pointer via operator= or reset().<br>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-org21222b7" class="outline-2">
+<h2 id="org21222b7">
+<code>shared_ptr</code> 与 <code>auto_ptr</code>
+</h2>
+<div class="outline-text-2" id="text-org21222b7">
+<p>
+<code>auto_ptr</code> 是 <code>shared_ptr</code> 的前身， 在C++11中开始支持 <code>shared_ptr</code> ，并弃用了 <code>auto_ptr</code> ，所以在新开发的项目中应该都使用 <code>shared_ptr</code> 。<br></p>
+
+<p>
+<code>shared_ptr</code> 所管理对象被销毁的时机：<br>
+The object is destroyed and its memory deallocated when either of the following happens:<br></p>
+<ul class="org-ul">
+<li>the last remaining <code>shared_ptr</code> owning the object is destroyed;<br>
+</li>
+<li>the last remaining <code>shared_ptr</code> owning the object is assigned another pointer via <code>operator=</code> or <code>reset()</code> .<br>
+</li>
+</ul>
+<p>
+<code>shared_ptr</code> 在何时会增加引用计数( <code>use_count</code> )呢？<br></p>
+<ul class="org-ul">
+<li>使用等号进行对象的拷贝<br>
+</li>
+<li>作为函数的参数进行传递<br>
+</li>
+</ul>
+<p>
+推荐使用 <code>make_shared</code> 创建 <code>shared_ptr</code> 对象，因为这样比使用指针进行创建效率更高。<br></p>
+
+<p>
+不要用一个动态分配内存的指针同时创建两个 <code>shared_ptr</code> 对象，也不要再手动对这个动态指针进行释放，如下所示的代码是错误的。<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// !! 这是错误代码的示例</span>
+<span class="kt">int</span><span class="o">*</span> <span class="n">pInt</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">pShared1</span><span class="p">(</span><span class="n">pInt</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">pShared2</span><span class="p">(</span><span class="n">pInt</span><span class="p">);</span> <span class="c1">// error</span>
+<span class="k">delete</span> <span class="n">pInt</span><span class="p">;</span>  <span class="c1">// error</span>
+</pre></div>
+
+<p>
+在使用 <code>shared_ptr</code> 存放动态申请的数组时，要手动指定 <code>deleter</code> ，也就是对象销毁函数，参考如下示例代码。<br></p>
+<div class="highlight"><pre><span></span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">pInt</span><span class="p">(</span><span class="k">new</span> <span class="kt">int</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="p">[](</span><span class="kt">int</span><span class="o">*</span> <span class="n">p</span><span class="p">){</span><span class="k">delete</span><span class="p">[]</span> <span class="n">p</span><span class="p">;});</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org40c1bac" class="outline-2">
+<h2 id="org40c1bac"><code>weak_ptr</code></h2>
+<div class="outline-text-2" id="text-org40c1bac">
+<p>
+<code>weak_ptr</code> 是从c++11开始支持的，用于存放已经由 <code>shared_ptr</code> 管理的对象。在 <code>weak_ptr</code> 需要操作其管理的对象时，需要先转化为 <code>shared_ptr</code> 再进行操作。<br></p>
+
+<p>
+<code>weak_ptr</code> 保证的是临时的所有权：只有在对象存在时才可以访问该对象，由于该对象可能会被释放掉， <code>weak_ptr</code> 用于追踪（track）该对象，在需要操作该对象时会转换为一个临时的 <code>shared_ptr</code> 以获得临时的所有权。如果这时原始的 <code>shared_ptr</code> 被销毁，则该对象的生存期会延长至这个临时的 <code>shared_ptr</code> 也被销毁。<br></p>
+
+<p>
+<code>weak_ptr</code> 的另一个用法是打破由 <code>shared_ptr</code> 组成的引用环（reference cycle）。用互锁来形容比较贴切，在这种情况下引用计数永远不会清零，因此会产生内存泄漏。需要将引用环中的一个 <code>shared_ptr</code> 修改为 <code>weak_ptr</code> 以解决这个问题。<br></p>
+
+<p>
+以下是示例代码<br></p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">A</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">B</span><span class="o">&gt;</span> <span class="n">b</span><span class="p">;</span> <span class="p">...</span> <span class="p">};</span>
+<span class="k">class</span> <span class="nc">B</span> <span class="p">{</span> <span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span> <span class="n">a</span><span class="p">;</span> <span class="p">...</span> <span class="p">};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">A</span><span class="o">&gt;</span> <span class="n">x</span><span class="p">(</span><span class="k">new</span> <span class="n">A</span><span class="p">);</span>  <span class="c1">// +1</span>
+<span class="n">x</span><span class="o">-&gt;</span><span class="n">b</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">B</span><span class="o">&gt;</span><span class="p">();</span> <span class="c1">// +1</span>
+<span class="n">x</span><span class="o">-&gt;</span><span class="n">b</span><span class="o">-&gt;</span><span class="n">a</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>                  <span class="c1">// +1</span>
+<span class="c1">// Ref count of 'x' is 2.</span>
+<span class="c1">// Ref count of 'x-&gt;b' is 1.</span>
+<span class="c1">// When 'x' leaves the scope, there will be a memory leak:</span>
+<span class="c1">// 2 is decremented to 1, and so both ref counts will be 1.</span>
+<span class="c1">// (Memory is deallocated only when ref count drops to 0)</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org9f77bde" class="outline-2">
+<h2 id="org9f77bde">Reference</h2>
+<div class="outline-text-2" id="text-org9f77bde">
+<ul class="org-ul">
+<li>
+<a href="https://en.cppreference.com/book/intro/smart_pointers">cppreference - smart pointers</a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/memory/unique_ptr">cppreference - <code>unique_ptr</code></a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/memory/shared_ptr">cppreference - <code>shared_ptr</code></a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/memory/weak_ptr">cppreference - <code>weak_ptr</code></a><br>
+</li>
+<li>
+<a href="https://www.acodersjourney.com/top-10-dumb-mistakes-avoid-c-11-smart-pointers/">acodersjourney.com - 10 dumb mistakes to avoid with smart-pointer</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/4984381/shared-ptr-and-weak-ptr-differences">stackoverflow - differences between <code>shared_ptr</code> and <code>weak_ptr</code></a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/shared_ptr/" rel="tag">shared_ptr</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/smart-pointer/" rel="tag">smart pointer</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/unique_ptr/" rel="tag">unique_ptr</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/launchy-maintain-303/" rel="prev">Previous post
+        <br><span>写在launchy3.0.3发布之后</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/sorting-algorithm/" rel="next">Next post
+        <br><span>常见排序算法总结</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/smart-pointers-in-cpp/",
+        disqus_title="C++\u4e2d\u7684\u667a\u80fd\u6307\u9488",
+        disqus_identifier="_cache/archives/2018/smart-pointers-in-cpp.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

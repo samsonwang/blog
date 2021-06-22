@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>libshmcache源码阅读笔记 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/notes-on-libshmcache/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/cpp-bit-field/" title="C/C++中的位域" type="text/html">
+<link rel="next" href="/posts/shell-output-redirections/" title="shell的输出重定向" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="libshmcache源码阅读笔记">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/notes-on-libshmcache/">
+<meta property="og:description" content="引言
+
+
+由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 libshmcache ，通过研究源码学习其中的优点并改进自己的模块。
+
+
+
+libshmcache与redis相似的是都使用内存进行数据缓存；与redis不同的是，redis使用的进程自己申请的动态内存，而libshmcache使用的是共享内存">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-07-23T10:51:59+08:00">
+<meta property="article:tag" content="c">
+<meta property="article:tag" content="memcached">
+<meta property="article:tag" content="redis">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">libshmcache源码阅读笔记</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-07-23T10:51:59+08:00" itemprop="datePublished">Jul 23, 2018</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <div id="outline-container-org1e3585b" class="outline-2">
+<h2 id="org1e3585b">引言</h2>
+<div class="outline-text-2" id="text-org1e3585b">
+<p>
+由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
+
+<p>
+libshmcache与redis相似的是都使用内存进行数据缓存；与redis不同的是，redis使用的进程自己申请的动态内存，而libshmcache使用的是共享内存。使用共享内存就意味着libshmcache主要的应用场景是同一台主机上的数据缓存。<br></p>
+
+<p>
+我花了一周时间阅读了比较感兴趣的部分代码，收获不少，现就以下几个方面总结一下自己的心得：<br></p>
+<ul class="org-ul">
+<li>纯C语言开发的代码风格<br>
+</li>
+<li>hash table的原理和实现<br>
+</li>
+<li>gcc原子化操作接口<br>
+</li>
+<li>有锁写和无锁读的实现细节<br>
+</li>
+<li>共享内存的两套函数接口(POSIX和SystemV)<br>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-orgb153750" class="outline-2">
+<h2 id="orgb153750">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-orgb153750">
+<p>
+我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
+
+<p>
+纵观所有项目代码，我感受比较深的就是使用结构体中嵌套匿名结构体，这样做能够增强数据结构的层次感，示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">shmcache_context</span> <span class="p">{</span>
+    <span class="kt">pid_t</span> <span class="n">pid</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">lock_fd</span><span class="p">;</span>    <span class="c1">//for file lock</span>
+    <span class="kt">int</span> <span class="n">detect_deadlock_clocks</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">shmcache_config</span> <span class="n">config</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">shm_memory_info</span> <span class="o">*</span><span class="n">memory</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="p">{</span>
+	<span class="k">struct</span> <span class="n">shmcache_segment_info</span> <span class="n">hashtable</span><span class="p">;</span>
+	<span class="k">struct</span> <span class="p">{</span>
+	    <span class="kt">int</span> <span class="n">count</span><span class="p">;</span>
+	    <span class="k">struct</span> <span class="n">shmcache_segment_info</span> <span class="o">*</span><span class="n">items</span><span class="p">;</span>
+	<span class="p">}</span> <span class="n">values</span><span class="p">;</span>
+    <span class="p">}</span> <span class="n">segments</span><span class="p">;</span>
+
+    <span class="k">struct</span> <span class="n">shmcache_value_allocator_context</span> <span class="n">value_allocator</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">shmcache_list</span> <span class="n">list</span><span class="p">;</span>   <span class="c1">//for value recycle</span>
+    <span class="kt">bool</span> <span class="n">create_segment</span><span class="p">;</span>  <span class="c1">//if check segment size                                  </span>
+<span class="p">};</span>
+</pre></div>
+<p>
+注意 <code>shmcache_context</code> 中的匿名结构体 <code>segments</code> 和 <code>values</code> ，这样的写法体现了相互包含关系，也使后续的操作该数据结构的语句更加容易理解。<br></p>
+
+<p>
+另外对于联合体和位域这两种技术也是我在之前开发中使用比较少的，通过阅读源码能够让我对其有了更深刻的理解。示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="k">union</span> <span class="n">shm_hentry_offset</span> <span class="p">{</span>
+    <span class="kt">int64_t</span> <span class="n">offset</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="nl">index</span> <span class="p">:</span><span class="mi">16</span><span class="p">;</span>
+	<span class="kt">int64_t</span> <span class="nl">offset</span> <span class="p">:</span><span class="mi">48</span><span class="p">;</span>
+    <span class="p">}</span> <span class="n">segment</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+<p>
+这段代码使用了联合体赋予了 <code>shm_hentry_offset</code> 两种访问方式，又使用了位域将 <code>int64_t</code> 分割为两段。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org4ba0926" class="outline-2">
+<h2 id="org4ba0926">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-org4ba0926">
+<p>
+libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
+之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
+对于hash计算中出现的hash值冲突，即在hash计算时出现了两个不同的key在经过hash计算后得到的bucket相同，libshmcache采用的解决方案是使用linked list来存放这些相同bucket对应的value。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org1e1d3b4" class="outline-2">
+<h2 id="org1e1d3b4">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-org1e1d3b4">
+<p>
+使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org61d8e52" class="outline-2">
+<h2 id="org61d8e52">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org61d8e52">
+<p>
+在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
+对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
+将 <code>pthread_mutex_t</code> 保存在共享内存中，不同的进程通过映射共享内存就能获得同一个互斥量，通过这个互斥量就能完成进程间同步。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgc8319d5" class="outline-2">
+<h2 id="orgc8319d5">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-orgc8319d5">
+<p>
+在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/c/" rel="tag">c</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/memcached/" rel="tag">memcached</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/redis/" rel="tag">redis</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/cpp-bit-field/" rel="prev">Previous post
+        <br><span>C/C++中的位域</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/shell-output-redirections/" rel="next">Next post
+        <br><span>shell的输出重定向</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/notes-on-libshmcache/",
+        disqus_title="libshmcache\u6e90\u7801\u9605\u8bfb\u7b14\u8bb0",
+        disqus_identifier="_cache/archives/2018/notes-on-libshmcache.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>常见的由于语法不当引起的编译警告 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/frequent-improper-syntax-warning-on-compile/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/emacs-global-gtags-guide/" title="在emacs中使用GNU Global的配置指南" type="text/html">
+<link rel="next" href="/posts/size_t-and-size_type/" title="关于size_t和size_type的比较" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="常见的由于语法不当引起的编译警告">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/frequent-improper-syntax-warning-on-compile/">
+<meta property="og:description" content="1 引言
+
+
+本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。
+这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。
+
+
+
+
+
+
+
+2 代码缺陷总结
+
+
+
+2.1 格式化字符串与后续参数不匹配
+
+
+函数原型如下
+
+int printf(const char* format, ...">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-01-04T00:45:52+08:00">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="gcc">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">常见的由于语法不当引起的编译警告</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-01-04T00:45:52+08:00" itemprop="datePublished">Jan 04, 2018</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <div id="outline-container-orgff87b8b" class="outline-2">
+<h2 id="orgff87b8b">1 引言</h2>
+<div class="outline-text-2" id="text-orgff87b8b">
+<p>
+本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。<br>
+这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
+
+<!-- TEASER_END -->
+</div>
+</div>
+
+<div id="outline-container-org6ef19f7" class="outline-2">
+<h2 id="org6ef19f7">2 代码缺陷总结</h2>
+<div class="outline-text-2" id="text-org6ef19f7">
+</div>
+<div id="outline-container-orge322cc4" class="outline-3">
+<h3 id="orge322cc4">2.1 格式化字符串与后续参数不匹配</h3>
+<div class="outline-text-3" id="text-orge322cc4">
+<p>
+函数原型如下<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">printf</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">format</span><span class="p">,</span> <span class="p">...);</span>
+<span class="kt">int</span> <span class="nf">sprintf</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span> <span class="n">str</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">format</span><span class="p">,</span> <span class="p">...);</span>
+</pre></div>
+</div>
+
+<div id="outline-container-orgdbf36a3" class="outline-4">
+<h4 id="orgdbf36a3">2.1.1 <code>size_t</code> 类型</h4>
+<div class="outline-text-4" id="text-orgdbf36a3">
+<p>
+由于 <code>size_t</code> 在不同平台上会有不同的类型定义，合适的做法是使用 <code>z</code> 对 <code>size_t</code> 进行格式化。<br>
+变量宽度标识符 <code>z</code> 需要编译器支持C++11或C99特性。<br>
+示例代码如下:<br></p>
+<div class="highlight"><pre><span></span><span class="kt">size_t</span> <span class="n">n</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="p">);</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"the size of char is %zd</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span> <span class="c1">// decimal</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"the size of char is %zx</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span> <span class="c1">// hex</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org93955b2" class="outline-4">
+<h4 id="org93955b2">2.1.2 <code>int64_t</code> 及其相关类型</h4>
+<div class="outline-text-4" id="text-org93955b2">
+<p>
+<code>int64_t</code> 是固定宽度为8字节的整形定义，在文件 <code>&lt;cstdint&gt;</code> 中有定义。<br>
+类似的还有 <code>int8_t</code>, <code>int16_t</code>, <code>int32_t</code> 分对应1，2，4字节的整形定义。<br>
+他们的格式化字符串使用  <code>PRId8</code>, <code>PRId16</code>, <code>PRId32</code>, <code>PRId64</code> 表示，他们在文件 <code>&lt;cinttypes&gt;</code> 中有定义。<br>
+阅读源码后底层实现原理是通过识别系统中字宽，通过宏定义将满足不同条件的情况定义出来。<br>
+同样这些特性也是从C++11和C99开始才引入的。<br>
+示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;cstio&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;cinttypes&gt;</span><span class="cp"></span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%zu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">PRId64</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%+"</span> <span class="n">PRId64</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">INT64_MIN</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%+"</span> <span class="n">PRId64</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">INT64_MAX</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">printf</span><span class="p">(</span><span class="s">"%+"</span> <span class="n">PRId64</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
+</pre></div>
+
+<p>
+参考资料：<a href="http://en.cppreference.com/w/cpp/types/integer">http://en.cppreference.com/w/cpp/types/integer</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-orgd09c79e" class="outline-4">
+<h4 id="orgd09c79e">2.1.3 <code>%x</code> 对应无符号整数</h4>
+<div class="outline-text-4" id="text-orgd09c79e">
+<p>
+在使用 <code>sscanf</code> 函数对取16进制数据时需要注意传入的需要是无符号类型的地址。<br>
+示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">szNumber</span> <span class="o">=</span> <span class="s">"af"</span>
+<span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">=</span> <span class="n">nNum</span><span class="p">;</span>
+<span class="n">sscanf</span><span class="p">(</span><span class="n">szNumber</span><span class="p">,</span> <span class="s">"%x"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">nNum</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org1d795d5" class="outline-3">
+<h3 id="org1d795d5">2.2 多个逻辑表达式之间在 <code>&amp;&amp;</code> 和 <code>||</code> 之间的运算符优先级</h3>
+<div class="outline-text-3" id="text-org1d795d5">
+<p>
+先看以下示例代码：<br></p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">EXPR1</span> <span class="o">||</span> <span class="n">EXPR2</span> <span class="o">||</span> <span class="n">EXPR3</span> <span class="o">&amp;&amp;</span> <span class="n">EXPR4</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// ....</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+分析：从语法规则上来说逻辑与（ <code>&amp;&amp;</code> ）的运算符优先级要高于逻辑或（ <code>||</code> ）。<br>
+所以在进行运算时，会先计算逻辑与，再计算逻辑或。<br></p>
+
+<p>
+从语法上分析是没有错误的，但是这样的表达式很容易造成读者4的误解。<br>
+改成以下的形式会好很多：<br></p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">EXPR1</span> <span class="o">||</span> <span class="n">EXPR2</span> <span class="o">||</span> <span class="p">(</span><span class="n">EXPR3</span> <span class="o">&amp;&amp;</span> <span class="n">EXPR4</span><span class="p">)</span> <span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// ....</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orga03a2f6" class="outline-3">
+<h3 id="orga03a2f6">2.3 有符号整数和无符号整数之间的大小比较</h3>
+<div class="outline-text-3" id="text-orga03a2f6">
+<p>
+有符号整数和无符号整数在进行大小比较时，有符号数会被转化为无符号数。<br>
+这样会引起一些不必要误解，所以应该避免这种用法。<br>
+示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">n1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+<span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">n2</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="kt">bool</span> <span class="n">bRet</span> <span class="o">=</span> <span class="n">n1</span> <span class="o">&lt;</span> <span class="n">n2</span><span class="p">;</span> <span class="c1">// bRet = false</span>
+</pre></div>
+<p>
+注意，这里的运算结果与实际预期不符。<br></p>
+
+<p>
+另外，使用无符号数作为循环的迭代条件时，需要注意进行迭代条件在比较时是否能够正常终止迭代。<br>
+示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span> <span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">100</span><span class="p">;</span> <span class="n">i</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">;</span> <span class="o">--</span><span class="n">i</span> <span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+注意，这里会出现死循环。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org1c45fc1" class="outline-3">
+<h3 id="org1c45fc1">2.4 函数的重载和覆盖</h3>
+<div class="outline-text-3" id="text-org1c45fc1">
+<p>
+在进行虚函数多态实现时，注意检查函数的一致性。<br>
+出现相同函数名称但是积累为非 <code>const</code> 版本，而派生类为 <code>const</code> 时，这时并不会导致多态，而会导致基类函数被隐藏。<br></p>
+</div>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/gcc/" rel="tag">gcc</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/emacs-global-gtags-guide/" rel="prev">Previous post
+        <br><span>在emacs中使用GNU Global的配置指南</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/size_t-and-size_type/" rel="next">Next post
+        <br><span>关于size_t和size_type的比较</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/frequent-improper-syntax-warning-on-compile/",
+        disqus_title="\u5e38\u89c1\u7684\u7531\u4e8e\u8bed\u6cd5\u4e0d\u5f53\u5f15\u8d77\u7684\u7f16\u8bd1\u8b66\u544a",
+        disqus_identifier="_cache/archives/2018/frequent-syntax-compile-warning.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>栈溢出问题和chkstk | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/stackoverflow-and-chkstk/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/msvc-legacy-stdio/" title="MSVC的stdio版本适配问题" type="text/html">
+<link rel="next" href="/posts/self-defined-deleter-in-cpp-smart-pointer/" title="在C++智能指针中使用自定义的deleter" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="栈溢出问题和chkstk">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/stackoverflow-and-chkstk/">
+<meta property="og:description" content="最近在调试程序时遇到了一个栈溢出的问题，栈溢出通常是由程序错误引起的，通过修正程序的bug就能解决问题。但是这次的栈溢出，从代码上看并没有错误，经过一番排查和调试，我找到了解决问题的方法，同时也加深了对操作系统中一些概念的理解。
+
+
+
+
+
+栈溢出的一般情况
+
+
+在我之前的编程经验中，在递归调用层次过深时会出现栈溢出（stack overflow）错误。由于函数在调用时会将当前的运行状态压入栈（st">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2020-05-10T14:08:32+08:00">
+<meta property="article:tag" content="c">
+<meta property="article:tag" content="chkstk">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="stack overflow">
+<meta property="article:tag" content="windows">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">栈溢出问题和chkstk</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2020-05-10T14:08:32+08:00" itemprop="datePublished">May 10, 2020</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+最近在调试程序时遇到了一个栈溢出的问题，栈溢出通常是由程序错误引起的，通过修正程序的bug就能解决问题。但是这次的栈溢出，从代码上看并没有错误，经过一番排查和调试，我找到了解决问题的方法，同时也加深了对操作系统中一些概念的理解。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org9a5dfd3" class="outline-2">
+<h2 id="org9a5dfd3">栈溢出的一般情况</h2>
+<div class="outline-text-2" id="text-org9a5dfd3">
+<p>
+在我之前的编程经验中，在递归调用层次过深时会出现栈溢出（stack overflow）错误。由于函数在调用时会将当前的运行状态压入栈（stack）中，当没有设置好递归函数的退出条件时，函数会出现无限次递归调用，但是栈的空间是有限的，在递归到一定次数时程序就栈溢出了。<br></p>
+
+<p>
+解决这种问题的方法比较直观，由于是程序错误引起的栈溢出，修正程序错误就好。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org188767d" class="outline-2">
+<h2 id="org188767d">这次的栈溢出的现象</h2>
+<div class="outline-text-2" id="text-org188767d">
+<p>
+这次的现象出比较隐蔽，导致我一开始并没有意识到这是个栈溢出的错误。<br></p>
+
+<p>
+我当时在测试某个库的功能，写了一些测试函数，整体的运行逻辑也比较简单，并没有很复杂的调用关系，并且所有的测试代码都放在一个源文件中。代码能够正常编译链接，但是在运行时异常退出。<br></p>
+
+<p>
+一开始，我认为是代码逻辑的问题，但在我仔细检查后并没发现问题。后来，我开始使用开发工具（MSVC2017）调试代码，程序在进入 <code>main</code> 函数后立刻崩溃了。更准确地讲，程序出现异常的位置在 <code>main</code> 函数入口之后，在 <code>main</code> 函数第一个语句之前，出现异常的代码叫 <code>chkstk.asm</code> ，在调用堆栈（callstack）中可以看到异常时的所执行的函数名称为 <code>test.exe!__chkstk()</code> 。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgc762d0a" class="outline-2">
+<h2 id="orgc762d0a">chkstk</h2>
+<div class="outline-text-2" id="text-orgc762d0a">
+<p>
+在查阅了一些资料后，我意识到这是个栈溢出错误。<br></p>
+
+<p>
+<code>_chkstk</code> 函数在函数中的栈区变量（local variable）超过一个内存页（one page）时调用。这个大小在x86编译器中是4k字节，在x64编译器中是8k字节。<br></p>
+
+<p>
+<code>_chkstk</code> 用于保证有足够的空间存放栈区变量。在windows系统中有内存页的概念，当程序需要更大的栈空间时， <code>_chkstk</code> 会按页申请内存，这些都是由操作系统完成的。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgc2adb0b" class="outline-2">
+<h2 id="orgc2adb0b">提高栈区空间的上限</h2>
+<div class="outline-text-2" id="text-orgc2adb0b">
+<p>
+在windows系统下，可以通过调整链接参数提高这个上限。<br></p>
+
+<div class="highlight"><pre><span></span>/STACK:reserve[,commit]
+</pre></div>
+
+<ul class="org-ul">
+<li>
+<code>reserve</code> 值规定了栈区的总大小，对于ARM、x86和x64，默认值为1MB。<br>
+</li>
+<li>
+<code>commit</code> 值规定了栈区内单个存页的大小，即每次申请内存的大小。当程序需要更大栈内存时，更大的 <code>commit</code> 有助于加快程序的运行速度，但会增加程序的内存用量，并却可能会降低程序的启动时间。对于ARM、x86和x64，默认值为4kB。<br>
+</li>
+<li>在MSVC中提供了图形化的配置界面，在 <code>Property Page</code> -&gt; <code>Linker</code> -&gt; <code>System</code> 中能够找到对应的配置项。<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org7b786fa" class="outline-2">
+<h2 id="org7b786fa">最终的解决方法</h2>
+<div class="outline-text-2" id="text-org7b786fa">
+<p>
+当然，我尝试了通过调整编译参数来增大栈区的方法。这种虽然有效，但是总感觉不是那么的优雅。<br></p>
+
+<p>
+真正漂亮的解决方法是对代码进行优化。我的代码需要有一块buffer存放临时数据，这个buffer的大小超过了1MB（系统默认值）。原来我是在栈上申请的这块内存，即声明了一个 <code>unsigned char</code> 数组；后来我将这块buffer改为放在堆区就没有问题了，即用 <code>new</code> 的方式申请一块内存。<br></p>
+
+<p>
+所以，在需要一个较大缓存区时，使用堆区内存是更合适的。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org4e5e799" class="outline-2">
+<h2 id="org4e5e799">参考资料</h2>
+<div class="outline-text-2" id="text-org4e5e799">
+<ul class="org-ul">
+<li>
+<a href="https://docs.microsoft.com/zh-cn/windows/win32/devnotes/-win32-chkstk">microsoft docs - win32 chkstk</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/8400118/what-is-the-purpose-of-the-chkstk-function">stackoverflow - purpose of chkstk</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/51885838/stack-overflow-on-stepping-into-a-function">stackoverflow - crash on stepping into a function</a><br>
+</li>
+<li>
+<a href="https://docs.microsoft.com/en-us/cpp/build/reference/stack-stack-allocations">microsoft docs - stack allocation</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/c/" rel="tag">c</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/chkstk/" rel="tag">chkstk</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/stack-overflow/" rel="tag">stack overflow</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/msvc-legacy-stdio/" rel="prev">Previous post
+        <br><span>MSVC的stdio版本适配问题</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/self-defined-deleter-in-cpp-smart-pointer/" rel="next">Next post
+        <br><span>在C++智能指针中使用自定义的deleter</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/stackoverflow-and-chkstk/",
+        disqus_title="\u6808\u6ea2\u51fa\u95ee\u9898\u548cchkstk",
+        disqus_identifier="_cache/archives/2020/stackoverflow-and-chkstk.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

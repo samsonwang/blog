@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C++(Qt)和Python混合编程的一些经验之谈 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/cpp-python-hybird-programming/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/linux-process-and-subprocess/" title="Tips on Linux Process and Subprocess" type="text/html">
+<link rel="next" href="/posts/inside-the-cpp-object-model-1/" title="深入探索C++内存模型（1）" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="C++(Qt)和Python混合编程的一些经验之谈">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/cpp-python-hybird-programming/">
+<meta property="og:description" content="在Launchy的开发中，我使用了Python作为Qt程序的插件开发语言，最近有朋友问我Qt和Python结合使用的一些细节。结合我之前踩坑的经历，C++（Qt）和Python的混合编程可以从几个方面进行考虑。
+
+
+
+
+
+基础概念
+
+
+Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌入到C++程序中，C++代码借助Pyhton解释器完成对Python代码的调">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2019-02-01T08:53:37+08:00">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="launchy">
+<meta property="article:tag" content="python">
+<meta property="article:tag" content="qt">
+<meta property="article:tag" content="windows">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">C++(Qt)和Python混合编程的一些经验之谈</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2019-02-01T08:53:37+08:00" itemprop="datePublished">Feb 01, 2019</time><span class="dt-updated"> / updated <time datetime="2020-05-08T21:45:37+08:00" itemprop="dateUpdated">May 08, 2020</time></span>
+
+      
+
+    </p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+在Launchy的开发中，我使用了Python作为Qt程序的插件开发语言，最近有朋友问我Qt和Python结合使用的一些细节。结合我之前踩坑的经历，C++（Qt）和Python的混合编程可以从几个方面进行考虑。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org1348da6" class="outline-2">
+<h2 id="org1348da6">基础概念</h2>
+<div class="outline-text-2" id="text-org1348da6">
+<p>
+Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌入到C++程序中，C++代码借助Pyhton解释器完成对Python代码的调用。<br></p>
+
+<p>
+Python代码中调用C++代码以实现数据交互和运行速度提升，实际上是用C++写Python拓展（extension），Python通过调用拓展以实现对C++代码的调用。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org120d632" class="outline-2">
+<h2 id="org120d632">实现方案的选择</h2>
+<div class="outline-text-2" id="text-org120d632">
+<p>
+C++和Python混合编程的解决方法有很多，需要根据需求和实际情况综合考虑来选择适合的方案。<br></p>
+
+<p>
+我目前了解到的有：CPython，Boost Python，SWIG，pybind11，ctypes，cffi等等。这个在后面会结合我的使用情况进行详细阐述。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org94e0c36" class="outline-2">
+<h2 id="org94e0c36">编译器的选择</h2>
+<div class="outline-text-2" id="text-org94e0c36">
+<p>
+在选择C++编译器时需要考虑Python的版本和Qt的版本。Python和Qt都有官方发布的二进制文件，最好选用与官方发版时相同的编译环境，这样可以省去自行编译的麻烦。<br></p>
+
+<p>
+例如：在windows平台下，Qt5.11官方发布的二进制文件包括VS2015和VS2017版本，Python3.6官方发布的二进制文件是VS2015版本，所以我选用了VS2015作为开发编译环境。如果选用VS2017，为防止可能出现二进制兼容性问题，我可能就需要自行编译VS2017版本的Python3.6的二进制文件（python3.lib）。<br></p>
+
+<p>
+另外，有的实现方案需要特定编译版本的支持，如pybind11就要求兼容C++11的编译器。<br></p>
+
+<p>
+<b>更新</b> : 我后面将launchy的开发环境换到VS2017了，幸运的是Python3.6的库文件仍能正常使用，这让我非常意外。不过我猜测可能原因是VS2017沿用了VS2015的cruntime。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org01e0fa3" class="outline-2">
+<h2 id="org01e0fa3">Qt和Python的版本</h2>
+<div class="outline-text-2" id="text-org01e0fa3">
+<p>
+32/64bit：在windows下，Qt和Python都有32位和64位版本的库文件，使用时要统一。<br></p>
+
+<p>
+embeddable/installed：对于Python在windows平台而言，有官方推荐的embeddable版本，专门用于集成在其他程序中使用。在开发时可以使用installed版，在发版时将对应的模块替换为embeddable版的文件即可，installed版和embeddable版的数字版本号要相同。<br></p>
+
+<p>
+debug/release：这个与开发调试有关，Python默认安装时只包含release版的库文件，如果整个C++程序编译为debug版就会报错，提示没有需要的python库（因为在链接阶段需要debug版的Python库）。所以如果需要编译debug版，就要额外下载debug版本的python库。而Qt默认包含了debug和release版本的库文件，不存在这个问题。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgd7d60ea" class="outline-2">
+<h2 id="orgd7d60ea">性能损耗</h2>
+<div class="outline-text-2" id="text-orgd7d60ea">
+<p>
+Python和C++交叉编程是有性能损耗的，如果这是一个对运行速度比较敏感的模块，尽量选择那些损耗较小的实现方案。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgdd892b9" class="outline-2">
+<h2 id="orgdd892b9">实现方案</h2>
+<div class="outline-text-2" id="text-orgdd892b9">
+<p>
+下面是我尝试过的一些方案，以及这些方案给我的感受。<br></p>
+</div>
+
+<div id="outline-container-orge7dd9fa" class="outline-3">
+<h3 id="orge7dd9fa"><a href="https://docs.python.org/3/c-api/">CPython</a></h3>
+<div class="outline-text-3" id="text-orge7dd9fa">
+<p>
+这是Python官方的标准方案，实际上后来的其他方案也大都是基于这个方案进行开发的。<br>
+优点：全方位精细化的控制，文档和教程比较详细，没有额外的依赖。<br>
+缺点：学习曲线陡峭，需要自行控制很多细节。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org9e22dfd" class="outline-3">
+<h3 id="org9e22dfd"><a href="https://www.boost.org/doc/libs/1_66_0/libs/python/doc/html/index.html">Boost.Python</a></h3>
+<div class="outline-text-3" id="text-org9e22dfd">
+<p>
+这是Boost库的一部分，提供了C++与Python的交叉编程很好支持。<br>
+优点：对众多编译器都有很好的兼容，是一个比较成熟的方案。<br>
+缺点：Boost库太厚重了，Boost本身就很复杂。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgdd1780a" class="outline-3">
+<h3 id="orgdd1780a"><a href="http://www.swig.org/">SWIG</a></h3>
+<div class="outline-text-3" id="text-orgdd1780a">
+<p>
+支持C/C++与多种编程语言进行交叉编程的解决方案。<br>
+优点：同时支持多种编程语言，如C#等等。<br>
+缺点：需要额外编写接口定义文件。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgef706d8" class="outline-3">
+<h3 id="orgef706d8"><a href="https://pybind11.readthedocs.io/en/stable/index.html">pybind11</a></h3>
+<div class="outline-text-3" id="text-orgef706d8">
+<p>
+大量使用C++11的新特性，代码风格与Boost.Python很相似。<br>
+优点：轻量级，只有头文件，无需引入其他二进制库文件依赖。<br>
+缺点：要求编译器支持C++11，相对于其他方案成熟度略低，很多功能要自己摸索。<br></p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org82f23d8" class="outline-2">
+<h2 id="org82f23d8">参考资料</h2>
+<div class="outline-text-2" id="text-org82f23d8">
+<ul class="org-ul">
+<li>
+<a href="https://docs.microsoft.com/en-us/visualstudio/python/working-with-c-cpp-python-in-visual-studio">microsoft docs - working with cpp and python in visual studio</a><br>
+</li>
+</ul>
+<p>
+(全文完)<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/launchy/" rel="tag">launchy</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/python/" rel="tag">python</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/qt/" rel="tag">qt</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/linux-process-and-subprocess/" rel="prev">Previous post
+        <br><span>Tips on Linux Process and Subprocess</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/inside-the-cpp-object-model-1/" rel="next">Next post
+        <br><span>深入探索C++内存模型（1）</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/cpp-python-hybird-programming/",
+        disqus_title="C++(Qt)\u548cPython\u6df7\u5408\u7f16\u7a0b\u7684\u4e00\u4e9b\u7ecf\u9a8c\u4e4b\u8c08",
+        disqus_identifier="_cache/archives/2019/cpp-python-hybird-programming.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
