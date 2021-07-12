@@ -55,9 +55,9 @@
       <a class="post-link" href="/posts/notes-on-libshmcache/">libshmcache源码阅读笔记</a>
     </h3>
 
-    <div id="outline-container-org1e3585b" class="outline-2">
-<h2 id="org1e3585b">引言</h2>
-<div class="outline-text-2" id="text-org1e3585b">
+    <div id="outline-container-org5ca25bb" class="outline-2">
+<h2 id="org5ca25bb">引言</h2>
+<div class="outline-text-2" id="text-org5ca25bb">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -82,9 +82,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-orgb153750" class="outline-2">
-<h2 id="orgb153750">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-orgb153750">
+<div id="outline-container-org1acc24f" class="outline-2">
+<h2 id="org1acc24f">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-org1acc24f">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -128,9 +128,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org4ba0926" class="outline-2">
-<h2 id="org4ba0926">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-org4ba0926">
+<div id="outline-container-orge5e2e90" class="outline-2">
+<h2 id="orge5e2e90">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-orge5e2e90">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -139,18 +139,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org1e1d3b4" class="outline-2">
-<h2 id="org1e1d3b4">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-org1e1d3b4">
+<div id="outline-container-org5091a8a" class="outline-2">
+<h2 id="org5091a8a">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-org5091a8a">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org61d8e52" class="outline-2">
-<h2 id="org61d8e52">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-org61d8e52">
+<div id="outline-container-org9156b75" class="outline-2">
+<h2 id="org9156b75">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org9156b75">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -159,9 +159,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orgc8319d5" class="outline-2">
-<h2 id="orgc8319d5">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-orgc8319d5">
+<div id="outline-container-orga03c817" class="outline-2">
+<h2 id="orga03c817">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-orga03c817">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
@@ -176,9 +176,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
       <a class="post-link" href="/posts/cpp-bit-field/">C/C++中的位域</a>
     </h3>
 
-    <div id="outline-container-org2d26478" class="outline-2">
-<h2 id="org2d26478">什么是位域</h2>
-<div class="outline-text-2" id="text-org2d26478">
+    <div id="outline-container-org21093a8" class="outline-2">
+<h2 id="org21093a8">什么是位域</h2>
+<div class="outline-text-2" id="text-org21093a8">
 <p>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">维基百科</a> 给出了以下解释<br></p>
 <blockquote>
@@ -207,9 +207,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org5173f43" class="outline-2">
-<h2 id="org5173f43">位域的语法</h2>
-<div class="outline-text-2" id="text-org5173f43">
+<div id="outline-container-orgdf03715" class="outline-2">
+<h2 id="orgdf03715">位域的语法</h2>
+<div class="outline-text-2" id="text-orgdf03715">
 <p>
 下面就是位域的语法格式。<br></p>
 <div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span> <span class="o">:</span> <span class="n">size</span>
@@ -256,9 +256,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org2b7f13f" class="outline-3">
-<h3 id="org2b7f13f">在 <code>size</code> 取0时如何理解</h3>
-<div class="outline-text-3" id="text-org2b7f13f">
+<div id="outline-container-orgbc3c0b2" class="outline-3">
+<h3 id="orgbc3c0b2">在 <code>size</code> 取0时如何理解</h3>
+<div class="outline-text-3" id="text-orgbc3c0b2">
 <p>
 对于 <code>size</code> 取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。<br>
 如下所示，定义了如下几种情况。<br></p>
@@ -343,10 +343,10 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org4475a9f" class="outline-3">
-<h3 id="org4475a9f">
+<div id="outline-container-org9383dfc" class="outline-3">
+<h3 id="org9383dfc">
 <code>struct</code> 与 <code>class</code> 关键字</h3>
-<div class="outline-text-3" id="text-org4475a9f">
+<div class="outline-text-3" id="text-org9383dfc">
 <p>
 多数例子都是以 <code>struct</code> 作为位域的组织标识，在C++中能否使用 <code>class</code> 作为位域的标识符呢？<br>
 经过测试，是可以使用 <code>class</code> 关键字的，但是需要注意 <code>class</code> 的默认访问控制属性为 <code>private</code> 。<br></p>
@@ -355,9 +355,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org265c47a" class="outline-2">
-<h2 id="org265c47a">位域的常见应用场景</h2>
-<div class="outline-text-2" id="text-org265c47a">
+<div id="outline-container-org1d6d5b7" class="outline-2">
+<h2 id="org1d6d5b7">位域的常见应用场景</h2>
+<div class="outline-text-2" id="text-org1d6d5b7">
 <p>
 为什么要使用位域？位域适合那些情况？<br></p>
 
@@ -370,18 +370,18 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org4d778ab" class="outline-2">
-<h2 id="org4d778ab">C++中的位操作接口</h2>
-<div class="outline-text-2" id="text-org4d778ab">
+<div id="outline-container-orgb03ec68" class="outline-2">
+<h2 id="orgb03ec68">C++中的位操作接口</h2>
+<div class="outline-text-2" id="text-orgb03ec68">
 <p>
 C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接口提供了指定比特位数据的操作接口。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orge18cd66" class="outline-2">
-<h2 id="orge18cd66">参考资料</h2>
-<div class="outline-text-2" id="text-orge18cd66">
+<div id="outline-container-org8dd210e" class="outline-2">
+<h2 id="org8dd210e">参考资料</h2>
+<div class="outline-text-2" id="text-org8dd210e">
 <ul class="org-ul">
 <li>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">wikipedia - bit field</a><br>
@@ -413,8 +413,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
       <a class="post-link" href="/posts/gcc-built-in-functions-for-atomic-memory-access/">GCC的内存原子化操作函数接口</a>
     </h3>
 
-    <div id="outline-container-orgbfcfdd8" class="outline-2">
-<h2 id="orgbfcfdd8">
+    <div id="outline-container-org807eb08" class="outline-2">
+<h2 id="org807eb08">
 <span class="section-number-2">1</span> 原子化操作</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -446,8 +446,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
       <a class="post-link" href="/posts/asynchronous-synchronous-and-blocking-unblocking/">同步和异步、阻塞和非阻塞</a>
     </h3>
 
-    <div id="outline-container-org23d6751" class="outline-2">
-<h2 id="org23d6751">
+    <div id="outline-container-org83be3b5" class="outline-2">
+<h2 id="org83be3b5">
 <span class="section-number-2">1</span> 同步和异步</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -463,8 +463,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
 </div>
 
-<div id="outline-container-org71e60c4" class="outline-3">
-<h3 id="org71e60c4">
+<div id="outline-container-org81d265c" class="outline-3">
+<h3 id="org81d265c">
 <span class="section-number-3">1.1</span> POSIX AIO</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -496,8 +496,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-org485a2cc" class="outline-3">
-<h3 id="org485a2cc">
+<div id="outline-container-org538f108" class="outline-3">
+<h3 id="org538f108">
 <span class="section-number-3">1.2</span> Linux AIO</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -536,8 +536,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-org5b46330" class="outline-3">
-<h3 id="org5b46330">
+<div id="outline-container-orgd8e1bc8" class="outline-3">
+<h3 id="orgd8e1bc8">
 <span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -567,8 +567,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 </div>
 
-<div id="outline-container-org2bb2908" class="outline-2">
-<h2 id="org2bb2908">
+<div id="outline-container-org5910f5a" class="outline-2">
+<h2 id="org5910f5a">
 <span class="section-number-2">2</span> 阻塞和非阻塞</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -579,8 +579,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-orgbce8507" class="outline-2">
-<h2 id="orgbce8507">
+<div id="outline-container-orgb9cd845" class="outline-2">
+<h2 id="orgb9cd845">
 <span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -590,8 +590,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org1bead1c" class="outline-2">
-<h2 id="org1bead1c">
+<div id="outline-container-org88ac5df" class="outline-2">
+<h2 id="org88ac5df">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
@@ -620,9 +620,9 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
     <p>
 查看Linux系统相关信息有助于排查和解决软件和硬件的兼容性问题。系统信息包括硬件信息和软件信息，硬件信息主要有CPU信息、内存信息、PCI信息、USB信息、硬盘信息等等。软件信息主要有系统版本、分区使用状态等等。本文主要介绍了获取当前Linux系统信息的命令。<br></p>
 
-<div id="outline-container-orgf0faaaf" class="outline-2">
-<h2 id="orgf0faaaf">查看系统相关信息</h2>
-<div class="outline-text-2" id="text-orgf0faaaf">
+<div id="outline-container-org6fdeea9" class="outline-2">
+<h2 id="org6fdeea9">查看系统相关信息</h2>
+<div class="outline-text-2" id="text-org6fdeea9">
 <p>
 <code>uname</code> 指令提供了查询系统信息的功能，使用该命令能够快速获取操作系统信息概览。<br></p>
 
@@ -661,25 +661,25 @@ hostnamectl
 </div>
 </div>
 
-<div id="outline-container-org146892a" class="outline-2">
-<h2 id="org146892a">查看CPU相关信息</h2>
-<div class="outline-text-2" id="text-org146892a">
+<div id="outline-container-orge2257b6" class="outline-2">
+<h2 id="orge2257b6">查看CPU相关信息</h2>
+<div class="outline-text-2" id="text-orge2257b6">
 <p>
 <code>lscpu</code> 指令能够查看当前系统中CPU的详细信息，包括型号、主频、构架、大小端等信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd2f597b" class="outline-2">
-<h2 id="orgd2f597b">查看硬盘相关信息</h2>
-<div class="outline-text-2" id="text-orgd2f597b">
+<div id="outline-container-org5d7c90f" class="outline-2">
+<h2 id="org5d7c90f">查看硬盘相关信息</h2>
+<div class="outline-text-2" id="text-org5d7c90f">
 <p>
 <code>lsblk</code> 指令能够查看块设备（block device）的详细信息，块设备主要指系统中的存储设备如硬盘和闪存。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org9a9a97b" class="outline-2">
-<h2 id="org9a9a97b">查看PCI设备的相关信息</h2>
-<div class="outline-text-2" id="text-org9a9a97b">
+<div id="outline-container-orgaa7d195" class="outline-2">
+<h2 id="orgaa7d195">查看PCI设备的相关信息</h2>
+<div class="outline-text-2" id="text-orgaa7d195">
 <p>
 <code>lspci</code> 指令能够查看PCI设备的信息，PCI设备包括USB、显卡、串口、网卡等其他外围设备。<br></p>
 
@@ -696,17 +696,17 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-org34e3e96" class="outline-2">
-<h2 id="org34e3e96">查看USB设备的相关信息</h2>
-<div class="outline-text-2" id="text-org34e3e96">
+<div id="outline-container-orgc9f81e4" class="outline-2">
+<h2 id="orgc9f81e4">查看USB设备的相关信息</h2>
+<div class="outline-text-2" id="text-orgc9f81e4">
 <p>
 <code>lsusb</code> 指令能够查看USBS设备的信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge11129c" class="outline-2">
-<h2 id="orge11129c">查看文件系统相关信息</h2>
-<div class="outline-text-2" id="text-orge11129c">
+<div id="outline-container-org1f68fd1" class="outline-2">
+<h2 id="org1f68fd1">查看文件系统相关信息</h2>
+<div class="outline-text-2" id="text-org1f68fd1">
 <p>
 <code>fdisk</code> 命令能够查看和操作linux系统的分区表。<br></p>
 
@@ -725,9 +725,9 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-orgeaf993d" class="outline-2">
-<h2 id="orgeaf993d">参考资料</h2>
-<div class="outline-text-2" id="text-orgeaf993d">
+<div id="outline-container-org450ffee" class="outline-2">
+<h2 id="org450ffee">参考资料</h2>
+<div class="outline-text-2" id="text-org450ffee">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/commands-to-collect-system-and-hardware-information-in-linux/">tecmint.com</a><br>
