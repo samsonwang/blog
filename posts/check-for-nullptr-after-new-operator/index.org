@@ -1,0 +1,51 @@
+#+BEGIN_COMMENT
+.. title: 由 =new= 创建的指针不需要检查 =nullptr=
+.. slug: check-for-nullptr-after-new-operator
+.. date: 2021-07-30 13:13:34 UTC+08:00
+.. tags: C++
+.. category: C++
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 由 =new= 创建的指针不需要检查 =nullptr=
+
+我们会检查空指针来判断指针是否有效。一直以来，在申请动态内存后，我都会习惯性地检查得到的指针是否为空，但是查阅了一些资料后发现这个操作是多余的。
+
+{{{TEASER_END}}}
+
+*TIPS* ：在 C++ 标准中规定， =new= 关键字在失败时会抛出 =std::bad_alloc= 异常。
+
+所以，不需要对 =new= 的返回值进行空指针判断， =new= 不会返回空指针，这点与C语言中的 =malloc= 有区别。C++中正确处理申请内存失败的写法如下。
+
+#+begin_src C++
+try {
+  Foo* p = new Foo;
+}
+catch (std::bad_alloc& e) {
+  std::cout << "bad_alloc: " << e.what() << std::endl;
+}
+#+end_src
+
+但是，以下几种情况例外。
+
+1. 编译器版本较老
+旧版编译器（如VC6.0）可能对C++异常（ =std::exception= ）机制的支持不够好，导致在申请内存失败时仍会返回空指针。
+
+2. 用 =nothrow= 关键字抑制异常的抛出
+写法如下，加上了 =std::nothrow= 关键字之后， =new= 就不会抛出异常而是会返回空指针。
+#+begin_src C++
+Foo* p = new (std::nothrow) Foo;
+if (!p){
+  std::cout << "fail to allocate" << std::endl;
+}
+#+end_src
+
+** 参考资料
+- [[https://www.cs.technion.ac.il/users/yechiel/c++-faq/new-never-returns-null.html][C++ FAQ - new never returns null]]
+- [[https://stackoverflow.com/questions/550451/will-new-return-null-in-any-case][stackoverflow - will new return null]]
+
+（全文完）

@@ -50,22 +50,193 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Aug 16, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/algorithm-weekly-zigzag-conversion/">每周算法：字符串锯齿变换</a>
+    </h3>
+
+    <div id="outline-container-org0fa1c15" class="outline-2">
+<h2 id="org0fa1c15">Description</h2>
+<div class="outline-text-2" id="text-org0fa1c15">
+<p>
+The string "PAYPALISHIRING" is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)<br></p>
+
+<div class="highlight"><pre><span></span>P   A   H   N
+A P L S I I G
+Y   I   R
+</pre></div>
+
+<p>
+And then read line by line: "PAHNAPLSIIGYIR"<br>
+Write the code that will take a string and make this conversion given a number of rows:<br>
+string convert(string s, int numRows);<br></p>
+
+<p>
+<b>Example 1:</b><br>
+Input: s = "PAYPALISHIRING", numRows = 3<br>
+Output: "PAHNAPLSIIGYIR"<br></p>
+
+<p>
+<b>Example 2:</b><br>
+Input: s = "PAYPALISHIRING", numRows = 4<br>
+Output: "PINALSIGYAHRPI"<br>
+Explanation:<br></p>
+<div class="highlight"><pre><span></span>P     I    N
+A   L S  I G
+Y A   H R
+P     I
+</pre></div>
+
+<p>
+来源： <a href="https://leetcode.com/problems/zigzag-conversion/description/">LeetCode 06 ZigZag Conversion</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org243381d" class="outline-2">
+<h2 id="org243381d">Solution</h2>
+<div class="outline-text-2" id="text-org243381d">
+</div>
+<div id="outline-container-orge06526c" class="outline-3">
+<h3 id="orge06526c">Approach 1 找规律</h3>
+<div class="outline-text-3" id="text-orge06526c">
+<p>
+我想到的第一个方法就是找规律，通过寻找每一行的变化规律，编写相应的计算逻辑。<br>
+需要注意:<br></p>
+<ul class="org-ul">
+<li>有符号数和无符号数的比较，这个是非常容易出错的，不要在有符号和无符号数之间进行比较。<br>
+</li>
+<li>特殊情况，也就是只有一行的情况，这个情况不需要进行转换，直接返回原字符串就好。<br>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="n">string</span> <span class="nf">convert</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">numRows</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span>
+    <span class="n">assert</span><span class="p">(</span><span class="n">numRows</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">base</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">numRows</span> <span class="o">-</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">base</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">s</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">string</span> <span class="n">ans</span><span class="p">;</span>
+
+    <span class="c1">// 第一行和最后一行需要进行特殊处理</span>
+
+    <span class="c1">// 第一行</span>
+    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="p">];</span>
+	<span class="o">++</span><span class="n">i</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 中间行</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">numRows</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+	<span class="k">while</span> <span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span> <span class="o">-</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+
+	    <span class="k">if</span> <span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span> <span class="o">-</span> <span class="n">j</span> <span class="o">&gt;=</span><span class="mi">0</span> <span class="p">)</span> <span class="p">{</span>
+		<span class="n">ans</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">];</span>
+	    <span class="p">}</span>
+
+	    <span class="k">if</span> <span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">ans</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="p">];</span>                
+	    <span class="p">}</span>
+
+	    <span class="o">++</span><span class="n">i</span><span class="p">;</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 最后一行</span>
+    <span class="kt">int</span> <span class="n">lastStart</span> <span class="o">=</span> <span class="n">numRows</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">lastStart</span> <span class="o">+</span> <span class="n">base</span><span class="o">*</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">ans</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">lastStart</span> <span class="o">+</span> <span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="p">];</span>
+	<span class="o">++</span><span class="n">i</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org3b46be4" class="outline-3">
+<h3 id="org3b46be4">Approach 2 Sort by Row</h3>
+<div class="outline-text-3" id="text-org3b46be4">
+<p>
+这个方法是leetcode提供的一个方法，主要思路是使用一个二维矩阵将字符串按照顺序存储起来，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(n)</code> 。<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">string</span> <span class="nf">convert</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">numRows</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">numRows</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="n">s</span><span class="p">;</span>
+
+    <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">rows</span><span class="p">(</span><span class="n">min</span><span class="p">(</span><span class="n">numRows</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">())));</span>
+    <span class="kt">int</span> <span class="n">curRow</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="n">goingDown</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">char</span> <span class="nl">c</span> <span class="p">:</span> <span class="n">s</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">rows</span><span class="p">[</span><span class="n">curRow</span><span class="p">]</span> <span class="o">+=</span> <span class="n">c</span><span class="p">;</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">curRow</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">curRow</span> <span class="o">==</span> <span class="n">numRows</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">goingDown</span> <span class="o">=</span> <span class="o">!</span><span class="n">goingDown</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="n">curRow</span> <span class="o">+=</span> <span class="n">goingDown</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">string</span> <span class="n">ret</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">string</span> <span class="nl">row</span> <span class="p">:</span> <span class="n">rows</span><span class="p">)</span> <span class="n">ret</span> <span class="o">+=</span> <span class="n">row</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org640cb17" class="outline-3">
+<h3 id="org640cb17">Approach 3 Visit by Row</h3>
+<div class="outline-text-3" id="text-org640cb17">
+<p>
+这个方法是leetcode提供的另一个方法，通过计算下标完成字符串的转换，实际上也是对转换的规律进行了总结，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(1)</code> 。<br>
+对于空间复杂度，实际上需要额外的空间存储结果字符串，如果忽略函数所返回的结果字符串，则空间复杂度为 <code>O(1)</code> 。<br></p>
+<div class="highlight"><pre><span></span><span class="n">string</span> <span class="nf">convert</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">numRows</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">numRows</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="n">s</span><span class="p">;</span>
+
+    <span class="n">string</span> <span class="n">ret</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+    <span class="kt">int</span> <span class="n">cycleLen</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">numRows</span> <span class="o">-</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">numRows</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">+</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">j</span> <span class="o">+=</span> <span class="n">cycleLen</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">ret</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">i</span><span class="p">];</span>
+	    <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">numRows</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">+</span> <span class="n">cycleLen</span> <span class="o">-</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">)</span>
+		<span class="n">ret</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">cycleLen</span> <span class="o">-</span> <span class="n">i</span><span class="p">];</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Aug 14, 2018</span>
     <h3>
       <a class="post-link" href="/posts/css-flexbox-layout-cheatsheet/">css flexbox 总结</a>
     </h3>
 
-    <div id="outline-container-org4997327" class="outline-2">
-<h2 id="org4997327">引言</h2>
-<div class="outline-text-2" id="text-org4997327">
+    <div id="outline-container-org1208900" class="outline-2">
+<h2 id="org1208900">引言</h2>
+<div class="outline-text-2" id="text-org1208900">
 <p>
 本文主要对css flexbox的关键点了总结，方便以后在以后的查阅。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org5c1fb07" class="outline-2">
-<h2 id="org5c1fb07">容器的属性</h2>
-<div class="outline-text-2" id="text-org5c1fb07">
+<div id="outline-container-orge3a7029" class="outline-2">
+<h2 id="orge3a7029">容器的属性</h2>
+<div class="outline-text-2" id="text-orge3a7029">
 <p>
 对于容器需要指定其显示方式为flexbox<br></p>
 <div class="highlight"><pre><span></span><span class="nt">display</span><span class="o">:</span> <span class="nt">flex</span><span class="o">;</span>
@@ -97,9 +268,9 @@
 </div>
 </div>
 
-<div id="outline-container-org8243631" class="outline-2">
-<h2 id="org8243631">条目的属性</h2>
-<div class="outline-text-2" id="text-org8243631">
+<div id="outline-container-org5fe861e" class="outline-2">
+<h2 id="org5fe861e">条目的属性</h2>
+<div class="outline-text-2" id="text-org5fe861e">
 <p>
 用于调整顺序<br></p>
 <div class="highlight"><pre><span></span><span class="nt">order</span><span class="o">:</span> <span class="o">&lt;</span><span class="nt">integer</span><span class="o">&gt;;</span> <span class="c">/* default 0 */</span>
@@ -133,9 +304,9 @@
 </div>
 
 
-<div id="outline-container-org523ca93" class="outline-2">
-<h2 id="org523ca93">参考资料</h2>
-<div class="outline-text-2" id="text-org523ca93">
+<div id="outline-container-org5f577b0" class="outline-2">
+<h2 id="org5f577b0">参考资料</h2>
+<div class="outline-text-2" id="text-org5f577b0">
 <ul class="org-ul">
 <li>
 <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">css-tricks.com</a><br>
@@ -185,9 +356,9 @@
       <a class="post-link" href="/posts/algorithm-weekly-longest-palindromic-substring/">每周算法：最长对称子串</a>
     </h3>
 
-    <div id="outline-container-orgba236b3" class="outline-2">
-<h2 id="orgba236b3">Description</h2>
-<div class="outline-text-2" id="text-orgba236b3">
+    <div id="outline-container-org4507f13" class="outline-2">
+<h2 id="org4507f13">Description</h2>
+<div class="outline-text-2" id="text-org4507f13">
 <p>
 Given a string s, find the longest palindromic substring in s. You may assume that the maximum length of s is 1000.<br></p>
 
@@ -207,16 +378,16 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-org50e9c10" class="outline-2">
-<h2 id="org50e9c10">Solution</h2>
-<div class="outline-text-2" id="text-org50e9c10">
+<div id="outline-container-orgec17ce8" class="outline-2">
+<h2 id="orgec17ce8">Solution</h2>
+<div class="outline-text-2" id="text-orgec17ce8">
 <p>
 我想到了两种方法：暴力解法、从中心展开<br></p>
 </div>
 
-<div id="outline-container-orgd31b2c4" class="outline-3">
-<h3 id="orgd31b2c4">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-orgd31b2c4">
+<div id="outline-container-org99be904" class="outline-3">
+<h3 id="org99be904">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org99be904">
 <p>
 暴击解法的时间复杂度为 <code>O(n3)</code> , 找出所有子串的时间复杂度为 <code>O(n2)</code> , 判断一个子串的时间复杂度为 <code>O(n)</code> ; 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -271,9 +442,9 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-org231d7de" class="outline-3">
-<h3 id="org231d7de">Approach 2 从中心展开</h3>
-<div class="outline-text-3" id="text-org231d7de">
+<div id="outline-container-org1c8a24e" class="outline-3">
+<h3 id="org1c8a24e">Approach 2 从中心展开</h3>
+<div class="outline-text-3" id="text-org1c8a24e">
 <p>
 从中心展开方法的时间复杂度为 <code>O(n2)</code> , 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -347,9 +518,9 @@ leetcode上还有一个解法，使用java完成的，它的坐标计算也很�
 </div>
 </div>
 
-<div id="outline-container-org9f680bb" class="outline-3">
-<h3 id="org9f680bb">Approach 3 动态规划（dynamic programming）</h3>
-<div class="outline-text-3" id="text-org9f680bb">
+<div id="outline-container-org3ecad58" class="outline-3">
+<h3 id="org3ecad58">Approach 3 动态规划（dynamic programming）</h3>
+<div class="outline-text-3" id="text-org3ecad58">
 <p>
 leetcode上还给给出了使用DP解决这个问题的方法。<br>
 我在leetcode上的discuss上找了个java写的解法。<br></p>
@@ -379,9 +550,9 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
 </div>
 </div>
 
-<div id="outline-container-org20765b4" class="outline-3">
-<h3 id="org20765b4">Approach 4 Manacher算法</h3>
-<div class="outline-text-3" id="text-org20765b4">
+<div id="outline-container-org700f296" class="outline-3">
+<h3 id="org700f296">Approach 4 Manacher算法</h3>
+<div class="outline-text-3" id="text-org700f296">
 <p>
 这个算法思路实在是新奇，感兴趣的同学可以 <a href="https://articles.leetcode.com/longest-palindromic-substring-part-ii/">去看看</a> 。<br></p>
 </div>
@@ -397,9 +568,9 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
       <a class="post-link" href="/posts/algorithm-weekly-longest-substring-without-repeating-characters/">每周算法：最长不含重复字符的子串</a>
     </h3>
 
-    <div id="outline-container-orga4328af" class="outline-2">
-<h2 id="orga4328af">Description</h2>
-<div class="outline-text-2" id="text-orga4328af">
+    <div id="outline-container-org5075681" class="outline-2">
+<h2 id="org5075681">Description</h2>
+<div class="outline-text-2" id="text-org5075681">
 <p>
 Given a string, find the length of the longest substring without repeating characters.<br></p>
 
@@ -414,16 +585,16 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 </div>
 
-<div id="outline-container-org3d15e8d" class="outline-2">
-<h2 id="org3d15e8d">Solution</h2>
-<div class="outline-text-2" id="text-org3d15e8d">
+<div id="outline-container-orgd2aef72" class="outline-2">
+<h2 id="orgd2aef72">Solution</h2>
+<div class="outline-text-2" id="text-orgd2aef72">
 <p>
 好久没刷算法题了，手有点生，没有什么思路，下面的答案是看过提示之后才写出来的。<br></p>
 </div>
 
-<div id="outline-container-org04a9ac8" class="outline-3">
-<h3 id="org04a9ac8">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org04a9ac8">
+<div id="outline-container-org93ae87f" class="outline-3">
+<h3 id="org93ae87f">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org93ae87f">
 <p>
 将所有的子串都穷举出来，并对它们进行判断，就能够得到最长子串的长度。这个算法很显然需要耗费很长时间。<br>
 需要注意的是： C++20中才支持 <code>std::set::contains</code> 这个接口（根据cppreference.com）。<br></p>
@@ -468,9 +639,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-org146ec6d" class="outline-3">
-<h3 id="org146ec6d">Approach 2 滑动窗口</h3>
-<div class="outline-text-3" id="text-org146ec6d">
+<div id="outline-container-orgbed204d" class="outline-3">
+<h3 id="orgbed204d">Approach 2 滑动窗口</h3>
+<div class="outline-text-3" id="text-orgbed204d">
 <p>
 滑动窗口的概念在字符串处理问题中十分常用，保持子串的左端点不动，不断拓展右侧端点，就能穷举出所有满足条件的子串。<br>
 需要注意的是这句话： <code>lengthMax = max(lengthMax, int(j-i+1));</code><br></p>
@@ -513,9 +684,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-org3876f12" class="outline-3">
-<h3 id="org3876f12">Approach 3 优化的滑动窗口</h3>
-<div class="outline-text-3" id="text-org3876f12">
+<div id="outline-container-org36a1858" class="outline-3">
+<h3 id="org36a1858">Approach 3 优化的滑动窗口</h3>
+<div class="outline-text-3" id="text-org36a1858">
 <p>
 使用 <code>map</code> 对字母出现的位置进行记录，这样在出现相同字母时，就能够从上一次出现的位置向后开始寻找。<br>
 需要注意句话 <code>it-&gt;second+1&gt;=i</code> , 需要对位置加1后再比较，这样才能保证 <code>i</code> 的坐标计算正确。<br></p>
@@ -560,8 +731,8 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
       <a class="post-link" href="/posts/navigation-and-selection-effectively-in-emacs/">提高emacs中浏览和选择操作效率的技巧</a>
     </h3>
 
-    <div id="outline-container-orgc6e5631" class="outline-2">
-<h2 id="orgc6e5631">
+    <div id="outline-container-orgf53e201" class="outline-2">
+<h2 id="orgf53e201">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -576,8 +747,8 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-orgfa4cab9" class="outline-2">
-<h2 id="orgfa4cab9">
+<div id="outline-container-org7557c82" class="outline-2">
+<h2 id="org7557c82">
 <span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -589,13 +760,13 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-org97d91f3" class="outline-2">
-<h2 id="org97d91f3">
+<div id="outline-container-org14f542d" class="outline-2">
+<h2 id="org14f542d">
 <span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-org271c1b7" class="outline-3">
-<h3 id="org271c1b7">
+<div id="outline-container-org22c3f8c" class="outline-3">
+<h3 id="org22c3f8c">
 <span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -640,8 +811,8 @@ Point and mark interchanged
 </div>
 </div>
 
-<div id="outline-container-org8c439ae" class="outline-3">
-<h3 id="org8c439ae">
+<div id="outline-container-org73d5a22" class="outline-3">
+<h3 id="org73d5a22">
 <span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -679,8 +850,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org5cae5ff" class="outline-3">
-<h3 id="org5cae5ff">
+<div id="outline-container-orgec9d423" class="outline-3">
+<h3 id="orgec9d423">
 <span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
 </h3>
 <div class="outline-text-3" id="text-3-3">
@@ -694,16 +865,16 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-orgd4e2bec" class="outline-2">
-<h2 id="orgd4e2bec">
+<div id="outline-container-org2cff00b" class="outline-2">
+<h2 id="org2cff00b">
 <span class="section-number-2">4</span> 其他插件支持</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
 </div>
 
-<div id="outline-container-orgf59d23f" class="outline-3">
-<h3 id="orgf59d23f">
+<div id="outline-container-orga22a5a3" class="outline-3">
+<h3 id="orga22a5a3">
 <span class="section-number-3">4.1</span> helm swoop</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
@@ -717,8 +888,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-orgae87043" class="outline-3">
-<h3 id="orgae87043">
+<div id="outline-container-org54a1cb7" class="outline-3">
+<h3 id="org54a1cb7">
 <span class="section-number-3">4.2</span> avy</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
@@ -734,8 +905,8 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-orgfb17cc3" class="outline-2">
-<h2 id="orgfb17cc3">
+<div id="outline-container-org4f70144" class="outline-2">
+<h2 id="org4f70144">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -749,93 +920,6 @@ interface FooProps {}
 <a href="https://github.com/abo-abo/avy">avy</a><br>
 </li>
 </ul>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Jul 26, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/shell-output-redirections/">shell的输出重定向</a>
-    </h3>
-
-    <div id="outline-container-orgb805304" class="outline-2">
-<h2 id="orgb805304">引言</h2>
-<div class="outline-text-2" id="text-orgb805304">
-<p>
-在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org0414755" class="outline-2">
-<h2 id="org0414755">使用尖括号完成重定向</h2>
-<div class="outline-text-2" id="text-org0414755">
-<p>
-示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
-<div class="highlight"><pre><span></span>ls . &gt; ls-output.txt
-</pre></div>
-<p>
-可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
-</div>
-
-<div id="outline-container-org8d1bd20" class="outline-3">
-<h3 id="org8d1bd20">重定向 <code>stdout</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org8d1bd20">
-<div class="highlight"><pre><span></span>ls . <span class="m">1</span>&gt; ls-output.txt
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org87321de" class="outline-3">
-<h3 id="org87321de">重定向 <code>stderr</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org87321de">
-<div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt; ls-error.txt
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org2ef0583" class="outline-3">
-<h3 id="org2ef0583">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
-<div class="outline-text-3" id="text-org2ef0583">
-<div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> ls-output-and-error.txt
-</pre></div>
-<p>
-以下命令具有相同的效果<br></p>
-<div class="highlight"><pre><span></span>ls . <span class="p">&amp;</span>&gt; ls-output-and-error.txt
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org238796f" class="outline-3">
-<h3 id="org238796f">将程序的输出丢掉</h3>
-<div class="outline-text-3" id="text-org238796f">
-<p>
-可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
-<div class="highlight"><pre><span></span>program &gt; /dev/null
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org3edd8c1" class="outline-3">
-<h3 id="org3edd8c1">将输出追加到指定文件尾部</h3>
-<div class="outline-text-3" id="text-org3edd8c1">
-<p>
-使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
-<div class="highlight"><pre><span></span><span class="nb">echo</span> <span class="nb">test</span> &gt;&gt; file-output.txt
-</pre></div>
-</div>
-</div>
-</div>
-
-<div id="outline-container-org26fabe6" class="outline-2">
-<h2 id="org26fabe6">使用管道完成重定向</h2>
-<div class="outline-text-2" id="text-org26fabe6">
-<p>
-使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
-<div class="highlight"><pre><span></span>ls <span class="p">|</span> grep &lt;pattern&gt;
-</pre></div>
 </div>
 </div>
 

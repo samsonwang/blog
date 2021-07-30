@@ -50,6 +50,125 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Apr 27, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/linux-command-examples-xargs/">Linux常用命令行指令 - xargs</a>
+    </h3>
+
+    <div id="outline-container-org0d7cd33" class="outline-2">
+<h2 id="org0d7cd33">基础用法</h2>
+<div class="outline-text-2" id="text-org0d7cd33">
+<p>
+<code>xargs</code> 指令默认情况下从 <code>stdin</code> 中读取信息，按照空格分或换行区分开，并且执行输入的命令（默认的命令是 <code>/bin/echo</code> ）。命令可以通过 <code>xargs</code> 的参数指定执行一次或多次，命令的执行参数为自身初始参数追加上由 <code>stdin</code> 读到的内容，命令在执行时会忽略空行。<br></p>
+
+<blockquote>
+<p>
+xargs reads items from the standard input, delimited by blanks (which can be protected with double or single quotes or a backslash) or newlines, and executes the command (default is /bin/echo) one or more times with any initial-arguments followed by items read from standard input. Blank lines on the standard input are ignored.<br></p>
+</blockquote>
+
+<p>
+在命令行输入 <code>xargs</code> 命令，输入 “a b c d” 后按回车，再按 <code>ctrl+d</code> 完成本次输入，则 <code>xargs</code> 的默认 <code>echo</code> 命令会将接收到的字符串打印出来，效果如下所示。<br></p>
+<div class="highlight"><pre><span></span># xargs
+a b c d
+a b c d
+</pre></div>
+
+<p>
+<code>xargs</code> 单独使用时功能比较单一，但是它与其他指令一起使用十分强大。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org56f1cd4" class="outline-2">
+<h2 id="org56f1cd4">
+<code>xargs</code> 与 <code>find</code> 组合使用</h2>
+<div class="outline-text-2" id="text-org56f1cd4">
+<p>
+常见的使用方法是使用 <code>find</code> 指令找到指定的文件，组合以 <code>xargs</code> 指令实现对指定文件的操作。<br></p>
+<div class="highlight"><pre><span></span>find . -name "demo_" | xargs file -i
+</pre></div>
+<p>
+由于 <code>xargs</code> 是使用空格作为各个参数的分隔符，如果遇到的文件名中含有空格，则并不能按照预期处理。这时，可以使用 <code>find</code> 指令的 <code>-print0</code> 将含有空格的文件名转化为字符串，再结合 <code>xargs</code> 的 <code>-0</code> 参数就能完成文件名中含有空格的处理，改进后的命令如下。<br></p>
+<div class="highlight"><pre><span></span>find . -name "demo_" -print0 | xargs -0 file -i
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgcce199e" class="outline-2">
+<h2 id="orgcce199e">
+<code>xargs</code> 与 <code>grep</code> 组合使用</h2>
+<div class="outline-text-2" id="text-orgcce199e">
+<p>
+常用命令如下，能够实现对指定规则文件的搜索匹配。<br></p>
+<div class="highlight"><pre><span></span>find . -name "*.log" | xargs grep error
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org903fa2a" class="outline-2">
+<h2 id="org903fa2a">使用 <code>-n</code> 参数让 <code>xargs</code> 的命令重复执行</h2>
+<div class="outline-text-2" id="text-org903fa2a">
+<p>
+如果想用 <code>find</code> 指令完成多个匹配规则的搜索，则可以使用 <code>-n</code> 参数将 <code>xargs</code> 的内容分割成多个。<br>
+下面的命令会执行3次 <code>find</code> 命令， <code>xargs</code> 会将接收的到的内容按照单词数为“1”分割，分3次传送给 <code>find</code> 指令。<br></p>
+<div class="highlight"><pre><span></span>echo "*.c" "*.cpp" "*.h" | xargs -n 1 find . -name
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org08cf499" class="outline-2">
+<h2 id="org08cf499">使用 <code>-t</code> 参数让 <code>xargs</code> 打印将要执行的命令</h2>
+<div class="outline-text-2" id="text-org08cf499">
+<p>
+让 <code>xargs</code> 将指令的命令打印出来主要是方便查看命令执行情况，也方便在出现错误时进行调试。<br></p>
+<div class="highlight"><pre><span></span>find . -name *.log | xargs -t rm -f
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org76b6b1b" class="outline-2">
+<h2 id="org76b6b1b">使用 <code>-p</code> 参数让 <code>xargs</code> 在执行命令前询问用户</h2>
+<div class="outline-text-2" id="text-org76b6b1b">
+<p>
+增加 <code>-p</code> 参数后， <code>xargs</code> 在每次执行命令前会将指令打印出来并询问用户，只有用户输入 “y” 时才会真正执行该条命令。<br></p>
+<div class="highlight"><pre><span></span>echo "*.c" "*.cpp" "*.h" | xargs -n 1 -p find . -name
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org34298a0" class="outline-2">
+<h2 id="org34298a0">使用 <code>-I</code> 参数让 <code>xargs</code> 进行参数替换</h2>
+<div class="outline-text-2" id="text-org34298a0">
+<p>
+<code>xargs</code> 默认会将读取到的内容追加在指令命令后面作为参数，使用 <code>-I</code> 参数能够控制命令参数的组合方式。<br>
+以下命令会将当前目录中的可执行文件移动到bin文件夹下。<br></p>
+<div class="highlight"><pre><span></span>find . -executable -type f -print0 | xargs -0 -I {} mv {} ./bin
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org481705c" class="outline-2">
+<h2 id="org481705c">参考资料</h2>
+<div class="outline-text-2" id="text-org481705c">
+<ol class="org-ol">
+<li>
+<a href="http://man7.org/linux/man-pages/man1/xargs.1.html">http://man7.org/linux/man-pages/man1/xargs.1.html</a><br>
+</li>
+<li>
+<a href="https://www.howtoforge.com/tutorial/linux-xargs-command/">https://www.howtoforge.com/tutorial/linux-xargs-command/</a><br>
+</li>
+<li>
+<a href="https://www.thegeekstuff.com/2013/12/xargs-examples">https://www.thegeekstuff.com/2013/12/xargs-examples</a><br>
+</li>
+</ol>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Apr 25, 2018</span>
     <h3>
       <a class="post-link" href="/posts/linux-command-examples-ipcs/">Linux常用命令行指令 - ipcs</a>
@@ -60,9 +179,9 @@
 Q：每个进程都有自己的地址空间和独立的用户空间，那么进程间是如何通信的呢？<br>
 A：内核，也就是操作系统的心脏，它能够访问整个操作系统的内存。我们可以要求内核分配一块用于进程间交互的空间。<br></p>
 
-<div id="outline-container-orgdd6c61e" class="outline-2">
-<h2 id="orgdd6c61e">几种进程间通信的方法</h2>
-<div class="outline-text-2" id="text-orgdd6c61e">
+<div id="outline-container-org1979337" class="outline-2">
+<h2 id="org1979337">几种进程间通信的方法</h2>
+<div class="outline-text-2" id="text-org1979337">
 <p>
 进程间通信的方法有很多，有些支持同机器上进程的信息交互，有些支持跨机器的进程交互。<br></p>
 <ul class="org-ul">
@@ -82,9 +201,9 @@ A：内核，也就是操作系统的心脏，它能够访问整个操作系统�
 </div>
 </div>
 
-<div id="outline-container-org04df73e" class="outline-2">
-<h2 id="org04df73e">常用ipcs指令</h2>
-<div class="outline-text-2" id="text-org04df73e">
+<div id="outline-container-org2c56748" class="outline-2">
+<h2 id="org2c56748">常用ipcs指令</h2>
+<div class="outline-text-2" id="text-org2c56748">
 <p>
 <b>列出所有的IPC设备</b><br></p>
 <div class="highlight"><pre><span></span>ipcs -a
@@ -146,9 +265,9 @@ A：内核，也就是操作系统的心脏，它能够访问整个操作系统�
       <a class="post-link" href="/posts/debug-with-gdb-on-multi-thread-programs/">使用gdb调试多线程程序</a>
     </h3>
 
-    <div id="outline-container-org2ef1250" class="outline-2">
-<h2 id="org2ef1250">查看当前线程信息</h2>
-<div class="outline-text-2" id="text-org2ef1250">
+    <div id="outline-container-orgae27f30" class="outline-2">
+<h2 id="orgae27f30">查看当前线程信息</h2>
+<div class="outline-text-2" id="text-orgae27f30">
 <p>
 <b>将进程中的各个线程信息显示出来</b><br></p>
 <div class="highlight"><pre><span></span>(gdb) info threads
@@ -176,9 +295,9 @@ A：内核，也就是操作系统的心脏，它能够访问整个操作系统�
 </div>
 </div>
 
-<div id="outline-container-org9824013" class="outline-2">
-<h2 id="org9824013">为指定的线程设置断点</h2>
-<div class="outline-text-2" id="text-org9824013">
+<div id="outline-container-org4d1cec1" class="outline-2">
+<h2 id="org4d1cec1">为指定的线程设置断点</h2>
+<div class="outline-text-2" id="text-org4d1cec1">
 <p>
 含有多线程的程序，可以为单独的线程设置断点<br></p>
 <div class="highlight"><pre><span></span>(gdb) break linespec thread tid
@@ -193,9 +312,9 @@ Whenever your program stops under GDB for any reason, all threads of execution s
 </div>
 </div>
 
-<div id="outline-container-orgb698561" class="outline-2">
-<h2 id="orgb698561">防止gdb自动切换线程</h2>
-<div class="outline-text-2" id="text-orgb698561">
+<div id="outline-container-org17187ec" class="outline-2">
+<h2 id="org17187ec">防止gdb自动切换线程</h2>
+<div class="outline-text-2" id="text-org17187ec">
 <p>
 在调试gdb程序时，在单步执行时，会出现线程间跳转切换，这样对跟踪代码执行状态十分不方便。<br>
 可以通过设置 <code>scheduler-locking</code> 让gdb在所调试的线程中运行，防止线程的自动切换。<br></p>
@@ -226,9 +345,9 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 </div>
 
 
-<div id="outline-container-org7d24402" class="outline-2">
-<h2 id="org7d24402">参考资料</h2>
-<div class="outline-text-2" id="text-org7d24402">
+<div id="outline-container-org345ae6b" class="outline-2">
+<h2 id="org345ae6b">参考资料</h2>
+<div class="outline-text-2" id="text-org345ae6b">
 <ol class="org-ol">
 <li>
 <a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_39.html">gnu manual 1</a><br>
@@ -347,9 +466,9 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 <div class="highlight"><pre><span></span>cp source_path dest_path
 </pre></div>
 
-<div id="outline-container-orgc09952c" class="outline-2">
-<h2 id="orgc09952c">从远程机器向本地拷贝</h2>
-<div class="outline-text-2" id="text-orgc09952c">
+<div id="outline-container-orge8e8ef1" class="outline-2">
+<h2 id="orge8e8ef1">从远程机器向本地拷贝</h2>
+<div class="outline-text-2" id="text-orge8e8ef1">
 <p>
 以下命令会把 <code>host</code> 主机上的 <code>src_path</code> 文件拷贝到本地 <code>dest_path</code> 目录中。<br></p>
 <div class="highlight"><pre><span></span>scp user@host:src_path dest_path
@@ -357,9 +476,9 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 </div>
 </div>
 
-<div id="outline-container-orgb6d6fb0" class="outline-2">
-<h2 id="orgb6d6fb0">从本地向远程机器拷贝</h2>
-<div class="outline-text-2" id="text-orgb6d6fb0">
+<div id="outline-container-org7c52c49" class="outline-2">
+<h2 id="org7c52c49">从本地向远程机器拷贝</h2>
+<div class="outline-text-2" id="text-org7c52c49">
 <p>
 以下命令会把本地 <code>src_path</code> 的文件拷贝打 <code>host</code> 主机上的 <code>dest_path</code> 路径上。<br></p>
 <div class="highlight"><pre><span></span>scp src_path user@host:dest_path
@@ -367,9 +486,9 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 </div>
 </div>
 
-<div id="outline-container-orgf6b934b" class="outline-2">
-<h2 id="orgf6b934b">拷贝目录下的所有文件</h2>
-<div class="outline-text-2" id="text-orgf6b934b">
+<div id="outline-container-orgc247302" class="outline-2">
+<h2 id="orgc247302">拷贝目录下的所有文件</h2>
+<div class="outline-text-2" id="text-orgc247302">
 <p>
 可以使用 <code>-r</code> 参数完成目录的递归拷贝， <code>r</code> 代表 <code>recursive</code> 递归。<br></p>
 <div class="highlight"><pre><span></span>scp -r user@host:/src_path dest_path
@@ -377,94 +496,13 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 </div>
 </div>
 
-<div id="outline-container-orgfebfa7e" class="outline-2">
-<h2 id="orgfebfa7e">在拷贝时限制带宽</h2>
-<div class="outline-text-2" id="text-orgfebfa7e">
+<div id="outline-container-org0fb699a" class="outline-2">
+<h2 id="org0fb699a">在拷贝时限制带宽</h2>
+<div class="outline-text-2" id="text-org0fb699a">
 <p>
 可以使用 <code>-l</code> 参数限制传输的带宽， <code>l</code> 代表 <code>limit</code> 限制，限制带宽的单位是 <code>kbps</code> 。<br>
 命令会在将拷贝传输的速度限制为 100kbps。<br></p>
 <div class="highlight"><pre><span></span>scp -l 100 src_path dest_path
-</pre></div>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Apr 16, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/cpp11-automatic-deduction-and-decltype/">C++11新特性：自动类型推导</a>
-    </h3>
-
-    <div id="outline-container-org4d5e607" class="outline-2">
-<h2 id="org4d5e607">关键字 <code>auto</code> 用于自动类型推导</h2>
-<div class="outline-text-2" id="text-org4d5e607">
-<div class="highlight"><pre><span></span><span class="k">auto</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>     <span class="c1">// int</span>
-<span class="k">auto</span> <span class="n">c</span><span class="o">=</span><span class="sc">'a'</span><span class="p">;</span>   <span class="c1">// char</span>
-<span class="k">auto</span> <span class="n">d</span><span class="o">=</span><span class="mf">0.5</span><span class="p">;</span>   <span class="c1">// double</span>
-</pre></div>
-
-<p>
-自动类型推导主要用于声明比较复杂的变量，或者变量是在泛型编程（模板）中自动生成出来的。<br></p>
-<div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vecNumbers</span><span class="p">;</span>
-<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">const_iterator</span> <span class="n">it</span> <span class="o">=</span> <span class="n">vecNumbers</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
-<span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">vecNumbers</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org7000c40" class="outline-2">
-<h2 id="org7000c40">
-<code>auto</code> 类型推导并不会指定 <code>const</code> 和 <code>volatile</code> 属性</h2>
-<div class="outline-text-2" id="text-org7000c40">
-<p>
-如果需要限定声明的变量为 <code>const</code> 和 <code>volatile</code> 属性，需要额外提供相应的关键字限定。因为编译器并不能推断出声明的变量是否具有常值属性和易失属性。<br></p>
-<div class="highlight"><pre><span></span><span class="k">volatile</span> <span class="k">auto</span> <span class="n">num</span><span class="o">=</span><span class="mi">5</span><span class="p">;</span>           <span class="c1">// volatile int</span>
-<span class="k">auto</span> <span class="k">volatile</span> <span class="k">const</span> <span class="n">var</span><span class="o">=</span><span class="nb">true</span><span class="p">;</span>  <span class="c1">//const valatile bool</span>
-<span class="k">auto</span> <span class="k">const</span> <span class="n">ch</span><span class="o">=</span><span class="sc">'a'</span><span class="p">;</span>             <span class="c1">// const char</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org9db1c67" class="outline-2">
-<h2 id="org9db1c67">关键字 <code>decltype</code> 用于获取一个对量的类型</h2>
-<div class="outline-text-2" id="text-org9db1c67">
-<p>
-使用 <code>decltype</code> 存储一个对象或表达式的类型， <code>decltype</code> 可以看做是 <code>auto</code> 的补充。<br></p>
-<div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vecNumbers</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="nf">decltype</span><span class="p">(</span><span class="n">vecNumbers</span><span class="p">.</span><span class="n">begin</span><span class="p">())</span> <span class="n">Iterator</span><span class="p">;</span>
-<span class="n">Iterator</span> <span class="n">it2</span><span class="p">;</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org7404722" class="outline-2">
-<h2 id="org7404722">函数返回值类型推导</h2>
-<div class="outline-text-2" id="text-org7404722">
-<p>
-在C++11中可以使用 <code>auto</code> 和 <code>decltype</code> 完成函数返回类型的推导。<br>
-旧的函数声明格式 <code>return_type func_name(param_type param, ...);</code><br>
-新的函数声明格式示例如下，以下函数接收 <code>bool</code> 作为函数的参数，并返回 <code>bool</code> 类型的结果。<br></p>
-<div class="highlight"><pre><span></span><span class="k">auto</span> <span class="nf">func_name</span><span class="p">(</span><span class="kt">bool</span> <span class="n">bParam</span><span class="p">)</span><span class="o">-&gt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">bParam</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="k">return</span> <span class="n">bParam</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-<p>
-函数返回值类型推导在模板泛型编程中非常有用，模板函数能够定义一个通用的返回类型，返回值类型会根据 <code>decltype</code> 自动推导。<br>
-新的函数声明格式更易于维护，因为返回值并没有作为硬编码写入源文件中，但这样做可能会牺牲代码的可读性。<br></p>
-<div class="highlight"><pre><span></span><span class="k">template</span> <span class="o">&lt;</span><span class="k">class</span> <span class="nc">T</span><span class="o">&gt;</span>
-<span class="k">auto</span> <span class="n">get_end</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span> <span class="n">v</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">decltype</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-<span class="p">{</span>
-  <span class="k">return</span> <span class="n">v</span><span class="p">.</span><span class="n">end</span><span class="p">();</span>
-<span class="p">}</span>
-
-<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vecNumbers</span><span class="p">;</span>
-<span class="k">auto</span> <span class="n">it</span> <span class="o">=</span> <span class="n">get_end</span><span class="p">(</span><span class="n">vecNumbers</span><span class="p">);</span>      <span class="c1">// returns iterator</span>
-
-<span class="k">const</span> <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vecNumbers2</span><span class="p">;</span>
-<span class="k">auto</span> <span class="n">it2</span> <span class="o">=</span> <span class="n">get_enm</span><span class="p">(</span><span class="n">vecNumbers2</span><span class="p">);</span>    <span class="c1">// returns const_iterator</span>
 </pre></div>
 </div>
 </div>

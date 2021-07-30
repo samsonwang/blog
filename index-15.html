@@ -50,14 +50,136 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Aug 29, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/algorithm-weekly-container-with-most-water/">每周算法：最大容器</a>
+    </h3>
+
+    <div id="outline-container-org704e2d2" class="outline-2">
+<h2 id="org704e2d2">Description</h2>
+<div class="outline-text-2" id="text-org704e2d2">
+<p>
+Given n non-negative integers a1, a2, …, an , where each represents a point at coordinate (i, ai). n vertical lines are drawn such that the two endpoints of line i is at (i, ai) and (i, 0). Find two lines, which together with x-axis forms a container, such that the container contains the most water.<br></p>
+
+<p>
+<b>Note:</b> You may not slant the container and n is at least 2.<br></p>
+
+<p>
+<b>Example:</b><br>
+Input: [1,8,6,2,5,4,8,3,7]<br>
+Output: 49<br></p>
+
+<p>
+来源： <a href="https://leetcode.com/problems/container-with-most-water/description/">leetcode 11 Container with most water</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-orgedcd9ac" class="outline-2">
+<h2 id="orgedcd9ac">Solution</h2>
+<div class="outline-text-2" id="text-orgedcd9ac">
+</div>
+<div id="outline-container-orgcf41a9b" class="outline-3">
+<h3 id="orgcf41a9b">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-orgcf41a9b">
+<p>
+暴力解法是最容易想到的解法了，然而暴力解法肯定不是本题的意图。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">maxArea</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">height</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">ans</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="n">height</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">len</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">len</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="n">j</span><span class="o">-</span><span class="n">i</span><span class="p">)</span> <span class="o">*</span> <span class="n">min</span><span class="p">(</span><span class="n">height</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">height</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
+	    <span class="n">ans</span> <span class="o">=</span> <span class="n">ans</span> <span class="o">&gt;</span> <span class="n">size</span> <span class="o">?</span> <span class="nl">ans</span> <span class="p">:</span> <span class="n">size</span><span class="p">;</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+使用这种解法只要把变量变化的范围想清楚就行了，没有什么特别的难点。<br>
+暴力解法的时间复杂度为 O(n<sup>2</sup>)，空间复杂度为 O(1)。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org2dccbe9" class="outline-3">
+<h3 id="org2dccbe9">Approach 2</h3>
+<div class="outline-text-3" id="text-org2dccbe9">
+<p>
+我在leetcode上看到这样一种解法，这种解法从逻辑和形式上看上不复杂，但是我的疑问在是否有严密的数学推导和论证。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">maxArea</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">height</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kt">int</span> <span class="n">ans</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">left</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">right</span> <span class="o">=</span> <span class="n">height</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="n">left</span> <span class="o">&lt;</span> <span class="n">right</span><span class="p">)</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="n">w</span> <span class="o">=</span> <span class="n">right</span> <span class="o">-</span> <span class="n">left</span><span class="p">;</span>
+	<span class="kt">int</span> <span class="n">h</span> <span class="o">=</span> <span class="n">min</span><span class="p">(</span><span class="n">height</span><span class="p">[</span><span class="n">left</span><span class="p">],</span> <span class="n">height</span><span class="p">[</span><span class="n">right</span><span class="p">]);</span>
+
+	<span class="n">ans</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">w</span><span class="o">*</span><span class="n">h</span><span class="p">,</span> <span class="n">ans</span><span class="p">);</span>
+
+	<span class="k">if</span> <span class="p">(</span><span class="n">height</span><span class="p">[</span><span class="n">left</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">height</span><span class="p">[</span><span class="n">right</span><span class="p">])</span> <span class="p">{</span>
+	    <span class="o">++</span><span class="n">left</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">else</span> <span class="p">{</span>
+	    <span class="o">--</span><span class="n">right</span><span class="p">;</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+这个算法的主要思想是最大面积由两端边界较短的板决定；所以在移动边界时要将长板保留，移动短板。该算法的时间复杂度为 O(n)，空间复杂度为O（1）。<br></p>
+
+<p>
+在寻求该算法的数学推导时，我看到了 @nan15 给出的另外一种解释：<br></p>
+<blockquote>
+<p>
+We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</code> . Let's say the left one is shorter: <code>h[l] &lt; h[r]</code> . Then, this is already the largest container the left one can possibly form. There's no need to consider it again. Therefore, we just throw it away and start again with <code>l = 1</code> and <code>r = n - 1</code> .<br></p>
+</blockquote>
+<p>
+这个论证我认为是更加直观的：从最宽的容器开始，这时左边坐标 <code>l = 0</code> ，右边坐标 <code>r = n - 1</code> 。假设左边更短，也就是 <code>h[l] &lt; h[r]</code> 。那么，对于左边的板子，这是已经是它能够形成的最大的面积了，也就不需要再考虑它了。因此，将左边的板子丢掉，使用 <code>l = 1</code> 和 <code>r = n - 1</code> 重新开始。<br></p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org93eb806" class="outline-2">
+<h2 id="org93eb806">Reference</h2>
+<div class="outline-text-2" id="text-org93eb806">
+<ul class="org-ul">
+<li>
+<a href="https://leetcode.com/problems/container-with-most-water/solution/">leetcode problem solution</a><br>
+</li>
+<li>
+<a href="https://leetcode.com/problems/container-with-most-water/discuss/6089/anyone-who-has-a-on-algorithm">leetcode discuss algorithm proof 1</a><br>
+</li>
+<li>
+<a href="https://leetcode.com/problems/container-with-most-water/discuss/6099/yet-another-way-to-see-what-happens-in-the-on-algorithm">leetcode discuss algorithm proof 2</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Aug 27, 2018</span>
     <h3>
       <a class="post-link" href="/posts/why-front-end-libraries/">为什么要使用各种前端框架</a>
     </h3>
 
-    <div id="outline-container-org2f1ba71" class="outline-2">
-<h2 id="org2f1ba71">引言</h2>
-<div class="outline-text-2" id="text-org2f1ba71">
+    <div id="outline-container-orgb0cfa61" class="outline-2">
+<h2 id="orgb0cfa61">引言</h2>
+<div class="outline-text-2" id="text-orgb0cfa61">
 <p>
 在学习前端的过程中，我开始接触到许多开发框架或开发工具，这些工具让我开始眼花缭乱。使用常规的html/css/js就已经能够开发出这种网页了，所以我问自己，为什么要学习这些框架或工具，这些库是用来解决什么问题的。想明白这个问题，我学习的目的就更加明确，在遇到一些开发情景时，也能够快速准确地挑选出应该使用的框架。<br></p>
 
@@ -66,9 +188,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgd01760f" class="outline-2">
-<h2 id="orgd01760f">为什么要使用jQuery</h2>
-<div class="outline-text-2" id="text-orgd01760f">
+<div id="outline-container-org7a676fb" class="outline-2">
+<h2 id="org7a676fb">为什么要使用jQuery</h2>
+<div class="outline-text-2" id="text-org7a676fb">
 <p>
 jQuery是一个轻量级js库，它有如下特性：<br></p>
 <ul class="org-ul">
@@ -88,9 +210,9 @@ jQuery是一个轻量级js库，它有如下特性：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0ef5108" class="outline-2">
-<h2 id="org0ef5108">为什么要使用SASS</h2>
-<div class="outline-text-2" id="text-org0ef5108">
+<div id="outline-container-org412bb94" class="outline-2">
+<h2 id="org412bb94">为什么要使用SASS</h2>
+<div class="outline-text-2" id="text-org412bb94">
 <p>
 SASS是一种CSS预编译格式，它最终会编译成CSS。<br>
 SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操作，函数操作，样式模板（mixin）等强大的特性。它能够让开发人员更方便地编写CSS。SASS支持 <code>import</code> 关键字，这样就能够很方便地对样式进行模块化设计。<br></p>
@@ -103,9 +225,9 @@ SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操�
 </div>
 </div>
 
-<div id="outline-container-org7d92ca6" class="outline-2">
-<h2 id="org7d92ca6">为什么要使用Bootstrap</h2>
-<div class="outline-text-2" id="text-org7d92ca6">
+<div id="outline-container-orgc050925" class="outline-2">
+<h2 id="orgc050925">为什么要使用Bootstrap</h2>
+<div class="outline-text-2" id="text-orgc050925">
 <p>
 Bootstrap是一个用于快速开发网页的前端框架。以我目前的理解来看，它更像是一个网页样式框架。<br></p>
 <ul class="org-ul">
@@ -121,9 +243,9 @@ Bootstrap是一个用于快速开发网页的前端框架。以我目前的理�
 </div>
 </div>
 
-<div id="outline-container-orgdf1b5f2" class="outline-2">
-<h2 id="orgdf1b5f2">为什么要使用React</h2>
-<div class="outline-text-2" id="text-orgdf1b5f2">
+<div id="outline-container-orgd540e9f" class="outline-2">
+<h2 id="orgd540e9f">为什么要使用React</h2>
+<div class="outline-text-2" id="text-orgd540e9f">
 <p>
 DOM操作对性能的影响很大，频繁的DOM操作会使网页渲染的速度变慢，React主要解决了这个问题。<br>
 React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新渲染。<br></p>
@@ -163,9 +285,9 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 </div>
 
 
-<div id="outline-container-org14f59a0" class="outline-2">
-<h2 id="org14f59a0">参考资料</h2>
-<div class="outline-text-2" id="text-org14f59a0">
+<div id="outline-container-org593f87a" class="outline-2">
+<h2 id="org593f87a">参考资料</h2>
+<div class="outline-text-2" id="text-org593f87a">
 <ol class="org-ol">
 <li>
 <a href="https://www.w3schools.com/jquery/jquery_intro.asp">w3schools jQuery intro</a><br>
@@ -195,8 +317,8 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
       <a class="post-link" href="/posts/javascript-object-oriented-programming/">javscript中的OOP特性</a>
     </h3>
 
-    <div id="outline-container-org7b39553" class="outline-2">
-<h2 id="org7b39553">
+    <div id="outline-container-org079102c" class="outline-2">
+<h2 id="org079102c">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -205,13 +327,13 @@ js也是具有OOP（object oriented programming）特性的，OOP在构建一些
 </div>
 </div>
 
-<div id="outline-container-orga592f0d" class="outline-2">
-<h2 id="orga592f0d">
+<div id="outline-container-org27a3469" class="outline-2">
+<h2 id="org27a3469">
 <span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-orgcad7ab8" class="outline-3">
-<h3 id="orgcad7ab8">
+<div id="outline-container-org63e662f" class="outline-3">
+<h3 id="org63e662f">
 <span class="section-number-3">2.1</span> 创建对象（object）</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -231,8 +353,8 @@ js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关�
 </div>
 </div>
 
-<div id="outline-container-orgf6e6a0d" class="outline-3">
-<h3 id="orgf6e6a0d">
+<div id="outline-container-orga587fd4" class="outline-3">
+<h3 id="orga587fd4">
 <span class="section-number-3">2.2</span> 类（class）的声明</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -253,8 +375,8 @@ crow instanceof Bird; // =&gt; true
 </div>
 </div>
 
-<div id="outline-container-orgdf68cd7" class="outline-3">
-<h3 id="orgdf68cd7">
+<div id="outline-container-org41679ce" class="outline-3">
+<h3 id="org41679ce">
 <span class="section-number-3">2.3</span> 类的共有成员</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
@@ -282,8 +404,8 @@ js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还
 </div>
 </div>
 
-<div id="outline-container-org0cd2a83" class="outline-3">
-<h3 id="org0cd2a83">
+<div id="outline-container-org964c0e5" class="outline-3">
+<h3 id="org964c0e5">
 <span class="section-number-3">2.4</span> 类的私有成员</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
@@ -304,8 +426,8 @@ ducky.getHatchedEggCount(); // returns 10
 </div>
 </div>
 
-<div id="outline-container-orgb4a102e" class="outline-3">
-<h3 id="orgb4a102e">
+<div id="outline-container-org2560b90" class="outline-3">
+<h3 id="org2560b90">
 <span class="section-number-3">2.5</span> 类的继承和派生</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
@@ -316,8 +438,8 @@ Bird.prototype.constructor = Bird;
 </div>
 </div>
 
-<div id="outline-container-org7db0c39" class="outline-3">
-<h3 id="org7db0c39">
+<div id="outline-container-orga376147" class="outline-3">
+<h3 id="orga376147">
 <span class="section-number-3">2.6</span> 类的覆盖</h3>
 <div class="outline-text-3" id="text-2-6">
 <p>
@@ -347,8 +469,8 @@ Bird.prototype.fly = function() {
 </div>
 
 
-<div id="outline-container-org2872eb0" class="outline-2">
-<h2 id="org2872eb0">
+<div id="outline-container-org678729c" class="outline-2">
+<h2 id="org678729c">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
@@ -368,9 +490,9 @@ Bird.prototype.fly = function() {
       <a class="post-link" href="/posts/javascript-regexp-cheatsheet/">js正则表达式备忘</a>
     </h3>
 
-    <div id="outline-container-orga86bfb8" class="outline-2">
-<h2 id="orga86bfb8">引言</h2>
-<div class="outline-text-2" id="text-orga86bfb8">
+    <div id="outline-container-org8022248" class="outline-2">
+<h2 id="org8022248">引言</h2>
+<div class="outline-text-2" id="text-org8022248">
 <p>
 近在FreeCodeCamp(FCC)学习前端的课程，其中有一节就是讲的 <code>regexp</code> ，也就是正则表达式。我之前零星地了解过一些正则表达式的相关知识，但不足以对正则表达式得出一个完整的认识。FCC的教程循序渐进，由简到繁，在教学中结合练习，非常适合初学者的学习过程。如何你的英文能够达到阅读技术类文献的水平，又正好想学习一下正则表达式，我推荐你试一下FCC的正则表达式教程，花3~4个小时就能够对正则表达式有个完整的理解。<br></p>
 
@@ -383,9 +505,9 @@ Bird.prototype.fly = function() {
 </div>
 
 
-<div id="outline-container-org4f741bf" class="outline-2">
-<h2 id="org4f741bf">要点总结（js版）</h2>
-<div class="outline-text-2" id="text-org4f741bf">
+<div id="outline-container-orgad1d5cf" class="outline-2">
+<h2 id="orgad1d5cf">要点总结（js版）</h2>
+<div class="outline-text-2" id="text-orgad1d5cf">
 <p>
 FCC的教程使用javascript作为开发语言，本节所有的代码都是js代码。<br></p>
 
@@ -628,9 +750,9 @@ lookahead 的概念， <code>(?=...)</code> 与 <code>(?!...)</code><br></p>
 </div>
 
 
-<div id="outline-container-orgd768cd2" class="outline-2">
-<h2 id="orgd768cd2">elisp和python中的正则表达式</h2>
-<div class="outline-text-2" id="text-orgd768cd2">
+<div id="outline-container-orga3db68a" class="outline-2">
+<h2 id="orga3db68a">elisp和python中的正则表达式</h2>
+<div class="outline-text-2" id="text-orga3db68a">
 <p>
 在emacs中内置了 <code>string-match</code> 函数进行正则表达式匹配，其函数原型为 <code>(string-match REGEXP STRING &amp;optional START)</code> ，下面就是在emacs中使用regexp的示例。<br></p>
 <div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span> <span class="nv">str-regexp</span> <span class="s">"\.[h|cpp]$"</span><span class="p">)</span>
@@ -652,9 +774,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 </div>
 
 
-<div id="outline-container-orga5f4652" class="outline-2">
-<h2 id="orga5f4652">参考资料</h2>
-<div class="outline-text-2" id="text-orga5f4652">
+<div id="outline-container-org339ab62" class="outline-2">
+<h2 id="org339ab62">参考资料</h2>
+<div class="outline-text-2" id="text-org339ab62">
 <ul class="org-ul">
 <li>
 <a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/regular-expressions">FCC regular-expression tutorial</a><br>
@@ -678,9 +800,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
       <a class="post-link" href="/posts/algorithm-weekly-string-to-integer/">每周算法：字符串转整数</a>
     </h3>
 
-    <div id="outline-container-orgf6f325d" class="outline-2">
-<h2 id="orgf6f325d">Description</h2>
-<div class="outline-text-2" id="text-orgf6f325d">
+    <div id="outline-container-orgcb085aa" class="outline-2">
+<h2 id="orgcb085aa">Description</h2>
+<div class="outline-text-2" id="text-orgcb085aa">
 <p>
 Implement <code>atoi</code> which converts a string to an integer.<br></p>
 
@@ -738,13 +860,13 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-org7a5ed64" class="outline-2">
-<h2 id="org7a5ed64">Solution</h2>
-<div class="outline-text-2" id="text-org7a5ed64">
+<div id="outline-container-org3f6c22a" class="outline-2">
+<h2 id="org3f6c22a">Solution</h2>
+<div class="outline-text-2" id="text-org3f6c22a">
 </div>
-<div id="outline-container-org08ae73f" class="outline-3">
-<h3 id="org08ae73f">Approach 1</h3>
-<div class="outline-text-3" id="text-org08ae73f">
+<div id="outline-container-org76effd5" class="outline-3">
+<h3 id="org76effd5">Approach 1</h3>
+<div class="outline-text-3" id="text-org76effd5">
 <p>
 这道题并不难，思路也比较容易想出来，下面就是我想到的解法。<br>
 可能需要注意的问题是：<br></p>
@@ -816,9 +938,9 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-org38166e2" class="outline-3">
-<h3 id="org38166e2">Approach 2</h3>
-<div class="outline-text-3" id="text-org38166e2">
+<div id="outline-container-org6a4a314" class="outline-3">
+<h3 id="org6a4a314">Approach 2</h3>
+<div class="outline-text-3" id="text-org6a4a314">
 <p>
 下面这段代码目前是leetcode上运行速度最快的solution sample，仅仅耗时了4ms。作者使用了很多让程序跑得更快的方法，其中的技巧值得我学习。<br></p>
 <div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span> <span class="n">fast</span> <span class="o">=</span> <span class="p">[]()</span> <span class="p">{</span>
@@ -887,9 +1009,9 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgc069309" class="outline-2">
-<h2 id="orgc069309">Reference</h2>
-<div class="outline-text-2" id="text-orgc069309">
+<div id="outline-container-org6387536" class="outline-2">
+<h2 id="org6387536">Reference</h2>
+<div class="outline-text-2" id="text-org6387536">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/31162367/significance-of-ios-basesync-with-stdiofalse-cin-tienull">stackoverflow.com sync with stdio</a><br>
@@ -907,17 +1029,17 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
       <a class="post-link" href="/posts/map-reduce/">MapReduce模型</a>
     </h3>
 
-    <div id="outline-container-orga93cb60" class="outline-2">
-<h2 id="orga93cb60">序言</h2>
-<div class="outline-text-2" id="text-orga93cb60">
+    <div id="outline-container-org3f3881e" class="outline-2">
+<h2 id="org3f3881e">序言</h2>
+<div class="outline-text-2" id="text-org3f3881e">
 <p>
 对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org5fe6c45" class="outline-2">
-<h2 id="org5fe6c45">什么是MapReduce</h2>
-<div class="outline-text-2" id="text-org5fe6c45">
+<div id="outline-container-org6002873" class="outline-2">
+<h2 id="org6002873">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-org6002873">
 <p>
 MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
 
@@ -933,9 +1055,9 @@ MapReduce是面向大数据并行处理的计算模型、框架和平台，它�
 </div>
 </div>
 
-<div id="outline-container-org20b393a" class="outline-2">
-<h2 id="org20b393a">map和reduce</h2>
-<div class="outline-text-2" id="text-org20b393a">
+<div id="outline-container-org6431c1f" class="outline-2">
+<h2 id="org6431c1f">map和reduce</h2>
+<div class="outline-text-2" id="text-org6431c1f">
 <p>
 <b>从编程语言的角度上来说</b><br>
 map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
@@ -954,9 +1076,9 @@ reduce操作也会接收到两个参数，一个列表和一个变换过程，�
 </div>
 </div>
 
-<div id="outline-container-orgbf12c94" class="outline-2">
-<h2 id="orgbf12c94">并行计算与大数据</h2>
-<div class="outline-text-2" id="text-orgbf12c94">
+<div id="outline-container-org55babcb" class="outline-2">
+<h2 id="org55babcb">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-org55babcb">
 <p>
 mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
 
@@ -987,9 +1109,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4fcb146" class="outline-2">
-<h2 id="org4fcb146">参考资料</h2>
-<div class="outline-text-2" id="text-org4fcb146">
+<div id="outline-container-orgb8f491e" class="outline-2">
+<h2 id="orgb8f491e">参考资料</h2>
+<div class="outline-text-2" id="text-orgb8f491e">
 <ul class="org-ul">
 <li>
 <a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
@@ -1001,177 +1123,6 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 <a href="https://hadoop.apache.org/">Hadoop主页</a><br>
 </li>
 </ul>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Aug 16, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/algorithm-weekly-zigzag-conversion/">每周算法：字符串锯齿变换</a>
-    </h3>
-
-    <div id="outline-container-orgd365f45" class="outline-2">
-<h2 id="orgd365f45">Description</h2>
-<div class="outline-text-2" id="text-orgd365f45">
-<p>
-The string "PAYPALISHIRING" is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)<br></p>
-
-<div class="highlight"><pre><span></span>P   A   H   N
-A P L S I I G
-Y   I   R
-</pre></div>
-
-<p>
-And then read line by line: "PAHNAPLSIIGYIR"<br>
-Write the code that will take a string and make this conversion given a number of rows:<br>
-string convert(string s, int numRows);<br></p>
-
-<p>
-<b>Example 1:</b><br>
-Input: s = "PAYPALISHIRING", numRows = 3<br>
-Output: "PAHNAPLSIIGYIR"<br></p>
-
-<p>
-<b>Example 2:</b><br>
-Input: s = "PAYPALISHIRING", numRows = 4<br>
-Output: "PINALSIGYAHRPI"<br>
-Explanation:<br></p>
-<div class="highlight"><pre><span></span>P     I    N
-A   L S  I G
-Y A   H R
-P     I
-</pre></div>
-
-<p>
-来源： <a href="https://leetcode.com/problems/zigzag-conversion/description/">LeetCode 06 ZigZag Conversion</a><br></p>
-</div>
-</div>
-
-<div id="outline-container-org5a0e1b3" class="outline-2">
-<h2 id="org5a0e1b3">Solution</h2>
-<div class="outline-text-2" id="text-org5a0e1b3">
-</div>
-<div id="outline-container-org8501f6a" class="outline-3">
-<h3 id="org8501f6a">Approach 1 找规律</h3>
-<div class="outline-text-3" id="text-org8501f6a">
-<p>
-我想到的第一个方法就是找规律，通过寻找每一行的变化规律，编写相应的计算逻辑。<br>
-需要注意:<br></p>
-<ul class="org-ul">
-<li>有符号数和无符号数的比较，这个是非常容易出错的，不要在有符号和无符号数之间进行比较。<br>
-</li>
-<li>特殊情况，也就是只有一行的情况，这个情况不需要进行转换，直接返回原字符串就好。<br>
-</li>
-</ul>
-<div class="highlight"><pre><span></span><span class="n">string</span> <span class="nf">convert</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">numRows</span><span class="p">)</span> <span class="p">{</span>
-
-    <span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span>
-    <span class="n">assert</span><span class="p">(</span><span class="n">numRows</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">);</span>
-    <span class="kt">int</span> <span class="n">base</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">numRows</span> <span class="o">-</span> <span class="mi">2</span><span class="p">;</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">base</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-	<span class="k">return</span> <span class="n">s</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="n">string</span> <span class="n">ans</span><span class="p">;</span>
-
-    <span class="c1">// 第一行和最后一行需要进行特殊处理</span>
-
-    <span class="c1">// 第一行</span>
-    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="k">while</span> <span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="p">];</span>
-	<span class="o">++</span><span class="n">i</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="c1">// 中间行</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">numRows</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
-	<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-	<span class="k">while</span> <span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span> <span class="o">-</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
-
-	    <span class="k">if</span> <span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span> <span class="o">-</span> <span class="n">j</span> <span class="o">&gt;=</span><span class="mi">0</span> <span class="p">)</span> <span class="p">{</span>
-		<span class="n">ans</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">];</span>
-	    <span class="p">}</span>
-
-	    <span class="k">if</span> <span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
-		<span class="n">ans</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="p">];</span>                
-	    <span class="p">}</span>
-
-	    <span class="o">++</span><span class="n">i</span><span class="p">;</span>
-	<span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="c1">// 最后一行</span>
-    <span class="kt">int</span> <span class="n">lastStart</span> <span class="o">=</span> <span class="n">numRows</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="k">while</span> <span class="p">(</span><span class="n">lastStart</span> <span class="o">+</span> <span class="n">base</span><span class="o">*</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
-	<span class="n">ans</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">lastStart</span> <span class="o">+</span> <span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="p">];</span>
-	<span class="o">++</span><span class="n">i</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-orgb91c354" class="outline-3">
-<h3 id="orgb91c354">Approach 2 Sort by Row</h3>
-<div class="outline-text-3" id="text-orgb91c354">
-<p>
-这个方法是leetcode提供的一个方法，主要思路是使用一个二维矩阵将字符串按照顺序存储起来，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(n)</code> 。<br></p>
-
-<div class="highlight"><pre><span></span><span class="n">string</span> <span class="nf">convert</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">numRows</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">numRows</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="n">s</span><span class="p">;</span>
-
-    <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">rows</span><span class="p">(</span><span class="n">min</span><span class="p">(</span><span class="n">numRows</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">())));</span>
-    <span class="kt">int</span> <span class="n">curRow</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="kt">bool</span> <span class="n">goingDown</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">char</span> <span class="nl">c</span> <span class="p">:</span> <span class="n">s</span><span class="p">)</span> <span class="p">{</span>
-	<span class="n">rows</span><span class="p">[</span><span class="n">curRow</span><span class="p">]</span> <span class="o">+=</span> <span class="n">c</span><span class="p">;</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">curRow</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">curRow</span> <span class="o">==</span> <span class="n">numRows</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-	    <span class="n">goingDown</span> <span class="o">=</span> <span class="o">!</span><span class="n">goingDown</span><span class="p">;</span>
-	<span class="p">}</span>
-
-	<span class="n">curRow</span> <span class="o">+=</span> <span class="n">goingDown</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="n">string</span> <span class="n">ret</span><span class="p">;</span>
-    <span class="k">for</span> <span class="p">(</span><span class="n">string</span> <span class="nl">row</span> <span class="p">:</span> <span class="n">rows</span><span class="p">)</span> <span class="n">ret</span> <span class="o">+=</span> <span class="n">row</span><span class="p">;</span>
-    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org5aca6ea" class="outline-3">
-<h3 id="org5aca6ea">Approach 3 Visit by Row</h3>
-<div class="outline-text-3" id="text-org5aca6ea">
-<p>
-这个方法是leetcode提供的另一个方法，通过计算下标完成字符串的转换，实际上也是对转换的规律进行了总结，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(1)</code> 。<br>
-对于空间复杂度，实际上需要额外的空间存储结果字符串，如果忽略函数所返回的结果字符串，则空间复杂度为 <code>O(1)</code> 。<br></p>
-<div class="highlight"><pre><span></span><span class="n">string</span> <span class="nf">convert</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">numRows</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">numRows</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="n">s</span><span class="p">;</span>
-
-    <span class="n">string</span> <span class="n">ret</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-    <span class="kt">int</span> <span class="n">cycleLen</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">numRows</span> <span class="o">-</span> <span class="mi">2</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">numRows</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">+</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">j</span> <span class="o">+=</span> <span class="n">cycleLen</span><span class="p">)</span> <span class="p">{</span>
-	    <span class="n">ret</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">i</span><span class="p">];</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">numRows</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">+</span> <span class="n">cycleLen</span> <span class="o">-</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">)</span>
-		<span class="n">ret</span> <span class="o">+=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">cycleLen</span> <span class="o">-</span> <span class="n">i</span><span class="p">];</span>
-	<span class="p">}</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
 </div>
 </div>
 
