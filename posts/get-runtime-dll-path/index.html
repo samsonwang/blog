@@ -65,16 +65,20 @@
 
     <p class="post-meta">
       
-    <time class="dt-published" datetime="2021-06-11T18:19:06+08:00" itemprop="datePublished">Jun 11, 2021</time></p>
+    <time class="dt-published" datetime="2021-06-11T18:19:06+08:00" itemprop="datePublished">Jun 11, 2021</time><span class="dt-updated"> / updated <time datetime="2021-08-27T09:13:00+08:00" itemprop="dateUpdated">Aug 27, 2021</time></span>
+
+      
+
+    </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
     <p>
 最近在开发一个动态库，这个动态库需要在运行时动态地加载另一个动态库。在库发布时会同时提供这两个动态库。库的使用者会主动加载第一个动态库，问题出现在第一个动态库加载第二个动态库时，如何确定第二个动态库的位置。<br></p>
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgb230807" class="outline-2">
-<h2 id="orgb230807">相似应用场景</h2>
-<div class="outline-text-2" id="text-orgb230807">
+<div id="outline-container-orgf6b3474" class="outline-2">
+<h2 id="orgf6b3474">相似应用场景</h2>
+<div class="outline-text-2" id="text-orgf6b3474">
 <p>
 在发布一个动态库时将这个动态库所需要的数据文件与动态库放在一起。在这个动态库执行时能够通过其自身的路径找到对应的数据文件。<br></p>
 
@@ -84,9 +88,9 @@
 </div>
 
 
-<div id="outline-container-org6676ae4" class="outline-2">
-<h2 id="org6676ae4">Windows平台</h2>
-<div class="outline-text-2" id="text-org6676ae4">
+<div id="outline-container-orgfcfb434" class="outline-2">
+<h2 id="orgfcfb434">Windows平台</h2>
+<div class="outline-text-2" id="text-orgfcfb434">
 <p>
 借助WIN32的 <code>GetModuleFilename</code> 接口<sup><a id="fnr.1" class="footref" href="/posts/get-runtime-dll-path/#fn.1">1</a></sup>获得动态库的路径，示例代码如下：<br></p>
 
@@ -109,15 +113,19 @@
 
 <p>
 也可以通过动态库的名字获得动态库句柄，调用 <code>GetModuleHandle</code> 函数<sup><a id="fnr.3" class="footref" href="/posts/get-runtime-dll-path/#fn.3">3</a></sup>即可，但是动态库的文件名称可以被修改，所以这个方法有可能会失效。<br></p>
-</div>
-</div>
 
-
-<div id="outline-container-org1a9ffba" class="outline-2">
-<h2 id="org1a9ffba">Linux平台</h2>
-<div class="outline-text-2" id="text-org1a9ffba">
 <p>
-借助 <code>dladdr</code> 函数<sup><a id="fnr.4" class="footref" href="/posts/get-runtime-dll-path/#fn.4">4</a></sup>获得动态库路径，示例代码如下：<br></p>
+<b>update 2021/8/27</b><br>
+由于在windows下动态库的加载是将动态库文件映射到程序内存中，所以WIN32的 <code>GetMappedFileName</code> 接口<sup><a id="fnr.4" class="footref" href="/posts/get-runtime-dll-path/#fn.4">4</a></sup>也能够获取当前动态库的路径，但是这个接口返回的路径并不是常见的以盘符起始的路径（例如 <code>\Device\HarddiskVolume5\bin\abc.dll</code> ，转换为常见的盘符路径为 <code>D:\bin\abc.dll</code> ）。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgfeb26f8" class="outline-2">
+<h2 id="orgfeb26f8">Linux平台</h2>
+<div class="outline-text-2" id="text-orgfeb26f8">
+<p>
+借助 <code>dladdr</code> 函数<sup><a id="fnr.5" class="footref" href="/posts/get-runtime-dll-path/#fn.5">5</a></sup>获得动态库路径，示例代码如下：<br></p>
 
 <div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;dlfcn.h&gt;</span><span class="cp"></span>
@@ -135,11 +143,11 @@
 </div>
 
 
-<div id="outline-container-org355e6f3" class="outline-2">
-<h2 id="org355e6f3">开源库</h2>
-<div class="outline-text-2" id="text-org355e6f3">
+<div id="outline-container-orgcc580e5" class="outline-2">
+<h2 id="orgcc580e5">开源库</h2>
+<div class="outline-text-2" id="text-orgcc580e5">
 <p>
-在检索相关资料时，我在Github上发现已经有开源库<sup><a id="fnr.5" class="footref" href="/posts/get-runtime-dll-path/#fn.5">5</a></sup>提供这样的功能。这个开源库还提供了MACOS和Android等多个平台的获取当前程序路径和动态库（共享库）路径的支持。<br></p>
+在检索相关资料时，我在Github上发现已经有开源库<sup><a id="fnr.6" class="footref" href="/posts/get-runtime-dll-path/#fn.6">6</a></sup>提供这样的功能。这个开源库还提供了MACOS和Android等多个平台的获取当前程序路径和动态库（共享库）路径的支持。<br></p>
 </div>
 </div>
 <div id="footnotes">
@@ -163,11 +171,16 @@
 
 <div class="footdef">
 <sup><a id="fn.4" class="footnum" href="/posts/get-runtime-dll-path/#fnr.4">4</a></sup><div class="footpara"><p class="footpara">
+<a href="https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getmappedfilenamea">https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getmappedfilenamea</a><br></p></div>
+</div>
+
+<div class="footdef">
+<sup><a id="fn.5" class="footnum" href="/posts/get-runtime-dll-path/#fnr.5">5</a></sup><div class="footpara"><p class="footpara">
 <a href="https://man7.org/linux/man-pages/man3/dladdr1.3.html">https://man7.org/linux/man-pages/man3/dladdr1.3.html</a><br></p></div>
 </div>
 
 <div class="footdef">
-<sup><a id="fn.5" class="footnum" href="/posts/get-runtime-dll-path/#fnr.5">5</a></sup><div class="footpara">
+<sup><a id="fn.6" class="footnum" href="/posts/get-runtime-dll-path/#fnr.6">6</a></sup><div class="footpara">
 <p class="footpara">
 <a href="https://github.com/gpakosz/whereami">https://github.com/gpakosz/whereami</a><br></p>
 

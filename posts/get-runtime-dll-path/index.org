@@ -2,6 +2,7 @@
 .. title: 在运行时获取动态库的路径
 .. slug: get-runtime-dll-path
 .. date: 2021-06-11 18:19:06 UTC+08:00
+.. updated: 2021-08-27 09:13:00 UTC+08:00
 .. tags: windows, linux, cpp, c
 .. category: cpp
 .. link:
@@ -46,9 +47,12 @@ void test_dll_func() {
 
 也可以通过动态库的名字获得动态库句柄，调用 =GetModuleHandle= 函数[fn:3]即可，但是动态库的文件名称可以被修改，所以这个方法有可能会失效。
 
+*update 2021/8/27*
+由于在windows下动态库的加载是将动态库文件映射到程序内存中，所以WIN32的 =GetMappedFileName= 接口[fn:4]也能够获取当前动态库的路径，但是这个接口返回的路径并不是常见的以盘符起始的路径（例如 =\Device\HarddiskVolume5\bin\abc.dll= ，转换为常见的盘符路径为 =D:\bin\abc.dll= ）。
+
 
 ** Linux平台
-借助 =dladdr= 函数[fn:4]获得动态库路径，示例代码如下：
+借助 =dladdr= 函数[fn:5]获得动态库路径，示例代码如下：
 
 #+begin_src c
 #include <stdio.h>
@@ -66,7 +70,7 @@ void test_so_func() {
 
 ** 开源库
 
-在检索相关资料时，我在Github上发现已经有开源库[fn:5]提供这样的功能。这个开源库还提供了MACOS和Android等多个平台的获取当前程序路径和动态库（共享库）路径的支持。
+在检索相关资料时，我在Github上发现已经有开源库[fn:6]提供这样的功能。这个开源库还提供了MACOS和Android等多个平台的获取当前程序路径和动态库（共享库）路径的支持。
 
 
 
@@ -76,8 +80,10 @@ void test_so_func() {
 
 [fn:3] https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandlea
 
-[fn:4] https://man7.org/linux/man-pages/man3/dladdr1.3.html
+[fn:4] https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getmappedfilenamea
 
-[fn:5] https://github.com/gpakosz/whereami
+[fn:5] https://man7.org/linux/man-pages/man3/dladdr1.3.html
+
+[fn:6] https://github.com/gpakosz/whereami
 
 （全文完）
