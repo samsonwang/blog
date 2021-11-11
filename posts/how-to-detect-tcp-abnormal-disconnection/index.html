@@ -17,13 +17,13 @@
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="如何检测TCP连接的异常断开">
 <meta property="og:url" content="https://blog.wangzhl.com/posts/how-to-detect-tcp-abnormal-disconnection/">
-<meta property="og:description" content="在以往的开发中，我会通过 recv() 接口的返回值来判断连接是否断开。但有时候我发现TCP连接已经无法正常收发数据了，但是 recv() 的返回值仍然不是0。
+<meta property="og:description" content="在以往的开发中，我会通过 recv() 接口的返回值来判断连接是否断开。但有时候我发现TCP连接已经无法正常收发数据了 recv() 的返回值仍然不是0。
 
 
 
 
 
-只有在TCP连接正常关闭时 recv() 接口才会返回 0
+在TCP连接正常关闭时 recv() 才会返回 0
 
 
 按照我以往的理解，在TCP连接断开时 recv() 接口就会返回0，事实上并不是这样的。
@@ -31,7 +31,7 @@
 
 
 
-When a stream socket peer has per">
+When a stream socket peer has performed ">
 <meta property="og:type" content="article">
 <meta property="article:published_time" content="2021-11-08T10:52:34+08:00">
 <meta property="article:tag" content="network">
@@ -66,14 +66,14 @@ When a stream socket peer has per">
     <time class="dt-published" datetime="2021-11-08T10:52:34+08:00" itemprop="datePublished">Nov 08, 2021</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
     <p>
-在以往的开发中，我会通过 <code>recv()</code> 接口的返回值来判断连接是否断开。但有时候我发现TCP连接已经无法正常收发数据了，但是 <code>recv()</code> 的返回值仍然不是0。<br></p>
+在以往的开发中，我会通过 <code>recv()</code> 接口的返回值来判断连接是否断开。但有时候我发现TCP连接已经无法正常收发数据了 <code>recv()</code> 的返回值仍然不是0。<br></p>
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org87ff190" class="outline-2">
-<h2 id="org87ff190">只有在TCP连接正常关闭时 <code>recv()</code> 接口才会返回 <code>0</code>
+<div id="outline-container-org1018c19" class="outline-2">
+<h2 id="org1018c19">在TCP连接正常关闭时 <code>recv()</code> 才会返回 <code>0</code>
 </h2>
-<div class="outline-text-2" id="text-org87ff190">
+<div class="outline-text-2" id="text-org1018c19">
 <p>
 按照我以往的理解，在TCP连接断开时 <code>recv()</code> 接口就会返回0，事实上并不是这样的。<br></p>
 
@@ -86,33 +86,33 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
 以上摘自 <code>recv()</code> 接口的帮助文档。只有在对端正常关闭TCP连接时 <code>recv()</code> 接口才会返回 <code>0</code> ，表示对端不会再有数据发过来了。这里的“正常关闭”指的是完成TCP的“四次挥手”流程。<br></p>
 
 <p>
-但是在一些特殊情况下，对端程序无法执行关闭流程，这导致本端程序无法及时检测到连接异常。常见的有：网线松动（链路故障）、程序崩溃。<br></p>
+但是在一些特殊情况下，对端程序无法正常关闭连接，这导致本端程序无法及时检测到连接断开。常见的有：网线松动（链路故障）、程序崩溃。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org22cc844" class="outline-2">
-<h2 id="org22cc844">使用心跳机制检测连接是否正常</h2>
-<div class="outline-text-2" id="text-org22cc844">
+<div id="outline-container-orgd7ef704" class="outline-2">
+<h2 id="orgd7ef704">使用心跳机制检测连接是否正常</h2>
+<div class="outline-text-2" id="text-orgd7ef704">
 <p>
-为了能尽快察觉到TCP连接出现了异常，一个常见的做法是周期性的发送心跳包验证与对端的连接状态。心跳包是应用层的特殊命令，属于TCP协议之上。若在连接异常时发送心跳包 <code>send()</code> 接口会返回 <code>-1</code> ，这样本端就能感知连接的异常了。<br></p>
+为了能尽快察觉到TCP连接异常，常见的做法是周期性的发送心跳包验证与对端的连接状态。心跳包是应用层的特殊命令，属于TCP协议之上。在连接异常时发送心跳包 <code>send()</code> 接口会返回 <code>-1</code> ，这样在本端就能感知连接异常了。<br></p>
 
 <p>
 在应用层协议中增加心跳机制的另一个作用是检测对端的运行状态是否正常，即与对端的TCP连接正常但是对端程序卡死了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb80647d" class="outline-2">
-<h2 id="orgb80647d">借助TCP的keepalive特性帮助识别连接的异常断开</h2>
-<div class="outline-text-2" id="text-orgb80647d">
+<div id="outline-container-orgb070d5a" class="outline-2">
+<h2 id="orgb070d5a">借助TCP的keepalive特性识别异常断开</h2>
+<div class="outline-text-2" id="text-orgb070d5a">
 <p>
-还有另一种非侵入的方式实现异常连接的检测，可以借助TCP的keepalive特性定期发送数据包，但是  <b>并不</b> 推荐使用这种方法。<br></p>
+还有另一种非侵入的方式检测异常连接，即借助TCP的keepalive特性定期发送数据包，但是  <b>并不</b> 推荐使用这种方法。<br></p>
 
 <p>
 有以下几点需要注意:<br></p>
 <ul class="org-ul">
 <li>keepalive特性默认是关闭的，需要手动开启。<br>
 </li>
-<li>keepalive的发送周期默认比较长（linux下是2小时），需要调整到一个较小的值。<br>
+<li>keepalive的发送周期默认比较长（linux下是2小时），做心跳机制使用时需要调整到一个较小的值。<br>
 </li>
 <li>TCP有重传机制，可能要通过修改 <code>tcp_retries2</code> 配置（默认是15）以减少重传次数，这样才能获得更快的检测到连接的异常。<br>
 </li>
@@ -121,9 +121,9 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
 </div>
 
 
-<div id="outline-container-org7ccbf3d" class="outline-2">
-<h2 id="org7ccbf3d">参考资料</h2>
-<div class="outline-text-2" id="text-org7ccbf3d">
+<div id="outline-container-orge5466c5" class="outline-2">
+<h2 id="orge5466c5">参考资料</h2>
+<div class="outline-text-2" id="text-orge5466c5">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/q/14782143/5080719">how to dectect disconnected network</a><br>
