@@ -52,20 +52,249 @@
 <li>
     <span class="post-meta">Aug 20, 2018</span>
     <h3>
+      <a class="post-link" href="/posts/algorithm-weekly-string-to-integer/">每周算法：字符串转整数</a>
+    </h3>
+
+    <div id="outline-container-org65cdaf9" class="outline-2">
+<h2 id="org65cdaf9">Description</h2>
+<div class="outline-text-2" id="text-org65cdaf9">
+<p>
+Implement <code>atoi</code> which converts a string to an integer.<br></p>
+
+<p>
+The function first discards as many whitespace characters as necessary until the first non-whitespace character is found. Then, starting from this character, takes an optional initial plus or minus sign followed by as many numerical digits as possible, and interprets them as a numerical value.<br></p>
+
+<p>
+The string can contain additional characters after those that form the integral number, which are ignored and have no effect on the behavior of this function.<br></p>
+
+<p>
+If the first sequence of non-whitespace characters in str is not a valid integral number, or if no such sequence exists because either str is empty or it contains only whitespace characters, no conversion is performed.<br></p>
+
+<p>
+If no valid conversion could be performed, a zero value is returned.<br></p>
+
+<p>
+<b>Note:</b><br>
+Only the space character ' ' is considered as whitespace character.<br>
+Assume we are dealing with an environment which could only store integers within the 32-bit signed integer range: [−2<sup>31</sup>,  2<sup>31</sup> − 1]. If the numerical value is out of the range of representable values, <code>INT_MAX</code> (2<sup>31</sup> − 1) or <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
+
+<p>
+<b>Example 1:</b><br>
+Input: "42"<br>
+Output: 42<br></p>
+
+<p>
+<b>Example 2:</b><br>
+Input: "   -42"<br>
+Output: -42<br>
+Explanation: The first non-whitespace character is '-', which is the minus sign.<br>
+Then take as many numerical digits as possible, which gets 42.<br></p>
+
+<p>
+<b>Example 3:</b><br>
+Input: "4193 with words"<br>
+Output: 4193<br>
+Explanation: Conversion stops at digit '3' as the next character is not a numerical digit.<br></p>
+
+<p>
+<b>Example 4:</b><br>
+Input: "words and 987"<br>
+Output: 0<br>
+Explanation: The first non-whitespace character is 'w', which is not a numerical<br>
+digit or a +/- sign. Therefore no valid conversion could be performed.<br></p>
+
+<p>
+<b>Example 5:</b><br>
+Input: "-91283472332"<br>
+Output: -2147483648<br>
+Explanation: The number "-91283472332" is out of the range of a 32-bit signed integer.<br>
+Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
+
+<p>
+来源 <a href="https://leetcode.com/problems/string-to-integer-atoi/description/">leetcode 8 string to integer</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org1a046c3" class="outline-2">
+<h2 id="org1a046c3">Solution</h2>
+<div class="outline-text-2" id="text-org1a046c3">
+</div>
+<div id="outline-container-org7334450" class="outline-3">
+<h3 id="org7334450">Approach 1</h3>
+<div class="outline-text-3" id="text-org7334450">
+<p>
+这道题并不难，思路也比较容易想出来，下面就是我想到的解法。<br>
+可能需要注意的问题是：<br></p>
+<ol class="org-ol">
+<li>字符到数字的转换，这个涉及到ascii码表的记忆，如果记不住了可以直接使用'0' 'a' 'A'<br>
+</li>
+<li>对于溢出的判断，我一开始只想到了使用 <code>int temp=num*10; if (temp/10!=num)</code> 进行判断，实际上却忽略了 <code>2147483648（0x80000000）</code> 的边界情况，这个是需要特别注意的。<br>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">parseChar</span><span class="p">(</span><span class="kt">char</span> <span class="n">ch</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">num</span> <span class="o">=</span> <span class="n">ch</span> <span class="o">-</span> <span class="sc">'0'</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">num</span> <span class="o">&gt;</span> <span class="mi">9</span> <span class="o">||</span> <span class="n">num</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">num</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">myAtoi</span> <span class="p">(</span><span class="n">string</span> <span class="n">str</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">bool</span> <span class="n">isNegative</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="n">isOverflow</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="c1">// 从前向后进行转换</span>
+    <span class="kt">size_t</span> <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="c1">// 去除多余的空格</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">' '</span><span class="p">)</span> <span class="p">{</span>
+	<span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 首先判断是否有符号位</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'-'</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">isNegative</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+	    <span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'+'</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="o">++</span><span class="n">pos</span><span class="p">;</span>
+	<span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 是否以数字进行开头</span>
+    <span class="c1">// 从左向右读取数字，每次读取需要判断是否溢出</span>
+    <span class="k">for</span> <span class="p">(</span> <span class="p">;</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">pos</span><span class="p">)</span> <span class="p">{</span>
+	<span class="kt">int</span> <span class="n">digit</span> <span class="o">=</span> <span class="n">parseChar</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]);</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">digit</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="c1">// 负数说明该位不是数字了</span>
+	    <span class="k">break</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="c1">// 如何判断是否溢出</span>
+	<span class="kt">int</span> <span class="n">temp</span> <span class="o">=</span> <span class="n">num</span><span class="o">*</span><span class="mi">10</span><span class="p">;</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">temp</span><span class="o">/</span><span class="mi">10</span> <span class="o">!=</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="n">isOverflow</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+	    <span class="k">break</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="n">num</span> <span class="o">=</span> <span class="n">temp</span> <span class="o">+</span> <span class="n">digit</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// 如果num变成负数，也是溢出了，相当于对最后一位检查溢出</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">isOverflow</span> <span class="o">||</span> <span class="n">num</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="n">isNegative</span> <span class="o">?</span> <span class="nl">INT_MIN</span> <span class="p">:</span> <span class="n">INT_MAX</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">isNegative</span> <span class="o">?</span> <span class="o">-</span><span class="nl">num</span> <span class="p">:</span> <span class="n">num</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org24ef4d4" class="outline-3">
+<h3 id="org24ef4d4">Approach 2</h3>
+<div class="outline-text-3" id="text-org24ef4d4">
+<p>
+下面这段代码目前是leetcode上运行速度最快的solution sample，仅仅耗时了4ms。作者使用了很多让程序跑得更快的方法，其中的技巧值得我学习。<br></p>
+<div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span> <span class="n">fast</span> <span class="o">=</span> <span class="p">[]()</span> <span class="p">{</span>
+	<span class="n">ios_base</span><span class="o">::</span><span class="n">sync_with_stdio</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="n">cin</span><span class="p">.</span><span class="n">tie</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="n">cout</span><span class="p">.</span><span class="n">tie</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}();</span>
+
+<span class="k">class</span> <span class="nc">Solution</span> <span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="kt">int</span> <span class="n">myAtoi</span><span class="p">(</span><span class="n">string</span> <span class="n">str</span><span class="p">)</span> <span class="p">{</span>
+	<span class="kt">long</span> <span class="kt">long</span> <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+	<span class="kt">int</span> <span class="n">base</span><span class="o">=</span><span class="mi">10</span><span class="p">;</span>
+	<span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+	<span class="kt">bool</span> <span class="n">flag</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+	<span class="kt">int</span> <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+	<span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+	    <span class="k">if</span><span class="p">(</span><span class="n">isalpha</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">sum</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="sc">' '</span><span class="o">&amp;&amp;</span><span class="n">flag</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">continue</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;=</span><span class="sc">'0'</span> <span class="o">&amp;&amp;</span> <span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;=</span><span class="sc">'9'</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">sum</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">sum</span> <span class="o">+</span> <span class="n">sign</span><span class="o">*</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="sc">'0'</span><span class="p">);</span>
+		<span class="n">flag</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'-'</span> <span class="o">&amp;&amp;</span><span class="n">flag</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+		<span class="n">flag</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'+'</span> <span class="o">&amp;&amp;</span> <span class="n">flag</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">flag</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">sum</span><span class="p">;</span>
+	    <span class="p">}</span>
+
+	    <span class="k">if</span><span class="p">(</span><span class="n">sum</span> <span class="o">&gt;</span> <span class="n">INT_MAX</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">INT_MAX</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">sum</span> <span class="o">&lt;</span> <span class="n">INT_MIN</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="n">INT_MIN</span><span class="p">;</span>
+	    <span class="p">}</span>
+	    <span class="k">return</span> <span class="n">sum</span><span class="p">;</span>
+	<span class="p">}</span>
+    <span class="p">};</span>
+</pre></div>
+
+<ul class="org-ul">
+<li>C++标准库中提供了判断是否是数字的接口 <code>isdigit</code> 和判断是否是字母的接口 <code>isalpha</code> 。<br>
+</li>
+
+<li>使用以下代码能加速代码的运行速度，这段代码会停止C++和C输入输出流的同步，并且解除 <code>cin</code> 和 <code>cout</code> 的捆绑，<a href="https://stackoverflow.com/questions/31162367/significance-of-ios-basesync-with-stdiofalse-cin-tienull">这里</a> 有更详细的解释。效果很明显，将其添加到我的代码中，将我的代码的运行时间从20ms提升至8ms。<br>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">int</span> <span class="n">fast</span> <span class="o">=</span> <span class="p">[]()</span> <span class="p">{</span>
+  <span class="n">ios_base</span><span class="o">::</span><span class="n">sync_with_stdio</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+  <span class="n">cin</span><span class="p">.</span><span class="n">tie</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+  <span class="n">cout</span><span class="p">.</span><span class="n">tie</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}();</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc1342f0" class="outline-2">
+<h2 id="orgc1342f0">Reference</h2>
+<div class="outline-text-2" id="text-orgc1342f0">
+<ul class="org-ul">
+<li>
+<a href="https://stackoverflow.com/questions/31162367/significance-of-ios-basesync-with-stdiofalse-cin-tienull">stackoverflow.com sync with stdio</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Aug 20, 2018</span>
+    <h3>
       <a class="post-link" href="/posts/map-reduce/">MapReduce模型</a>
     </h3>
 
-    <div id="outline-container-org85779a8" class="outline-2">
-<h2 id="org85779a8">序言</h2>
-<div class="outline-text-2" id="text-org85779a8">
+    <div id="outline-container-org22e58b4" class="outline-2">
+<h2 id="org22e58b4">序言</h2>
+<div class="outline-text-2" id="text-org22e58b4">
 <p>
 对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd9c838b" class="outline-2">
-<h2 id="orgd9c838b">什么是MapReduce</h2>
-<div class="outline-text-2" id="text-orgd9c838b">
+<div id="outline-container-org1619d50" class="outline-2">
+<h2 id="org1619d50">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-org1619d50">
 <p>
 MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
 
@@ -81,9 +310,9 @@ MapReduce是面向大数据并行处理的计算模型、框架和平台，它�
 </div>
 </div>
 
-<div id="outline-container-orgfa270f5" class="outline-2">
-<h2 id="orgfa270f5">map和reduce</h2>
-<div class="outline-text-2" id="text-orgfa270f5">
+<div id="outline-container-orgacc6053" class="outline-2">
+<h2 id="orgacc6053">map和reduce</h2>
+<div class="outline-text-2" id="text-orgacc6053">
 <p>
 <b>从编程语言的角度上来说</b><br>
 map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
@@ -102,9 +331,9 @@ reduce操作也会接收到两个参数，一个列表和一个变换过程，�
 </div>
 </div>
 
-<div id="outline-container-orga97b0ca" class="outline-2">
-<h2 id="orga97b0ca">并行计算与大数据</h2>
-<div class="outline-text-2" id="text-orga97b0ca">
+<div id="outline-container-org965a156" class="outline-2">
+<h2 id="org965a156">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-org965a156">
 <p>
 mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
 
@@ -135,9 +364,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb6c0442" class="outline-2">
-<h2 id="orgb6c0442">参考资料</h2>
-<div class="outline-text-2" id="text-orgb6c0442">
+<div id="outline-container-org6f2a37c" class="outline-2">
+<h2 id="org6f2a37c">参考资料</h2>
+<div class="outline-text-2" id="text-org6f2a37c">
 <ul class="org-ul">
 <li>
 <a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
@@ -161,9 +390,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
       <a class="post-link" href="/posts/algorithm-weekly-zigzag-conversion/">每周算法：字符串锯齿变换</a>
     </h3>
 
-    <div id="outline-container-org0f7395e" class="outline-2">
-<h2 id="org0f7395e">Description</h2>
-<div class="outline-text-2" id="text-org0f7395e">
+    <div id="outline-container-org2ca66e1" class="outline-2">
+<h2 id="org2ca66e1">Description</h2>
+<div class="outline-text-2" id="text-org2ca66e1">
 <p>
 The string "PAYPALISHIRING" is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)<br></p>
 
@@ -198,13 +427,13 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-org6bb4159" class="outline-2">
-<h2 id="org6bb4159">Solution</h2>
-<div class="outline-text-2" id="text-org6bb4159">
+<div id="outline-container-orgef310de" class="outline-2">
+<h2 id="orgef310de">Solution</h2>
+<div class="outline-text-2" id="text-orgef310de">
 </div>
-<div id="outline-container-org6d9595c" class="outline-3">
-<h3 id="org6d9595c">Approach 1 找规律</h3>
-<div class="outline-text-3" id="text-org6d9595c">
+<div id="outline-container-org2b1a474" class="outline-3">
+<h3 id="org2b1a474">Approach 1 找规律</h3>
+<div class="outline-text-3" id="text-org2b1a474">
 <p>
 我想到的第一个方法就是找规律，通过寻找每一行的变化规律，编写相应的计算逻辑。<br>
 需要注意:<br></p>
@@ -266,9 +495,9 @@ P     I
 </div>
 
 
-<div id="outline-container-orgcd552de" class="outline-3">
-<h3 id="orgcd552de">Approach 2 Sort by Row</h3>
-<div class="outline-text-3" id="text-orgcd552de">
+<div id="outline-container-org339ee63" class="outline-3">
+<h3 id="org339ee63">Approach 2 Sort by Row</h3>
+<div class="outline-text-3" id="text-org339ee63">
 <p>
 这个方法是leetcode提供的一个方法，主要思路是使用一个二维矩阵将字符串按照顺序存储起来，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(n)</code> 。<br></p>
 
@@ -296,9 +525,9 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-orge55b601" class="outline-3">
-<h3 id="orge55b601">Approach 3 Visit by Row</h3>
-<div class="outline-text-3" id="text-orge55b601">
+<div id="outline-container-org7e9b7ef" class="outline-3">
+<h3 id="org7e9b7ef">Approach 3 Visit by Row</h3>
+<div class="outline-text-3" id="text-org7e9b7ef">
 <p>
 这个方法是leetcode提供的另一个方法，通过计算下标完成字符串的转换，实际上也是对转换的规律进行了总结，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(1)</code> 。<br>
 对于空间复杂度，实际上需要额外的空间存储结果字符串，如果忽略函数所返回的结果字符串，则空间复杂度为 <code>O(1)</code> 。<br></p>
@@ -332,17 +561,17 @@ P     I
       <a class="post-link" href="/posts/css-flexbox-layout-cheatsheet/">css flexbox 总结</a>
     </h3>
 
-    <div id="outline-container-org8e86750" class="outline-2">
-<h2 id="org8e86750">引言</h2>
-<div class="outline-text-2" id="text-org8e86750">
+    <div id="outline-container-org926cc02" class="outline-2">
+<h2 id="org926cc02">引言</h2>
+<div class="outline-text-2" id="text-org926cc02">
 <p>
 本文主要对css flexbox的关键点了总结，方便以后在以后的查阅。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org987f720" class="outline-2">
-<h2 id="org987f720">容器的属性</h2>
-<div class="outline-text-2" id="text-org987f720">
+<div id="outline-container-orgdf7cf24" class="outline-2">
+<h2 id="orgdf7cf24">容器的属性</h2>
+<div class="outline-text-2" id="text-orgdf7cf24">
 <p>
 对于容器需要指定其显示方式为flexbox<br></p>
 <div class="highlight"><pre><span></span><span class="nt">display</span><span class="o">:</span> <span class="nt">flex</span><span class="o">;</span>
@@ -374,9 +603,9 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-orgee32285" class="outline-2">
-<h2 id="orgee32285">条目的属性</h2>
-<div class="outline-text-2" id="text-orgee32285">
+<div id="outline-container-org92c7939" class="outline-2">
+<h2 id="org92c7939">条目的属性</h2>
+<div class="outline-text-2" id="text-org92c7939">
 <p>
 用于调整顺序<br></p>
 <div class="highlight"><pre><span></span><span class="nt">order</span><span class="o">:</span> <span class="o">&lt;</span><span class="nt">integer</span><span class="o">&gt;;</span> <span class="c">/* default 0 */</span>
@@ -410,9 +639,9 @@ P     I
 </div>
 
 
-<div id="outline-container-org4d101b2" class="outline-2">
-<h2 id="org4d101b2">参考资料</h2>
-<div class="outline-text-2" id="text-org4d101b2">
+<div id="outline-container-org9c83c0a" class="outline-2">
+<h2 id="org9c83c0a">参考资料</h2>
+<div class="outline-text-2" id="text-org9c83c0a">
 <ul class="org-ul">
 <li>
 <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">css-tricks.com</a><br>
@@ -462,9 +691,9 @@ P     I
       <a class="post-link" href="/posts/algorithm-weekly-longest-palindromic-substring/">每周算法：最长对称子串</a>
     </h3>
 
-    <div id="outline-container-org5568d4a" class="outline-2">
-<h2 id="org5568d4a">Description</h2>
-<div class="outline-text-2" id="text-org5568d4a">
+    <div id="outline-container-org0966a2c" class="outline-2">
+<h2 id="org0966a2c">Description</h2>
+<div class="outline-text-2" id="text-org0966a2c">
 <p>
 Given a string s, find the longest palindromic substring in s. You may assume that the maximum length of s is 1000.<br></p>
 
@@ -484,16 +713,16 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3617610" class="outline-2">
-<h2 id="org3617610">Solution</h2>
-<div class="outline-text-2" id="text-org3617610">
+<div id="outline-container-orge1d8bcc" class="outline-2">
+<h2 id="orge1d8bcc">Solution</h2>
+<div class="outline-text-2" id="text-orge1d8bcc">
 <p>
 我想到了两种方法：暴力解法、从中心展开<br></p>
 </div>
 
-<div id="outline-container-orgc6aed75" class="outline-3">
-<h3 id="orgc6aed75">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-orgc6aed75">
+<div id="outline-container-org7b553d0" class="outline-3">
+<h3 id="org7b553d0">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org7b553d0">
 <p>
 暴击解法的时间复杂度为 <code>O(n3)</code> , 找出所有子串的时间复杂度为 <code>O(n2)</code> , 判断一个子串的时间复杂度为 <code>O(n)</code> ; 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -548,9 +777,9 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-org6b15c8c" class="outline-3">
-<h3 id="org6b15c8c">Approach 2 从中心展开</h3>
-<div class="outline-text-3" id="text-org6b15c8c">
+<div id="outline-container-org13fa3e2" class="outline-3">
+<h3 id="org13fa3e2">Approach 2 从中心展开</h3>
+<div class="outline-text-3" id="text-org13fa3e2">
 <p>
 从中心展开方法的时间复杂度为 <code>O(n2)</code> , 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -624,9 +853,9 @@ leetcode上还有一个解法，使用java完成的，它的坐标计算也很�
 </div>
 </div>
 
-<div id="outline-container-org9e2af44" class="outline-3">
-<h3 id="org9e2af44">Approach 3 动态规划（dynamic programming）</h3>
-<div class="outline-text-3" id="text-org9e2af44">
+<div id="outline-container-org9360ede" class="outline-3">
+<h3 id="org9360ede">Approach 3 动态规划（dynamic programming）</h3>
+<div class="outline-text-3" id="text-org9360ede">
 <p>
 leetcode上还给给出了使用DP解决这个问题的方法。<br>
 我在leetcode上的discuss上找了个java写的解法。<br></p>
@@ -656,174 +885,11 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
 </div>
 </div>
 
-<div id="outline-container-orgb4b824f" class="outline-3">
-<h3 id="orgb4b824f">Approach 4 Manacher算法</h3>
-<div class="outline-text-3" id="text-orgb4b824f">
+<div id="outline-container-orga75434e" class="outline-3">
+<h3 id="orga75434e">Approach 4 Manacher算法</h3>
+<div class="outline-text-3" id="text-orga75434e">
 <p>
 这个算法思路实在是新奇，感兴趣的同学可以 <a href="https://articles.leetcode.com/longest-palindromic-substring-part-ii/">去看看</a> 。<br></p>
-</div>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Aug 02, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/algorithm-weekly-longest-substring-without-repeating-characters/">每周算法：最长不含重复字符的子串</a>
-    </h3>
-
-    <div id="outline-container-org2b08750" class="outline-2">
-<h2 id="org2b08750">Description</h2>
-<div class="outline-text-2" id="text-org2b08750">
-<p>
-Given a string, find the length of the longest substring without repeating characters.<br></p>
-
-<p>
-<b>Examples:</b><br>
-Given "abcabcbb", the answer is "abc", which the length is 3.<br>
-Given "bbbbb", the answer is "b", with the length of 1.<br>
-Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer must be a substring, "pwke" is a subsequence and not a substring.<br></p>
-
-<p>
-来源：<a href="https://leetcode.com/problems/longest-substring-without-repeating-characters/description/">LeetCode 03 Longest Substring Without Repeating Characters</a><br></p>
-</div>
-</div>
-
-<div id="outline-container-org7dff76c" class="outline-2">
-<h2 id="org7dff76c">Solution</h2>
-<div class="outline-text-2" id="text-org7dff76c">
-<p>
-好久没刷算法题了，手有点生，没有什么思路，下面的答案是看过提示之后才写出来的。<br></p>
-</div>
-
-<div id="outline-container-org1a1d0f1" class="outline-3">
-<h3 id="org1a1d0f1">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org1a1d0f1">
-<p>
-将所有的子串都穷举出来，并对它们进行判断，就能够得到最长子串的长度。这个算法很显然需要耗费很长时间。<br>
-需要注意的是： C++20中才支持 <code>std::set::contains</code> 这个接口（根据cppreference.com）。<br></p>
-
-<div class="highlight"><pre><span></span><span class="kt">bool</span> <span class="nf">isStringWithUniqueString</span><span class="p">(</span><span class="k">const</span> <span class="n">string</span><span class="o">&amp;</span> <span class="n">str</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="c1">// 用于判断字符串是否是具有唯一字符的</span>
-    <span class="n">set</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">setChar</span><span class="p">;</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">setChar</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">!=</span> <span class="n">setChar</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-	<span class="p">{</span>
-	    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
-	<span class="p">}</span>
-
-	<span class="n">setChar</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;=</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
-	<span class="p">{</span>
-	    <span class="c1">// get sub-string</span>
-	    <span class="n">string</span> <span class="n">strTemp</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="o">-</span><span class="n">i</span><span class="p">);</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">isStringWithUniqueString</span><span class="p">(</span><span class="n">strTemp</span><span class="p">))</span>
-	    <span class="p">{</span>
-		<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">strTemp</span><span class="p">.</span><span class="n">length</span><span class="p">());</span>
-	    <span class="p">}</span>
-	<span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-org484ac51" class="outline-3">
-<h3 id="org484ac51">Approach 2 滑动窗口</h3>
-<div class="outline-text-3" id="text-org484ac51">
-<p>
-滑动窗口的概念在字符串处理问题中十分常用，保持子串的左端点不动，不断拓展右侧端点，就能穷举出所有满足条件的子串。<br>
-需要注意的是这句话： <code>lengthMax = max(lengthMax, int(j-i+1));</code><br></p>
-<ol class="org-ol">
-<li>
-<code>std::max</code> 并不能同时匹配 <code>int</code> 和 <code>size_t</code> ，所以需要进行强制类型转换。<br>
-</li>
-<li>在完成第 <code>j</code> 个字母的验证后，说明包含该字母的子串也满足条件，所以要进行 <code>+1</code> 操作，这个主要是针对只有一个字母的字符串。<br>
-</li>
-</ol>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="c1">// 这个循环目的是，验证从i到j的字符串是否满足条件</span>
-	<span class="n">set</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">setChar</span><span class="p">;</span>
-
-	<span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
-	<span class="p">{</span>
-	    <span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">setChar</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="o">!=</span> <span class="n">setChar</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-	    <span class="p">{</span>
-		<span class="k">break</span><span class="p">;</span>
-	    <span class="p">}</span>
-	    <span class="k">else</span>
-	    <span class="p">{</span>
-		<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span>
-	    <span class="p">}</span>
-
-	    <span class="n">setChar</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
-	<span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-org51d00d6" class="outline-3">
-<h3 id="org51d00d6">Approach 3 优化的滑动窗口</h3>
-<div class="outline-text-3" id="text-org51d00d6">
-<p>
-使用 <code>map</code> 对字母出现的位置进行记录，这样在出现相同字母时，就能够从上一次出现的位置向后开始寻找。<br>
-需要注意句话 <code>it-&gt;second+1&gt;=i</code> , 需要对位置加1后再比较，这样才能保证 <code>i</code> 的坐标计算正确。<br></p>
-
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span> <span class="n">s</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">int</span> <span class="n">lengthMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-
-    <span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">size_t</span><span class="o">&gt;</span> <span class="n">mapPos</span><span class="p">;</span>
-
-    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span>
-    <span class="p">{</span>
-	<span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
-	<span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">size_t</span><span class="o">&gt;::</span><span class="n">iterator</span> <span class="n">it</span> <span class="o">=</span> <span class="n">mapPos</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">it</span> <span class="o">!=</span> <span class="n">mapPos</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
-	<span class="p">{</span>
-	    <span class="c1">// 这里说明找到了字符上一次出现的位置</span>
-	    <span class="k">if</span> <span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">+</span> <span class="mi">1</span><span class="o">&gt;=</span> <span class="n">i</span><span class="p">)</span>
-	    <span class="p">{</span>
-		<span class="n">i</span> <span class="o">=</span> <span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
-	    <span class="p">}</span>
-	<span class="p">}</span>
-
-	<span class="n">lengthMax</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span> <span class="kt">int</span><span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span>
-
-	<span class="n">mapPos</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">lengthMax</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
 </div>
 </div>
 </div>

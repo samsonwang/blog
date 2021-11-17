@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>结构体字节对齐的陷阱 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/cpp-pragma-pack-pitfall/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/how-to-detect-tcp-abnormal-disconnection/" title="如何检测TCP连接的异常断开" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="结构体字节对齐的陷阱">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/cpp-pragma-pack-pitfall/">
+<meta property="og:description" content="pragma pack 的功能是设定结构体内成员变量的字节对齐方式。它在使用时有一个易错点，而且出错后排查起来还非常不容易。
+
+
+
+
+
+遇到的问题
+
+
+在调试一个程序时发现在某个函数中能够正确地读到结构体成员变量值，在另一个函数中读到的却是错误的值。我刚开始遇到这个问题非常诧异，因为在同一个程序中读取的是同一个结构体对象，出现这样的现象是非常奇怪的。最终排查后发现是由两个函数中的结构体内存布局差异">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2021-11-16T11:27:35+08:00">
+<meta property="article:tag" content="c">
+<meta property="article:tag" content="cpp">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">结构体字节对齐的陷阱</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2021-11-16T11:27:35+08:00" itemprop="datePublished">Nov 16, 2021</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+<code>pragma pack</code> 的功能是设定结构体内成员变量的字节对齐方式。它在使用时有一个易错点，而且出错后排查起来还非常不容易。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-orgcaf4362" class="outline-2">
+<h2 id="orgcaf4362">遇到的问题</h2>
+<div class="outline-text-2" id="text-orgcaf4362">
+<p>
+在调试一个程序时发现在某个函数中能够正确地读到结构体成员变量值，在另一个函数中读到的却是错误的值。我刚开始遇到这个问题非常诧异，因为在同一个程序中读取的是同一个结构体对象，出现这样的现象是非常奇怪的。最终排查后发现是由两个函数中的结构体内存布局差异导致的。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgc902cd7" class="outline-2">
+<h2 id="orgc902cd7">注意 <code>pragma pack</code> 的作用域</h2>
+<div class="outline-text-2" id="text-orgc902cd7">
+<p>
+下面就是将结构体对齐方式修改为4字节的例子：<br></p>
+
+<div class="highlight"><pre><span></span><span class="cp">#pragma pack(4)</span>
+</pre></div>
+
+<p>
+我原以为它是针对单个头文件生效的，但其实它会影响这个头文件文件以及在其之后被引用的头文件。这个特性有点类似于命名空间 <code>namespace</code> 的污染效果，在头文件中使用<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">using</span> <span class="k">namespace</span> <span class="n">xxx</span><span class="p">;</span>
+</pre></div>
+
+<p>
+之后，会影响后续被引用的其他头文件。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org1936687" class="outline-2">
+<h2 id="org1936687">一个简单的例子</h2>
+<div class="outline-text-2" id="text-org1936687">
+<p>
+在本节展示的是一个头文件引用顺序对结构体字节对齐大小的影响。<br></p>
+
+<p>
+文件 header1.h 中内容如下：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// header1.h</span>
+<span class="cp">#pragma pack(1)</span>
+<span class="k">struct</span> <span class="n">s1</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">m_ch</span><span class="p">;</span>
+  <span class="kt">float</span> <span class="n">m_f</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+文件 header2.h 中的内容如下：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// header2.h</span>
+<span class="k">struct</span> <span class="n">s2</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">m_ch</span><span class="p">;</span>
+  <span class="kt">float</span> <span class="n">m_f</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+在 file1.cpp 中的内容如下：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// file1.cpp</span>
+<span class="cp">#include</span> <span class="cpf">&lt;header1.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;header2.h&gt;</span><span class="cp"></span>
+<span class="c1">// ...</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"sizeof(s1) = %u, sizeof(s2) = %u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+      <span class="k">sizeof</span><span class="p">(</span><span class="n">s1</span><span class="p">),</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">s2</span><span class="p">));</span>
+</pre></div>
+<p>
+期望的输出为：sizeof(s1) = 6, sizeof(s2) = 6<br></p>
+
+<p>
+在 file2.cpp 中的内容如下：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// file2.cpp</span>
+<span class="cp">#include</span> <span class="cpf">&lt;header2.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;header1.h&gt;</span><span class="cp"></span>
+<span class="c1">// ...</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"sizeof(s1) = %u, sizeof(s2) = %u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+      <span class="k">sizeof</span><span class="p">(</span><span class="n">s1</span><span class="p">),</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">s2</span><span class="p">));</span>
+</pre></div>
+<p>
+期望的输出为：sizeof(s1) = 6, sizeof(s2) = 8<br></p>
+</div>
+</div>
+
+<div id="outline-container-org86b3634" class="outline-2">
+<h2 id="org86b3634">避免这样的情况</h2>
+<div class="outline-text-2" id="text-org86b3634">
+<p>
+组合使用 <code>pragma pack(push)</code> 和 <code>pragma push(pop)</code> 即可将字节对齐大小的调整限定在一个范围内，写法如下。<br></p>
+
+<div class="highlight"><pre><span></span><span class="cp">#pragma pack(push, 4)</span>
+<span class="c1">// ...</span>
+<span class="cp">#pragma pack(pop)</span>
+</pre></div>
+
+<p>
+效果是将作用域外的字节对齐大小压栈暂存起来，在作用域内使用自定的大小，跳出作用域后弹出栈中的配置大小。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgfc3f66a" class="outline-2">
+<h2 id="orgfc3f66a">写在后面</h2>
+<div class="outline-text-2" id="text-orgfc3f66a">
+<p>
+大部分时候，我们都不需要也应该避免修改结构体的字节对齐方式，因为修改默认值可能导致代码运行效率下降。<br></p>
+
+<p>
+在使用结构体时，编译器会对字节对齐进行优化，我们并不需要关注每个成员变量在内存中的排布。只有在特定情况下，当我们希望以特定顺序从内存中读取数据时，才需要修改结构体的内存布局。<br></p>
+
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/c/" rel="tag">c</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/how-to-detect-tcp-abnormal-disconnection/" rel="prev">Previous post
+        <br><span>如何检测TCP连接的异常断开</span>
+      </a>
+    </li>
+    <li class="next">
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/cpp-pragma-pack-pitfall/",
+        disqus_title="\u7ed3\u6784\u4f53\u5b57\u8282\u5bf9\u9f50\u7684\u9677\u9631",
+        disqus_identifier="_cache/posts/cpp-pragma-pack-pitfall.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+#+BEGIN_COMMENT
+.. title: 结构体字节对齐的陷阱
+.. slug: cpp-pragma-pack-pitfall
+.. date: 2021-11-16 11:27:35 UTC+08:00
+.. tags: cpp, c
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 结构体字节对齐的陷阱
+
+=pragma pack= 的功能是设定结构体内成员变量的字节对齐方式。它在使用时有一个易错点，而且出错后排查起来还非常不容易。
+
+{{{TEASER_END}}}
+
+** 遇到的问题
+
+在调试一个程序时发现在某个函数中能够正确地读到结构体成员变量值，在另一个函数中读到的却是错误的值。我刚开始遇到这个问题非常诧异，因为在同一个程序中读取的是同一个结构体对象，出现这样的现象是非常奇怪的。最终排查后发现是由两个函数中的结构体内存布局差异导致的。
+
+** 注意 =pragma pack= 的作用域
+
+下面就是将结构体对齐方式修改为4字节的例子：
+
+#+begin_src c
+#pragma pack(4)
+#+end_src
+
+我原以为它是针对单个头文件生效的，但其实它会影响这个头文件文件以及在其之后被引用的头文件。这个特性有点类似于命名空间 =namespace= 的污染效果，在头文件中使用
+
+#+begin_src cpp
+using namespace xxx;
+#+end_src
+
+之后，会影响后续被引用的其他头文件。
+
+** 一个简单的例子
+在本节展示的是一个头文件引用顺序对结构体字节对齐大小的影响。
+
+文件 header1.h 中内容如下：
+#+begin_src c
+// header1.h
+#pragma pack(1)
+struct s1 {
+  char m_ch;
+  float m_f;
+};
+#+end_src
+
+文件 header2.h 中的内容如下：
+#+begin_src c
+// header2.h
+struct s2 {
+  char m_ch;
+  float m_f;
+};
+#+end_src
+
+在 file1.cpp 中的内容如下：
+#+begin_src c
+// file1.cpp
+#include <header1.h>
+#include <header2.h>
+// ...
+printf("sizeof(s1) = %u, sizeof(s2) = %u\n",
+      sizeof(s1), sizeof(s2));
+#+end_src
+期望的输出为：sizeof(s1) = 6, sizeof(s2) = 6
+
+在 file2.cpp 中的内容如下：
+#+begin_src c
+// file2.cpp
+#include <header2.h>
+#include <header1.h>
+// ...
+printf("sizeof(s1) = %u, sizeof(s2) = %u\n",
+      sizeof(s1), sizeof(s2));
+#+end_src
+期望的输出为：sizeof(s1) = 6, sizeof(s2) = 8
+
+** 避免这样的情况
+组合使用 =pragma pack(push)= 和 =pragma push(pop)= 即可将字节对齐大小的调整限定在一个范围内，写法如下。
+
+#+begin_src c
+#pragma pack(push, 4)
+// ...
+#pragma pack(pop)
+#+end_src
+
+效果是将作用域外的字节对齐大小压栈暂存起来，在作用域内使用自定的大小，跳出作用域后弹出栈中的配置大小。
+
+** 写在后面
+
+大部分时候，我们都不需要也应该避免修改结构体的字节对齐方式，因为修改默认值可能导致代码运行效率下降。
+
+在使用结构体时，编译器会对字节对齐进行优化，我们并不需要关注每个成员变量在内存中的排布。只有在特定情况下，当我们希望以特定顺序从内存中读取数据时，才需要修改结构体的内存布局。
+
+（全文完）

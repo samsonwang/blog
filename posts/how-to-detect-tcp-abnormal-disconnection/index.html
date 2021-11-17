@@ -13,6 +13,7 @@
 <link rel="canonical" href="https://blog.wangzhl.com/posts/how-to-detect-tcp-abnormal-disconnection/">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
 <link rel="prev" href="/posts/check-for-nullptr-after-new-operator/" title="由new创建的指针不需要检查nullptr" type="text/html">
+<link rel="next" href="/posts/cpp-pragma-pack-pitfall/" title="结构体字节对齐的陷阱" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="如何检测TCP连接的异常断开">
@@ -70,10 +71,10 @@ When a stream socket peer has performed ">
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org1018c19" class="outline-2">
-<h2 id="org1018c19">在TCP连接正常关闭时 <code>recv()</code> 才会返回 <code>0</code>
+<div id="outline-container-orgeb5e2b1" class="outline-2">
+<h2 id="orgeb5e2b1">在TCP连接正常关闭时 <code>recv()</code> 才会返回 <code>0</code>
 </h2>
-<div class="outline-text-2" id="text-org1018c19">
+<div class="outline-text-2" id="text-orgeb5e2b1">
 <p>
 按照我以往的理解，在TCP连接断开时 <code>recv()</code> 接口就会返回0，事实上并不是这样的。<br></p>
 
@@ -90,9 +91,9 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
 </div>
 </div>
 
-<div id="outline-container-orgd7ef704" class="outline-2">
-<h2 id="orgd7ef704">使用心跳机制检测连接是否正常</h2>
-<div class="outline-text-2" id="text-orgd7ef704">
+<div id="outline-container-orgca2e1eb" class="outline-2">
+<h2 id="orgca2e1eb">使用心跳机制检测连接是否正常</h2>
+<div class="outline-text-2" id="text-orgca2e1eb">
 <p>
 为了能尽快察觉到TCP连接异常，常见的做法是周期性的发送心跳包验证与对端的连接状态。心跳包是应用层的特殊命令，属于TCP协议之上。在连接异常时发送心跳包 <code>send()</code> 接口会返回 <code>-1</code> ，这样在本端就能感知连接异常了。<br></p>
 
@@ -101,9 +102,9 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
 </div>
 </div>
 
-<div id="outline-container-orgb070d5a" class="outline-2">
-<h2 id="orgb070d5a">借助TCP的keepalive特性识别异常断开</h2>
-<div class="outline-text-2" id="text-orgb070d5a">
+<div id="outline-container-org868b42f" class="outline-2">
+<h2 id="org868b42f">借助TCP的keepalive特性识别异常断开</h2>
+<div class="outline-text-2" id="text-org868b42f">
 <p>
 还有另一种非侵入的方式检测异常连接，即借助TCP的keepalive特性定期发送数据包，但是  <b>并不</b> 推荐使用这种方法。<br></p>
 
@@ -121,9 +122,9 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
 </div>
 
 
-<div id="outline-container-orge5466c5" class="outline-2">
-<h2 id="orge5466c5">参考资料</h2>
-<div class="outline-text-2" id="text-orge5466c5">
+<div id="outline-container-orgd0403b5" class="outline-2">
+<h2 id="orgd0403b5">参考资料</h2>
+<div class="outline-text-2" id="text-orgd0403b5">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/q/14782143/5080719">how to dectect disconnected network</a><br>
@@ -155,6 +156,9 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
       </a>
     </li>
     <li class="next">
+      <a href="/posts/cpp-pragma-pack-pitfall/" rel="next">Next post
+        <br><span>结构体字节对齐的陷阱</span>
+      </a>
     </li>
   </ul>
 <section class="comments hidden-print"><div id="disqus_thread"></div>

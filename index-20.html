@@ -50,6 +50,63 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Apr 18, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/cpp11-range-based-for-loop/">C++11新特性：基于范围的for循环</a>
+    </h3>
+
+    <p>
+<b>在C++11中，介绍了一种新的for循环写法，基于范围的for循环。</b><br>
+与旧的for循环类似，也是用来对遍历容器中的所有元素，新的写法更加简洁方便。可以使用auto自动适配容器中的内容。为了遍历容器时提高效率，在访问容器内部时可以声明为元素的引用，进而避免不必要的对象拷贝。示例代码如下（代码节选自 <a href="http://en.cppreference.com/w/cpp/language/range-for">cppreferance</a>）<br></p>
+<div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">v</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">};</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">const</span> <span class="kt">int</span><span class="o">&amp;</span> <span class="nl">i</span> <span class="p">:</span> <span class="n">v</span><span class="p">)</span> <span class="c1">// access by const reference</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">i</span> <span class="o">&lt;&lt;</span> <span class="sc">' '</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="nl">i</span> <span class="p">:</span> <span class="n">v</span><span class="p">)</span> <span class="c1">// access by value, the type of i is int</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">i</span> <span class="o">&lt;&lt;</span> <span class="sc">' '</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="nl">n</span> <span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">})</span> <span class="c1">// the initializer may be a braced-init-list</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">n</span> <span class="o">&lt;&lt;</span> <span class="sc">' '</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="n">a</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">};</span>
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="nl">n</span> <span class="p">:</span> <span class="n">a</span><span class="p">)</span> <span class="c1">// the initializer may be an array</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">n</span> <span class="o">&lt;&lt;</span> <span class="sc">' '</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="nl">n</span> <span class="p">:</span> <span class="n">a</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="sc">' '</span><span class="p">;</span> <span class="c1">// the loop variable need not be used</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+</pre></div>
+
+<p>
+<b>注意 <code>std::map</code> 的范围for循环遍历的写法</b><br><code>std::map</code> 中存放的是 <code>key-value pair</code> 键值对，所以在遍历的时候每次拿到的是一个 <code>pair</code> ，在访问其中的元素时，需要注意书写方法。示例代码如下。<br></p>
+<div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">mapDemo</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="nl">kvp</span> <span class="p">:</span> <span class="n">mapDemo</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">kvp</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">" - "</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">kvp</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Apr 17, 2018</span>
     <h3>
       <a class="post-link" href="/posts/linux-command-examples-scp/">Linux常用命令行指令 - scp</a>
@@ -60,9 +117,9 @@
 <div class="highlight"><pre><span></span>cp source_path dest_path
 </pre></div>
 
-<div id="outline-container-org6a2bced" class="outline-2">
-<h2 id="org6a2bced">从远程机器向本地拷贝</h2>
-<div class="outline-text-2" id="text-org6a2bced">
+<div id="outline-container-org0855ac1" class="outline-2">
+<h2 id="org0855ac1">从远程机器向本地拷贝</h2>
+<div class="outline-text-2" id="text-org0855ac1">
 <p>
 以下命令会把 <code>host</code> 主机上的 <code>src_path</code> 文件拷贝到本地 <code>dest_path</code> 目录中。<br></p>
 <div class="highlight"><pre><span></span>scp user@host:src_path dest_path
@@ -70,9 +127,9 @@
 </div>
 </div>
 
-<div id="outline-container-org304c2a7" class="outline-2">
-<h2 id="org304c2a7">从本地向远程机器拷贝</h2>
-<div class="outline-text-2" id="text-org304c2a7">
+<div id="outline-container-orgeba9368" class="outline-2">
+<h2 id="orgeba9368">从本地向远程机器拷贝</h2>
+<div class="outline-text-2" id="text-orgeba9368">
 <p>
 以下命令会把本地 <code>src_path</code> 的文件拷贝打 <code>host</code> 主机上的 <code>dest_path</code> 路径上。<br></p>
 <div class="highlight"><pre><span></span>scp src_path user@host:dest_path
@@ -80,9 +137,9 @@
 </div>
 </div>
 
-<div id="outline-container-org7ce1fc1" class="outline-2">
-<h2 id="org7ce1fc1">拷贝目录下的所有文件</h2>
-<div class="outline-text-2" id="text-org7ce1fc1">
+<div id="outline-container-org97509ee" class="outline-2">
+<h2 id="org97509ee">拷贝目录下的所有文件</h2>
+<div class="outline-text-2" id="text-org97509ee">
 <p>
 可以使用 <code>-r</code> 参数完成目录的递归拷贝， <code>r</code> 代表 <code>recursive</code> 递归。<br></p>
 <div class="highlight"><pre><span></span>scp -r user@host:/src_path dest_path
@@ -90,9 +147,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgde648ec" class="outline-2">
-<h2 id="orgde648ec">在拷贝时限制带宽</h2>
-<div class="outline-text-2" id="text-orgde648ec">
+<div id="outline-container-orgbd2375e" class="outline-2">
+<h2 id="orgbd2375e">在拷贝时限制带宽</h2>
+<div class="outline-text-2" id="text-orgbd2375e">
 <p>
 可以使用 <code>-l</code> 参数限制传输的带宽， <code>l</code> 代表 <code>limit</code> 限制，限制带宽的单位是 <code>kbps</code> 。<br>
 命令会在将拷贝传输的速度限制为 100kbps。<br></p>
@@ -110,9 +167,9 @@
       <a class="post-link" href="/posts/cpp11-automatic-deduction-and-decltype/">C++11新特性：自动类型推导</a>
     </h3>
 
-    <div id="outline-container-orgfec68b0" class="outline-2">
-<h2 id="orgfec68b0">关键字 <code>auto</code> 用于自动类型推导</h2>
-<div class="outline-text-2" id="text-orgfec68b0">
+    <div id="outline-container-org8df0ecf" class="outline-2">
+<h2 id="org8df0ecf">关键字 <code>auto</code> 用于自动类型推导</h2>
+<div class="outline-text-2" id="text-org8df0ecf">
 <div class="highlight"><pre><span></span><span class="k">auto</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>     <span class="c1">// int</span>
 <span class="k">auto</span> <span class="n">c</span><span class="o">=</span><span class="sc">'a'</span><span class="p">;</span>   <span class="c1">// char</span>
 <span class="k">auto</span> <span class="n">d</span><span class="o">=</span><span class="mf">0.5</span><span class="p">;</span>   <span class="c1">// double</span>
@@ -127,10 +184,10 @@
 </div>
 </div>
 
-<div id="outline-container-org9aeaaa1" class="outline-2">
-<h2 id="org9aeaaa1">
+<div id="outline-container-org7b087d0" class="outline-2">
+<h2 id="org7b087d0">
 <code>auto</code> 类型推导并不会指定 <code>const</code> 和 <code>volatile</code> 属性</h2>
-<div class="outline-text-2" id="text-org9aeaaa1">
+<div class="outline-text-2" id="text-org7b087d0">
 <p>
 如果需要限定声明的变量为 <code>const</code> 和 <code>volatile</code> 属性，需要额外提供相应的关键字限定。因为编译器并不能推断出声明的变量是否具有常值属性和易失属性。<br></p>
 <div class="highlight"><pre><span></span><span class="k">volatile</span> <span class="k">auto</span> <span class="n">num</span><span class="o">=</span><span class="mi">5</span><span class="p">;</span>           <span class="c1">// volatile int</span>
@@ -140,9 +197,9 @@
 </div>
 </div>
 
-<div id="outline-container-org1070388" class="outline-2">
-<h2 id="org1070388">关键字 <code>decltype</code> 用于获取一个对量的类型</h2>
-<div class="outline-text-2" id="text-org1070388">
+<div id="outline-container-org9948a9f" class="outline-2">
+<h2 id="org9948a9f">关键字 <code>decltype</code> 用于获取一个对量的类型</h2>
+<div class="outline-text-2" id="text-org9948a9f">
 <p>
 使用 <code>decltype</code> 存储一个对象或表达式的类型， <code>decltype</code> 可以看做是 <code>auto</code> 的补充。<br></p>
 <div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">vecNumbers</span><span class="p">;</span>
@@ -152,9 +209,9 @@
 </div>
 </div>
 
-<div id="outline-container-org6a5a74a" class="outline-2">
-<h2 id="org6a5a74a">函数返回值类型推导</h2>
-<div class="outline-text-2" id="text-org6a5a74a">
+<div id="outline-container-orgc10215a" class="outline-2">
+<h2 id="orgc10215a">函数返回值类型推导</h2>
+<div class="outline-text-2" id="text-orgc10215a">
 <p>
 在C++11中可以使用 <code>auto</code> 和 <code>decltype</code> 完成函数返回类型的推导。<br>
 旧的函数声明格式 <code>return_type func_name(param_type param, ...);</code><br>
@@ -232,28 +289,6 @@ ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 </pre></div>
 <p>
 完成以上操作后，可以执行 <code>date</code> 命令查看修改效果。<br></p>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Mar 28, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/linux-command-examples-netstat/">Linux常用命令行指令 - netstat</a>
-    </h3>
-
-    <p>
-常见的选项有：<br>
--a (all)显示所有选项，netstat默认不显示LISTEN相关<br>
--t (tcp)仅显示tcp相关选项<br>
--u (udp)仅显示udp相关选项<br>
--n 拒绝显示别名，能显示数字的全部转化成数字。(重要)<br>
--l 仅列出有在 Listen (监听) 的服务状态<br>
--p 显示建立相关链接的程序名(macOS中表示协议 -p protocol)<br>
--r 显示路由信息，路由表<br>
--e 显示扩展信息，例如uid等<br>
--s 按各个协议进行统计 (重要)<br>
--c 每隔一个固定时间，执行该netstat命令。<br></p>
 
   </li>
 
