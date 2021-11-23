@@ -247,6 +247,7 @@ for d in os.scandir("archives"):
 PAGES = (
     ("pages/404.*", "", "story.tmpl"),
     ("pages/about.*", "", "story.tmpl"),
+    ("pages/explore.*", "", "page.tmpl"),
 
     ("pages/*.rst", "pages", "page.tmpl"),
     ("pages/*.md", "pages", "page.tmpl"),
