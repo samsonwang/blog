@@ -50,13 +50,13 @@
 <div class="home">
   <ul class="post-list">
 <li>
-    <span class="post-meta">Jan 09, 2019</span>
+    <span class="post-meta">Jun 29, 2018</span>
     <h3>
-      <a class="post-link" href="/posts/launchy-dev-note-1/">谈谈自己在开发launchy时的一些收获</a>
+      <a class="post-link" href="/posts/gdb-display-contents-of-memory-address/">在gdb中查看指定内存地址的内容</a>
     </h3>
 
     <p>
-在开发launchy时，我学到了很多开发相关的技巧，对于如何做好一款软件也有了更加全面的认识。<br></p>
+调试 C/C++ 程序时，需要打印指定内存地址的内容。我最近调试程序中的序列化模块时，需要将类对象按照指定的格式转化为二进制流，为了验证转化结果，在调试时就需要将指定内存地址中的内容打印出来。<br></p>
 
 
 
@@ -64,13 +64,475 @@
 
 
   <li>
-    <span class="post-meta">Jan 04, 2019</span>
+    <span class="post-meta">Jun 26, 2018</span>
     <h3>
-      <a class="post-link" href="/posts/cpp-time-cheatsheet/">C++常用的时间接口</a>
+      <a class="post-link" href="/posts/asynchronous-synchronous-and-blocking-unblocking/">同步和异步、阻塞和非阻塞</a>
+    </h3>
+
+    <div id="outline-container-orgb48e612" class="outline-2">
+<h2 id="orgb48e612">
+<span class="section-number-2">1</span> 同步和异步</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+同步和异步指的是在进行I/O操作完成之前，是否允许其他处理步骤继续执行。<br>
+计算机中的I/O操作相对于数据处理操作时十分耗时的。<br></p>
+
+<p>
+一个简单的I/O操作方式就是启动连接并等待操作完成，但是这样的操作（同步阻塞I/O）在通信过程中会阻塞进程的处理进度。<br>
+相应的，可以在启动通信的同时进行其他的处理，并不需要等待I/O操作的完成，这样的操作就被称作是异步I/O。那些依赖于I/O操作执行完成的任务会阻塞等待I/O操作的完成，其他不依赖与I/O操作的任务能够继续执行。<br></p>
+
+<p>
+同步模型常用的函数接口： <code>read</code> , <code>write</code> , <code>send</code> , <code>recv</code><br>
+异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
+</div>
+
+<div id="outline-container-org6bd720c" class="outline-3">
+<h3 id="org6bd720c">
+<span class="section-number-3">1.1</span> POSIX AIO</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+在头文件 <code>aio.h</code> 中定义，链接时使用 <code>-lrt</code><br></p>
+
+<p>
+<b>函数接口</b><br>
+异步写操作<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_read</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
+</pre></div>
+
+<p>
+异步读操作<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_write</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
+</pre></div>
+
+<p>
+获取异步操作结果<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_return</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
+</pre></div>
+
+<p>
+获取异步操作中的错误<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">aio_error</span><span class="p">(</span><span class="k">struct</span> <span class="n">aiocb</span><span class="o">*</span> <span class="n">aiocbp</span><span class="p">);</span>
+</pre></div>
+
+<p>
+示例代码： <a href="https://gist.github.com/rsms/771059">github gist</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org02bdae4" class="outline-3">
+<h3 id="org02bdae4">
+<span class="section-number-3">1.2</span> Linux AIO</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+在头文件 <code>libaio.h</code> 中定义，链接时使用 <code>-laio</code><br></p>
+
+<p>
+<b>函数接口</b><br>
+需要注意的是aio的函数接口需要借助 <code>syscall</code> 进行调用。<br>
+创建aio context对象<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">io_setup</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">nr</span><span class="p">,</span> <span class="n">aio_context_t</span><span class="o">*</span> <span class="n">ctxp</span><span class="p">);</span>
+</pre></div>
+<p>
+销毁aio context对象<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">io_destroy</span><span class="p">(</span><span class="n">aio_context_t</span> <span class="n">ctx</span><span class="p">);</span>
+</pre></div>
+<p>
+提交异步操作<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">io_submit</span><span class="p">(</span><span class="n">aio_context_t</span> <span class="n">ctx</span><span class="p">,</span> <span class="kt">long</span> <span class="n">nr</span><span class="p">,</span> <span class="k">struct</span> <span class="n">iocb</span><span class="o">**</span> <span class="n">iocbpp</span><span class="p">);</span>
+</pre></div>
+<p>
+获取异步操作结果<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">io_getevents</span><span class="p">(</span><span class="n">aio_context_t</span> <span class="n">ctx</span><span class="p">,</span> <span class="kt">long</span> <span class="n">min_nr</span><span class="p">,</span> <span class="kt">long</span> <span class="n">max_nr</span><span class="p">,</span>
+		 <span class="n">io_event</span><span class="o">*</span> <span class="n">events</span><span class="p">,</span> <span class="k">struct</span> <span class="n">timespec</span><span class="o">*</span> <span class="n">timeout</span><span class="p">);</span>
+</pre></div>
+
+<p>
+示例代码:<br></p>
+<ul class="org-ul">
+<li>
+<a href="https://gist.github.com/larytet/87f90b08643ac3de934df2cadff4989c">github gist</a><br>
+</li>
+<li>
+<a href="http://www.xmailserver.org/eventfd-aio-test.c">xmailserver.org</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orga92100e" class="outline-3">
+<h3 id="orga92100e">
+<span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+摘自 <a href="https://stackoverflow.com/questions/8768083/difference-between-posix-aio-and-libaio-on-linux">stackoverflow.com</a><br></p>
+<blockquote>
+<p>
+On linux, the two AIO implementations are fundamentally different.<br>
+The POSIX AIO is a user-level implementation that performs normal blocking I/O in multiple threads, hence giving the illusion that the I/Os are asynchronous. The main reason to do this is that:<br></p>
+<ul class="org-ul">
+<li>it works with any filesystem<br>
+</li>
+<li>it works (essentially) on any operating system (keep in mind that gnu's libc is portable)<br>
+</li>
+<li>it works on files with buffering enabled (i.e. no O<sub>DIRECT</sub> flag set)<br>
+</li>
+</ul>
+<p>
+The main drawback is that your queue depth (i.e. the number of outstanding operations you can have in practice) is limited by the number of threads you choose to have, which also means that a slow operation on one disk may block an operation going to a different disk. It also affects which I/Os (or how many) is seen by the kernel and the disk scheduler as well.<br>
+The kernel AIO (i.e. io<sub>submit</sub>() et.al.) is kernel support for asynchronous I/O operations, where the io requests are actually queued up in the kernel, sorted by whatever disk scheduler you have, presumably some of them are forwarded (in somewhat optimal order one would hope) to the actual disk as asynchronous operations (using TCQ or NCQ). The main restriction with this approach is that not all filesystems work that well or at all with async I/O (and may fall back to blocking semantics), files have to be opened with O<sub>DIRECT</sub> which comes with a whole lot of other restrictions on the I/O requests. If you fail to open your files with O<sub>DIRECT</sub>, it may still "work", as in you get the right data back, but it probably isn't done asynchronously, but is falling back to blocking semantics.<br>
+Also keep in mind that io<sub>submit</sub>() can actually block on the disk under certain circumstances.<br></p>
+</blockquote>
+<p>
+在Linux上两种AIO是完全不同的；<br>
+POSIX AIO实现在用户层，实际上进行的操作是普通的多线程阻塞操作，表现为I/O操作是异步的，这种AIO的优点是兼容性和可移植性好，缺点是操作队列长度受限于最大线程数量。<br>
+Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核中维护，这种AIO的缺点是并不支持所有的文件系统，Linux AIO在某些情况下的磁盘操作是会阻塞的。<br></p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc862bdc" class="outline-2">
+<h2 id="orgc862bdc">
+<span class="section-number-2">2</span> 阻塞和非阻塞</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+阻塞与非阻塞的概念针对的是函数是否会立即返回。<br>
+非阻塞模型常与IO复用技术组合使用。<br>
+可以通过函数将IO设备设置为非阻塞模式。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org4f9e8b7" class="outline-2">
+<h2 id="org4f9e8b7">
+<span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+在处理 IO 的时候，阻塞和非阻塞都是同步 IO。<br>
+只有使用了特殊的 API 才是异步 IO。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org0c3e45f" class="outline-2">
+<h2 id="org0c3e45f">
+<span class="section-number-2">4</span> 参考资料</h2>
+<div class="outline-text-2" id="text-4">
+<ul class="org-ul">
+<li>
+<a href="https://blog.csdn.net/hguisu/article/details/38638183">csdn.net</a><br>
+</li>
+<li>
+<a href="https://github.com/littledan/linux-aio%20repo">github.com linux-aio</a><br>
+</li>
+<li>
+<a href="https://www.ibm.com/developerworks/linux/library/l-async/index.html">ibm developerworks</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Jun 20, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/check-system-information-on-linux/">查看Linux系统的相关信息</a>
     </h3>
 
     <p>
-与时间相关的操作在开发中是十分常见的，本文总结了常用时间接口，并给出了示例代码。<br></p>
+查看Linux系统相关信息有助于排查和解决软件和硬件的兼容性问题。系统信息包括硬件信息和软件信息，硬件信息主要有CPU信息、内存信息、PCI信息、USB信息、硬盘信息等等。软件信息主要有系统版本、分区使用状态等等。本文主要介绍了获取当前Linux系统信息的命令。<br></p>
+
+<div id="outline-container-org624e509" class="outline-2">
+<h2 id="org624e509">查看系统相关信息</h2>
+<div class="outline-text-2" id="text-org624e509">
+<p>
+<code>uname</code> 指令提供了查询系统信息的功能，使用该命令能够快速获取操作系统信息概览。<br></p>
+
+<p>
+查看内核名称<br></p>
+<div class="highlight"><pre><span></span>uname -s
+</pre></div>
+
+<p>
+查看处理器类型<br></p>
+<div class="highlight"><pre><span></span>uname -p
+</pre></div>
+
+<p>
+查看硬件架构<br></p>
+<div class="highlight"><pre><span></span>uname -i
+</pre></div>
+
+<p>
+查看内核版本<br></p>
+<div class="highlight"><pre><span></span>uname -r
+</pre></div>
+
+<p>
+查看所有系统信息<br></p>
+<div class="highlight"><pre><span></span>uname -a
+</pre></div>
+
+<p>
+查看操作系统信息（发行版信息）<br></p>
+<div class="highlight"><pre><span></span>cat /etc/os-release
+cat /proc/version
+lsb_release -a
+hostnamectl
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org33b2cae" class="outline-2">
+<h2 id="org33b2cae">查看CPU相关信息</h2>
+<div class="outline-text-2" id="text-org33b2cae">
+<p>
+<code>lscpu</code> 指令能够查看当前系统中CPU的详细信息，包括型号、主频、构架、大小端等信息。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org6e7b5fb" class="outline-2">
+<h2 id="org6e7b5fb">查看硬盘相关信息</h2>
+<div class="outline-text-2" id="text-org6e7b5fb">
+<p>
+<code>lsblk</code> 指令能够查看块设备（block device）的详细信息，块设备主要指系统中的存储设备如硬盘和闪存。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org2720160" class="outline-2">
+<h2 id="org2720160">查看PCI设备的相关信息</h2>
+<div class="outline-text-2" id="text-org2720160">
+<p>
+<code>lspci</code> 指令能够查看PCI设备的信息，PCI设备包括USB、显卡、串口、网卡等其他外围设备。<br></p>
+
+<p>
+输出树形结果<br></p>
+<div class="highlight"><pre><span></span>lspci -t
+</pre></div>
+
+<p>
+输出详细信息<br></p>
+<div class="highlight"><pre><span></span>lspci -v
+lspci -vv
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org9f9fd71" class="outline-2">
+<h2 id="org9f9fd71">查看USB设备的相关信息</h2>
+<div class="outline-text-2" id="text-org9f9fd71">
+<p>
+<code>lsusb</code> 指令能够查看USBS设备的信息。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org1df3ca4" class="outline-2">
+<h2 id="org1df3ca4">查看文件系统相关信息</h2>
+<div class="outline-text-2" id="text-org1df3ca4">
+<p>
+<code>fdisk</code> 命令能够查看和操作linux系统的分区表。<br></p>
+
+<p>
+查看文件系统信息<br></p>
+<div class="highlight"><pre><span></span>fdisk -l
+</pre></div>
+
+<p>
+<code>df</code> 命令能够查看分区信息和硬盘使用信息<br></p>
+
+<p>
+使输出信息更容易理解<br></p>
+<div class="highlight"><pre><span></span>df -h
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orga52d437" class="outline-2">
+<h2 id="orga52d437">参考资料</h2>
+<div class="outline-text-2" id="text-orga52d437">
+<ul class="org-ul">
+<li>
+<a href="https://www.tecmint.com/commands-to-collect-system-and-hardware-information-in-linux/">tecmint.com</a><br>
+</li>
+<li>
+<a href="https://www.binarytides.com/linux-commands-hardware-info/">binarytides.com</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Jun 14, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/linux-command-examples-top/">Linux常用命令行指令 - top</a>
+    </h3>
+
+    <p>
+linux的top命令能够动态显示当前系统的运行状态。它能够显示操作系统的汇总信息和当前系统上的正在运行的进程列表。<br></p>
+
+<div id="outline-container-org237bccf" class="outline-2">
+<h2 id="org237bccf">统计信息说明</h2>
+<div class="outline-text-2" id="text-org237bccf">
+<p>
+(可以通过配置文件修改通计信息区的显示格式，下文所描述的都是在默认配置下的显示内容)<br></p>
+</div>
+<div id="outline-container-org3408024" class="outline-3">
+<h3 id="org3408024">第1行</h3>
+<div class="outline-text-3" id="text-org3408024">
+<ul class="org-ul">
+<li>当前系统时间<br>
+</li>
+<li>当前系统的启动时长<br>
+</li>
+<li>当前登录的用户数量<br>
+</li>
+<li>当前系统的平均负载（分别是1min,5min,10min的平均负载）<br>
+</li>
+</ul>
+<p>
+这一行信息也可以通过 <code>uptime</code> 和 <code>w</code> 指令获得<br></p>
+</div>
+</div>
+<div id="outline-container-org2df994e" class="outline-3">
+<h3 id="org2df994e">第2行</h3>
+<div class="outline-text-3" id="text-org2df994e">
+<ul class="org-ul">
+<li>总进程数<br>
+</li>
+<li>正在运行的进程数<br>
+</li>
+<li>休眠的进程数<br>
+</li>
+<li>停止的进程数<br>
+</li>
+<li>僵尸进程数<br>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org5157701" class="outline-3">
+<h3 id="org5157701">第3行</h3>
+<div class="outline-text-3" id="text-org5157701">
+<ul class="org-ul">
+<li>us 用户空间占用CPU百分比<br>
+</li>
+<li>sy 内核空间占用CPU百分比<br>
+</li>
+<li>ni 用户进程空间内改变过优先级的进程占用CPU百分比<br>
+</li>
+<li>id 空闲CPU百分比<br>
+</li>
+<li>wa 等待输入输出的CPU时间百分比<br>
+</li>
+<li>hi CPU服务于硬件中断所耗费的时间总额<br>
+</li>
+<li>si CPU服务软中断所耗费的时间总额<br>
+</li>
+<li>st Steal time 虚拟机被hypervisor偷去的CPU时间（如果当前处于一个hypervisor下的vm，实际上hypervisor也是要消耗一部分CPU处理时间的）<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org54d52de" class="outline-3">
+<h3 id="org54d52de">第4行</h3>
+<div class="outline-text-3" id="text-org54d52de">
+<ul class="org-ul">
+<li>物理内存总量<br>
+</li>
+<li>使用的物理内存总量<br>
+</li>
+<li>空闲内存总量<br>
+</li>
+<li>用作内核缓存的内存量<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org41c868d" class="outline-3">
+<h3 id="org41c868d">第5行</h3>
+<div class="outline-text-3" id="text-org41c868d">
+<ul class="org-ul">
+<li>交换区总量<br>
+</li>
+<li>使用的交换区总量<br>
+</li>
+<li>空间交换区总量<br>
+</li>
+<li>缓冲交换区总量<br>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org4c76905" class="outline-2">
+<h2 id="org4c76905">进程信息</h2>
+<div class="outline-text-2" id="text-org4c76905">
+<p>
+在top命令中按f按可以查看显示的列信息，按对应字母来开启/关闭列，大写字母表示开启，小写字母表示关闭。带*号的是默认列。<br></p>
+
+<p>
+A: PID = (Process Id) 进程Id；<br>
+E: USER = (User Name) 进程所有者的用户名；<br>
+H: PR = (Priority) 优先级<br>
+I: NI = (Nice value) nice值。负值表示高优先级，正值表示低优先级<br>
+O: VIRT = (Virtual Image (kb)) 进程使用的虚拟内存总量，单位kb。VIRT=SWAP+RES<br>
+Q: RES = (Resident size (kb)) 进程使用的、未被换出的物理内存大小，单位kb。RES=CODE+DATA<br>
+T: SHR = (Shared Mem size (kb)) 共享内存大小，单位kb<br>
+W: S = (Process Status) 进程状态。D=不可中断的睡眠状态,R=运行,S=睡眠,T=跟踪/停止,Z=僵尸进程<br>
+K: %CPU = (CPU usage) 上次更新到现在的CPU时间占用百分比<br>
+N: %MEM = (Memory usage (RES)) 进程使用的物理内存百分比<br>
+M: TIME+ = (CPU Time, hundredths) 进程使用的CPU时间总计，单位1/100秒<br>
+b: PPID = (Parent Process Pid) 父进程Id<br>
+c: RUSER = (Real user name)<br>
+d: UID = (User Id) 进程所有者的用户id<br>
+f: GROUP = (Group Name) 进程所有者的组名<br>
+g: TTY = (Controlling Tty) 启动进程的终端名。不是从终端启动的进程则显示为 ?<br>
+j: P = (Last used cpu (SMP)) 最后使用的CPU，仅在多CPU环境下有意义<br>
+p: SWAP = (Swapped size (kb)) 进程使用的虚拟内存中，被换出的大小，单位kb<br>
+l: TIME = (CPU Time) 进程使用的CPU时间总计，单位秒<br>
+r: CODE = (Code size (kb)) 可执行代码占用的物理内存大小，单位kb<br>
+s: DATA = (Data+Stack size (kb)) 可执行代码以外的部分(数据段+栈)占用的物理内存大小，单位kb<br>
+u: nFLT = (Page Fault count) 页面错误次数<br>
+v: nDRT = (Dirty Pages count) 最后一次写入到现在，被修改过的页面数<br>
+y: WCHAN = (Sleeping in Function) 若该进程在睡眠，则显示睡眠中的系统函数名<br>
+z: Flags = (Task Flags &lt;sched.h&gt;) 任务标志，参考 sched.h<br>
+X: COMMAND = (Command name/line) 命令名/命令行<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgac7c1ac" class="outline-2">
+<h2 id="orgac7c1ac">参考资料</h2>
+<div class="outline-text-2" id="text-orgac7c1ac">
+<ul class="org-ul">
+<li>
+<a href="https://www.tecmint.com/12-top-command-examples-in-linux/">tecmint.com</a><br>
+</li>
+<li>
+<a href="https://blog.csdn.net/sanshiqiduer/article/details/1933625">csdn blog</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Jun 07, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/cloud-server-security/">云服务器安全相关配置</a>
+    </h3>
+
+    <p>
+我所租用的云服务器操作系统为CentOS Linux，在使用云服务器的过程中为了保证服务器的安全，进行了一些简单的配置，这样能够增加服务器被破解的难度。<br></p>
 
 
 
@@ -78,57 +540,638 @@
 
 
   <li>
-    <span class="post-meta">Dec 29, 2018</span>
+    <span class="post-meta">May 16, 2018</span>
     <h3>
-      <a class="post-link" href="/posts/heap-data-structure/">数据结构 - 堆</a>
+      <a class="post-link" href="/posts/c-style-and-cpp-style-file-api/">C风格和C++风格的文件操作库函数总结</a>
     </h3>
 
     <p>
-在计算机科学中，堆是一种特殊的、基于树（tree）的、满足堆特性的数据结构。本文以堆数据结构作为切入点，介绍了与之相关的优先队列和堆排序。<br></p>
+由于C++是兼容C的，所以使用C++进行文件操作时，会发现有两套库函数可以使用，它们分别是C风格的和C++风格的。<br></p>
+
+<div id="outline-container-org08ff700" class="outline-2">
+<h2 id="org08ff700">C风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-org08ff700">
+<p>
+<b>打开文件，关闭文件</b><br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="kt">FILE</span><span class="o">*</span> <span class="nf">fopen</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">mode</span><span class="p">);</span>
+<span class="kt">int</span> <span class="nf">fclose</span><span class="p">(</span><span class="kt">FILE</span><span class="o">*</span> <span class="n">fp</span><span class="p">);</span>
+</pre></div>
+
+<p>
+<b>读取文件，写入文件</b><br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="kt">size_t</span> <span class="nf">fread</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">ptr</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">nmemb</span><span class="p">,</span> <span class="kt">FILE</span><span class="o">*</span> <span class="n">stream</span><span class="p">);</span>
+<span class="kt">size_t</span> <span class="nf">fwrite</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">ptr</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">nmemb</span><span class="p">,</span> <span class="kt">FILE</span><span class="o">*</span> <span class="n">stream</span><span class="p">);</span>
+</pre></div>
+<p>
+关于fread中两个表示大小的参数，在这个 <a href="https://stackoverflow.com/questions/8589425/how-does-fread-really-work">stackoverflow</a> 问题中得到了比较好的解答。<br></p>
 
 
+<p>
+<b>改变文件指示器的位置</b><br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="kt">int</span> <span class="nf">fseek</span><span class="p">(</span><span class="kt">FILE</span><span class="o">*</span> <span class="n">stream</span><span class="p">,</span> <span class="kt">long</span> <span class="n">offset</span><span class="p">,</span> <span class="kt">int</span> <span class="n">whence</span><span class="p">);</span>
+<span class="kt">long</span> <span class="nf">ftell</span><span class="p">(</span><span class="kt">FILE</span><span class="o">*</span> <span class="n">stream</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">rewind</span><span class="p">(</span><span class="kt">FILE</span><span class="o">*</span> <span class="n">stream</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-orgfaa56ad" class="outline-2">
+<h2 id="orgfaa56ad">C++风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-orgfaa56ad">
+<p>
+C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件实际上就会对应一个 <code>fstream</code> 对象，一下函数都是 <code>fstream</code> 的成员函数。<br>
+文件打开和关闭<br></p>
+<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">open</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">filename</span><span class="p">,</span> <span class="n">ios_base</span><span class="o">::</span><span class="n">openmode</span> <span class="n">mode</span> <span class="o">=</span> <span class="n">ios_base</span><span class="o">::</span><span class="n">in</span><span class="o">|</span><span class="n">ios_base</span><span class="o">::</span><span class="n">out</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">open</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">filename</span><span class="p">,</span> <span class="n">ios_base</span><span class="o">::</span><span class="n">openmode</span> <span class="n">mode</span> <span class="o">=</span> <span class="n">ios_base</span><span class="o">::</span><span class="n">in</span><span class="o">|</span><span class="n">ios_base</span><span class="o">::</span><span class="n">out</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">close</span><span class="p">();</span>
+</pre></div>
+
+<p>
+对于文件的读写可以才采用流运算符重载的方法完成。<br></p>
+<div class="highlight"><pre><span></span><span class="k">friend</span> <span class="n">fstream</span><span class="o">&amp;</span> <span class="k">operator</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">fstream</span><span class="o">&amp;</span> <span class="n">ofs</span><span class="p">,</span> <span class="k">const</span> <span class="n">CRecord</span><span class="o">&amp;</span> <span class="n">objRecord</span><span class="p">);</span>
+<span class="k">friend</span> <span class="n">fstream</span><span class="o">&amp;</span> <span class="k">operator</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">fstream</span><span class="o">&amp;</span> <span class="n">ifs</span><span class="p">,</span> <span class="n">CRecord</span><span class="o">&amp;</span> <span class="n">objRecord</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org45936a5" class="outline-2">
+<h2 id="org45936a5">题外话</h2>
+<div class="outline-text-2" id="text-org45936a5">
+<p>
+在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。<br></p>
+</div>
+</div>
 
   </li>
 
 
   <li>
-    <span class="post-meta">Dec 24, 2018</span>
+    <span class="post-meta">May 11, 2018</span>
     <h3>
-      <a class="post-link" href="/posts/sorting-algorithm/">常见排序算法总结</a>
+      <a class="post-link" href="/posts/endianness-and-union-type/">字节序与union类型</a>
     </h3>
 
-    <p>
-排序是计算机编程中很常见的操作，本文对常见的排序算法进行了总结，并针对每种算法给出了示例代码。<br></p>
+    <div id="outline-container-orga477755" class="outline-2">
+<h2 id="orga477755">字节序是什么</h2>
+<div class="outline-text-2" id="text-orga477755">
+<p>
+字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。字节序分为大端字节序和小端字节序，两种字节序不能混用。<br></p>
+
+<ul class="org-ul">
+<li>大端字节序 ：高位字节保存在较低位地址的内存中<br>
+</li>
+<li>小端字节序 ：高位字节保存在较高位地址的内存中<br>
+</li>
+</ul>
+<p>
+以 <code>int n = 0x12345678;</code> 为例，大端字节序内存中的存储的顺序为 <code>0x12 0x34 0x56 0x78</code> ，小端字节序内存中的存储顺序为 <code>0x78 0x56 0x34 0x12</code> 。很明显可以看出大端字节序更符合人类的阅读习惯。<br></p>
+
+<ul class="org-ul">
+<li>常见的大端系统CPU：IBM z/Atchitecture<br>
+</li>
+<li>常见的小端系统CPU：intel x86<br>
+</li>
+</ul>
+<p>
+网络字节序使用的大端字节序，常用网络协议如IPv4、IPv6、TCP和UDP协议都是使用大端字节序进行数据传输的。<br></p>
+</div>
+</div>
 
 
+
+<div id="outline-container-orgfa011fa" class="outline-2">
+<h2 id="orgfa011fa">提供字节序转换功能的函数接口</h2>
+<div class="outline-text-2" id="text-orgfa011fa">
+<p>
+在网络通信接口中提供了转换主机字节序和网络字节序之间的函数接口，如下所示。<br></p>
+<div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="nf">htonl</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">hostlong</span><span class="p">);</span>
+<span class="kt">uint16_t</span> <span class="nf">htons</span><span class="p">(</span><span class="kt">uint16_t</span> <span class="n">hostshort</span><span class="p">);</span>
+<span class="kt">uint32_t</span> <span class="nf">ntohl</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">netlong</span><span class="p">);</span>
+<span class="kt">uint16_t</span> <span class="nf">ntohs</span><span class="p">(</span><span class="kt">uint16_t</span> <span class="n">netshort</span><span class="p">);</span>
+</pre></div>
+
+<p>
+有些时候，我们需要手动转换内存字节流，可以使用以下接口帮助实现指定字节序的转换。<br></p>
+
+<p>
+小端字节序的函数实现如下：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// small endian</span>
+<span class="kr">inline</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span> <span class="n">SE_GetStreamU16</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span> <span class="n">SE_GetStreamU32</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="kt">void</span> <span class="n">SE_SetStreamU16</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="kt">void</span> <span class="n">SE_SetStreamU32</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+大端字节序的函数实现如下：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// big endian</span>
+<span class="kr">inline</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span> <span class="n">BE_GetStreamU16</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">|</span> <span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span> <span class="n">BE_GetStreamU32</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span>
+			 <span class="o">|</span> <span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="kt">void</span> <span class="n">BE_SetStreamU16</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kr">inline</span> <span class="kt">void</span> <span class="n">BE_SetStreamU32</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">p</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">pTemp</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+    <span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+
+<div id="outline-container-org1f328a8" class="outline-2">
+<h2 id="org1f328a8">查看当前系统的字节序</h2>
+<div class="outline-text-2" id="text-org1f328a8">
+<p>
+通过 <code>lscpu</code> 命令，能得到cpu的大端和小端信息。<br></p>
+<div class="highlight"><pre><span></span>lscpu <span class="p">|</span> grep -i endian
+</pre></div>
+
+<p>
+通过常用shell命令，在大端系统中会输出0，在小端系统中会输出1。<br></p>
+<div class="highlight"><pre><span></span><span class="nb">echo</span> -n I <span class="p">|</span> od -to2 <span class="p">|</span> head -n1 <span class="p">|</span> cut -f2 -d<span class="s2">" "</span> <span class="p">|</span> cut -c6
+</pre></div>
+
+<p>
+借助python进行判断。<br></p>
+<div class="highlight"><pre><span></span>python -c <span class="s2">"import sys; print(sys.byteorder)"</span>
+<span class="c1"># or</span>
+python -c <span class="s2">"import sys;sys.exit(0 if sys.byteorder=='big' else 1)"</span>
+</pre></div>
+
+<p>
+借助linux的ELF进行判断，查看第6个字节，小端系统中为1，大端系统中为2。<br></p>
+<div class="highlight"><pre><span></span>xxd -c <span class="m">1</span> -l <span class="m">6</span> /bin/bash
+<span class="c1"># or</span>
+hexdump -n <span class="m">6</span> -C /bin/bash
+</pre></div>
+
+<p>
+可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;inttypes.h&gt;</span><span class="cp"></span>
+
+<span class="k">typedef</span> <span class="k">union</span> <span class="n">un</span> <span class="p">{</span>
+    <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">ch</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+<span class="p">}</span> <span class="n">un</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">un</span> <span class="n">u</span><span class="p">;</span>
+    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"u.x=0x%x</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">u</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org4abdeaa" class="outline-2">
+<h2 id="org4abdeaa">参考资料</h2>
+<div class="outline-text-2" id="text-org4abdeaa">
+<ul class="org-ul">
+<li>
+<a href="https://en.wikipedia.org/wiki/Endianness">wikipedia.com - endianness</a><br>
+</li>
+<li>
+<a href="https://serverfault.com/questions/163487/how-to-tell-if-a-linux-system-is-big-endian-or-little-endian">serverfault.com - how to check endian</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format">wikipedia.com - ELF format</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
 
   </li>
 
 
   <li>
-    <span class="post-meta">Nov 28, 2018</span>
+    <span class="post-meta">May 05, 2018</span>
     <h3>
-      <a class="post-link" href="/posts/smart-pointers-in-cpp/">C++中的智能指针</a>
+      <a class="post-link" href="/posts/python-logging-with-function-name/">在Python日志中输出文件名和函数名</a>
     </h3>
 
     <p>
-C++中有很多智能指针如 <code>unique_ptr</code> 和 <code>shared_ptr</code> ，本篇文章主要介绍这些指针的功能和应用场景。<br></p>
+Python内置了日志模块，在默认情况下输出的日志是不带文件名和函数名的，这样在排查问题时，遇到相似的日志就变得容易混淆，可以通过设置将输出的日志中带有文件名和函数名。参考了stackoverflow的回答，详细代码如下。<br></p>
 
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">'root'</span><span class="p">)</span>
+<span class="n">LOG_FORMAT</span> <span class="o">=</span> <span class="s2">"</span><span class="si">%(filename)s</span><span class="s2">:</span><span class="si">%(lineno)s</span><span class="s2"> </span><span class="si">%(funcName)s</span><span class="s2">() </span><span class="si">%(message)s</span><span class="s2">"</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="n">LOG_FORMAT</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+</pre></div>
 
+<p>
+<b>参考资料</b><br><a href="https://stackoverflow.com/questions/10973362/python-logging-function-name-file-name-line-number-using-a-single-file">stackoverflow</a><br></p>
 
   </li>
 
 
   <li>
-    <span class="post-meta">Nov 26, 2018</span>
+    <span class="post-meta">Apr 27, 2018</span>
     <h3>
-      <a class="post-link" href="/posts/launchy-maintain-303/">写在launchy3.0.3发布之后</a>
+      <a class="post-link" href="/posts/linux-command-examples-xargs/">Linux常用命令行指令 - xargs</a>
+    </h3>
+
+    <div id="outline-container-orgb028748" class="outline-2">
+<h2 id="orgb028748">基础用法</h2>
+<div class="outline-text-2" id="text-orgb028748">
+<p>
+<code>xargs</code> 指令默认情况下从 <code>stdin</code> 中读取信息，按照空格分或换行区分开，并且执行输入的命令（默认的命令是 <code>/bin/echo</code> ）。命令可以通过 <code>xargs</code> 的参数指定执行一次或多次，命令的执行参数为自身初始参数追加上由 <code>stdin</code> 读到的内容，命令在执行时会忽略空行。<br></p>
+
+<blockquote>
+<p>
+xargs reads items from the standard input, delimited by blanks (which can be protected with double or single quotes or a backslash) or newlines, and executes the command (default is /bin/echo) one or more times with any initial-arguments followed by items read from standard input. Blank lines on the standard input are ignored.<br></p>
+</blockquote>
+
+<p>
+在命令行输入 <code>xargs</code> 命令，输入 “a b c d” 后按回车，再按 <code>ctrl+d</code> 完成本次输入，则 <code>xargs</code> 的默认 <code>echo</code> 命令会将接收到的字符串打印出来，效果如下所示。<br></p>
+<div class="highlight"><pre><span></span># xargs
+a b c d
+a b c d
+</pre></div>
+
+<p>
+<code>xargs</code> 单独使用时功能比较单一，但是它与其他指令一起使用十分强大。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgc52b15d" class="outline-2">
+<h2 id="orgc52b15d">
+<code>xargs</code> 与 <code>find</code> 组合使用</h2>
+<div class="outline-text-2" id="text-orgc52b15d">
+<p>
+常见的使用方法是使用 <code>find</code> 指令找到指定的文件，组合以 <code>xargs</code> 指令实现对指定文件的操作。<br></p>
+<div class="highlight"><pre><span></span>find . -name "demo_" | xargs file -i
+</pre></div>
+<p>
+由于 <code>xargs</code> 是使用空格作为各个参数的分隔符，如果遇到的文件名中含有空格，则并不能按照预期处理。这时，可以使用 <code>find</code> 指令的 <code>-print0</code> 将含有空格的文件名转化为字符串，再结合 <code>xargs</code> 的 <code>-0</code> 参数就能完成文件名中含有空格的处理，改进后的命令如下。<br></p>
+<div class="highlight"><pre><span></span>find . -name "demo_" -print0 | xargs -0 file -i
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgfd65998" class="outline-2">
+<h2 id="orgfd65998">
+<code>xargs</code> 与 <code>grep</code> 组合使用</h2>
+<div class="outline-text-2" id="text-orgfd65998">
+<p>
+常用命令如下，能够实现对指定规则文件的搜索匹配。<br></p>
+<div class="highlight"><pre><span></span>find . -name "*.log" | xargs grep error
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgfa69607" class="outline-2">
+<h2 id="orgfa69607">使用 <code>-n</code> 参数让 <code>xargs</code> 的命令重复执行</h2>
+<div class="outline-text-2" id="text-orgfa69607">
+<p>
+如果想用 <code>find</code> 指令完成多个匹配规则的搜索，则可以使用 <code>-n</code> 参数将 <code>xargs</code> 的内容分割成多个。<br>
+下面的命令会执行3次 <code>find</code> 命令， <code>xargs</code> 会将接收的到的内容按照单词数为“1”分割，分3次传送给 <code>find</code> 指令。<br></p>
+<div class="highlight"><pre><span></span>echo "*.c" "*.cpp" "*.h" | xargs -n 1 find . -name
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org19d9e6b" class="outline-2">
+<h2 id="org19d9e6b">使用 <code>-t</code> 参数让 <code>xargs</code> 打印将要执行的命令</h2>
+<div class="outline-text-2" id="text-org19d9e6b">
+<p>
+让 <code>xargs</code> 将指令的命令打印出来主要是方便查看命令执行情况，也方便在出现错误时进行调试。<br></p>
+<div class="highlight"><pre><span></span>find . -name *.log | xargs -t rm -f
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orge4c191c" class="outline-2">
+<h2 id="orge4c191c">使用 <code>-p</code> 参数让 <code>xargs</code> 在执行命令前询问用户</h2>
+<div class="outline-text-2" id="text-orge4c191c">
+<p>
+增加 <code>-p</code> 参数后， <code>xargs</code> 在每次执行命令前会将指令打印出来并询问用户，只有用户输入 “y” 时才会真正执行该条命令。<br></p>
+<div class="highlight"><pre><span></span>echo "*.c" "*.cpp" "*.h" | xargs -n 1 -p find . -name
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org26c692f" class="outline-2">
+<h2 id="org26c692f">使用 <code>-I</code> 参数让 <code>xargs</code> 进行参数替换</h2>
+<div class="outline-text-2" id="text-org26c692f">
+<p>
+<code>xargs</code> 默认会将读取到的内容追加在指令命令后面作为参数，使用 <code>-I</code> 参数能够控制命令参数的组合方式。<br>
+以下命令会将当前目录中的可执行文件移动到bin文件夹下。<br></p>
+<div class="highlight"><pre><span></span>find . -executable -type f -print0 | xargs -0 -I {} mv {} ./bin
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgee61e19" class="outline-2">
+<h2 id="orgee61e19">参考资料</h2>
+<div class="outline-text-2" id="text-orgee61e19">
+<ol class="org-ol">
+<li>
+<a href="http://man7.org/linux/man-pages/man1/xargs.1.html">http://man7.org/linux/man-pages/man1/xargs.1.html</a><br>
+</li>
+<li>
+<a href="https://www.howtoforge.com/tutorial/linux-xargs-command/">https://www.howtoforge.com/tutorial/linux-xargs-command/</a><br>
+</li>
+<li>
+<a href="https://www.thegeekstuff.com/2013/12/xargs-examples">https://www.thegeekstuff.com/2013/12/xargs-examples</a><br>
+</li>
+</ol>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Apr 25, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/linux-command-examples-ipcs/">Linux常用命令行指令 - ipcs</a>
     </h3>
 
     <p>
-维护launchy也有一段时间了，目前已经发了4个版本，整体功能也趋于稳定。在维护launchy的过程中有很多思考，今天集中写下来，算是里程碑样的记录。<br></p>
+<code>IPC</code> 是 <code>inter process communication</code> 的缩写，这项技术能够让进程间相互通信。<br>
+Q：每个进程都有自己的地址空间和独立的用户空间，那么进程间是如何通信的呢？<br>
+A：内核，也就是操作系统的心脏，它能够访问整个操作系统的内存。我们可以要求内核分配一块用于进程间交互的空间。<br></p>
+
+<div id="outline-container-org368e763" class="outline-2">
+<h2 id="org368e763">几种进程间通信的方法</h2>
+<div class="outline-text-2" id="text-org368e763">
+<p>
+进程间通信的方法有很多，有些支持同机器上进程的信息交互，有些支持跨机器的进程交互。<br></p>
+<ul class="org-ul">
+<li>
+<b>管道</b> ： pipes，管道提供了进程间交换信息的方法。<br>
+</li>
+<li>
+<b>共享内存</b> ： shared memory，一个进程创建一块其他进程能够访问的内存空间，多个进程可以通过共享内存进行数据交换。<br>
+</li>
+<li>
+<b>消息队列</b> ： message queue，消息队列是一个固定结构、有序的内存段，多个进程可以存放和取回数据。<br>
+</li>
+<li>
+<b>信号量</b> ： semaphores，信号量提供了多进程访问同一资源的同步机制，信号量不负责传递数据，它协调对共享资源的访问。<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org2e27875" class="outline-2">
+<h2 id="org2e27875">常用ipcs指令</h2>
+<div class="outline-text-2" id="text-org2e27875">
+<p>
+<b>列出所有的IPC设备</b><br></p>
+<div class="highlight"><pre><span></span>ipcs -a
+</pre></div>
+
+<p>
+<b>列出所有的消息队列</b><br></p>
+<div class="highlight"><pre><span></span>ipcs -q
+</pre></div>
+
+<p>
+<b>列出所有的信号量</b><br></p>
+<div class="highlight"><pre><span></span>ipcs -s
+</pre></div>
+
+<p>
+<b>列出所有的共享内存</b><br></p>
+<div class="highlight"><pre><span></span>ipcs -m
+</pre></div>
+
+<p>
+<b>获取与IPC设备信息</b><br></p>
+<div class="highlight"><pre><span></span>ipcs -q -i msq_id
+</pre></div>
+
+<p>
+<b>列出IPC设备的限制</b><br></p>
+<div class="highlight"><pre><span></span>ipcs -l
+</pre></div>
+
+<p>
+<b>列出IPC设备的创建者和拥有者</b><br></p>
+<div class="highlight"><pre><span></span>ipcs -m -c
+</pre></div>
+
+<p>
+<b>列出最近使用IPC设备的进程id</b><br></p>
+<div class="highlight"><pre><span></span>ipcs -m -p
+</pre></div>
+
+<p>
+<b>列出IPC设备的最后访问时间</b><br></p>
+<div class="highlight"><pre><span></span>ipcs -s -t
+</pre></div>
+
+<p>
+<b>列出IPC设备的当前使用状态</b><br></p>
+<div class="highlight"><pre><span></span>ipcs -u
+</pre></div>
+</div>
+</div>
+
+  </li>
 
 
+  <li>
+    <span class="post-meta">Apr 20, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/debug-with-gdb-on-multi-thread-programs/">使用gdb调试多线程程序</a>
+    </h3>
+
+    <div id="outline-container-org85cd1fe" class="outline-2">
+<h2 id="org85cd1fe">查看当前线程信息</h2>
+<div class="outline-text-2" id="text-org85cd1fe">
+<p>
+<b>将进程中的各个线程信息显示出来</b><br></p>
+<div class="highlight"><pre><span></span>(gdb) info threads
+</pre></div>
+
+<p>
+<b>切换到指定进程</b><br></p>
+<div class="highlight"><pre><span></span>(gdb) thread tid
+</pre></div>
+
+<p>
+<b>向指定的线程发送自定的指令</b><br></p>
+<div class="highlight"><pre><span></span>(gdb) thread apply tid/all args
+</pre></div>
+<p>
+常用的指定是查看所有线程的调用堆栈 <code>thread apply all bt</code> ，这个指令与 <code>pstack</code> 命令有些相似。<br></p>
+
+<p>
+<b>gdb默认会自动捕捉新产生线程</b><br>
+会在产生一个新的线程时会显示出LWP的字样提示用户，LWP = light weight process<br>
+可以设置gdb是否提示线程相关的事件<br></p>
+<div class="highlight"><pre><span></span>(gdb) set print thread-events on/off
+(gdb) show print thread-events
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org12cec50" class="outline-2">
+<h2 id="org12cec50">为指定的线程设置断点</h2>
+<div class="outline-text-2" id="text-org12cec50">
+<p>
+含有多线程的程序，可以为单独的线程设置断点<br></p>
+<div class="highlight"><pre><span></span>(gdb) break linespec thread tid
+</pre></div>
+
+<p>
+任何时候当你的程序在GDB模式下停止的时候，包括当前调试线程的所有线程都会停下来，不会对继续对当前进程造成更改。这时你可以在线程间进行切换，查看整个进程的执行状况。<br></p>
+<blockquote>
+<p>
+Whenever your program stops under GDB for any reason, all threads of execution stop, not just the current thread. This allows you to examine the overall state of the program, including switching between threads, without worrying that things may change underfoot.<br></p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-orgf6c90a7" class="outline-2">
+<h2 id="orgf6c90a7">防止gdb自动切换线程</h2>
+<div class="outline-text-2" id="text-orgf6c90a7">
+<p>
+在调试gdb程序时，在单步执行时，会出现线程间跳转切换，这样对跟踪代码执行状态十分不方便。<br>
+可以通过设置 <code>scheduler-locking</code> 让gdb在所调试的线程中运行，防止线程的自动切换。<br></p>
+<div class="highlight"><pre><span></span>(gdb) set scheduler-locking step
+</pre></div>
+<p>
+可以执行以下命令查看当前 <code>scheduler-locking</code> 的设置<br></p>
+<div class="highlight"><pre><span></span>(gdb) show scheduler-locking
+</pre></div>
+<p>
+<code>scheduler-locking</code> 有三种模式<br></p>
+<ol class="org-ol">
+<li>
+<code>off</code> 任何线程在任何时候都能执行<br>
+</li>
+<li>
+<code>on</code> 只有当前线程能够执行<br>
+</li>
+<li>
+<code>step</code> 为单步执行优化的模式，比较适合一般的调试<br>
+</li>
+</ol>
+<blockquote>
+<p>
+Set the scheduler locking mode. If it is off, then there is no locking and any thread may run at any time. If on, then only the current thread may run when the inferior is resumed. The step mode optimizes for single-stepping. It stops other threads from "seizing the prompt" by preempting the current thread while you are stepping. Other threads will only rarely (or never) get a chance to run when you step. They are more likely to run when you `next' over a function call, and they are completely free to run when you use commands like `continue', `until', or `finish'. However, unless another thread hits a breakpoint during its timeslice, they will never steal the GDB prompt away from the thread that you are debugging.<br></p>
+</blockquote>
+</div>
+</div>
+
+
+<div id="outline-container-org80ba28c" class="outline-2">
+<h2 id="org80ba28c">参考资料</h2>
+<div class="outline-text-2" id="text-org80ba28c">
+<ol class="org-ol">
+<li>
+<a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_39.html">gnu manual 1</a><br>
+</li>
+<li>
+<a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_24.html">gun manual 2</a><br>
+</li>
+<li>
+<a href="https://sourceware.org/gdb/onlinedocs/gdb/Threads.html">sourceware gdb onlinedocs</a><br>
+</li>
+<li>
+<a href="http://www.drdobbs.com/cpp/multithreaded-debugging-techniques/199200938?pgno=1">drdobbs.com</a><br>
+</li>
+</ol>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Apr 19, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/gdb-ignore-received-signal/">在gdb调试时忽略系统信号（signal）</a>
+    </h3>
+
+    <p>
+在gdb调试程序时，默认情况下gdb在收到信号时会中断程序的运行，并将收到的信号显示出来。这时，可以选择输入 <code>c</code> (continue)让程序继续运行。如果程序会重复收到这信号，会非常影响调试效率。可以通过配置忽略指定的系统信号。<br></p>
+
+<p>
+查看当前系统信号的处理信息的指令如下。<br></p>
+<div class="highlight"><pre><span></span>(gdb) info signal
+</pre></div>
+
+<p>
+以调试网络程序为例，进程会经常收到 <code>SIGPIPE</code> 消息，对于网络进程的 <code>SIGPIPE</code> 消息在程序中会由自身处理，可以使用以下指令让gdb不再提示 <code>SIGPIPE</code> 信号。<br></p>
+<div class="highlight"><pre><span></span>(gdb) handle SIGPIPE nostop noprint
+</pre></div>
+<p>
+其中， <code>nostop</code> 表示在收到信号时不再中断程序的运行， <code>noprint</code> 表示在收到信号时不再将收到的信号打印到gdb调试界面，这两个参数可以分开使用。<br></p>
+
+<p>
+参考资料： <a href="ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_38.html">gnu gdb manual</a><br></p>
+
+<p>
+（全文完）<br></p>
 
   </li>
 
@@ -142,10 +1185,10 @@ C++中有很多智能指针如 <code>unique_ptr</code> 和 <code>shared_ptr</cod
 
   <ul class="index-pager hidden-print">
 <li class="previous">
-      <a href="/index-8.html" rel="prev">&lt; Newer posts</a>
+        <a href="/index-10.html" rel="next">&lt; Older posts</a>
     </li>
     <li class="next">
-      <a href="/index-10.html" rel="next">Older posts &gt;</a>
+        <a href="/index-8.html" rel="prev">Newer posts &gt;</a>
     </li>
   </ul>
 </div>

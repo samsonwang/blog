@@ -50,13 +50,243 @@
 <div class="home">
   <ul class="post-list">
 <li>
-    <span class="post-meta">Oct 29, 2018</span>
+    <span class="post-meta">Feb 08, 2018</span>
     <h3>
-      <a class="post-link" href="/posts/algorithm-weekly-find-first-and-last-position-of-element-in-sorted-array/">每周算法：从有序数组中找到目标出现的第一次和最后一次的位置</a>
+      <a class="post-link" href="/posts/use-git-with-socks5-proxy/">为git设置socks5代理</a>
     </h3>
 
     <p>
-leetcode第34题，难度为medium，有序数组的查找，二分查找的变种。<br></p>
+在某些时候，为了绕过网络封锁，在使用git时需要借助代理完成相关网络操作。<br></p>
+
+<div id="outline-container-org3a78697" class="outline-2">
+<h2 id="org3a78697">一个可用的VPN代理是先决条件</h2>
+<div class="outline-text-2" id="text-org3a78697">
+<p>
+关于VPN的架设就不在此讨论了。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgccc45fe" class="outline-2">
+<h2 id="orgccc45fe">将repo的链接由ssh改为为https</h2>
+<div class="outline-text-2" id="text-orgccc45fe">
+<p>
+已经使用https的repo跳过此步骤。<br>
+本教程需要通过https（http）的方式使用代理，所以如果现有的repo是使用ssh方式clone到本地的，需要修改其为https方式。<br>
+需要修改 <code>repo_name/.git/config</code> 中的url配置，将其中的git格式改为https格式。使用文本编辑工具将其打开进行修改，以github为例，需要将 <code>git@github.com:user_name/repo_name.git</code> 改为 <code>https://github.com/user_name/repo_name.git</code> 。<br>
+可以使用sed指令完成替换。<br></p>
+<div class="highlight"><pre><span></span>sed -i 's/git@github.com:/git:\/\/github.com\//' ./.git/config
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org353ad80" class="outline-2">
+<h2 id="org353ad80">设置git使用代理</h2>
+<div class="outline-text-2" id="text-org353ad80">
+<p>
+将git配置为使用socks5代理，以socks5的ip和端口是 <code>127.0.0.1:1080</code> 为例。<br></p>
+<div class="highlight"><pre><span></span>git config --global http.proxy 'socks5://127.0.0.1:1080'
+git config --global https.proxy 'socks5://127.0.0.1:1080'
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org8c4a2a5" class="outline-2">
+<h2 id="org8c4a2a5">将登录信息缓存下来</h2>
+<div class="outline-text-2" id="text-org8c4a2a5">
+<p>
+使用https时，在向远程仓库进行推送（git push）时会要求验证用户名和密码，由于每次都输入验证信息是十分繁琐的，考虑将验证信息缓存下来。<br></p>
+<div class="highlight"><pre><span></span>git config --global credential.helper cache
+</pre></div>
+<p>
+git默认会将密码缓存15分钟，在这期间进行的操作是不需要再次进行密码验证的，可以使用下面命令修改缓存的时长。<br></p>
+<div class="highlight"><pre><span></span>git config --global credential.helper "cache --timeout=3600"
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org91cc819" class="outline-2">
+<h2 id="org91cc819">将登陆信息保存下来</h2>
+<div class="outline-text-2" id="text-org91cc819">
+<p>
+也可以考虑将用户名和密码永久保存下来，这样就不需要再次进行密码验证了。<br><b>注意:</b> 使用这种配置会将明文的账户和密码保存在 <code>~/.git-cretidentials</code> 文件中，所以仅推荐在个人电脑中使用这个配置。<br></p>
+<div class="highlight"><pre><span></span>git config --global credential.helper store
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgae3e4ed" class="outline-2">
+<h2 id="orgae3e4ed">参考资料</h2>
+<div class="outline-text-2" id="text-orgae3e4ed">
+<ul class="org-ul">
+<li>
+<a href="https://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-on-github">stackoverflow question</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Feb 07, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/cpp-development-framework-on-windows/">windows平台下的C++开发框架</a>
+    </h3>
+
+    <p>
+在开发windows应用程序时，经常会遇到win32、mfc、atl的函数。下面就对三种API（或者说是开发框架）进行了总结。<br></p>
+
+<div id="outline-container-orgfff5e6c" class="outline-2">
+<h2 id="orgfff5e6c">Win32开发框架</h2>
+<div class="outline-text-2" id="text-orgfff5e6c">
+<p>
+win32开发框架是最基础的函数接口，更接近操作系统底层。<br>
+使用Win32接口的优点是程序的依赖最小，生成的可执行文件的体积也最小。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orga81af04" class="outline-2">
+<h2 id="orga81af04">MFC开发框架</h2>
+<div class="outline-text-2" id="text-orga81af04">
+<p>
+MFC是Microsoft Foundation Class的缩写，将win32的相关接口按照OOP的思想封装了起来，目的是提供一个快速开发原生应用的框架。<br>
+使用MFC开发的程序体型略显臃肿，而且MFC也比较陈旧了，并不推荐使用MFC进行开发。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org3c73cbb" class="outline-2">
+<h2 id="org3c73cbb">ATL开发框架</h2>
+<div class="outline-text-2" id="text-org3c73cbb">
+<p>
+ATL是Active Template Library的缩写，是针对COM组件的开发实现的一套开发框架。ATL简化了ActiveX COM组件的开发。<br></p>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Feb 06, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/emacs-search-string-in-directory-recursively/">使用emacs在目录中递归搜索字符串</a>
+    </h3>
+
+    <p>
+对文件中的字符串搜索是开发中经常遇到的情景，下面就对常见的搜索字符串的方式进行了总结。<br></p>
+
+<p>
+<b>对当前buffer进行搜索（单个文件）</b><br><code>C-s</code> 向后搜索<br><code>C-r</code> 向后搜索<br><code>M-s o</code> 使用occur对当前buffer中的指定关键字进行统计<br>
+在安装了helm以后可以使用 <code>helm-occur</code> 完成当前buffer的搜索<br></p>
+
+<p>
+<b>对目录中的指定文件进行搜索（一个目录下的多个文件）</b><br><code>C-x d</code> 进入dired模式，在dired模式中使用 <code>M-x &lt;dired-do-find-regexp&gt;</code> (快捷键 <code>A</code> )对标记的文件进行搜索。<br></p>
+
+<p>
+<b>对目录中的所有文件进行递归搜索（一个目录下的所有文件和所有子目录中的文件）</b><br><code>M-x &lt;rgrep&gt;</code> 能够对一个目录下所有的文件进行正则表达式匹配<br></p>
+
+<p>
+<b>注意事项</b><br>
+在windows平台上使用grep和find指令时，需要借助仿linux环境中的程序完成，如cygwin中的程序。<br>
+需要将程序的路径添加到系统环境变量path中，并且为了覆盖windows系统自带的find命令，需要将该路径放在系统find路径之前。<br>
+tips： 对于安装了 <code>git bash</code> 的同学，直接将其中的 <code>mingw64\bin</code> 的绝对路径加入系统path中即可。<br></p>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Feb 05, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/shadowsock-server-setup-guide/">ss服务器的配置指南</a>
+    </h3>
+
+    <p>
+租一个服务器自己搭建梯子是科学上网方便稳定快捷的好方法。<br>
+本文主要是自己部署vpn服务端的笔记，作为备忘留存下来。<br></p>
+
+<div id="outline-container-orgfc6cebb" class="outline-2">
+<h2 id="orgfc6cebb">安装ss服务程序</h2>
+<div class="outline-text-2" id="text-orgfc6cebb">
+<p>
+安装环境为CentOS7, 需要使用python的包管理工具pip完成对ss-server的安装。<br></p>
+<div class="highlight"><pre><span></span>sudo yum install m2crypto python-setuptools
+sudo easy_install pip
+sudo pip install shadowsocks
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org60e608a" class="outline-2">
+<h2 id="org60e608a">配置ss服务器</h2>
+<div class="outline-text-2" id="text-org60e608a">
+<p>
+<b>配置文件示例</b> :<br>
+这份配置中使用了多个端口作供ss-server使用<br></p>
+<div class="highlight"><pre><span></span>{
+    "server":"your-server-ip",
+    "local_address":"127.0.0.1",
+    "local_port":1080,
+    "port_password":
+    {
+	"32366":"shadowsocks",
+	"32367":"shadowsocks",
+	"32368":"shadowsocks",
+	"32369":"shadowsocks",
+	"52369":"shadowsocks"
+    },
+    "timeout":300,
+    "method":"aes-256-cfb",
+    "fast_open": false
+}
+</pre></div>
+
+
+<p>
+<b>启动脚本示例</b> :<br>
+直接在命令行直接输入指令也能够完成ss服务的启动和停止，使用脚本只是为了方便一些。<br></p>
+<div class="highlight"><pre><span></span>#!/bin/bash
+ss_start()
+{
+  ssserver -c /root/shadowsocks/shadowsocks.json -d start
+}
+ss_stop()
+{
+  ssserver -c /root/shadowsocks/shadowsocks.json -d stop
+}
+# shell script main
+if [ "$#" -eq "0" ]; then
+  ss_start
+else
+  case "$1" in
+  start)
+    ss_start
+    exit;;
+  stop)
+    ss_stop
+    exit;;
+  esac
+fi
+</pre></div>
+
+<p>
+<b>增加系统启动项</b><br>
+可以将启动脚本加入系统启动项，这样就能够保证在每次reboot后，服务都能自动开启。<br></p>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Jan 19, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/git-cheatsheet/">常用git操作备忘</a>
+    </h3>
+
+    <p>
+对常用指令进行总结，方便以后遇到相同情况时查阅。<br></p>
 
 
 
@@ -64,13 +294,244 @@ leetcode第34题，难度为medium，有序数组的查找，二分查找的变�
 
 
   <li>
-    <span class="post-meta">Oct 28, 2018</span>
+    <span class="post-meta">Jan 17, 2018</span>
     <h3>
-      <a class="post-link" href="/posts/linux-run-program-nohup/">[转]Linux 技巧：让进程在后台可靠运行的几种方法</a>
+      <a class="post-link" href="/posts/emacs-find-replace-string-in-directory/">使用emacs查找替换指定目录所有文件中字符串</a>
     </h3>
 
     <p>
-我们经常会碰到这样的问题，用 telnet/ssh 登录了远程的 Linux 服务器，运行了一些耗时较长的任务， 结果却由于网络的不稳定导致任务中途失败。如何让命令提交后不受本地关闭终端窗口/网络断开连接的干扰呢？下面举了一些例子， 您可以针对不同的场景选择不同的方式来处理这个问题。<br></p>
+本文主要介绍在emacs中对一个目录中的很多文件进行字符串查找和替换操作的方法。参考了 <a href="http://ergoemacs.org/emacs/blog.html">XahLee</a> 的教程后，在此记录做个备份。<br></p>
+<div id="outline-container-orga5b0a3e" class="outline-2">
+<h2 id="orga5b0a3e">操作步骤</h2>
+<div class="outline-text-2" id="text-orga5b0a3e">
+<p>
+<b>进入dired模式</b> ： 我的快捷键配置为 <code>C-x d</code>, 也可以使用 <code>M-x &lt;dired&gt;</code> .<br><b>标记需要查找的文件</b> ： 在进入dired模式后，对需要操作的文件或目录进行操作。<br></p>
+<ul class="org-ul">
+<li>
+<code>m</code> 对光标所在的文件或目录进行标记<br>
+</li>
+<li>
+<code>u</code> 对光标所在的文件或目录取消标记<br>
+</li>
+<li>
+<code>U</code> 取消所有标记<br>
+</li>
+</ul>
+<p>
+可以通过 <code>M-x &lt;dired-mark-files-regexp&gt;</code> 使用正则表达式完成批量文件增加标记。<br><b>批量查找</b> ： 使用 <code>M-x &lt;dired-do-query-replace-regexp&gt;</code> 进行查找替换。在有 <code>grep</code> 的支持时（linux环境下或windows环境中增加了类似cygwin的程序），也可以使用 <code>&lt;dired-do-find-regexp-and-replace&gt;</code> 进行文本查找替换。<br><b>查找结果</b> ： 在查找结果中使用如下快捷键完成操作<br></p>
+<ul class="org-ul">
+<li>
+<code>y</code> 对当前记录执行替换操作<br>
+</li>
+<li>
+<code>n</code> 跳过当前记录<br>
+</li>
+<li>
+<code>C-g</code> 停止本次查找替换操作<br>
+</li>
+<li>
+<code>!</code> 同意本文件中的查找替换操作<br>
+</li>
+<li>
+<code>N</code> 跳过本文件中的查找替换操作<br>
+</li>
+<li>
+<code>Y</code> 同意本次所有的查找替换操作<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgcdec4e6" class="outline-2">
+<h2 id="orgcdec4e6">相关技巧</h2>
+<div class="outline-text-2" id="text-orgcdec4e6">
+<p>
+如果需要批量查找(不进行替换)，可以在dired模式中 <code>M-x &lt;dired-do-search&gt;</code> 进行查找，对于查找结果使用 <code>M-x tags-loop-continue</code> 进行逐条浏览。<br></p>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Jan 10, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/stl-iterator-invalidate/">STL容器的迭代器失效问题</a>
+    </h3>
+
+    <div id="outline-container-org75b7183" class="outline-2">
+<h2 id="org75b7183">1 引言</h2>
+<div class="outline-text-2" id="text-org75b7183">
+<p>
+常见的STL容器都能使用迭代器访问容器内元素，迭代器相同于一个指向容器内元素的指针，可以通过移动迭代器实现遍历容器。<br>
+但是在使用迭代器时需要考虑STL容器的失效问题；迭代器失效主要出现在对容器进行了增删操作之后，迭代器不再指向原本的元素。<br>
+这时如果再通过迭代器访问容器就有可能出现异常。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgbeb2df0" class="outline-2">
+<h2 id="orgbeb2df0">2 map容器</h2>
+<div class="outline-text-2" id="text-orgbeb2df0">
+<p>
+<b>内部数据结构</b> ：红黑树<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入都红黑树中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgd4f3aff" class="outline-2">
+<h2 id="orgd4f3aff">3 vector容器</h2>
+<div class="outline-text-2" id="text-orgd4f3aff">
+<p>
+<b>内部数据结构</b> ：数组(一段连续内存空间)<br><b>插入操作</b> ：由于vector使用的是一段有长度限制的连续空间，插入( <code>push_back</code> / <code>insert</code> )操作在vector中加入新的元素时需要分情况考虑。<br></p>
+<ul class="org-ul">
+<li>当vector中元素总数仍不大于capacity，这时插入位置后的元素都被依次移动到下一个位置，所以插入位置之后的迭代器都会失效。<br>
+</li>
+<li>当vector中元素总数大于capacity，这个时候会重新开辟更大的内存空间，将原来的vector中的内容复制到新的vector中，回收原先vector的内存空间。由于新的vector的地址已完全改变，所以原先的所有迭代器都会失效。<br>
+</li>
+</ul>
+<p>
+<b>删除操作</b> ：删除( <code>pop_back</code> / <code>erase</code> )操作在vector中删除元素，删除位置后的元素都被依次复制到前一个位置，所以删除位置之后的迭代器都会失效。<br>
+示例代码：<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgadeba97" class="outline-2">
+<h2 id="orgadeba97">4 list容器</h2>
+<div class="outline-text-2" id="text-orgadeba97">
+<p>
+<b>内部数据结构</b> ：双向环状链表<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入到链表中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org59145f3" class="outline-2">
+<h2 id="org59145f3">5 小结</h2>
+<div class="outline-text-2" id="text-org59145f3">
+<p>
+在操作STL容器时，对容器增删（ <code>erase</code> / <code>insert</code> ）之后应该注意接收返回值，这样可以有效避免迭代器失效的产生。<br>
+对容器进行遍历删除操作时，另一种语法技巧是在 <code>erase</code> 接口中对迭代器进行后自增（it++），这种写法也能够保证遍历正常进行。理解这种写法需要参考运算符重载的相关知识，后自增操作会产生一个临时变量用于函数返回。<br></p>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Jan 08, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/size_t-and-size_type/">关于size_t和size_type的比较</a>
+    </h3>
+
+    <div id="outline-container-org8dcc44a" class="outline-2">
+<h2 id="org8dcc44a">1 引言</h2>
+<div class="outline-text-2" id="text-org8dcc44a">
+<p>
+编程中常见的表示两种大小的类型标识符有 <code>size_t</code> 和 <code>size_type</code> ，这两种类型十分相似，非常容易混淆。本文对他们的使用场景进行了比较，并提供了示例代码。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org5db7a30" class="outline-2">
+<h2 id="org5db7a30">2 <code>size_t</code> 类型</h2>
+<div class="outline-text-2" id="text-org5db7a30">
+<p>
+当需要描述某个对象的大小（size）时都应该使用 <code>size_t</code> ，其大小被限制为 0 到 <code>SIZE_MAX</code> 之间。<br><code>size_t</code> 的定义在 <code>&lt;cstddef&gt;</code> 中， <code>SIZE_MAX</code> 的定义在 <code>&lt;climits&gt;</code> 中。<br><code>size_t</code> 一般会作为 <code>sizeof</code> 运算符的返回结果，可以理解为在给定的平台中是统一的。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgffbdd89" class="outline-2">
+<h2 id="orgffbdd89">3 <code>size_type</code> 类型</h2>
+<div class="outline-text-2" id="text-orgffbdd89">
+<p>
+在 <code>STL</code> 中定义了 <code>size_type</code> 是与 <code>Allocator::size_tpye</code> 相对应的。而 <code>Allocator</code> 是模板的一个参数。<br><code>size_type</code> 可以理解为在给定容器范围内是统一的。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orga0b3931" class="outline-2">
+<h2 id="orga0b3931">4 二者之间的比较</h2>
+<div class="outline-text-2" id="text-orga0b3931">
+<p>
+这两种类型主要是为了提高代码的可移植性。一般情况来说，这两种类型是没有区别的，因为使用标准库默认的 <code>Allocator</code> 所对应的 <code>size_type</code> 就是 <code>size_t</code> 。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org3da4936" class="outline-2">
+<h2 id="org3da4936">5 示例代码</h2>
+<div class="outline-text-2" id="text-org3da4936">
+<p>
+注意 <code>size_type</code> 在使用时需要加上容器类型限定。<br></p>
+<div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">n1</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">v</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">size_type</span> <span class="n">n2</span> <span class="o">=</span> <span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">s</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">::</span><span class="n">size_type</span> <span class="n">n3</span> <span class="o">=</span> <span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org6fb87c4" class="outline-2">
+<h2 id="org6fb87c4">6 参考资料</h2>
+<div class="outline-text-2" id="text-org6fb87c4">
+<ul class="org-ul">
+<li>
+<a href="http://en.cppreference.com/w/cpp/types/size_t">http://en.cppreference.com/w/cpp/types/size_t</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/918567/size-t-vs-containersize-type">https://stackoverflow.com/questions/918567/size-t-vs-containersize-type</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Jan 04, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/frequent-improper-syntax-warning-on-compile/">常见的由于语法不当引起的编译警告</a>
+    </h3>
+
+    <div id="outline-container-orgf009acc" class="outline-2">
+<h2 id="orgf009acc">1 引言</h2>
+<div class="outline-text-2" id="text-orgf009acc">
+<p>
+本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。<br>
+这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
+
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Jan 02, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/emacs-global-gtags-guide/">在emacs中使用GNU Global的配置指南</a>
+    </h3>
+
+    <div id="outline-container-org99507ed" class="outline-2">
+<h2 id="org99507ed">1 引言</h2>
+<div class="outline-text-2" id="text-org99507ed">
+<p>
+本文主要针对emacs中的global的配置和使用方法做了简要介绍。global是代码标签化索引工具，能够在许多源码中快速定位函数的实现位置。我主要使用global来辅助代码跳转；还有一种用法是用来辅助代码补全，目前正在研究中。<br></p>
+
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Dec 31, 2017</span>
+    <h3>
+      <a class="post-link" href="/posts/gcc-warn-on-compile/">GCC编译时的警告（warn）相关参数</a>
+    </h3>
+
+    <p>
+编译阶段警告信息有助于排查代码中错误，合理配置编译警告信息能够提高开发效率。<br>
+通过了解编译警告，也能够了解到哪些代码风格是不好的，有哪些代码的书写格式是容易出现问题的，有助于让自己写出更高质量的代码。<br></p>
 
 
 
@@ -78,57 +539,40 @@ leetcode第34题，难度为medium，有序数组的查找，二分查找的变�
 
 
   <li>
-    <span class="post-meta">Oct 22, 2018</span>
+    <span class="post-meta">Dec 15, 2017</span>
     <h3>
-      <a class="post-link" href="/posts/algorithm-weekly-search-in-rotated-sorted-array/">每周算法：搜索有序的回环数组</a>
+      <a class="post-link" href="/posts/linux-directory-structure/">Linux 系统目录结构</a>
     </h3>
 
-    <p>
-leetcode第33道，难度为medium，数组搜索问题，是二分查找的升级版。<br></p>
+    <div id="outline-container-orgdbefd69" class="outline-2">
+<h2 id="orgdbefd69">Linux系统的目录结构以及各个目录的作用</h2>
+<div class="outline-text-2" id="text-orgdbefd69">
+</div>
+<div id="outline-container-org37a7d6f" class="outline-3">
+<h3 id="org37a7d6f"><code>/bin</code></h3>
+<div class="outline-text-3" id="text-org37a7d6f">
+<p>
+bin是binary的缩写，这个目录存放使用者最经常使用的命令<br></p>
+</div>
+</div>
 
+<div id="outline-container-org7d0fb65" class="outline-3">
+<h3 id="org7d0fb65"><code>/boot</code></h3>
+<div class="outline-text-3" id="text-org7d0fb65">
+<p>
+这里存放的是启动linux时使用的一些核心文件<br></p>
+</div>
+</div>
 
+<div id="outline-container-org2120b7e" class="outline-3">
+<h3 id="org2120b7e"><code>/etc</code></h3>
+<div class="outline-text-3" id="text-org2120b7e">
+<p>
+这个目录用来存放系统管理所需要的配置文件和子目录<br></p>
 
-  </li>
-
-
-  <li>
-    <span class="post-meta">Oct 20, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/brief-intro-to-gateway/">网关简介</a>
-    </h3>
-
-    <p>
-网关是在网络通信中常常被提起的一个词，它究竟是什么，它其中包含哪些知识点呢？本文将带你了解网关的一些基础概念。<br></p>
-
-
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Oct 18, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/debug-with-gdb-gui/">gdb图形化调试</a>
-    </h3>
-
-    <p>
-gdb是linux下很强大的调试工具，它使用命令行进行交互。相比于windows下visual studio的图形化调试界面，gdb的命令行方式操作起来不是很方便，从用户友好度上二者难以相提并论。不过gdb也有许多配套的前端组件，提供了图形化界面展示调试过程中的信息，这样就比传统命令行方式要方便很多。本文介绍了使用图形化的gdb前端让调试变得便捷高效，建议再阅读本文之前先掌握一些gdb的基础知识。<br></p>
-
-
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Oct 17, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/algorithm-weekly-next-permutation/">每周算法：下一个组合</a>
-    </h3>
-
-    <p>
-leetcode算法题第31道，难度为medium。这道题考察题意理解的准确性和思路的全面性，对于题目所包含规律的总结也很重要。<br></p>
-
-
+</div>
+</div>
+</div>
 
   </li>
 
@@ -142,10 +586,10 @@ leetcode算法题第31道，难度为medium。这道题考察题意理解的准�
 
   <ul class="index-pager hidden-print">
 <li class="previous">
-      <a href="/index-10.html" rel="prev">&lt; Newer posts</a>
+        <a href="/index-12.html" rel="next">&lt; Older posts</a>
     </li>
     <li class="next">
-      <a href="/index-12.html" rel="next">Older posts &gt;</a>
+        <a href="/index-10.html" rel="prev">Newer posts &gt;</a>
     </li>
   </ul>
 </div>
