@@ -1,0 +1,48 @@
+#+BEGIN_COMMENT
+.. title: 检查C字符串为空
+.. slug: check-c-string-empty
+.. date: 2023-03-10 09:08:51 UTC+08:00
+.. tags: c, strlen
+.. category: c
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 检查C字符串为空
+
+在C语言中如何检测字符串为空字符串，最近看到twitter上有对此问题讨论，让我学习到了很多新的知识点。
+
+{{{TEASER_END}}}
+
+** 使用 =strlen= 判断空字符串
+使用 =strlen= 接口进行判断，这是我看到这个问题时的第一反应，示例代码段如下：
+
+#+begin_src c
+bool CheckStringEmpty(const char* pStr) {
+    return pStr && strlen(pStr) > 0;
+}
+#+end_src
+
+这段代码肯定是符合要求的，通过判断字符串的长度来确定字符串非空。但是这并不是最优解，因为 =strlen= 需要扫描整个字符串才能得到字符串的长度。
+
+** 效率改进的空字符串判断
+判断空字符串只需要保证字符串长度大于0，所以仅需要检查第一个字符是否为结束字符即可。示例代码段如下：
+
+#+begin_src c
+bool CheckStringEmpty(const char* pStr) {
+    return pStr && pStr[0];
+}
+#+end_src
+
+** 思考
+这个问题其实并不是很难，但是又比较零碎，而且随着硬件设备的性能逐渐提高，这种关乎性能的问题很容易被忽略。
+只有在硬件资源比较紧张时才有可能扣这些细节，优秀的代码就是在这些细节上做到无可挑剔。以此共勉。
+
+
+** 参考资料
+- [[https://mail.openvswitch.org/pipermail/ovs-dev/2023-February/402361.html][mail list - openvswitch]]
+
+（全文完）
