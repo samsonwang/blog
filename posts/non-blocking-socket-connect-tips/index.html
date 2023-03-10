@@ -69,30 +69,30 @@ if (res &lt; 0 &amp;&amp; errno != EINPROGRE">
       
     <time class="dt-published" datetime="2018-08-31T17:04:19+08:00" itemprop="datePublished">Aug 31, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org27b11f7" class="outline-2">
-<h2 id="org27b11f7">问题</h2>
-<div class="outline-text-2" id="text-org27b11f7">
+    <div id="outline-container-org834b43f" class="outline-2">
+<h2 id="org834b43f">问题</h2>
+<div class="outline-text-2" id="text-org834b43f">
 <p>
 使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3c2f6b5" class="outline-2">
-<h2 id="org3c2f6b5">解答</h2>
-<div class="outline-text-2" id="text-org3c2f6b5">
+<div id="outline-container-org616185d" class="outline-2">
+<h2 id="org616185d">解答</h2>
+<div class="outline-text-2" id="text-org616185d">
 <p>
 客户端建立连接的示例代码如下：<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="p">...);</span>
-<span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">errno</span> <span class="o">!=</span> <span class="n">EINPROGRESS</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// case1. error, fail somehow, close socket</span>
-    <span class="k">return</span><span class="p">;</span>
-<span class="p">}</span>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">res</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">errno</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EINPROGRESS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// case1. error, fail somehow, close socket</span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 
-<span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// case2. connection has succeeded immediately</span>
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="c1">// case3. connection attempt is in progress</span>
-<span class="p">}</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">res</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// case2. connection has succeeded immediately</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// case3. connection attempt is in progress</span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 <p>
 由于是非阻塞模式，所以 <code>connect</code> 之后会直接返回，根据返回值 <code>res</code> 和 <code>errno</code> 能够判断建立连接的结果。<br></p>
@@ -112,26 +112,26 @@ if (res &lt; 0 &amp;&amp; errno != EINPROGRE">
 <li>case6，表示连接建立成功，可以开始 <code>read</code> 和 <code>write</code> 了。<br>
 </li>
 </ul>
-<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">result</span><span class="p">;</span>
-<span class="kt">socklen_t</span> <span class="n">result_len</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
-<span class="k">if</span> <span class="p">(</span><span class="n">getsockopt</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">SO_ERROR</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">result</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">result_len</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// case4. error, fail somehow, close socket</span>
-    <span class="k">return</span><span class="p">;</span>
-<span class="p">}</span>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w"></span>
+<span class="kt">socklen_t</span><span class="w"> </span><span class="n">result_len</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">getsockopt</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">SOL_SOCKET</span><span class="p">,</span><span class="w"> </span><span class="n">SO_ERROR</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result_len</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// case4. error, fail somehow, close socket</span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 
-<span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// case5. connection failed; error code is in 'result'</span>
-    <span class="k">return</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// case5. connection failed; error code is in 'result'</span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 
 <span class="c1">// case6. socket is ready for read()/write()</span>
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org5432321" class="outline-2">
-<h2 id="org5432321">参考资料</h2>
-<div class="outline-text-2" id="text-org5432321">
+<div id="outline-container-orgfd248ad" class="outline-2">
+<h2 id="orgfd248ad">参考资料</h2>
+<div class="outline-text-2" id="text-orgfd248ad">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
@@ -196,7 +196,7 @@ if (res &lt; 0 &amp;&amp; errno != EINPROGRE">
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="copyright">Copyright 2023, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
 <li><a rel="me" href="/rss.xml">

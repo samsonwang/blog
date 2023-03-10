@@ -13,6 +13,7 @@
 <link rel="canonical" href="https://blog.wangzhl.com/posts/cpp-pragma-pack-pitfall/">
 <link rel="icon" href="/favicon.ico" sizes="64x64">
 <link rel="prev" href="/posts/how-to-detect-tcp-abnormal-disconnection/" title="如何检测TCP连接的异常断开" type="text/html">
+<link rel="next" href="/posts/check-c-string-empty/" title="检查C字符串为空" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="结构体字节对齐的陷阱">
@@ -65,17 +66,17 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org0b4fdca" class="outline-2">
-<h2 id="org0b4fdca">遇到的问题</h2>
-<div class="outline-text-2" id="text-org0b4fdca">
+<div id="outline-container-org6f6212c" class="outline-2">
+<h2 id="org6f6212c">遇到的问题</h2>
+<div class="outline-text-2" id="text-org6f6212c">
 <p>
 在调试一个程序时发现在某个函数中能够正确地读到结构体成员变量值，在另一个函数中读到的却是错误的值。我刚开始遇到这个问题非常诧异，因为在同一个程序中读取的是同一个结构体对象，出现这样的现象是非常奇怪的。最终排查后发现是由两个函数中的结构体内存布局差异导致的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org7071705" class="outline-2">
-<h2 id="org7071705">注意 <code>pragma pack</code> 的作用域</h2>
-<div class="outline-text-2" id="text-org7071705">
+<div id="outline-container-org8b1fad8" class="outline-2">
+<h2 id="org8b1fad8">注意 <code>pragma pack</code> 的作用域</h2>
+<div class="outline-text-2" id="text-org8b1fad8">
 <p>
 下面就是将结构体对齐方式修改为4字节的例子：<br></p>
 
@@ -85,7 +86,7 @@
 <p>
 我原以为它是针对单个头文件生效的，但其实它会影响这个头文件文件以及在其之后被引用的头文件。这个特性有点类似于命名空间 <code>namespace</code> 的污染效果，在头文件中使用<br></p>
 
-<div class="highlight"><pre><span></span><span class="k">using</span> <span class="k">namespace</span> <span class="n">xxx</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">xxx</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 
 <p>
@@ -93,9 +94,9 @@
 </div>
 </div>
 
-<div id="outline-container-org56944ac" class="outline-2">
-<h2 id="org56944ac">一个简单的例子</h2>
-<div class="outline-text-2" id="text-org56944ac">
+<div id="outline-container-org0f8744f" class="outline-2">
+<h2 id="org0f8744f">一个简单的例子</h2>
+<div class="outline-text-2" id="text-org0f8744f">
 <p>
 在本节展示的是一个头文件引用顺序对结构体字节对齐大小的影响。<br></p>
 
@@ -103,29 +104,29 @@
 文件 header1.h 中内容如下：<br></p>
 <div class="highlight"><pre><span></span><span class="c1">// header1.h</span>
 <span class="cp">#pragma pack(1)</span>
-<span class="k">struct</span> <span class="n">s1</span> <span class="p">{</span>
-  <span class="kt">char</span> <span class="n">m_ch</span><span class="p">;</span>
-  <span class="kt">float</span> <span class="n">m_f</span><span class="p">;</span>
-<span class="p">};</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">s1</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="n">m_ch</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="kt">float</span><span class="w"> </span><span class="n">m_f</span><span class="p">;</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
 </pre></div>
 
 <p>
 文件 header2.h 中的内容如下：<br></p>
 <div class="highlight"><pre><span></span><span class="c1">// header2.h</span>
-<span class="k">struct</span> <span class="n">s2</span> <span class="p">{</span>
-  <span class="kt">char</span> <span class="n">m_ch</span><span class="p">;</span>
-  <span class="kt">float</span> <span class="n">m_f</span><span class="p">;</span>
-<span class="p">};</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">s2</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="n">m_ch</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="kt">float</span><span class="w"> </span><span class="n">m_f</span><span class="p">;</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
 </pre></div>
 
 <p>
 在 file1.cpp 中的内容如下：<br></p>
 <div class="highlight"><pre><span></span><span class="c1">// file1.cpp</span>
-<span class="cp">#include</span> <span class="cpf">&lt;header1.h&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;header2.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;header1.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;header2.h&gt;</span><span class="cp"></span>
 <span class="c1">// ...</span>
-<span class="n">printf</span><span class="p">(</span><span class="s">"sizeof(s1) = %u, sizeof(s2) = %u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
-      <span class="k">sizeof</span><span class="p">(</span><span class="n">s1</span><span class="p">),</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">s2</span><span class="p">));</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"sizeof(s1) = %u, sizeof(s2) = %u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="k">sizeof</span><span class="p">(</span><span class="n">s1</span><span class="p">),</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">s2</span><span class="p">));</span><span class="w"></span>
 </pre></div>
 <p>
 期望的输出为：sizeof(s1) = 6, sizeof(s2) = 6<br></p>
@@ -133,20 +134,20 @@
 <p>
 在 file2.cpp 中的内容如下：<br></p>
 <div class="highlight"><pre><span></span><span class="c1">// file2.cpp</span>
-<span class="cp">#include</span> <span class="cpf">&lt;header2.h&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;header1.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;header2.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;header1.h&gt;</span><span class="cp"></span>
 <span class="c1">// ...</span>
-<span class="n">printf</span><span class="p">(</span><span class="s">"sizeof(s1) = %u, sizeof(s2) = %u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
-      <span class="k">sizeof</span><span class="p">(</span><span class="n">s1</span><span class="p">),</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">s2</span><span class="p">));</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"sizeof(s1) = %u, sizeof(s2) = %u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"></span>
+<span class="w">      </span><span class="k">sizeof</span><span class="p">(</span><span class="n">s1</span><span class="p">),</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">s2</span><span class="p">));</span><span class="w"></span>
 </pre></div>
 <p>
 期望的输出为：sizeof(s1) = 6, sizeof(s2) = 8<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga8e10b8" class="outline-2">
-<h2 id="orga8e10b8">避免这样的情况</h2>
-<div class="outline-text-2" id="text-orga8e10b8">
+<div id="outline-container-orgea115a9" class="outline-2">
+<h2 id="orgea115a9">避免这样的情况</h2>
+<div class="outline-text-2" id="text-orgea115a9">
 <p>
 组合使用 <code>pragma pack(push)</code> 和 <code>pragma push(pop)</code> 即可将字节对齐大小的调整限定在一个范围内，写法如下。<br></p>
 
@@ -160,9 +161,9 @@
 </div>
 </div>
 
-<div id="outline-container-org13cd92a" class="outline-2">
-<h2 id="org13cd92a">写在后面</h2>
-<div class="outline-text-2" id="text-org13cd92a">
+<div id="outline-container-org5557610" class="outline-2">
+<h2 id="org5557610">写在后面</h2>
+<div class="outline-text-2" id="text-org5557610">
 <p>
 大部分时候，我们都不需要也应该避免修改结构体的字节对齐方式，因为修改默认值可能导致代码运行效率下降。<br></p>
 
@@ -189,6 +190,9 @@
       </a>
     </li>
     <li class="next">
+      <a href="/posts/check-c-string-empty/" rel="next">Next post
+        <br><span>检查C字符串为空</span>
+      </a>
     </li>
   </ul>
 <section class="comments hidden-print"><div id="disqus_thread"></div>
@@ -196,7 +200,7 @@
         var disqus_shortname ="samsonwang-blog",
             disqus_url="https://blog.wangzhl.com/posts/cpp-pragma-pack-pitfall/",
         disqus_title="\u7ed3\u6784\u4f53\u5b57\u8282\u5bf9\u9f50\u7684\u9677\u9631",
-        disqus_identifier="_cache/posts/cpp-pragma-pack-pitfall.html",
+        disqus_identifier="_cache/archives/2021/cpp-pragma-pack-pitfall.html",
         disqus_config = function () {
             this.language = "en";
         };
@@ -221,7 +225,7 @@
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="copyright">Copyright 2023, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
 <li><a rel="me" href="/rss.xml">

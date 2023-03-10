@@ -68,17 +68,17 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org5b13411" class="outline-2">
-<h2 id="org5b13411">什么是OLE错误</h2>
-<div class="outline-text-2" id="text-org5b13411">
+<div id="outline-container-org943137e" class="outline-2">
+<h2 id="org943137e">什么是OLE错误</h2>
+<div class="outline-text-2" id="text-org943137e">
 <p>
 OLE的全称是Object Linking and Embedding，主要用在Windows Office软件中，它支持编辑类应用程序向另一个应用程序发送当前文档的一部分。出现OLE错误时大多是应用程序没有及时响应OLE操作，错误的完整提示为“Microsoft Excel is waiting for another application to complete an OLE action”。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org9b77e5d" class="outline-2">
-<h2 id="org9b77e5d">不要在非GUI线程中调用QClipboard</h2>
-<div class="outline-text-2" id="text-org9b77e5d">
+<div id="outline-container-orgd51275e" class="outline-2">
+<h2 id="orgd51275e">不要在非GUI线程中调用QClipboard</h2>
+<div class="outline-text-2" id="text-orgd51275e">
 <p>
 出现这个问题，我首先想到的是Qt相关的bug，因为剪切版能够在一般的程序中正常完成复制和粘粘操作，只会在excel中出现错误。<br></p>
 
@@ -87,18 +87,18 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 
 <p>
 之后我编写了下面这样的代码辅助判断QClipboard是否是在GUI线程（主线程）中执行。<br></p>
-<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">QApplication</span><span class="o">::</span><span class="n">instance</span><span class="p">()</span><span class="o">-&gt;</span><span class="kr">thread</span><span class="p">()</span> <span class="o">==</span> <span class="n">QThread</span><span class="o">::</span><span class="n">currentThread</span><span class="p">())</span> <span class="p">{</span>
-    <span class="n">qDebug</span><span class="p">(</span><span class="s">"running in main thread"</span><span class="p">);</span>
-<span class="p">}</span>
+<div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">QApplication</span><span class="o">::</span><span class="n">instance</span><span class="p">()</span><span class="o">-&gt;</span><span class="kr">thread</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">QThread</span><span class="o">::</span><span class="n">currentThread</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">qDebug</span><span class="p">(</span><span class="s">"running in main thread"</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 <p>
 结果是所有QClipboard都是在GUI线程中调用的，所以这个bug并不是由线程引起的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org5d7d493" class="outline-2">
-<h2 id="org5d7d493">在nativeEventFilter中过滤消息时需要格外谨慎</h2>
-<div class="outline-text-2" id="text-org5d7d493">
+<div id="outline-container-orgbae25d2" class="outline-2">
+<h2 id="orgbae25d2">在nativeEventFilter中过滤消息时需要格外谨慎</h2>
+<div class="outline-text-2" id="text-orgbae25d2">
 <p>
 我开始怀疑是自己使用QClipboard的方法不正确，于是新建了一个应用程序工程，在这个工程中只加入了一个简单界面，在控件的槽函数中使用QClipboard。结果是这个新应用程序能够成功完成与excel的复制粘粘的数据交互，然后我又将这个简单界面挪到Launchy中，发现在Launchy工程中使用这个界面就会出现OLE错误。这样以来，能够确定是问题并不是QClipboard的使用出现了错误，也不是由于界面部分引起的错误，问题被缩小到QApplication相关的的代码中。<br></p>
 
@@ -113,9 +113,9 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 </div>
 </div>
 
-<div id="outline-container-org7fa0628" class="outline-2">
-<h2 id="org7fa0628">参考资料</h2>
-<div class="outline-text-2" id="text-org7fa0628">
+<div id="outline-container-orga369f12" class="outline-2">
+<h2 id="orga369f12">参考资料</h2>
+<div class="outline-text-2" id="text-orga369f12">
 <ul class="org-ul">
 <li>
 <a href="https://windowsreport.com/excel-is-waiting-for-ole/">windowsreport.com - excel is waiting for ole</a><br>
@@ -183,7 +183,7 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="copyright">Copyright 2023, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
 <li><a rel="me" href="/rss.xml">

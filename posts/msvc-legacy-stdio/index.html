@@ -70,18 +70,18 @@ windows系统的向下兼容性一直是做的比较好的，一些老旧软件�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org102d4bf" class="outline-2">
-<h2 id="org102d4bf">链接旧版本库时遇到的问题</h2>
-<div class="outline-text-2" id="text-org102d4bf">
+<div id="outline-container-org07ac089" class="outline-2">
+<h2 id="org07ac089">链接旧版本库时遇到的问题</h2>
+<div class="outline-text-2" id="text-org07ac089">
 <p>
 有个库是由MSVC2008编译的，我在MSVC2017中使用这个库进行链接时出现错误，提示我缺少一些函数（如： <code>sprintf</code> 、 <code>_snprintf</code> 、 <code>__iob_func</code> 等）。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org96a0ce2" class="outline-2">
-<h2 id="org96a0ce2">为什么会出现这个问题</h2>
-<div class="outline-text-2" id="text-org96a0ce2">
+<div id="outline-container-orgfa6b19a" class="outline-2">
+<h2 id="orgfa6b19a">为什么会出现这个问题</h2>
+<div class="outline-text-2" id="text-orgfa6b19a">
 <p>
 在查阅了一些资料后发现，从MSVC2015开始，微软修改了C运行时库（C runtime），将其拆分为Universal CRT( <code>ucrtbase</code> ) 和 VC Runtime Library ( <code>vcruntime</code> )。其中，UCRT包含大部分的标准功能，VCRT包含与编译相关的功能（如异常处理等内部功能）。一些函数从UCRT中删掉了，导致链接时无法找到对应的符号（unresolved external symbol）。下面是微软官方的原文。<br></p>
 
@@ -101,39 +101,39 @@ For the CRT, mixing-and-matching was never supported, but it often just worked, 
 </div>
 
 
-<div id="outline-container-orge22354b" class="outline-2">
-<h2 id="orge22354b">官方推荐的解决方案</h2>
-<div class="outline-text-2" id="text-orge22354b">
+<div id="outline-container-org3ec5f97" class="outline-2">
+<h2 id="org3ec5f97">官方推荐的解决方案</h2>
+<div class="outline-text-2" id="text-org3ec5f97">
 <p>
 微软在MSVC2015后提供了 <code>legacy_stdio_definitions.lib</code> 库，能够提供大部分缺失的链接符号（symbol）。但仍有一些无法提供兼容的链接符号，如一些函数定义 <code>__iob_func</code> 或导出的数据 <code>__imp___iob</code> 、 <code>__imp___pctype</code> 、 <code>__imp___mb_cur_max</code> 。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org9d78ca6" class="outline-2">
-<h2 id="org9d78ca6">那 <code>__iob_func</code> 怎么处理呢？</h2>
-<div class="outline-text-2" id="text-org9d78ca6">
+<div id="outline-container-org5b544b6" class="outline-2">
+<h2 id="org5b544b6">那 <code>__iob_func</code> 怎么处理呢？</h2>
+<div class="outline-text-2" id="text-org5b544b6">
 <p>
 微软官方没有提供 <code>__iob_func</code> 的适配方案，但是我找到了另外的方法，即可以自己实现一个同名函数。<br></p>
 
 <div class="highlight"><pre><span></span><span class="cp">#if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1900)</span>
 <span class="cp">#if defined(__cplusplus)</span>
-<span class="k">extern</span> <span class="s">"C"</span> <span class="kt">FILE</span><span class="o">*</span> <span class="n">__iob_func</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">static</span> <span class="kt">FILE</span> <span class="n">iob</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="o">*</span><span class="n">stdin</span><span class="p">,</span> <span class="o">*</span><span class="n">stdout</span><span class="p">,</span> <span class="o">*</span><span class="n">stderr</span><span class="p">};</span>
-    <span class="k">return</span> <span class="n">iob</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="k">extern</span><span class="w"> </span><span class="s">"C"</span><span class="w"> </span><span class="kt">FILE</span><span class="o">*</span><span class="w"> </span><span class="n">__iob_func</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">FILE</span><span class="w"> </span><span class="n">iob</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="o">*</span><span class="n">stdin</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">stdout</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">stderr</span><span class="p">};</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">iob</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 <span class="cp">#else</span>
-<span class="kt">FILE</span><span class="o">*</span> <span class="kr">__cdecl</span> <span class="n">__iob_func</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">static</span> <span class="kt">FILE</span> <span class="n">iob</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
-    <span class="k">static</span> <span class="kt">bool</span> <span class="n">initialized</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">initialized</span><span class="p">)</span> <span class="p">{</span>
-	<span class="n">initialized</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
-	<span class="n">iob</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">*</span><span class="n">stdin</span><span class="p">;</span>
-	<span class="n">iob</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">*</span><span class="n">stdout</span><span class="p">;</span>
-	<span class="n">iob</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">*</span><span class="n">stderr</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="n">iob</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="kt">FILE</span><span class="o">*</span><span class="w"> </span><span class="kr">__cdecl</span><span class="w"> </span><span class="n">__iob_func</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">FILE</span><span class="w"> </span><span class="n">iob</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">initialized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">initialized</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="n">initialized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">iob</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">stdin</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">iob</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">stdout</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">iob</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">stderr</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">iob</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 <span class="cp">#endif </span><span class="c1">// __cplusplus</span>
 <span class="cp">#endif </span><span class="c1">// _MSC_VER</span>
 </pre></div>
@@ -146,31 +146,31 @@ For the CRT, mixing-and-matching was never supported, but it often just worked, 
 
 <p>
 MSVC2015中的 <code>FILE</code> 结构体定义：<br></p>
-<div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_iobuf</span> <span class="p">{</span>
-    <span class="kt">void</span><span class="o">*</span> <span class="n">_Placeholder</span><span class="p">;</span>
-<span class="p">}</span> <span class="kt">FILE</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">_iobuf</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">_Placeholder</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="kt">FILE</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 
 <p>
 MSVC2008中的 <code>FILE</code> 结构体定义：<br></p>
-<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">_iobuf</span> <span class="p">{</span>
-    <span class="kt">char</span> <span class="o">*</span><span class="n">_ptr</span><span class="p">;</span>
-    <span class="kt">int</span>   <span class="n">_cnt</span><span class="p">;</span>
-    <span class="kt">char</span> <span class="o">*</span><span class="n">_base</span><span class="p">;</span>
-    <span class="kt">int</span>   <span class="n">_flag</span><span class="p">;</span>
-    <span class="kt">int</span>   <span class="n">_file</span><span class="p">;</span>
-    <span class="kt">int</span>   <span class="n">_charbuf</span><span class="p">;</span>
-    <span class="kt">int</span>   <span class="n">_bufsiz</span><span class="p">;</span>
-    <span class="kt">char</span> <span class="o">*</span><span class="n">_tmpfname</span><span class="p">;</span>
-<span class="p">};</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">_iobuf</span> <span class="kt">FILE</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">_iobuf</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">_ptr</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w">   </span><span class="n">_cnt</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">_base</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w">   </span><span class="n">_flag</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w">   </span><span class="n">_file</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w">   </span><span class="n">_charbuf</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w">   </span><span class="n">_bufsiz</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">_tmpfname</span><span class="p">;</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">_iobuf</span><span class="w"> </span><span class="kt">FILE</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgb6a151d" class="outline-2">
-<h2 id="orgb6a151d">参考资料</h2>
-<div class="outline-text-2" id="text-orgb6a151d">
+<div id="outline-container-org3a235ac" class="outline-2">
+<h2 id="org3a235ac">参考资料</h2>
+<div class="outline-text-2" id="text-org3a235ac">
 <ul class="org-ul">
 <li>
 <a href="https://docs.microsoft.com/en-us/cpp/porting/overview-of-potential-upgrade-issues-visual-cpp">microsoft docs - potential upgrade issues</a><br>
@@ -249,7 +249,7 @@ MSVC2008中的 <code>FILE</code> 结构体定义：<br></p>
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="copyright">Copyright 2023, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
 <li><a rel="me" href="/rss.xml">

@@ -86,27 +86,27 @@ fork和vfork都是用来创建子进程的系统调用函数，本文主要对�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgd2568cb" class="outline-2">
-<h2 id="orgd2568cb">函数形式</h2>
-<div class="outline-text-2" id="text-orgd2568cb">
+<div id="outline-container-org75e1c7d" class="outline-2">
+<h2 id="org75e1c7d">函数形式</h2>
+<div class="outline-text-2" id="text-org75e1c7d">
 <p>
 <code>fork</code> 创建一个子进程<br></p>
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
-<span class="kt">pid_t</span> <span class="nf">fork</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="kt">pid_t</span><span class="w"> </span><span class="nf">fork</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 
 <p>
 <code>vfork</code> 创建一个子进程并阻塞父进程<br></p>
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;sys/types.h&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
-<span class="kt">pid_t</span> <span class="nf">vfork</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/types.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="kt">pid_t</span><span class="w"> </span><span class="nf">vfork</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgdcd4eca" class="outline-2">
-<h2 id="orgdcd4eca">区别对比</h2>
-<div class="outline-text-2" id="text-orgdcd4eca">
+<div id="outline-container-orgc6457ad" class="outline-2">
+<h2 id="orgc6457ad">区别对比</h2>
+<div class="outline-text-2" id="text-orgc6457ad">
 <p>
 二者的函数形式十分相似，函数的功能也类似，它们的区别可以归纳为以下几点。<br></p>
 <ul class="org-ul">
@@ -123,17 +123,17 @@ fork和vfork都是用来创建子进程的系统调用函数，本文主要对�
 <p>
 <code>vfork</code> 的应用场景主要是配合 <code>exec</code> 系列函数，如果只在子进程中调用 <code>exec</code> 函数，由于 <code>exec</code> 函数会替换子进程的进程映像（process image），所以也就没有必要复制父进程的地址空间了。使用 <code>vfork</code> 时，父进程会阻塞到子进程的 <code>exec</code> 或 <code>_exit</code> 执行。<br></p>
 
-<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">((</span><span class="n">pid</span> <span class="o">=</span> <span class="n">vfork</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">execl</span><span class="p">(...,</span> <span class="nb">NULL</span><span class="p">);</span> <span class="cm">/* after a successful execl the parent should be resumed */</span>
-    <span class="n">_exit</span><span class="p">(</span><span class="mi">127</span><span class="p">);</span> <span class="cm">/* terminate the child in case execl fails */</span>
-<span class="p">}</span>
+<div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">pid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vfork</span><span class="p">())</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">execl</span><span class="p">(...,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span><span class="w"> </span><span class="cm">/* after a successful execl the parent should be resumed */</span><span class="w"></span>
+<span class="w">    </span><span class="n">_exit</span><span class="p">(</span><span class="mi">127</span><span class="p">);</span><span class="w"> </span><span class="cm">/* terminate the child in case execl fails */</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org32bc281" class="outline-2">
-<h2 id="org32bc281">参考资料</h2>
-<div class="outline-text-2" id="text-org32bc281">
+<div id="outline-container-org2d7b80b" class="outline-2">
+<h2 id="org2d7b80b">参考资料</h2>
+<div class="outline-text-2" id="text-org2d7b80b">
 <ol class="org-ol">
 <li>
 <a href="https://stackoverflow.com/questions/4259629/what-is-the-difference-between-fork-and-vfork">stackoverflow.com - difference between fork and vfork</a><br>
@@ -209,7 +209,7 @@ fork和vfork都是用来创建子进程的系统调用函数，本文主要对�
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="copyright">Copyright 2023, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
 <li><a rel="me" href="/rss.xml">

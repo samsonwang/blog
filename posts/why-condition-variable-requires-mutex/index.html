@@ -79,8 +79,8 @@ thread:
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org711b1ab" class="outline-2">
-<h2 id="org711b1ab">
+<div id="outline-container-orgf1f1546" class="outline-2">
+<h2 id="orgf1f1546">
 <span class="section-number-2">1</span> 条件变量的标准范式</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -127,8 +127,8 @@ unlock mutex.
 </div>
 
 
-<div id="outline-container-orgeb6cf6b" class="outline-2">
-<h2 id="orgeb6cf6b">
+<div id="outline-container-org258e44f" class="outline-2">
+<h2 id="org258e44f">
 <span class="section-number-2">2</span> 条件变量的虚假唤醒（spurious wakeup）</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -141,8 +141,8 @@ This means that when you wait on a condition variable, the wait may (occasionall
 </div>
 
 
-<div id="outline-container-org1e55b9f" class="outline-2">
-<h2 id="org1e55b9f">
+<div id="outline-container-orge2be7c2" class="outline-2">
+<h2 id="orge2be7c2">
 <span class="section-number-2">3</span> C++11 中的条件变量</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -151,116 +151,116 @@ This means that when you wait on a condition variable, the wait may (occasionall
 <p>
 <b>注意</b> : 在C++标准库条件变量的 <code>notify</code> 操作之前是不需要互斥量的锁定状态的，这点与POSIX标准的 <code>pthread</code> 接口有些不同。可以理解为在C++11的互斥锁只负责保护条件变量配套的布尔值；而POSIX的互斥锁既要保护布尔值，也要保护条件变量。<br></p>
 
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;thread&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;mutex&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;condition_variable&gt;</span><span class="cp"></span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;thread&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;mutex&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;condition_variable&gt;</span><span class="cp"></span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">mutex</span> <span class="n">m</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">condition_variable</span> <span class="n">cv</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">data</span><span class="p">;</span>
-<span class="kt">bool</span> <span class="n">ready</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
-<span class="kt">bool</span> <span class="n">processed</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">condition_variable</span><span class="w"> </span><span class="n">cv</span><span class="p">;</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">data</span><span class="p">;</span><span class="w"></span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">ready</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">processed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
 
-<span class="kt">void</span> <span class="nf">worker_thread</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="c1">// Wait until main() sends data</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
-    <span class="n">cv</span><span class="p">.</span><span class="n">wait</span><span class="p">(</span><span class="n">lk</span><span class="p">,</span> <span class="p">[]{</span><span class="k">return</span> <span class="n">ready</span><span class="p">;});</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">worker_thread</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// Wait until main() sends data</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span><span class="w"> </span><span class="n">lk</span><span class="p">(</span><span class="n">m</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">cv</span><span class="p">.</span><span class="n">wait</span><span class="p">(</span><span class="n">lk</span><span class="p">,</span><span class="w"> </span><span class="p">[]{</span><span class="k">return</span><span class="w"> </span><span class="n">ready</span><span class="p">;});</span><span class="w"></span>
 
-    <span class="c1">// after the wait, we own the lock.</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Worker thread is processing data</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
-    <span class="n">data</span> <span class="o">+=</span> <span class="s">" after processing"</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// after the wait, we own the lock.</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Worker thread is processing data</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">data</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="s">" after processing"</span><span class="p">;</span><span class="w"></span>
 
-    <span class="c1">// Send data back to main()</span>
-    <span class="n">processed</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Worker thread signals data processing completed</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Send data back to main()</span>
+<span class="w">    </span><span class="n">processed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Worker thread signals data processing completed</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span><span class="w"></span>
 
-    <span class="c1">// Manual unlocking is done before notifying, to avoid waking up</span>
-    <span class="c1">// the waiting thread only to block again (see notify_one for details)</span>
-    <span class="n">lk</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span>
-    <span class="n">cv</span><span class="p">.</span><span class="n">notify_one</span><span class="p">();</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="c1">// Manual unlocking is done before notifying, to avoid waking up</span>
+<span class="w">    </span><span class="c1">// the waiting thread only to block again (see notify_one for details)</span>
+<span class="w">    </span><span class="n">lk</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">cv</span><span class="p">.</span><span class="n">notify_one</span><span class="p">();</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 
-<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="kr">thread</span> <span class="n">worker</span><span class="p">(</span><span class="n">worker_thread</span><span class="p">);</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="w"> </span><span class="n">worker</span><span class="p">(</span><span class="n">worker_thread</span><span class="p">);</span><span class="w"></span>
 
-    <span class="n">data</span> <span class="o">=</span> <span class="s">"Example data"</span><span class="p">;</span>
-    <span class="c1">// send data to the worker thread</span>
-    <span class="p">{</span>
-	<span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
-	<span class="n">ready</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
-	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"main() signals data ready for processing</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="n">cv</span><span class="p">.</span><span class="n">notify_one</span><span class="p">();</span>
+<span class="w">    </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"Example data"</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// send data to the worker thread</span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span><span class="w"> </span><span class="n">lk</span><span class="p">(</span><span class="n">m</span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="n">ready</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"main() signals data ready for processing</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">cv</span><span class="p">.</span><span class="n">notify_one</span><span class="p">();</span><span class="w"></span>
 
-    <span class="c1">// wait for the worker</span>
-    <span class="p">{</span>
-	<span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lk</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
-	<span class="n">cv</span><span class="p">.</span><span class="n">wait</span><span class="p">(</span><span class="n">lk</span><span class="p">,</span> <span class="p">[]{</span><span class="k">return</span> <span class="n">processed</span><span class="p">;});</span>
-    <span class="p">}</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Back in main(), data = "</span> <span class="o">&lt;&lt;</span> <span class="n">data</span> <span class="o">&lt;&lt;</span> <span class="sc">'\n'</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// wait for the worker</span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="n">std</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span><span class="w"> </span><span class="n">lk</span><span class="p">(</span><span class="n">m</span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="n">cv</span><span class="p">.</span><span class="n">wait</span><span class="p">(</span><span class="n">lk</span><span class="p">,</span><span class="w"> </span><span class="p">[]{</span><span class="k">return</span><span class="w"> </span><span class="n">processed</span><span class="p">;});</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Back in main(), data = "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">;</span><span class="w"></span>
 
-    <span class="n">worker</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="n">worker</span><span class="p">.</span><span class="n">join</span><span class="p">();</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 </div>
 
 
-<div id="outline-container-org8482cec" class="outline-2">
-<h2 id="org8482cec">
+<div id="outline-container-org346605e" class="outline-2">
+<h2 id="org346605e">
 <span class="section-number-2">4</span> boost 中的条件变量</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 以下代码是boost库的条件变量示例代码。<br></p>
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&lt;boost/thread.hpp&gt;</span><span class="cp"></span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/thread.hpp&gt;</span><span class="cp"></span>
 
-<span class="n">boost</span><span class="o">::</span><span class="n">mutex</span> <span class="n">io_mutex</span><span class="p">;</span>
-<span class="n">boost</span><span class="o">::</span><span class="n">condition_variable</span> <span class="n">condition</span><span class="p">;</span>
-<span class="kt">bool</span> <span class="n">worker_is_done</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<span class="n">boost</span><span class="o">::</span><span class="n">mutex</span><span class="w"> </span><span class="n">io_mutex</span><span class="p">;</span><span class="w"></span>
+<span class="n">boost</span><span class="o">::</span><span class="n">condition_variable</span><span class="w"> </span><span class="n">condition</span><span class="p">;</span><span class="w"></span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">worker_is_done</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
 
-<span class="kt">void</span> <span class="nf">workFunction</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Waiting a little..."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-    <span class="n">boost</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">posix_time</span><span class="o">::</span><span class="n">seconds</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">workFunction</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Waiting a little..."</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">posix_time</span><span class="o">::</span><span class="n">seconds</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span><span class="w"></span>
 
-    <span class="p">{</span>
-	<span class="n">boost</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">boost</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">guard</span><span class="p">(</span><span class="n">io_mutex</span><span class="p">);</span>
-	<span class="n">worker_is_done</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
-    <span class="p">}</span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="n">boost</span><span class="o">::</span><span class="n">lock_guard</span><span class="o">&lt;</span><span class="n">boost</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span><span class="w"> </span><span class="n">guard</span><span class="p">(</span><span class="n">io_mutex</span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="n">worker_is_done</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
 
-    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Notifying condition..."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-    <span class="n">condition</span><span class="p">.</span><span class="n">notify_one</span><span class="p">();</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Notifying condition..."</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">condition</span><span class="p">.</span><span class="n">notify_one</span><span class="p">();</span><span class="w"></span>
 
-    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Waiting a little more..."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-    <span class="n">boost</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">posix_time</span><span class="o">::</span><span class="n">seconds</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Waiting a little more..."</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">this_thread</span><span class="o">::</span><span class="n">sleep</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">posix_time</span><span class="o">::</span><span class="n">seconds</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 
-<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-<span class="p">{</span>
-    <span class="n">boost</span><span class="o">::</span><span class="kr">thread</span> <span class="n">workThread</span><span class="p">(</span><span class="o">&amp;</span><span class="n">workFunction</span><span class="p">);</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="kr">thread</span><span class="w"> </span><span class="n">workThread</span><span class="p">(</span><span class="o">&amp;</span><span class="n">workFunction</span><span class="p">);</span><span class="w"></span>
 
-    <span class="n">boost</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">boost</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span> <span class="n">lock</span><span class="p">(</span><span class="n">io_mutex</span><span class="p">);</span>
-    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">worker_is_done</span><span class="p">)</span>
-	 <span class="n">condition</span><span class="p">.</span><span class="n">wait</span><span class="p">(</span><span class="n">lock</span><span class="p">);</span>
+<span class="w">    </span><span class="n">boost</span><span class="o">::</span><span class="n">unique_lock</span><span class="o">&lt;</span><span class="n">boost</span><span class="o">::</span><span class="n">mutex</span><span class="o">&gt;</span><span class="w"> </span><span class="n">lock</span><span class="p">(</span><span class="n">io_mutex</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">worker_is_done</span><span class="p">)</span><span class="w"></span>
+<span class="w">	 </span><span class="n">condition</span><span class="p">.</span><span class="n">wait</span><span class="p">(</span><span class="n">lock</span><span class="p">);</span><span class="w"></span>
 
-    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Condition notified."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-    <span class="n">workThread</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
-    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Thread finished."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Condition notified."</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">workThread</span><span class="p">.</span><span class="n">join</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Thread finished."</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
 
-    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 </div>
 
 
-<div id="outline-container-org3443102" class="outline-2">
-<h2 id="org3443102">
+<div id="outline-container-org63e4a2b" class="outline-2">
+<h2 id="org63e4a2b">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -342,7 +342,7 @@ This means that when you wait on a condition variable, the wait may (occasionall
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="copyright">Copyright 2023, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
 <li><a rel="me" href="/rss.xml">

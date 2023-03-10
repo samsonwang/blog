@@ -71,20 +71,20 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgc9af157" class="outline-2">
-<h2 id="orgc9af157">使用linux信号触发定时任务</h2>
-<div class="outline-text-2" id="text-orgc9af157">
+<div id="outline-container-orgecd67d5" class="outline-2">
+<h2 id="orgecd67d5">使用linux信号触发定时任务</h2>
+<div class="outline-text-2" id="text-orgecd67d5">
 <p>
 可以使用操作系统API预订一个 <code>SIGALRM</code> 信号，在指定的时间后程序就能收到信号，在信号的处理函数中就能实现定时任务。具体的系统API如下：<br></p>
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
-<span class="kt">unsigned</span> <span class="kt">int</span> <span class="nf">alarm</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">seconds</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">alarm</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">seconds</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 
 <p>
 这里值得一提的是另一个信号 <code>SIGVTALRM</code> ，可以使用 <code>setitimer</code> 系统接口进行设置。这个定时器计算的是程序在用户模式（user mode）消耗的时间。另外，这个定时器还可以通过传入的 <code>struct itimerval</code> 设置为循环触发。<br></p>
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;sys/time.h&gt;</span><span class="cp"></span>
-<span class="kt">int</span> <span class="nf">setitimer</span><span class="p">(</span><span class="kt">int</span> <span class="n">which</span><span class="p">,</span> <span class="k">const</span> <span class="k">struct</span> <span class="n">itimerval</span> <span class="o">*</span><span class="n">new_value</span><span class="p">,</span>
-	      <span class="k">struct</span> <span class="n">itimerval</span> <span class="o">*</span><span class="n">old_value</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/time.h&gt;</span><span class="cp"></span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">setitimer</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">which</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">itimerval</span><span class="w"> </span><span class="o">*</span><span class="n">new_value</span><span class="p">,</span><span class="w"></span>
+<span class="w">	      </span><span class="k">struct</span><span class="w"> </span><span class="nc">itimerval</span><span class="w"> </span><span class="o">*</span><span class="n">old_value</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 
 <p>
@@ -92,18 +92,18 @@
 </div>
 </div>
 
-<div id="outline-container-orge2480ba" class="outline-2">
-<h2 id="orge2480ba">通过timerfd实现定时任务</h2>
-<div class="outline-text-2" id="text-orge2480ba">
+<div id="outline-container-orgd0fc10e" class="outline-2">
+<h2 id="orgd0fc10e">通过timerfd实现定时任务</h2>
+<div class="outline-text-2" id="text-orgd0fc10e">
 <p>
 timerfd是linux独有的接口，可以在定时器超时后通过一个文件描述符通知程序。<br></p>
 
-<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;sys/timerfd.h&gt;</span><span class="cp"></span>
-<span class="kt">int</span> <span class="nf">timerfd_create</span><span class="p">(</span><span class="kt">int</span> <span class="n">clockid</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">);</span>
-<span class="kt">int</span> <span class="nf">timerfd_settime</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">,</span>
-		    <span class="k">const</span> <span class="k">struct</span> <span class="n">itimerspec</span> <span class="o">*</span><span class="n">new_value</span><span class="p">,</span>
-		    <span class="k">struct</span> <span class="n">itimerspec</span> <span class="o">*</span><span class="n">old_value</span><span class="p">);</span>
-<span class="kt">int</span> <span class="nf">timerfd_gettime</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="k">struct</span> <span class="n">itimerspec</span> <span class="o">*</span><span class="n">curr_value</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;sys/timerfd.h&gt;</span><span class="cp"></span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">timerfd_create</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">clockid</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">flags</span><span class="p">);</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">timerfd_settime</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">flags</span><span class="p">,</span><span class="w"></span>
+<span class="w">		    </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">itimerspec</span><span class="w"> </span><span class="o">*</span><span class="n">new_value</span><span class="p">,</span><span class="w"></span>
+<span class="w">		    </span><span class="k">struct</span><span class="w"> </span><span class="nc">itimerspec</span><span class="w"> </span><span class="o">*</span><span class="n">old_value</span><span class="p">);</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">timerfd_gettime</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">itimerspec</span><span class="w"> </span><span class="o">*</span><span class="n">curr_value</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 
 <p>
@@ -111,9 +111,9 @@ timerfd是linux独有的接口，可以在定时器超时后通过一个文件�
 </div>
 </div>
 
-<div id="outline-container-org0ca437c" class="outline-2">
-<h2 id="org0ca437c">在网络编程中借助事件的等待间隔执行定时任务</h2>
-<div class="outline-text-2" id="text-org0ca437c">
+<div id="outline-container-orgbcc7d82" class="outline-2">
+<h2 id="orgbcc7d82">在网络编程中借助事件的等待间隔执行定时任务</h2>
+<div class="outline-text-2" id="text-orgbcc7d82">
 <p>
 在网络编程中，通常都会用到一套IO复用接口，如select/poll/epoll等，它们会帮你同时检查多个socket上是否有读写操作。这些接口都有一个等待时间，在这个指定时间是最大等待时间，即使在没有需要处理的IO操作时也会返回。这个时间是一般是个固定值，如10ms/20ms/50ms，它被称作网络库的基准频率。在这段空余时间中可以检查定时器是否超时，并执行超时定时器的回调函数。<br></p>
 
@@ -154,9 +154,9 @@ timerfd是linux独有的接口，可以在定时器超时后通过一个文件�
 </div>
 </div>
 
-<div id="outline-container-org04aa4bd" class="outline-2">
-<h2 id="org04aa4bd">参考资料</h2>
-<div class="outline-text-2" id="text-org04aa4bd">
+<div id="outline-container-orgcddced6" class="outline-2">
+<h2 id="orgcddced6">参考资料</h2>
+<div class="outline-text-2" id="text-orgcddced6">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/a/10193120/5080719">stackoverflow - how to implement timer in c</a><br>
@@ -242,7 +242,7 @@ timerfd是linux独有的接口，可以在定时器超时后通过一个文件�
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2021, all rights reserved.</div>
+          <div class="copyright">Copyright 2023, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
 <li><a rel="me" href="/rss.xml">
