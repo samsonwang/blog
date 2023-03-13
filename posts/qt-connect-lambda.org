@@ -1,0 +1,44 @@
+#+BEGIN_COMMENT
+.. title: Qt连接匿名函数的踩坑记录
+.. slug: qt-connect-lambda
+.. date: 2023-03-13 11:33:19 UTC+08:00
+.. tags: qt, c++, lambda
+.. category: qt
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: Qt连接匿名函数的踩坑记录
+
+今天在调试代码时遇到了一个有趣的问题，值得仔细思考。
+
+{{{TEASER_END}}}
+
+#+begin_src C++
+QAction* pAction = new QAction;
+QWidget* pWidget = new QWidget;
+
+// connect demo1
+QObject::connect(pAction, &QAction::triggered,
+                 pWidget, [pWidget](QWidget* pWidget){
+                     pWidget->show();
+                     pWidget->raise();
+                 });
+// connect demo2
+QObject::connect(pAction, &QAction::triggered,
+                 [pWidget](QWidget* pWidget){
+                     pWidget->show();
+                     pWidget->raise();
+                 });
+#+end_src
+
+比较上面两个 =connect= 代码段，它们的区别是什么呢？
+
+1. 从实现的功能来讲，它们没有区别。都能在信号触发时调用匿名函数。
+2. 当 =pWidget= 被析构时，上面的demo1能够感知到信号接收端的系统，从而自动断开信号与槽的连接；而在demo2中，将无法自动断开信号槽的连接，这样会由于使用了悬空指针，最终导致程序崩溃。
+
+
+（全文完）
