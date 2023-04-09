@@ -1,0 +1,96 @@
+#+BEGIN_COMMENT
+.. title: 将界面窗口置顶显示
+.. slug: bring-widget-window-to-the-front
+.. date: 2023-03-14 10:48:38 UTC+08:00
+.. tags: windows, qt, c++
+.. category: windows
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 将界面窗口置顶显示
+
+最近需要实现一个功能，在启动第二个程序实例时将主界面窗口置顶显示。界面程序是基于Qt开发的，在Windows操作系统上实现窗口置顶需要一些特殊的处理。
+
+{{{TEASER_END}}}
+
+** 使用Qt库的方案
+可以使用Qt库的 =QWidget::raise()= 这个接口来置顶窗口。但是在Windows系统上，将窗口置顶显示这个操作是受限制的，在后台运行的程序并不能随意将自己的窗口置于顶层。需要借助 =AllowSetForegroundWindow()= 接口将置顶窗口权限移交至后台程序，后台程序才允许将自己的窗口置于顶层。
+
+下面的例子采用了第三方库SingleApplication来实现实例之间的交互。
+
+#+begin_src cpp
+#include <QWidget>
+
+#include "singleapplication.h"
+
+#ifdef Q_OS_WINDOWS
+#include <Windows.h>
+#endif
+
+void raiseWidget(QWidget* widget);
+
+int main(int argc, char *argv[]) {
+
+#ifdef Q_OS_WINDOWS
+    SingleApplication app(argc, argv, true);
+
+    if (app.isSecondary()) {
+
+        AllowSetForegroundWindow( DWORD( app.primaryPid() ) );
+
+        app.sendMessage("RAISE_WIDGET");
+
+        return 0;
+    }
+#else
+    SingleApplication app(argc, argv);
+#endif
+
+    QWidget* widget = new QWidget;
+
+#ifdef Q_OS_WINDOWS
+    QObject::connect(&app, &SingleApplication::receivedMessage,
+                     widget, [widget] () { raiseWidget(widget); } );
+#else
+    QObject::connect(&app, &SingleApplication::instanceStarted,
+                     widget, [widget] () { raiseWidget(widget); } );
+#endif
+
+    widget->show();
+
+    return app.exec();
+}
+
+void raiseWidget(QWidget* widget) {
+#ifdef Q_OS_WINDOWS
+    HWND hwnd = (HWND)widget->winId();
+
+    // check if widget is minimized to Windows task bar
+    if (::IsIconic(hwnd)) {
+        ::ShowWindow(hwnd, SW_RESTORE);
+    }
+
+    ::SetForegroundWindow(hwnd);
+#else
+    widget->show();
+    widget->raise();
+    widget->activateWindow();
+#endif
+}
+#+end_src
+
+** 使用Win32接口的方案
+可以使用Win32接口 =FindWindow= 找到窗口对应的句柄，通过窗口句柄将界面带到前面。这个窗口句柄允许是非本进程的。
+
+*tips:* Qt编写的程序并不适合用 =FindWindow= 接口，因为Qt界面的 windows class name 都是一样的，所以通过 =FindWindow= 接口不容易匹配到目标窗口。
+
+** 参考资料
+- [[https://github.com/itay-grudev/SingleApplication][github - qt SingleApplication]]
+- [[https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow][msdn - SetForegroundWindow]]
+- [[https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-findwindowa][msdn - FindWindow]]
+
+（全文完）
