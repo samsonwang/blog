@@ -1223,18 +1223,18 @@ BODY_END = """
   gtag('js', new Date());
   gtag('config', 'UA-108507797-1');
 </script>
-
-<!-- baidu tongji -->
-<script>
-var _hmt = _hmt || [];
-(function() {
-  var hm = document.createElement("script");
-  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
-  var s = document.getElementsByTagName("script")[0];
-  s.parentNode.insertBefore(hm, s);
-})();
-</script>
 """
+
+# <!-- baidu tongji -->
+# <script>
+# var _hmt = _hmt || [];
+#(function() {
+#  var hm = document.createElement("script");
+#  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+#  var s = document.getElementsByTagName("script")[0];
+#  s.parentNode.insertBefore(hm, s);
+#})();
+#</script>
 
 # The possibility to extract metadata from the filename by using a
 # regular expression.
