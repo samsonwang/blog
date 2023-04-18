@@ -50,14 +50,94 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Aug 31, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/non-blocking-socket-connect-tips/">客户端使用非阻塞socket进行connect的流程</a>
+    </h3>
+
+    <div id="outline-container-org49ec2de" class="outline-2">
+<h2 id="org49ec2de">问题</h2>
+<div class="outline-text-2" id="text-org49ec2de">
+<p>
+使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgc6a998e" class="outline-2">
+<h2 id="orgc6a998e">解答</h2>
+<div class="outline-text-2" id="text-orgc6a998e">
+<p>
+客户端建立连接的示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">res</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">errno</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EINPROGRESS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// case1. error, fail somehow, close socket</span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">res</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// case2. connection has succeeded immediately</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// case3. connection attempt is in progress</span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+<p>
+由于是非阻塞模式，所以 <code>connect</code> 之后会直接返回，根据返回值 <code>res</code> 和 <code>errno</code> 能够判断建立连接的结果。<br></p>
+<ul class="org-ul">
+<li>case1，表示连接失败；<br>
+</li>
+<li>case2，表示连接建立成功；<br>
+</li>
+<li>case3，表示正在建立连接的过程中，在这个情况下，需要等待socket变成可写（writable）状态，可以使用 <code>select</code> 或 <code>epoll</code> 完成；<br>
+</li>
+</ul>
+<p>
+在 case3 情况下，socket可写后，执行下面的代码检查socket是否出现错误。<br></p>
+<ul class="org-ul">
+<li>case4和case5，表示socket出现了错误，将会关闭连接；<br>
+</li>
+<li>case6，表示连接建立成功，可以开始 <code>read</code> 和 <code>write</code> 了。<br>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w"></span>
+<span class="kt">socklen_t</span><span class="w"> </span><span class="n">result_len</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">getsockopt</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">SOL_SOCKET</span><span class="p">,</span><span class="w"> </span><span class="n">SO_ERROR</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result_len</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// case4. error, fail somehow, close socket</span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// case5. connection failed; error code is in 'result'</span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="c1">// case6. socket is ready for read()/write()</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org2f0c2a5" class="outline-2">
+<h2 id="org2f0c2a5">参考资料</h2>
+<div class="outline-text-2" id="text-org2f0c2a5">
+<ul class="org-ul">
+<li>
+<a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Aug 29, 2018</span>
     <h3>
       <a class="post-link" href="/posts/algorithm-weekly-container-with-most-water/">每周算法：最大容器</a>
     </h3>
 
-    <div id="outline-container-orgbfeda60" class="outline-2">
-<h2 id="orgbfeda60">Description</h2>
-<div class="outline-text-2" id="text-orgbfeda60">
+    <div id="outline-container-orgaba1528" class="outline-2">
+<h2 id="orgaba1528">Description</h2>
+<div class="outline-text-2" id="text-orgaba1528">
 <p>
 Given n non-negative integers a1, a2, …, an , where each represents a point at coordinate (i, ai). n vertical lines are drawn such that the two endpoints of line i is at (i, ai) and (i, 0). Find two lines, which together with x-axis forms a container, such that the container contains the most water.<br></p>
 
@@ -74,13 +154,13 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-org1425407" class="outline-2">
-<h2 id="org1425407">Solution</h2>
-<div class="outline-text-2" id="text-org1425407">
+<div id="outline-container-org30a12ae" class="outline-2">
+<h2 id="org30a12ae">Solution</h2>
+<div class="outline-text-2" id="text-org30a12ae">
 </div>
-<div id="outline-container-org4ccba0f" class="outline-3">
-<h3 id="org4ccba0f">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org4ccba0f">
+<div id="outline-container-orgf8a0e4a" class="outline-3">
+<h3 id="orgf8a0e4a">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-orgf8a0e4a">
 <p>
 暴力解法是最容易想到的解法了，然而暴力解法肯定不是本题的意图。<br></p>
 
@@ -106,9 +186,9 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-org301b0c5" class="outline-3">
-<h3 id="org301b0c5">Approach 2</h3>
-<div class="outline-text-3" id="text-org301b0c5">
+<div id="outline-container-org24faaf7" class="outline-3">
+<h3 id="org24faaf7">Approach 2</h3>
+<div class="outline-text-3" id="text-org24faaf7">
 <p>
 我在leetcode上看到这样一种解法，这种解法从逻辑和形式上看上不复杂，但是我的疑问在是否有严密的数学推导和论证。<br></p>
 
@@ -151,9 +231,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 </div>
 </div>
 
-<div id="outline-container-org52e01c7" class="outline-2">
-<h2 id="org52e01c7">Reference</h2>
-<div class="outline-text-2" id="text-org52e01c7">
+<div id="outline-container-org8225cb0" class="outline-2">
+<h2 id="org8225cb0">Reference</h2>
+<div class="outline-text-2" id="text-org8225cb0">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/container-with-most-water/solution/">leetcode problem solution</a><br>
@@ -177,9 +257,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
       <a class="post-link" href="/posts/why-front-end-libraries/">为什么要使用各种前端框架</a>
     </h3>
 
-    <div id="outline-container-org550459a" class="outline-2">
-<h2 id="org550459a">引言</h2>
-<div class="outline-text-2" id="text-org550459a">
+    <div id="outline-container-org0a7b4ab" class="outline-2">
+<h2 id="org0a7b4ab">引言</h2>
+<div class="outline-text-2" id="text-org0a7b4ab">
 <p>
 在学习前端的过程中，我开始接触到许多开发框架或开发工具，这些工具让我开始眼花缭乱。使用常规的html/css/js就已经能够开发出这种网页了，所以我问自己，为什么要学习这些框架或工具，这些库是用来解决什么问题的。想明白这个问题，我学习的目的就更加明确，在遇到一些开发情景时，也能够快速准确地挑选出应该使用的框架。<br></p>
 
@@ -188,9 +268,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 </div>
 </div>
 
-<div id="outline-container-org4e5e0e1" class="outline-2">
-<h2 id="org4e5e0e1">为什么要使用jQuery</h2>
-<div class="outline-text-2" id="text-org4e5e0e1">
+<div id="outline-container-org44bbcb2" class="outline-2">
+<h2 id="org44bbcb2">为什么要使用jQuery</h2>
+<div class="outline-text-2" id="text-org44bbcb2">
 <p>
 jQuery是一个轻量级js库，它有如下特性：<br></p>
 <ul class="org-ul">
@@ -210,9 +290,9 @@ jQuery是一个轻量级js库，它有如下特性：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org9dad6b5" class="outline-2">
-<h2 id="org9dad6b5">为什么要使用SASS</h2>
-<div class="outline-text-2" id="text-org9dad6b5">
+<div id="outline-container-org8cf398f" class="outline-2">
+<h2 id="org8cf398f">为什么要使用SASS</h2>
+<div class="outline-text-2" id="text-org8cf398f">
 <p>
 SASS是一种CSS预编译格式，它最终会编译成CSS。<br>
 SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操作，函数操作，样式模板（mixin）等强大的特性。它能够让开发人员更方便地编写CSS。SASS支持 <code>import</code> 关键字，这样就能够很方便地对样式进行模块化设计。<br></p>
@@ -225,9 +305,9 @@ SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操�
 </div>
 </div>
 
-<div id="outline-container-org474a073" class="outline-2">
-<h2 id="org474a073">为什么要使用Bootstrap</h2>
-<div class="outline-text-2" id="text-org474a073">
+<div id="outline-container-org78ce823" class="outline-2">
+<h2 id="org78ce823">为什么要使用Bootstrap</h2>
+<div class="outline-text-2" id="text-org78ce823">
 <p>
 Bootstrap是一个用于快速开发网页的前端框架。以我目前的理解来看，它更像是一个网页样式框架。<br></p>
 <ul class="org-ul">
@@ -243,9 +323,9 @@ Bootstrap是一个用于快速开发网页的前端框架。以我目前的理�
 </div>
 </div>
 
-<div id="outline-container-org130f705" class="outline-2">
-<h2 id="org130f705">为什么要使用React</h2>
-<div class="outline-text-2" id="text-org130f705">
+<div id="outline-container-orgcecad27" class="outline-2">
+<h2 id="orgcecad27">为什么要使用React</h2>
+<div class="outline-text-2" id="text-orgcecad27">
 <p>
 DOM操作对性能的影响很大，频繁的DOM操作会使网页渲染的速度变慢，React主要解决了这个问题。<br>
 React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新渲染。<br></p>
@@ -285,9 +365,9 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 </div>
 
 
-<div id="outline-container-orgaf97104" class="outline-2">
-<h2 id="orgaf97104">参考资料</h2>
-<div class="outline-text-2" id="text-orgaf97104">
+<div id="outline-container-org7ec3865" class="outline-2">
+<h2 id="org7ec3865">参考资料</h2>
+<div class="outline-text-2" id="text-org7ec3865">
 <ol class="org-ol">
 <li>
 <a href="https://www.w3schools.com/jquery/jquery_intro.asp">w3schools jQuery intro</a><br>
@@ -317,8 +397,8 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
       <a class="post-link" href="/posts/javascript-object-oriented-programming/">javscript中的OOP特性</a>
     </h3>
 
-    <div id="outline-container-orgb25bdc9" class="outline-2">
-<h2 id="orgb25bdc9">
+    <div id="outline-container-orgfdc615a" class="outline-2">
+<h2 id="orgfdc615a">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -327,13 +407,13 @@ js也是具有OOP（object oriented programming）特性的，OOP在构建一些
 </div>
 </div>
 
-<div id="outline-container-org2b6a4a1" class="outline-2">
-<h2 id="org2b6a4a1">
+<div id="outline-container-orgd41684d" class="outline-2">
+<h2 id="orgd41684d">
 <span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-org421193e" class="outline-3">
-<h3 id="org421193e">
+<div id="outline-container-org0d6b1b8" class="outline-3">
+<h3 id="org0d6b1b8">
 <span class="section-number-3">2.1</span> 创建对象（object）</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -353,8 +433,8 @@ js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关�
 </div>
 </div>
 
-<div id="outline-container-orge72f821" class="outline-3">
-<h3 id="orge72f821">
+<div id="outline-container-orga66bb1b" class="outline-3">
+<h3 id="orga66bb1b">
 <span class="section-number-3">2.2</span> 类（class）的声明</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -375,8 +455,8 @@ crow instanceof Bird; // =&gt; true
 </div>
 </div>
 
-<div id="outline-container-orgebebe24" class="outline-3">
-<h3 id="orgebebe24">
+<div id="outline-container-org6c4d174" class="outline-3">
+<h3 id="org6c4d174">
 <span class="section-number-3">2.3</span> 类的共有成员</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
@@ -404,8 +484,8 @@ js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还
 </div>
 </div>
 
-<div id="outline-container-org31131d5" class="outline-3">
-<h3 id="org31131d5">
+<div id="outline-container-orgeb8085c" class="outline-3">
+<h3 id="orgeb8085c">
 <span class="section-number-3">2.4</span> 类的私有成员</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
@@ -426,8 +506,8 @@ ducky.getHatchedEggCount(); // returns 10
 </div>
 </div>
 
-<div id="outline-container-org3505c6a" class="outline-3">
-<h3 id="org3505c6a">
+<div id="outline-container-org93641c2" class="outline-3">
+<h3 id="org93641c2">
 <span class="section-number-3">2.5</span> 类的继承和派生</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
@@ -438,8 +518,8 @@ Bird.prototype.constructor = Bird;
 </div>
 </div>
 
-<div id="outline-container-org1f5eb9a" class="outline-3">
-<h3 id="org1f5eb9a">
+<div id="outline-container-org5572ba9" class="outline-3">
+<h3 id="org5572ba9">
 <span class="section-number-3">2.6</span> 类的覆盖</h3>
 <div class="outline-text-3" id="text-2-6">
 <p>
@@ -469,8 +549,8 @@ Bird.prototype.fly = function() {
 </div>
 
 
-<div id="outline-container-orgf883a39" class="outline-2">
-<h2 id="orgf883a39">
+<div id="outline-container-org6c45802" class="outline-2">
+<h2 id="org6c45802">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">
@@ -490,9 +570,9 @@ Bird.prototype.fly = function() {
       <a class="post-link" href="/posts/javascript-regexp-cheatsheet/">js正则表达式备忘</a>
     </h3>
 
-    <div id="outline-container-orgf3180ee" class="outline-2">
-<h2 id="orgf3180ee">引言</h2>
-<div class="outline-text-2" id="text-orgf3180ee">
+    <div id="outline-container-orgb5a4e8d" class="outline-2">
+<h2 id="orgb5a4e8d">引言</h2>
+<div class="outline-text-2" id="text-orgb5a4e8d">
 <p>
 近在FreeCodeCamp(FCC)学习前端的课程，其中有一节就是讲的 <code>regexp</code> ，也就是正则表达式。我之前零星地了解过一些正则表达式的相关知识，但不足以对正则表达式得出一个完整的认识。FCC的教程循序渐进，由简到繁，在教学中结合练习，非常适合初学者的学习过程。如何你的英文能够达到阅读技术类文献的水平，又正好想学习一下正则表达式，我推荐你试一下FCC的正则表达式教程，花3~4个小时就能够对正则表达式有个完整的理解。<br></p>
 
@@ -505,9 +585,9 @@ Bird.prototype.fly = function() {
 </div>
 
 
-<div id="outline-container-org43063ac" class="outline-2">
-<h2 id="org43063ac">要点总结（js版）</h2>
-<div class="outline-text-2" id="text-org43063ac">
+<div id="outline-container-orgf45d9a8" class="outline-2">
+<h2 id="orgf45d9a8">要点总结（js版）</h2>
+<div class="outline-text-2" id="text-orgf45d9a8">
 <p>
 FCC的教程使用javascript作为开发语言，本节所有的代码都是js代码。<br></p>
 
@@ -750,9 +830,9 @@ lookahead 的概念， <code>(?=...)</code> 与 <code>(?!...)</code><br></p>
 </div>
 
 
-<div id="outline-container-org8c061ea" class="outline-2">
-<h2 id="org8c061ea">elisp和python中的正则表达式</h2>
-<div class="outline-text-2" id="text-org8c061ea">
+<div id="outline-container-orgbf4fdef" class="outline-2">
+<h2 id="orgbf4fdef">elisp和python中的正则表达式</h2>
+<div class="outline-text-2" id="text-orgbf4fdef">
 <p>
 在emacs中内置了 <code>string-match</code> 函数进行正则表达式匹配，其函数原型为 <code>(string-match REGEXP STRING &amp;optional START)</code> ，下面就是在emacs中使用regexp的示例。<br></p>
 <div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span> <span class="nv">str-regexp</span> <span class="s">"\.[h|cpp]$"</span><span class="p">)</span>
@@ -774,9 +854,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 </div>
 
 
-<div id="outline-container-org33b6b47" class="outline-2">
-<h2 id="org33b6b47">参考资料</h2>
-<div class="outline-text-2" id="text-org33b6b47">
+<div id="outline-container-orgd307da2" class="outline-2">
+<h2 id="orgd307da2">参考资料</h2>
+<div class="outline-text-2" id="text-orgd307da2">
 <ul class="org-ul">
 <li>
 <a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/regular-expressions">FCC regular-expression tutorial</a><br>
@@ -800,9 +880,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
       <a class="post-link" href="/posts/algorithm-weekly-string-to-integer/">每周算法：字符串转整数</a>
     </h3>
 
-    <div id="outline-container-org22b5a87" class="outline-2">
-<h2 id="org22b5a87">Description</h2>
-<div class="outline-text-2" id="text-org22b5a87">
+    <div id="outline-container-orgc4477de" class="outline-2">
+<h2 id="orgc4477de">Description</h2>
+<div class="outline-text-2" id="text-orgc4477de">
 <p>
 Implement <code>atoi</code> which converts a string to an integer.<br></p>
 
@@ -860,13 +940,13 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-org823d876" class="outline-2">
-<h2 id="org823d876">Solution</h2>
-<div class="outline-text-2" id="text-org823d876">
+<div id="outline-container-org34864eb" class="outline-2">
+<h2 id="org34864eb">Solution</h2>
+<div class="outline-text-2" id="text-org34864eb">
 </div>
-<div id="outline-container-org518a97d" class="outline-3">
-<h3 id="org518a97d">Approach 1</h3>
-<div class="outline-text-3" id="text-org518a97d">
+<div id="outline-container-orgec90ca7" class="outline-3">
+<h3 id="orgec90ca7">Approach 1</h3>
+<div class="outline-text-3" id="text-orgec90ca7">
 <p>
 这道题并不难，思路也比较容易想出来，下面就是我想到的解法。<br>
 可能需要注意的问题是：<br></p>
@@ -938,9 +1018,9 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-org158a8fb" class="outline-3">
-<h3 id="org158a8fb">Approach 2</h3>
-<div class="outline-text-3" id="text-org158a8fb">
+<div id="outline-container-org3deb541" class="outline-3">
+<h3 id="org3deb541">Approach 2</h3>
+<div class="outline-text-3" id="text-org3deb541">
 <p>
 下面这段代码目前是leetcode上运行速度最快的solution sample，仅仅耗时了4ms。作者使用了很多让程序跑得更快的方法，其中的技巧值得我学习。<br></p>
 <div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">fast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
@@ -1009,9 +1089,9 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
 </div>
 </div>
 
-<div id="outline-container-org413e5e9" class="outline-2">
-<h2 id="org413e5e9">Reference</h2>
-<div class="outline-text-2" id="text-org413e5e9">
+<div id="outline-container-org422a323" class="outline-2">
+<h2 id="org422a323">Reference</h2>
+<div class="outline-text-2" id="text-org422a323">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/31162367/significance-of-ios-basesync-with-stdiofalse-cin-tienull">stackoverflow.com sync with stdio</a><br>
@@ -1029,17 +1109,17 @@ Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
       <a class="post-link" href="/posts/map-reduce/">MapReduce模型</a>
     </h3>
 
-    <div id="outline-container-orge1c984b" class="outline-2">
-<h2 id="orge1c984b">序言</h2>
-<div class="outline-text-2" id="text-orge1c984b">
+    <div id="outline-container-org49f0610" class="outline-2">
+<h2 id="org49f0610">序言</h2>
+<div class="outline-text-2" id="text-org49f0610">
 <p>
 对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga3cee86" class="outline-2">
-<h2 id="orga3cee86">什么是MapReduce</h2>
-<div class="outline-text-2" id="text-orga3cee86">
+<div id="outline-container-orgb3b3c6e" class="outline-2">
+<h2 id="orgb3b3c6e">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-orgb3b3c6e">
 <p>
 MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
 
@@ -1055,9 +1135,9 @@ MapReduce是面向大数据并行处理的计算模型、框架和平台，它�
 </div>
 </div>
 
-<div id="outline-container-org3981d9c" class="outline-2">
-<h2 id="org3981d9c">map和reduce</h2>
-<div class="outline-text-2" id="text-org3981d9c">
+<div id="outline-container-org9de1be3" class="outline-2">
+<h2 id="org9de1be3">map和reduce</h2>
+<div class="outline-text-2" id="text-org9de1be3">
 <p>
 <b>从编程语言的角度上来说</b><br>
 map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
@@ -1076,9 +1156,9 @@ reduce操作也会接收到两个参数，一个列表和一个变换过程，�
 </div>
 </div>
 
-<div id="outline-container-org4c5ce81" class="outline-2">
-<h2 id="org4c5ce81">并行计算与大数据</h2>
-<div class="outline-text-2" id="text-org4c5ce81">
+<div id="outline-container-org4577fa4" class="outline-2">
+<h2 id="org4577fa4">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-org4577fa4">
 <p>
 mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
 
@@ -1109,9 +1189,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga94cd91" class="outline-2">
-<h2 id="orga94cd91">参考资料</h2>
-<div class="outline-text-2" id="text-orga94cd91">
+<div id="outline-container-orga585cae" class="outline-2">
+<h2 id="orga585cae">参考资料</h2>
+<div class="outline-text-2" id="text-orga585cae">
 <ul class="org-ul">
 <li>
 <a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
@@ -1135,9 +1215,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
       <a class="post-link" href="/posts/algorithm-weekly-zigzag-conversion/">每周算法：字符串锯齿变换</a>
     </h3>
 
-    <div id="outline-container-orgcb64a13" class="outline-2">
-<h2 id="orgcb64a13">Description</h2>
-<div class="outline-text-2" id="text-orgcb64a13">
+    <div id="outline-container-org667b122" class="outline-2">
+<h2 id="org667b122">Description</h2>
+<div class="outline-text-2" id="text-org667b122">
 <p>
 The string "PAYPALISHIRING" is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)<br></p>
 
@@ -1172,13 +1252,13 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-orgbe6d6f7" class="outline-2">
-<h2 id="orgbe6d6f7">Solution</h2>
-<div class="outline-text-2" id="text-orgbe6d6f7">
+<div id="outline-container-orgf909169" class="outline-2">
+<h2 id="orgf909169">Solution</h2>
+<div class="outline-text-2" id="text-orgf909169">
 </div>
-<div id="outline-container-org56e0804" class="outline-3">
-<h3 id="org56e0804">Approach 1 找规律</h3>
-<div class="outline-text-3" id="text-org56e0804">
+<div id="outline-container-orgcadfd90" class="outline-3">
+<h3 id="orgcadfd90">Approach 1 找规律</h3>
+<div class="outline-text-3" id="text-orgcadfd90">
 <p>
 我想到的第一个方法就是找规律，通过寻找每一行的变化规律，编写相应的计算逻辑。<br>
 需要注意:<br></p>
@@ -1240,9 +1320,9 @@ P     I
 </div>
 
 
-<div id="outline-container-orga28178e" class="outline-3">
-<h3 id="orga28178e">Approach 2 Sort by Row</h3>
-<div class="outline-text-3" id="text-orga28178e">
+<div id="outline-container-org9adc4d7" class="outline-3">
+<h3 id="org9adc4d7">Approach 2 Sort by Row</h3>
+<div class="outline-text-3" id="text-org9adc4d7">
 <p>
 这个方法是leetcode提供的一个方法，主要思路是使用一个二维矩阵将字符串按照顺序存储起来，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(n)</code> 。<br></p>
 
@@ -1270,9 +1350,9 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-org5ed9e36" class="outline-3">
-<h3 id="org5ed9e36">Approach 3 Visit by Row</h3>
-<div class="outline-text-3" id="text-org5ed9e36">
+<div id="outline-container-org359d576" class="outline-3">
+<h3 id="org359d576">Approach 3 Visit by Row</h3>
+<div class="outline-text-3" id="text-org359d576">
 <p>
 这个方法是leetcode提供的另一个方法，通过计算下标完成字符串的转换，实际上也是对转换的规律进行了总结，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(1)</code> 。<br>
 对于空间复杂度，实际上需要额外的空间存储结果字符串，如果忽略函数所返回的结果字符串，则空间复杂度为 <code>O(1)</code> 。<br></p>
@@ -1306,17 +1386,17 @@ P     I
       <a class="post-link" href="/posts/css-flexbox-layout-cheatsheet/">css flexbox 总结</a>
     </h3>
 
-    <div id="outline-container-orga8d8df5" class="outline-2">
-<h2 id="orga8d8df5">引言</h2>
-<div class="outline-text-2" id="text-orga8d8df5">
+    <div id="outline-container-orgdc94e1d" class="outline-2">
+<h2 id="orgdc94e1d">引言</h2>
+<div class="outline-text-2" id="text-orgdc94e1d">
 <p>
 本文主要对css flexbox的关键点了总结，方便以后在以后的查阅。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org01df571" class="outline-2">
-<h2 id="org01df571">容器的属性</h2>
-<div class="outline-text-2" id="text-org01df571">
+<div id="outline-container-org0fe253b" class="outline-2">
+<h2 id="org0fe253b">容器的属性</h2>
+<div class="outline-text-2" id="text-org0fe253b">
 <p>
 对于容器需要指定其显示方式为flexbox<br></p>
 <div class="highlight"><pre><span></span><span class="nt">display</span><span class="o">:</span><span class="w"> </span><span class="nt">flex</span><span class="o">;</span><span class="w"></span>
@@ -1348,9 +1428,9 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-org0fd5719" class="outline-2">
-<h2 id="org0fd5719">条目的属性</h2>
-<div class="outline-text-2" id="text-org0fd5719">
+<div id="outline-container-orge2d797e" class="outline-2">
+<h2 id="orge2d797e">条目的属性</h2>
+<div class="outline-text-2" id="text-orge2d797e">
 <p>
 用于调整顺序<br></p>
 <div class="highlight"><pre><span></span><span class="nt">order</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nt">integer</span><span class="o">&gt;;</span><span class="w"> </span><span class="c">/* default 0 */</span><span class="w"></span>
@@ -1384,9 +1464,9 @@ P     I
 </div>
 
 
-<div id="outline-container-org76caac8" class="outline-2">
-<h2 id="org76caac8">参考资料</h2>
-<div class="outline-text-2" id="text-org76caac8">
+<div id="outline-container-org019aa82" class="outline-2">
+<h2 id="org019aa82">参考资料</h2>
+<div class="outline-text-2" id="text-org019aa82">
 <ul class="org-ul">
 <li>
 <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">css-tricks.com</a><br>
@@ -1436,9 +1516,9 @@ P     I
       <a class="post-link" href="/posts/algorithm-weekly-longest-palindromic-substring/">每周算法：最长对称子串</a>
     </h3>
 
-    <div id="outline-container-org5c62cb3" class="outline-2">
-<h2 id="org5c62cb3">Description</h2>
-<div class="outline-text-2" id="text-org5c62cb3">
+    <div id="outline-container-orgc5892d9" class="outline-2">
+<h2 id="orgc5892d9">Description</h2>
+<div class="outline-text-2" id="text-orgc5892d9">
 <p>
 Given a string s, find the longest palindromic substring in s. You may assume that the maximum length of s is 1000.<br></p>
 
@@ -1458,16 +1538,16 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgcfb2a3e" class="outline-2">
-<h2 id="orgcfb2a3e">Solution</h2>
-<div class="outline-text-2" id="text-orgcfb2a3e">
+<div id="outline-container-org165c082" class="outline-2">
+<h2 id="org165c082">Solution</h2>
+<div class="outline-text-2" id="text-org165c082">
 <p>
 我想到了两种方法：暴力解法、从中心展开<br></p>
 </div>
 
-<div id="outline-container-org59c1004" class="outline-3">
-<h3 id="org59c1004">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org59c1004">
+<div id="outline-container-org50f8a87" class="outline-3">
+<h3 id="org50f8a87">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org50f8a87">
 <p>
 暴击解法的时间复杂度为 <code>O(n3)</code> , 找出所有子串的时间复杂度为 <code>O(n2)</code> , 判断一个子串的时间复杂度为 <code>O(n)</code> ; 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -1522,9 +1602,9 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-org93efaaa" class="outline-3">
-<h3 id="org93efaaa">Approach 2 从中心展开</h3>
-<div class="outline-text-3" id="text-org93efaaa">
+<div id="outline-container-org341ea30" class="outline-3">
+<h3 id="org341ea30">Approach 2 从中心展开</h3>
+<div class="outline-text-3" id="text-org341ea30">
 <p>
 从中心展开方法的时间复杂度为 <code>O(n2)</code> , 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -1598,9 +1678,9 @@ leetcode上还有一个解法，使用java完成的，它的坐标计算也很�
 </div>
 </div>
 
-<div id="outline-container-org1e5a484" class="outline-3">
-<h3 id="org1e5a484">Approach 3 动态规划（dynamic programming）</h3>
-<div class="outline-text-3" id="text-org1e5a484">
+<div id="outline-container-org2dfcaa6" class="outline-3">
+<h3 id="org2dfcaa6">Approach 3 动态规划（dynamic programming）</h3>
+<div class="outline-text-3" id="text-org2dfcaa6">
 <p>
 leetcode上还给给出了使用DP解决这个问题的方法。<br>
 我在leetcode上的discuss上找了个java写的解法。<br></p>
@@ -1630,9 +1710,9 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
 </div>
 </div>
 
-<div id="outline-container-org0abe895" class="outline-3">
-<h3 id="org0abe895">Approach 4 Manacher算法</h3>
-<div class="outline-text-3" id="text-org0abe895">
+<div id="outline-container-orga6f0fd9" class="outline-3">
+<h3 id="orga6f0fd9">Approach 4 Manacher算法</h3>
+<div class="outline-text-3" id="text-orga6f0fd9">
 <p>
 这个算法思路实在是新奇，感兴趣的同学可以 <a href="https://articles.leetcode.com/longest-palindromic-substring-part-ii/">去看看</a> 。<br></p>
 </div>
@@ -1648,9 +1728,9 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
       <a class="post-link" href="/posts/algorithm-weekly-longest-substring-without-repeating-characters/">每周算法：最长不含重复字符的子串</a>
     </h3>
 
-    <div id="outline-container-orgab0a98b" class="outline-2">
-<h2 id="orgab0a98b">Description</h2>
-<div class="outline-text-2" id="text-orgab0a98b">
+    <div id="outline-container-orgf9de113" class="outline-2">
+<h2 id="orgf9de113">Description</h2>
+<div class="outline-text-2" id="text-orgf9de113">
 <p>
 Given a string, find the length of the longest substring without repeating characters.<br></p>
 
@@ -1665,16 +1745,16 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 </div>
 
-<div id="outline-container-org8b6d6f0" class="outline-2">
-<h2 id="org8b6d6f0">Solution</h2>
-<div class="outline-text-2" id="text-org8b6d6f0">
+<div id="outline-container-org05259f7" class="outline-2">
+<h2 id="org05259f7">Solution</h2>
+<div class="outline-text-2" id="text-org05259f7">
 <p>
 好久没刷算法题了，手有点生，没有什么思路，下面的答案是看过提示之后才写出来的。<br></p>
 </div>
 
-<div id="outline-container-orge8619c1" class="outline-3">
-<h3 id="orge8619c1">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-orge8619c1">
+<div id="outline-container-orgea4437a" class="outline-3">
+<h3 id="orgea4437a">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-orgea4437a">
 <p>
 将所有的子串都穷举出来，并对它们进行判断，就能够得到最长子串的长度。这个算法很显然需要耗费很长时间。<br>
 需要注意的是： C++20中才支持 <code>std::set::contains</code> 这个接口（根据cppreference.com）。<br></p>
@@ -1719,9 +1799,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-org775462e" class="outline-3">
-<h3 id="org775462e">Approach 2 滑动窗口</h3>
-<div class="outline-text-3" id="text-org775462e">
+<div id="outline-container-orgd994b83" class="outline-3">
+<h3 id="orgd994b83">Approach 2 滑动窗口</h3>
+<div class="outline-text-3" id="text-orgd994b83">
 <p>
 滑动窗口的概念在字符串处理问题中十分常用，保持子串的左端点不动，不断拓展右侧端点，就能穷举出所有满足条件的子串。<br>
 需要注意的是这句话： <code>lengthMax = max(lengthMax, int(j-i+1));</code><br></p>
@@ -1764,9 +1844,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-org5f5f421" class="outline-3">
-<h3 id="org5f5f421">Approach 3 优化的滑动窗口</h3>
-<div class="outline-text-3" id="text-org5f5f421">
+<div id="outline-container-org7e06723" class="outline-3">
+<h3 id="org7e06723">Approach 3 优化的滑动窗口</h3>
+<div class="outline-text-3" id="text-org7e06723">
 <p>
 使用 <code>map</code> 对字母出现的位置进行记录，这样在出现相同字母时，就能够从上一次出现的位置向后开始寻找。<br>
 需要注意句话 <code>it-&gt;second+1&gt;=i</code> , 需要对位置加1后再比较，这样才能保证 <code>i</code> 的坐标计算正确。<br></p>
@@ -1799,207 +1879,6 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Jul 30, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/navigation-and-selection-effectively-in-emacs/">提高emacs中浏览和选择操作效率的技巧</a>
-    </h3>
-
-    <div id="outline-container-orgb5440a8" class="outline-2">
-<h2 id="orgb5440a8">
-<span class="section-number-2">1</span> 引言</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with-selection-and-navigation-in-emacs/">一篇博文</a> 给了我很大的启发，他详细地介绍了emacs中的相关概念，并提供了许多充满想象力的小技巧。作为emacs的入门级选手确实学到了很多，也拓宽了自己的思路。<br></p>
-
-<p>
-我最初的开发环境是Visual Studio，这一类比较大型的IDE集成了许多功能，但同时也会束缚住使用者的想法。通过这篇文章我感受到的由普通操作指令能组合成的新编辑方式。<br></p>
-
-<p>
-如果英文水平允许的话，非常推荐阅读一下原版的博文，原文中有更加丰富形象的图片示例，无论是跟我一样刚刚入门emacs的新手，还是经验丰富的老兵，都能够从中获得启发。下面，我结合自己的理解和收获谈谈emacs中操作的体会。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-orgd9d9860" class="outline-2">
-<h2 id="orgd9d9860">
-<span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
-<div class="outline-text-2" id="text-2">
-<p>
-我之前进行代码段复制的操作是十分基础的，用 <code>C-@</code> 模拟鼠标按下，方向键模拟鼠标拖动，在鼠标拖动的过程中就形成了一个选区，然后用 <code>M-w</code> 对这个选区进行复制操作，用 <code>C-y</code> 粘贴被复制的内容。<br></p>
-
-<p>
-以上操作带出了几个非常重要的概念 。在emacs中，鼠标光标所在位置被称作 <code>point</code> ；组合键 <code>C-@</code> 执行的是 <code>set-mark-command</code> 命令，就是将 <code>point</code> 所在位置标记为 <code>mark</code> ；通过移动光标，也就是移动 <code>point</code> 后，在 <code>point</code> 与 <code>mark</code> 之间就形成了 <code>region</code> 。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-org849667d" class="outline-2">
-<h2 id="org849667d">
-<span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
-<div class="outline-text-2" id="text-3">
-</div>
-<div id="outline-container-org062cc25" class="outline-3">
-<h3 id="org062cc25">
-<span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
-<div class="outline-text-3" id="text-3-1">
-<p>
-下面就来介绍一个非常重要的命令 <code>exchange-point-and-mark</code> ，这个命令默认被绑定在组合键 <code>C-x C-x</code> 上，从字面意思上很容易理解这条指令的作用，就是交换 <code>mark</code> 和 <code>point</code> 的位置。这样做的意义在于能够方便地切换 <code>region</code> 的可动边界，这样能够使 <code>region</code> 方便地分别从两端调整大小。<br>
-下面的示例是截取自Paul的博文，需要注意的是，他习惯于使用 <code>C-SPC</code> 调用 <code>set-mark-command</code> 。<br></p>
-
-<div class="highlight"><pre><span></span>Lorem ipsum dolor sit amet
-      ^ Cursor
-
-
-      Point
-      |
-      Mark
-      |
-Lorem ipsum dolor sit amet
-      ^ C-spc
-
-
-      Mark          Point
-      | ----region--|
-      |             |
-Lorem ipsum dolor sit amet
-	 move       ^
-	 forward -&gt;
-
-
-      Mark          Point
-      | ----region--|
-      |             |
-Lorem ipsum dolor sit amet
-		    ^
-		    C-x C-x
-
-
-      Point         Mark
-      | ----region--|
-      |             |
-Lorem ipsum dolor sit amet
-
-Point and mark interchanged
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgfc0b3d8" class="outline-3">
-<h3 id="orgfc0b3d8">
-<span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
-<div class="outline-text-3" id="text-3-2">
-<p>
-对于 <code>region</code> 相关的操作，通常是对已经存在的代码段进行编辑的，如果我们在输入之前就知道有许多字段是需要重复输入的，那么就可以在输入之前设置好 <code>mark</code> ，对输入后形成的 <code>region</code> 完成复制。这个技巧在特定情况能够很大地提升输入效率，但是我个人认为，想要在实战中完成这个操作，还需要保证非常清晰的思路。可以通过下面的示例感受这种操作带来的方便(示例截取自Paul的博文)。<br></p>
-
-<p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-navigation-and-selection-effectively-in-emacs-1.gif" alt="nil"><br></p>
-
-<p>
-下面给出了详细的操作解析<br></p>
-
-<div class="highlight"><pre><span></span>class
-      ^ C-spc =&gt; Activate mark
-
-class Foo
-	  ^ M-w =&gt; Foo has now been killed (copied)
-
-class Foo extends React.Component&lt;
-				  ^ C-spc =&gt; Activate mark
-
-class Foo extends React.Component&lt;
-				  ^ C-y =&gt; Yank (paste) Foo
-
-class Foo extends React.Component&lt;FooProps
-					  ^ M-w =&gt; FooProps has now been killed (copied)
-
-class Foo extends React.Component&lt;FooProps&gt;
-
-// Later
-interface
-	   ^ C-y =&gt; Yank FooProps
-
-interface FooProps {}
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgd74b3f9" class="outline-3">
-<h3 id="orgd74b3f9">
-<span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
-</h3>
-<div class="outline-text-3" id="text-3-3">
-<p>
-使用 <code>rectangle-mark-mode</code> 命令，默认快捷键 <code>C-x-SPC</code> ，能够框选出一个矩形的 <code>region</code> 。对于矩形 <code>region</code> ，Paul给出的示例是复制 <code>dired</code> 中的多个文件名称，貌似其他合适的使用场景不太多。<br></p>
-
-<p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-navigation-and-selection-effectively-in-emacs-2.gif" alt="nil"><br></p>
-</div>
-</div>
-</div>
-
-
-<div id="outline-container-org09d8a53" class="outline-2">
-<h2 id="org09d8a53">
-<span class="section-number-2">4</span> 其他插件支持</h2>
-<div class="outline-text-2" id="text-4">
-<p>
-有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
-</div>
-
-<div id="outline-container-orgbd33c9d" class="outline-3">
-<h3 id="orgbd33c9d">
-<span class="section-number-3">4.1</span> helm swoop</h3>
-<div class="outline-text-3" id="text-4-1">
-<p>
-从我个人的使用体验来看 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和helm occur的功能十分相似，它们都提供了方便的关键词跳转功能。<br></p>
-
-<p>
-下面的图片来自helm swoop的 <a href="https://github.com/ShingoFukuyama/helm-swoop">主页</a><br></p>
-
-<p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-navigation-and-selection-effectively-in-emacs-3.gif" alt="nil"><br></p>
-</div>
-</div>
-
-<div id="outline-container-orgb80ca3b" class="outline-3">
-<h3 id="orgb80ca3b">
-<span class="section-number-3">4.2</span> avy</h3>
-<div class="outline-text-3" id="text-4-2">
-<p>
-<a href="https://github.com/abo-abo/avy">avy</a> 的思路非常独特，这样的跳转和定位让我想起了Chrome浏览器中的Vimium插件，他允许我们使用更少的按键就能跳转到当前buffer中的任意位置，略微遗憾的是它只支持拉丁字母，不过在编写代码的大多数情况下是够用的。<br></p>
-
-<p>
-下面的图片来自Paul的博文<br></p>
-
-<p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-navigation-and-selection-effectively-in-emacs-4.gif" alt="nil"><br></p>
-</div>
-</div>
-</div>
-
-
-<div id="outline-container-org30d5195" class="outline-2">
-<h2 id="org30d5195">
-<span class="section-number-2">5</span> 参考资料</h2>
-<div class="outline-text-2" id="text-5">
-<ul class="org-ul">
-<li>
-<a href="https://lorefnon.tech/2018/07/14/getting-productive-with-selection-and-navigation-in-emacs/">lorefnon.tech</a><br>
-</li>
-<li>
-<a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a><br>
-</li>
-<li>
-<a href="https://github.com/abo-abo/avy">avy</a><br>
-</li>
-</ul>
 </div>
 </div>
 

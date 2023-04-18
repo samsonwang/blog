@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>记录一次TCP异常分析 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/tcp_error_research_note/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/bring-widget-window-to-the-front/" title="将界面窗口置顶显示" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="记录一次TCP异常分析">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/tcp_error_research_note/">
+<meta property="og:description" content="最近在排查一个TCP异常现象，有很多收获，加深了我对TCP的理解，在这里记录一下。
+
+
+
+
+
+问题现象
+
+
+测试环境为windows 10，详细的抓包如下。
+
+
+
+
+
+
+
+问题的流程为：
+
+
+服务端IP为192.168.10.10，端口为3001；客户端IP为192.168.10.20。
+服务端重启了，在图中的No.310中可以看到服务端关闭了连接。
+随后客户端尝试重连，在图中的No.331可以看">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2023-04-17T15:17:58+08:00">
+<meta property="article:tag" content="network">
+<meta property="article:tag" content="tcp">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">记录一次TCP异常分析</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2023-04-17T15:17:58+08:00" itemprop="datePublished">Apr 17, 2023</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+最近在排查一个TCP异常现象，有很多收获，加深了我对TCP的理解，在这里记录一下。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org97ba736" class="outline-2">
+<h2 id="org97ba736">问题现象</h2>
+<div class="outline-text-2" id="text-org97ba736">
+<p>
+测试环境为windows 10，详细的抓包如下。<br></p>
+
+<p>
+<img src="/assets/images/spinner.svg" data-src="/images/post-tcp-error-research-note.png" alt="wireshark capture"><br></p>
+
+<p>
+问题的流程为：<br></p>
+<ol class="org-ol">
+<li>服务端IP为192.168.10.10，端口为3001；客户端IP为192.168.10.20。<br>
+</li>
+<li>服务端重启了，在图中的No.310中可以看到服务端关闭了连接。<br>
+</li>
+<li>随后客户端尝试重连，在图中的No.331可以看到服务端与客户端完成了三次握手过程，成功建立连接。<br>
+</li>
+<li>在连接成功后很短时间（1秒）内服务端就将连接断开了，断开时的错误码是10045，在软件的log中看到了这个错误流程。<br>
+</li>
+<li>后续在客户端发送心跳时，服务端通知客户端重置连接，在图中No.543可以看到。<br>
+</li>
+</ol>
+</div>
+</div>
+
+
+<div id="outline-container-orgf03d741" class="outline-2">
+<h2 id="orgf03d741">
+<code>TIME_WAIT</code> 状态</h2>
+<div class="outline-text-2" id="text-orgf03d741">
+<p>
+主动关闭连接的一方在四次挥手结束时会处在 <code>TIME_WAIT</code> 状态，随后需要等待2MSL时间后 <code>TIME_WAIT</code> 状态才会变为 <code>CLOSED</code> 状态。<br>
+一般我们会在服务端设置 <code>SO_REUSEADDR</code> 参数，这样服务端在重启时可以忽略 <code>TIME_WAIT</code> 的限制，快速重用之前的端口。<br></p>
+
+<p>
+但是在服务端使用 <code>SO_REUSEADDR</code> 时，虽然能够快速重用IP和端口，但是如果客户端快速重连时可能会出现一次失败，就像问题流程中的步骤4和5一样。<br>
+虽然客户端成功完成了三次握手，但是随后却被服务端认为是连接异常而关闭了。<br></p>
+
+<p>
+这可能是由于服务端在快速重用IP和端口时，会在一段时间内无法区分客户端发来的包是重启之前连接的还是重启之后连接的。<br></p>
+
+<p>
+TIPS: 当我们希望客户端使用固定的端口时， <code>SO_REUSEADDR</code> 也可以用在客户端socket上。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org824ec14" class="outline-2">
+<h2 id="org824ec14">静默时间</h2>
+<div class="outline-text-2" id="text-org824ec14">
+<p>
+在查资料时，了解到了一个新的概念“静默时间”。<br></p>
+
+<p>
+如果一台处于 <code>TIME_WAIT</code> 状态下的连接向关联的主机崩溃，然后在MSL内重新启动，并且使用与主机崩溃之前处于 <code>TIME_WAIT</code> 状态的连接相同的IP地址与端口号，那么将会怎样处理呢？在上述情况下，该连接在主机崩溃之前产生的延迟报文段会被认为属于主机重启后创建的新连接。<br></p>
+
+<p>
+为了防止上述情况的发生，[RFC0793]指出在崩溃或者重启后TCP协议应当在创建新的连接之前等待相当于一个MSL的时间。该段时间被称作静默时间。<br></p>
+
+<p>
+然而只有极少数实现遵循了这一点。因为绝大多数的主机在崩溃之后都需要超过一个MSL的时间才能重新启动。此外，如果上层应用程序自身已采用了校验和或者加密手段，那么此类错误会很容易检测出来。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgd17fe60" class="outline-2">
+<h2 id="orgd17fe60">参考资料</h2>
+<div class="outline-text-2" id="text-orgd17fe60">
+<ul class="org-ul">
+<li>《TCP/IP详解》卷1：协议<br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/network/" rel="tag">network</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/tcp/" rel="tag">tcp</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/bring-widget-window-to-the-front/" rel="prev">Previous post
+        <br><span>将界面窗口置顶显示</span>
+      </a>
+    </li>
+    <li class="next">
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/tcp_error_research_note/",
+        disqus_title="\u8bb0\u5f55\u4e00\u6b21TCP\u5f02\u5e38\u5206\u6790",
+        disqus_identifier="_cache/posts/tcp_error_research_note.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2023, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script><!-- baidu tongji --><script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1dcffb5494ab56e69005c957d7320ad1";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</body>
+</html>
