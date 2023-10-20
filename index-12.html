@@ -49,14 +49,74 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Jan 17, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/emacs-find-replace-string-in-directory/">使用emacs查找替换指定目录所有文件中字符串</a>
+    </h3>
+
+    <p>
+本文主要介绍在emacs中对一个目录中的很多文件进行字符串查找和替换操作的方法。参考了 <a href="http://ergoemacs.org/emacs/blog.html">XahLee</a> 的教程后，在此记录做个备份。<br></p>
+<div id="outline-container-orgf4dbccf" class="outline-2">
+<h2 id="orgf4dbccf">操作步骤</h2>
+<div class="outline-text-2" id="text-orgf4dbccf">
+<p>
+<b>进入dired模式</b> ： 我的快捷键配置为 <code>C-x d</code>, 也可以使用 <code>M-x &lt;dired&gt;</code> .<br><b>标记需要查找的文件</b> ： 在进入dired模式后，对需要操作的文件或目录进行操作。<br></p>
+<ul class="org-ul">
+<li>
+<code>m</code> 对光标所在的文件或目录进行标记<br>
+</li>
+<li>
+<code>u</code> 对光标所在的文件或目录取消标记<br>
+</li>
+<li>
+<code>U</code> 取消所有标记<br>
+</li>
+</ul>
+<p>
+可以通过 <code>M-x &lt;dired-mark-files-regexp&gt;</code> 使用正则表达式完成批量文件增加标记。<br><b>批量查找</b> ： 使用 <code>M-x &lt;dired-do-query-replace-regexp&gt;</code> 进行查找替换。在有 <code>grep</code> 的支持时（linux环境下或windows环境中增加了类似cygwin的程序），也可以使用 <code>&lt;dired-do-find-regexp-and-replace&gt;</code> 进行文本查找替换。<br><b>查找结果</b> ： 在查找结果中使用如下快捷键完成操作<br></p>
+<ul class="org-ul">
+<li>
+<code>y</code> 对当前记录执行替换操作<br>
+</li>
+<li>
+<code>n</code> 跳过当前记录<br>
+</li>
+<li>
+<code>C-g</code> 停止本次查找替换操作<br>
+</li>
+<li>
+<code>!</code> 同意本文件中的查找替换操作<br>
+</li>
+<li>
+<code>N</code> 跳过本文件中的查找替换操作<br>
+</li>
+<li>
+<code>Y</code> 同意本次所有的查找替换操作<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgd0d0364" class="outline-2">
+<h2 id="orgd0d0364">相关技巧</h2>
+<div class="outline-text-2" id="text-orgd0d0364">
+<p>
+如果需要批量查找(不进行替换)，可以在dired模式中 <code>M-x &lt;dired-do-search&gt;</code> 进行查找，对于查找结果使用 <code>M-x tags-loop-continue</code> 进行逐条浏览。<br></p>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Jan 10, 2018</span>
     <h3>
       <a class="post-link" href="/posts/stl-iterator-invalidate/">STL容器的迭代器失效问题</a>
     </h3>
 
-    <div id="outline-container-org5e40881" class="outline-2">
-<h2 id="org5e40881">1 引言</h2>
-<div class="outline-text-2" id="text-org5e40881">
+    <div id="outline-container-orgd92f70b" class="outline-2">
+<h2 id="orgd92f70b">1 引言</h2>
+<div class="outline-text-2" id="text-orgd92f70b">
 <p>
 常见的STL容器都能使用迭代器访问容器内元素，迭代器相同于一个指向容器内元素的指针，可以通过移动迭代器实现遍历容器。<br>
 但是在使用迭代器时需要考虑STL容器的失效问题；迭代器失效主要出现在对容器进行了增删操作之后，迭代器不再指向原本的元素。<br>
@@ -64,17 +124,17 @@
 </div>
 </div>
 
-<div id="outline-container-org8f3920a" class="outline-2">
-<h2 id="org8f3920a">2 map容器</h2>
-<div class="outline-text-2" id="text-org8f3920a">
+<div id="outline-container-org94ba3b1" class="outline-2">
+<h2 id="org94ba3b1">2 map容器</h2>
+<div class="outline-text-2" id="text-org94ba3b1">
 <p>
 <b>内部数据结构</b> ：红黑树<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入都红黑树中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgc68ce24" class="outline-2">
-<h2 id="orgc68ce24">3 vector容器</h2>
-<div class="outline-text-2" id="text-orgc68ce24">
+<div id="outline-container-orgb825cba" class="outline-2">
+<h2 id="orgb825cba">3 vector容器</h2>
+<div class="outline-text-2" id="text-orgb825cba">
 <p>
 <b>内部数据结构</b> ：数组(一段连续内存空间)<br><b>插入操作</b> ：由于vector使用的是一段有长度限制的连续空间，插入( <code>push_back</code> / <code>insert</code> )操作在vector中加入新的元素时需要分情况考虑。<br></p>
 <ul class="org-ul">
@@ -89,17 +149,17 @@
 </div>
 </div>
 
-<div id="outline-container-org78e5111" class="outline-2">
-<h2 id="org78e5111">4 list容器</h2>
-<div class="outline-text-2" id="text-org78e5111">
+<div id="outline-container-orge0d83a4" class="outline-2">
+<h2 id="orge0d83a4">4 list容器</h2>
+<div class="outline-text-2" id="text-orge0d83a4">
 <p>
 <b>内部数据结构</b> ：双向环状链表<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入到链表中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgc719075" class="outline-2">
-<h2 id="orgc719075">5 小结</h2>
-<div class="outline-text-2" id="text-orgc719075">
+<div id="outline-container-org3076000" class="outline-2">
+<h2 id="org3076000">5 小结</h2>
+<div class="outline-text-2" id="text-org3076000">
 <p>
 在操作STL容器时，对容器增删（ <code>erase</code> / <code>insert</code> ）之后应该注意接收返回值，这样可以有效避免迭代器失效的产生。<br>
 对容器进行遍历删除操作时，另一种语法技巧是在 <code>erase</code> 接口中对迭代器进行后自增（it++），这种写法也能够保证遍历正常进行。理解这种写法需要参考运算符重载的相关知识，后自增操作会产生一个临时变量用于函数返回。<br></p>
@@ -115,42 +175,42 @@
       <a class="post-link" href="/posts/size_t-and-size_type/">关于size_t和size_type的比较</a>
     </h3>
 
-    <div id="outline-container-orga74b403" class="outline-2">
-<h2 id="orga74b403">1 引言</h2>
-<div class="outline-text-2" id="text-orga74b403">
+    <div id="outline-container-org62e0166" class="outline-2">
+<h2 id="org62e0166">1 引言</h2>
+<div class="outline-text-2" id="text-org62e0166">
 <p>
 编程中常见的表示两种大小的类型标识符有 <code>size_t</code> 和 <code>size_type</code> ，这两种类型十分相似，非常容易混淆。本文对他们的使用场景进行了比较，并提供了示例代码。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org1350a14" class="outline-2">
-<h2 id="org1350a14">2 <code>size_t</code> 类型</h2>
-<div class="outline-text-2" id="text-org1350a14">
+<div id="outline-container-org087ba88" class="outline-2">
+<h2 id="org087ba88">2 <code>size_t</code> 类型</h2>
+<div class="outline-text-2" id="text-org087ba88">
 <p>
 当需要描述某个对象的大小（size）时都应该使用 <code>size_t</code> ，其大小被限制为 0 到 <code>SIZE_MAX</code> 之间。<br><code>size_t</code> 的定义在 <code>&lt;cstddef&gt;</code> 中， <code>SIZE_MAX</code> 的定义在 <code>&lt;climits&gt;</code> 中。<br><code>size_t</code> 一般会作为 <code>sizeof</code> 运算符的返回结果，可以理解为在给定的平台中是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgef96b9f" class="outline-2">
-<h2 id="orgef96b9f">3 <code>size_type</code> 类型</h2>
-<div class="outline-text-2" id="text-orgef96b9f">
+<div id="outline-container-org9816855" class="outline-2">
+<h2 id="org9816855">3 <code>size_type</code> 类型</h2>
+<div class="outline-text-2" id="text-org9816855">
 <p>
 在 <code>STL</code> 中定义了 <code>size_type</code> 是与 <code>Allocator::size_tpye</code> 相对应的。而 <code>Allocator</code> 是模板的一个参数。<br><code>size_type</code> 可以理解为在给定容器范围内是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org1acca80" class="outline-2">
-<h2 id="org1acca80">4 二者之间的比较</h2>
-<div class="outline-text-2" id="text-org1acca80">
+<div id="outline-container-orgd35a843" class="outline-2">
+<h2 id="orgd35a843">4 二者之间的比较</h2>
+<div class="outline-text-2" id="text-orgd35a843">
 <p>
 这两种类型主要是为了提高代码的可移植性。一般情况来说，这两种类型是没有区别的，因为使用标准库默认的 <code>Allocator</code> 所对应的 <code>size_type</code> 就是 <code>size_t</code> 。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org25af367" class="outline-2">
-<h2 id="org25af367">5 示例代码</h2>
-<div class="outline-text-2" id="text-org25af367">
+<div id="outline-container-org7a71185" class="outline-2">
+<h2 id="org7a71185">5 示例代码</h2>
+<div class="outline-text-2" id="text-org7a71185">
 <p>
 注意 <code>size_type</code> 在使用时需要加上容器类型限定。<br></p>
 <div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">n1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span><span class="w"></span>
@@ -164,9 +224,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgdad2c81" class="outline-2">
-<h2 id="orgdad2c81">6 参考资料</h2>
-<div class="outline-text-2" id="text-orgdad2c81">
+<div id="outline-container-orga4a1653" class="outline-2">
+<h2 id="orga4a1653">6 参考资料</h2>
+<div class="outline-text-2" id="text-orga4a1653">
 <ul class="org-ul">
 <li>
 <a href="http://en.cppreference.com/w/cpp/types/size_t">http://en.cppreference.com/w/cpp/types/size_t</a><br>
@@ -187,9 +247,9 @@
       <a class="post-link" href="/posts/frequent-improper-syntax-warning-on-compile/">常见的由于语法不当引起的编译警告</a>
     </h3>
 
-    <div id="outline-container-orgc475383" class="outline-2">
-<h2 id="orgc475383">1 引言</h2>
-<div class="outline-text-2" id="text-orgc475383">
+    <div id="outline-container-org8bd775a" class="outline-2">
+<h2 id="org8bd775a">1 引言</h2>
+<div class="outline-text-2" id="text-org8bd775a">
 <p>
 本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。<br>
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
@@ -206,9 +266,9 @@
       <a class="post-link" href="/posts/emacs-global-gtags-guide/">在emacs中使用GNU Global的配置指南</a>
     </h3>
 
-    <div id="outline-container-orgd78597c" class="outline-2">
-<h2 id="orgd78597c">1 引言</h2>
-<div class="outline-text-2" id="text-orgd78597c">
+    <div id="outline-container-org8c7b78e" class="outline-2">
+<h2 id="org8c7b78e">1 引言</h2>
+<div class="outline-text-2" id="text-org8c7b78e">
 <p>
 本文主要针对emacs中的global的配置和使用方法做了简要介绍。global是代码标签化索引工具，能够在许多源码中快速定位函数的实现位置。我主要使用global来辅助代码跳转；还有一种用法是用来辅助代码补全，目前正在研究中。<br></p>
 
@@ -237,29 +297,29 @@
       <a class="post-link" href="/posts/linux-directory-structure/">Linux 系统目录结构</a>
     </h3>
 
-    <div id="outline-container-org7b67260" class="outline-2">
-<h2 id="org7b67260">Linux系统的目录结构以及各个目录的作用</h2>
-<div class="outline-text-2" id="text-org7b67260">
+    <div id="outline-container-orgce3ca24" class="outline-2">
+<h2 id="orgce3ca24">Linux系统的目录结构以及各个目录的作用</h2>
+<div class="outline-text-2" id="text-orgce3ca24">
 </div>
-<div id="outline-container-orgf99785a" class="outline-3">
-<h3 id="orgf99785a"><code>/bin</code></h3>
-<div class="outline-text-3" id="text-orgf99785a">
+<div id="outline-container-org779dbf2" class="outline-3">
+<h3 id="org779dbf2"><code>/bin</code></h3>
+<div class="outline-text-3" id="text-org779dbf2">
 <p>
 bin是binary的缩写，这个目录存放使用者最经常使用的命令<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3433972" class="outline-3">
-<h3 id="org3433972"><code>/boot</code></h3>
-<div class="outline-text-3" id="text-org3433972">
+<div id="outline-container-org0a8f179" class="outline-3">
+<h3 id="org0a8f179"><code>/boot</code></h3>
+<div class="outline-text-3" id="text-org0a8f179">
 <p>
 这里存放的是启动linux时使用的一些核心文件<br></p>
 </div>
 </div>
 
-<div id="outline-container-org65ea78b" class="outline-3">
-<h3 id="org65ea78b"><code>/etc</code></h3>
-<div class="outline-text-3" id="text-org65ea78b">
+<div id="outline-container-org088c799" class="outline-3">
+<h3 id="org088c799"><code>/etc</code></h3>
+<div class="outline-text-3" id="text-org088c799">
 <p>
 这个目录用来存放系统管理所需要的配置文件和子目录<br></p>
 
@@ -277,17 +337,17 @@ bin是binary的缩写，这个目录存放使用者最经常使用的命令<br><
     </h3>
 
     <div>
-<div id="outline-container-org226274a" class="outline-2">
-<h2 id="org226274a">1 代码编译阶段</h2>
-<div class="outline-text-2" id="text-org226274a">
+<div id="outline-container-org69da128" class="outline-2">
+<h2 id="org69da128">1 代码编译阶段</h2>
+<div class="outline-text-2" id="text-org69da128">
 <p>
 在调试C/C++代码时，在编译阶段使用 <code>gcc/g++ -g</code> 命令编译，将调试信息生成在目标文件中。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb6baad2" class="outline-2">
-<h2 id="orgb6baad2">2 开启gdb模式</h2>
-<div class="outline-text-2" id="text-orgb6baad2">
+<div id="outline-container-org6be522d" class="outline-2">
+<h2 id="org6be522d">2 开启gdb模式</h2>
+<div class="outline-text-2" id="text-org6be522d">
 <ul class="org-ul">
 <li>直接进入gdb模式: <code>gdb</code> <br>
 </li>
@@ -309,9 +369,9 @@ bin是binary的缩写，这个目录存放使用者最经常使用的命令<br><
       <a class="post-link" href="/posts/blog-open-up/">终于，博客开通了</a>
     </h3>
 
-    <div id="outline-container-orgfea79dc" class="outline-2">
-<h2 id="orgfea79dc">1 前言</h2>
-<div class="outline-text-2" id="text-orgfea79dc">
+    <div id="outline-container-org951976a" class="outline-2">
+<h2 id="org951976a">1 前言</h2>
+<div class="outline-text-2" id="text-org951976a">
 <p>
 Samson的博客开通了。<br>
 作为码农，一直想要有个博客作为学习与积累的记录。<br>

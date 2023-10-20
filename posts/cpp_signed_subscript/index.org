@@ -1,0 +1,111 @@
+#+BEGIN_COMMENT
+.. title: 在C++中使用有符号数作为容器下标
+.. slug: cpp_signed_subscript
+.. date: 2023-08-22 17:15:49 UTC+08:00
+.. tags: cpp
+.. category: cpp
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 在C++中使用有符号数作为容器下标
+
+在C++20中引入了 =std::span= 特性，针对容器下标和容器大小该使用有符号数 =signed= 还是无符号数 =unsigned= ，大家开始讨论。综合来看，在旧标准的设计中使用无符号数作为容器下标是有历史原因的；但是在后来的使用中也发现了许多弊端。最终，在C++20标准下 =std::span= 使用了有符号数 =signed= 作为大小和下标。
+
+{{{TEASER_END}}}
+
+** Bjarne Stroustrup 的观点
+C++创始人Bjarne Stroustrup针对此问题发表了一些观点（见参考资料1），其中对比了两种方案的优势和劣势，会在下文中详细展开讲讲。
+
+支持使用无符号 =unsigned= 容器下标和容器大小的理由如下：
+- 自1996年开始的STL实现中就一直在使用无符号数。
+- 容器大小不可能为负数。
+
+支持使用有符号 =signed= 容器下标和容器大小的理由如下：
+- 整数计算的结果大部分都是有符号数。
+- 在C和C++中，无符号数并不能模拟自然数。
+
+Bjarne的最终观点是：
+- 在 =std::span= 中使用有符号数作为容器下标是有意这样设计的。
+- 在最初的STL中使用无符号数 =unsigned= 是错误的，并且应该最终被修正过来。
+
+当初在STL中使用无符号数的原因
+- 容器 =std::vector= 的下标并不能为负数，所以使用 =unsigned= 是比较明显的
+- 无符号数拥有更大的范围，这样我们就能拥有更大容量的 =std::vector= ，这在16位机器上比较重要。
+- 检查下标有效性时只需要检查一侧，因为无符号数并不会小于0。
+
+但是经过这些年的使用，Bjarne也听到了一些不同的声音
+- C++的无符号数用起来比较奇怪，因为它无法模拟自然数。无符号数具有模运算特性，并且将无符号数与有符号数进行转换时容易出现意外情况。
+- 即使在最早版本的STL中 =std::vector= 的最大允许范围 =max_size()= 也是有符号数的最大值。我们并不需要那点额外的范围了。
+- 在现代处理器中，检查 =x>=0 && x<max= 并不会比 =x<max= 慢很多。因为有指令流水线的存在，检查两个条件可以放在不同的流水线中同时计算出结果。
+
+** 无符号数存在的问题
+
+混用无符号数和有符号数非常容易引起混淆和bug。然而，在以下两种情况会容易出现有符号数和无符号数的混用。
+- 当某个参数只有是非负数才有意义。
+- 在循环中使用的变量。
+
+在下面的这种情况
+#+begin_src cpp
+// calculate area
+unsigned area(unsigned x, unsigned y) {
+  return x * y;
+}
+auto a = area(height1-height2, length1-length2);
+#+end_src
+
+当 =height1 < height2= 时，就会导致异常情况出现，而此时编译器并不会产生编译警告，只有在运行时才会触发此问题。这主要是由于无符号数的模运算特性导致的。
+
+在 =for= 循环中使用无符号数也有很多种容易出错的情况
+
+#+begin_src cpp
+for (int i = 0; i < v.size(); ++i) {
+	v[i] = 7;	
+}
+#+end_src
+
+混用了有符号数和无符号数，这样容易出错。
+
+#+begin_src cpp
+for (std::vector<int>::size_type i = 0; i < v.size(); ++i) {
+	v[i] = 7;
+}
+#+end_src
+
+改成这样就能避免问题了，但是对于STL专家来讲，为什么要将容器中数据类型放在 =for= 循环中呢。
+
+#+begin_src cpp
+for (std::vector<decltype(v[0])>::size_type i = 0; i < v.size(); ++i) {
+	v[i] = 7;
+}
+#+end_src
+
+下面的写法也非常容易出错，因为 =i= 是无符号数，所以终止条件判断会永远成立，这个循环是一个无限循环。
+
+#+begin_src cpp
+for (size_t i = n - 1; i >= 0; --i) {
+	// ...
+}
+#+end_src
+
+
+** 专有名词
+- modular arithmetic - 模算术
+是一种整数的算术系统，其中数字超过一定值后（称为模或余数）后会“卷回”到较小的数值。  
+
+- EWG - Evolution Working Group
+C++ EWG 是 C++ 标准委员会的 Evolution Working Group，负责 C++ 标准的演化和改进。EWG 由来自世界各地的 C++ 专家组成，他们定期召开会议来讨论 C++ 标准的改进建议。
+
+EWG 的目标是使 C++ 语言更加现代、安全、高效和易于使用。EWG 已经提出了许多改进建议，这些建议已经被纳入 C++ 标准的最新版本中。
+
+
+** 参考资料
+1. [[https://open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1428r0.pdf][open std - paper p1428]]
+2. [[https://en.wikipedia.org/wiki/Modular_arithmetic][wikipedia - modular arithmetic]]
+
+（全文完）
+
+
