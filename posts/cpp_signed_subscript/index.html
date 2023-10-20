@@ -18,15 +18,11 @@
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="在C++中使用有符号数作为容器下标">
 <meta property="og:url" content="https://blog.wangzhl.com/posts/cpp_signed_subscript/">
-<meta property="og:description" content="在C++20中引入了 std::span 特性，针对容器下标和容器大小该使用有符号数 signed 还是无符号数 unsigned ，大家开始讨论。综合来看，在旧标准的设计中使用无符号数作为容器下标是有历史原因的；但是在后来的使用中也发现了许多弊端。最终，在C++20标准下 std::span 使用了有符号数 signed 作为大小和下标。
+<meta property="og:description" content="在C++20中引入了 std::span 特性，针对容器下标和容器大小该使用有符号数 signed 还是无符号数 unsigned ，大家开始讨论。综合来看，在旧标准的设计中使用无符号数作为容器下标是有历史原因的；但是在后来的使用中也发现了许多弊端。
 
 
 
-
-
-Bjarne Stroustrup 的观点
-
-">
+最终，在C++20标准下 std::span 仍然使用了无符号数作为大小和下标类型。但是讨论的过程很有意思，也让我在后续的开发中思考有符号数和">
 <meta property="og:type" content="article">
 <meta property="article:published_time" content="2023-08-22T17:15:49+08:00">
 <meta property="article:tag" content="cpp">
@@ -60,13 +56,16 @@ Bjarne Stroustrup 的观点
     <time class="dt-published" datetime="2023-08-22T17:15:49+08:00" itemprop="datePublished">Aug 22, 2023</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
     <p>
-在C++20中引入了 <code>std::span</code> 特性，针对容器下标和容器大小该使用有符号数 <code>signed</code> 还是无符号数 <code>unsigned</code> ，大家开始讨论。综合来看，在旧标准的设计中使用无符号数作为容器下标是有历史原因的；但是在后来的使用中也发现了许多弊端。最终，在C++20标准下 <code>std::span</code> 使用了有符号数 <code>signed</code> 作为大小和下标。<br></p>
+在C++20中引入了 <code>std::span</code> 特性，针对容器下标和容器大小该使用有符号数 <code>signed</code> 还是无符号数 <code>unsigned</code> ，大家开始讨论。综合来看，在旧标准的设计中使用无符号数作为容器下标是有历史原因的；但是在后来的使用中也发现了许多弊端。<br></p>
+
+<p>
+最终，在C++20标准下 <code>std::span</code> 仍然使用了无符号数作为大小和下标类型。但是讨论的过程很有意思，也让我在后续的开发中思考有符号数和无符号数的使用。<br></p>
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org68e19a9" class="outline-2">
-<h2 id="org68e19a9">Bjarne Stroustrup 的观点</h2>
-<div class="outline-text-2" id="text-org68e19a9">
+<div id="outline-container-orgf59f8da" class="outline-2">
+<h2 id="orgf59f8da">Bjarne Stroustrup 的观点</h2>
+<div class="outline-text-2" id="text-orgf59f8da">
 <p>
 C++创始人Bjarne Stroustrup针对此问题发表了一些观点（见参考资料1），其中对比了两种方案的优势和劣势，会在下文中详细展开讲讲。<br></p>
 
@@ -95,7 +94,7 @@ Bjarne的最终观点是：<br></p>
 </li>
 </ul>
 <p>
-当初在STL中使用无符号数的原因<br></p>
+当初在STL中使用无符号数的原因：<br></p>
 <ul class="org-ul">
 <li>容器 <code>std::vector</code> 的下标并不能为负数，所以使用 <code>unsigned</code> 是比较明显的<br>
 </li>
@@ -117,9 +116,9 @@ Bjarne的最终观点是：<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf82e004" class="outline-2">
-<h2 id="orgf82e004">无符号数存在的问题</h2>
-<div class="outline-text-2" id="text-orgf82e004">
+<div id="outline-container-org733a048" class="outline-2">
+<h2 id="org733a048">无符号数存在的问题</h2>
+<div class="outline-text-2" id="text-org733a048">
 <p>
 混用无符号数和有符号数非常容易引起混淆和bug。然而，在以下两种情况会容易出现有符号数和无符号数的混用。<br></p>
 <ul class="org-ul">
@@ -175,9 +174,9 @@ Bjarne的最终观点是：<br></p>
 </div>
 
 
-<div id="outline-container-org83f7190" class="outline-2">
-<h2 id="org83f7190">专有名词</h2>
-<div class="outline-text-2" id="text-org83f7190">
+<div id="outline-container-org909ba3e" class="outline-2">
+<h2 id="org909ba3e">专有名词</h2>
+<div class="outline-text-2" id="text-org909ba3e">
 <ul class="org-ul">
 <li>modular arithmetic - 模算术<br>
 </li>
@@ -198,9 +197,9 @@ EWG 的目标是使 C++ 语言更加现代、安全、高效和易于使用。EW
 </div>
 
 
-<div id="outline-container-org36b14d2" class="outline-2">
-<h2 id="org36b14d2">参考资料</h2>
-<div class="outline-text-2" id="text-org36b14d2">
+<div id="outline-container-org5442a01" class="outline-2">
+<h2 id="org5442a01">参考资料</h2>
+<div class="outline-text-2" id="text-org5442a01">
 <ol class="org-ol">
 <li>
 <a href="https://open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1428r0.pdf">open std - paper p1428</a><br>
