@@ -3,7 +3,7 @@
 .. slug: cloud-server-security
 .. date: 2018-06-07 14:12:38 UTC+08:00
 .. updated: 2023-11-16 14:49:38 UTC+08:00
-.. tags: linux, denyhosts, last, lastb, lastlog, sshd
+.. tags: linux, denyhosts, fail2ban, last, lastb, lastlog, sshd
 .. category: linux
 .. link:
 .. description:
@@ -16,7 +16,7 @@
 
 {{{TEASER_END}}}
 
-** 使用denyhosts防止暴力破解登录密码
+** 使用denyhosts防止暴力破解
 登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，屏蔽该登录ip，限制密码的尝试次数。
 
 *** 安装denyhosts
@@ -88,6 +88,60 @@ ln -s /usr/bin/daemon-control-dist denyhosts
 如果系统中安装了 =chkconfig= ，可以用以下命令确保denyhosts会在开机时自动启动。
 #+BEGIN_SRC sh
 chkconfig --add denyhosts
+#+END_SRC
+
+
+** 使用fail2ban防止暴力破解
+
+由于在默认的软件仓库中经常找不到denyhosts软件，所以我尝试切换到了fail2ban。fail2ban支持的功能更多，命令交互也更加友好。
+
+*** 安装fail2ban
+使用自带的包管理器中安装fail2ban，命令行如下。
+#+BEGIN_SRC shell
+yum install fail2ban
+#+END_SRC
+
+*** 编辑配置文件
+安装包中自带的默认配置文件为 =/etc/fail2ban/jail.conf= ；为了防止由于软件更新导致配置文件被覆盖，推荐将用户配置保存在 =/etc/fail2ban/jail.local= 中；软件会先加载默认配置，再加载用户配置。
+
+针对 ssh 登录服务的配置如下所示。需要注意的是如果修改了默认的ssh端口，则需要调整 =port= 对应的配置项；不同服务器的ssh登录记录的保存位置也可能不相同，需要根据实际情况修改 =logpath= 配置项。
+#+BEGIN_SRC conf
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/secure
+maxretry = 3
+findtime = 10m
+bantime = 1d
+ignoreip = 127.0.0.1
+#+END_SRC
+
+*** 启动fail2ban
+使用下面的命令启动fail2ban服务。
+#+BEGIN_SRC shell
+service fail2ban start
+#+END_SRC
+
+使用下面的命令让fail2ban开机自动启动。
+#+BEGIN_SRC shell
+service fail2ban enable
+#+END_SRC
+
+*** 查看fail2ban的运行情况
+查看系统服务的运行状态，命令如下：
+#+BEGIN_SRC shell
+service fail2ban status
+#+END_SRC
+
+fail2ban提供了自带的命令工具，用于查看服务端的状态，命令如下：
+#+BEGIN_SRC shell
+fail2ban-client status
+#+END_SRC
+
+还可以插件具体某个规则的屏蔽情况，例如下面的命令就能够查看 sshd 的过滤情况。
+#+BEGIN_SRC shell
+fail2ban-client status sshd
 #+END_SRC
 
 
