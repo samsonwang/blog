@@ -24,13 +24,14 @@
 
 
 
-使用denyhosts防止暴力破解登录密码
+使用denyhosts防止暴力破解
 
 
-登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，">
+登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，屏蔽该登">
 <meta property="og:type" content="article">
 <meta property="article:published_time" content="2018-06-07T14:12:38+08:00">
 <meta property="article:tag" content="denyhosts">
+<meta property="article:tag" content="fail2ban">
 <meta property="article:tag" content="last">
 <meta property="article:tag" content="lastb">
 <meta property="article:tag" content="lastlog">
@@ -74,20 +75,20 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org468ebc5" class="outline-2">
-<h2 id="org468ebc5">使用denyhosts防止暴力破解登录密码</h2>
-<div class="outline-text-2" id="text-org468ebc5">
+<div id="outline-container-org408616d" class="outline-2">
+<h2 id="org408616d">使用denyhosts防止暴力破解</h2>
+<div class="outline-text-2" id="text-org408616d">
 <p>
 登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，屏蔽该登录ip，限制密码的尝试次数。<br></p>
 </div>
 
-<div id="outline-container-orga0441c5" class="outline-3">
-<h3 id="orga0441c5">安装denyhosts</h3>
-<div class="outline-text-3" id="text-orga0441c5">
+<div id="outline-container-orgea6912d" class="outline-3">
+<h3 id="orgea6912d">安装denyhosts</h3>
+<div class="outline-text-3" id="text-orgea6912d">
 </div>
-<div id="outline-container-orgb3ebb82" class="outline-4">
-<h4 id="orgb3ebb82">使用包管理器安装</h4>
-<div class="outline-text-4" id="text-orgb3ebb82">
+<div id="outline-container-org4adcdbf" class="outline-4">
+<h4 id="org4adcdbf">使用包管理器安装</h4>
+<div class="outline-text-4" id="text-org4adcdbf">
 <p>
 可以使用自带的包管理器安装denyhost，这样是比较方便的，后续的配置工作也会简单一些。<br></p>
 <div class="highlight"><pre><span></span>yum install denyhosts
@@ -95,9 +96,9 @@
 </div>
 </div>
 
-<div id="outline-container-org981be1b" class="outline-4">
-<h4 id="org981be1b">手动安装</h4>
-<div class="outline-text-4" id="text-org981be1b">
+<div id="outline-container-org5e6f320" class="outline-4">
+<h4 id="org5e6f320">手动安装</h4>
+<div class="outline-text-4" id="text-org5e6f320">
 <p>
 update: 2020-6-5<br>
 在包管理器中没有找到denyhosts，于是按照官方文档进行手动安装，使用的denyhost版本为3.1.2beta。<br></p>
@@ -127,9 +128,9 @@ pip install ipaddr
 </div>
 </div>
 
-<div id="outline-container-orgc1f3977" class="outline-3">
-<h3 id="orgc1f3977">编辑配置文件</h3>
-<div class="outline-text-3" id="text-orgc1f3977">
+<div id="outline-container-orgcffb39b" class="outline-3">
+<h3 id="orgcffb39b">编辑配置文件</h3>
+<div class="outline-text-3" id="text-orgcffb39b">
 <p>
 安装好denyhosts之后，它的默认配置文件为 <code>/etc/denyhosts.conf</code> 。该配置文件有很好的注释，对于每个配置项的作用都有很好的说明。可能需要修改的相关配置项有如下几个。<br></p>
 
@@ -147,9 +148,9 @@ DENY_THRESHOLD_ROOT = 5
 </div>
 </div>
 
-<div id="outline-container-org66000b2" class="outline-3">
-<h3 id="org66000b2">启动denyhosts</h3>
-<div class="outline-text-3" id="text-org66000b2">
+<div id="outline-container-org2b77dcf" class="outline-3">
+<h3 id="org2b77dcf">启动denyhosts</h3>
+<div class="outline-text-3" id="text-org2b77dcf">
 <p>
 使用以下命令启动denyhosts，查看denyhosts的运行状态。<br></p>
 <div class="highlight"><pre><span></span>service denyhosts start
@@ -177,9 +178,84 @@ ln -s /usr/bin/daemon-control-dist denyhosts
 </div>
 
 
-<div id="outline-container-orgc3165de" class="outline-2">
-<h2 id="orgc3165de">加固sshd的配置</h2>
-<div class="outline-text-2" id="text-orgc3165de">
+<div id="outline-container-org2dc5684" class="outline-2">
+<h2 id="org2dc5684">使用fail2ban防止暴力破解</h2>
+<div class="outline-text-2" id="text-org2dc5684">
+<p>
+由于在默认的软件仓库中经常找不到denyhosts软件，所以我尝试切换到了fail2ban。fail2ban支持的功能更多，命令交互也更加友好。<br></p>
+</div>
+
+<div id="outline-container-org8786f43" class="outline-3">
+<h3 id="org8786f43">安装fail2ban</h3>
+<div class="outline-text-3" id="text-org8786f43">
+<p>
+使用自带的包管理器中安装fail2ban，命令行如下。<br></p>
+<div class="highlight"><pre><span></span>yum install fail2ban
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org07a8c3a" class="outline-3">
+<h3 id="org07a8c3a">编辑配置文件</h3>
+<div class="outline-text-3" id="text-org07a8c3a">
+<p>
+安装包中自带的默认配置文件为 <code>/etc/fail2ban/jail.conf</code> ；为了防止由于软件更新导致配置文件被覆盖，推荐将用户配置保存在 <code>/etc/fail2ban/jail.local</code> 中；软件会先加载默认配置，再加载用户配置。<br></p>
+
+<p>
+针对 ssh 登录服务的配置如下所示。需要注意的是如果修改了默认的ssh端口，则需要调整 <code>port</code> 对应的配置项；不同服务器的ssh登录记录的保存位置也可能不相同，需要根据实际情况修改 <code>logpath</code> 配置项。<br></p>
+<div class="highlight"><pre><span></span>[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/secure
+maxretry = 3
+findtime = 10m
+bantime = 1d
+ignoreip = 127.0.0.1
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org48a077c" class="outline-3">
+<h3 id="org48a077c">启动fail2ban</h3>
+<div class="outline-text-3" id="text-org48a077c">
+<p>
+使用下面的命令启动fail2ban服务。<br></p>
+<div class="highlight"><pre><span></span>service fail2ban start
+</pre></div>
+
+<p>
+使用下面的命令让fail2ban开机自动启动。<br></p>
+<div class="highlight"><pre><span></span>service fail2ban enable
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org06503a5" class="outline-3">
+<h3 id="org06503a5">查看fail2ban的运行情况</h3>
+<div class="outline-text-3" id="text-org06503a5">
+<p>
+查看系统服务的运行状态，命令如下：<br></p>
+<div class="highlight"><pre><span></span>service fail2ban status
+</pre></div>
+
+<p>
+fail2ban提供了自带的命令工具，用于查看服务端的状态，命令如下：<br></p>
+<div class="highlight"><pre><span></span>fail2ban-client status
+</pre></div>
+
+<p>
+还可以插件具体某个规则的屏蔽情况，例如下面的命令就能够查看 sshd 的过滤情况。<br></p>
+<div class="highlight"><pre><span></span>fail2ban-client status sshd
+</pre></div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orga225fc2" class="outline-2">
+<h2 id="orga225fc2">加固sshd的配置</h2>
+<div class="outline-text-2" id="text-orga225fc2">
 <p>
 sshd的默认端口号为22，很多暴力破解程序会直接对该端口进行登录尝试，通过修改默认的sshd端口号，可以增加破解难度。<br></p>
 
@@ -190,9 +266,9 @@ sshd的默认端口号为22，很多暴力破解程序会直接对该端口进�
 由于所有Linux系统都必然有root用户，所以在暴力破解时最容易被攻击的就是root用户，可以通过禁用远程root用户登录的方式增加攻击难度。因为如果root用户可用，攻击者只需要对root用户的密码进行暴力破解；而禁用远程root登录后，攻击者需要同时猜测用户名和密码。<br></p>
 </div>
 
-<div id="outline-container-orga9b134c" class="outline-3">
-<h3 id="orga9b134c">编辑配置文件</h3>
-<div class="outline-text-3" id="text-orga9b134c">
+<div id="outline-container-org55e0f4a" class="outline-3">
+<h3 id="org55e0f4a">编辑配置文件</h3>
+<div class="outline-text-3" id="text-org55e0f4a">
 <p>
 sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 
@@ -208,9 +284,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb8d8574" class="outline-3">
-<h3 id="orgb8d8574">重启sshd服务</h3>
-<div class="outline-text-3" id="text-orgb8d8574">
+<div id="outline-container-orgdd70709" class="outline-3">
+<h3 id="orgdd70709">重启sshd服务</h3>
+<div class="outline-text-3" id="text-orgdd70709">
 <p>
 更改配置文件后，需要重启服务使配置文件生效。<br></p>
 
@@ -224,9 +300,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 </div>
 
 
-<div id="outline-container-orgbe30be9" class="outline-2">
-<h2 id="orgbe30be9">查看系统登录记录</h2>
-<div class="outline-text-2" id="text-orgbe30be9">
+<div id="outline-container-orgbc8515a" class="outline-2">
+<h2 id="orgbc8515a">查看系统登录记录</h2>
+<div class="outline-text-2" id="text-orgbc8515a">
 <p>
 <code>last</code> 指令能够查看登录成功的记录，记录保存位置为 <code>/var/log/wtmp</code> 。<br></p>
 
@@ -253,9 +329,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 </div>
 
 
-<div id="outline-container-orgbe45542" class="outline-2">
-<h2 id="orgbe45542">参考资料</h2>
-<div class="outline-text-2" id="text-orgbe45542">
+<div id="outline-container-orgadc3c51" class="outline-2">
+<h2 id="orgadc3c51">参考资料</h2>
+<div class="outline-text-2" id="text-orgadc3c51">
 <ul class="org-ul">
 <li>
 <a href="https://github.com/denyhosts/denyhosts">github - denyhosts</a><br>
@@ -273,6 +349,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
   <ul class="tags-list vertical-center">
 <li>
       <a class="badge" href="/tags/denyhosts/" rel="tag">denyhosts</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/fail2ban/" rel="tag">fail2ban</a>
     </li>
     <li>
       <a class="badge" href="/tags/last/" rel="tag">last</a>
