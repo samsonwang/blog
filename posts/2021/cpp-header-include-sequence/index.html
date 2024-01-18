@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C++头文件的引用顺序 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2021/cpp-header-include-sequence/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2020/chinese-garbled-text-demo/" title="常见的中文乱码示例" type="text/html">
+<link rel="next" href="/posts/2021/get-runtime-dll-path/" title="在运行时获取动态库的路径" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="C++头文件的引用顺序">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2021/cpp-header-include-sequence/">
+<meta property="og:description" content="一般在C++开发中，会使用头文件（ .h/hpp ）和源文件（ .cpp/cxx ）将函数的声明和实现分开。当需要使用某个函数时，将声明函数所在的头文件引用进来即可。在较复杂的项目中会引用很多头文件，这些头文件可能来自于标准库、操作系统相关库、第三方库和自身项目。在实际开发过程中，多个头文件的引用顺序通常并不会有很大的影响；但是从编码风格和项目维护等方面考虑，头文件的引用顺序确是值得注意的。
+
+
+">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2021-05-28T21:37:57+08:00">
+<meta property="article:tag" content="cpp">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">C++头文件的引用顺序</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2021-05-28T21:37:57+08:00" itemprop="datePublished">May 28, 2021</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+一般在C++开发中，会使用头文件（ <code>.h/hpp</code> ）和源文件（ <code>.cpp/cxx</code> ）将函数的声明和实现分开。当需要使用某个函数时，将声明函数所在的头文件引用进来即可。在较复杂的项目中会引用很多头文件，这些头文件可能来自于标准库、操作系统相关库、第三方库和自身项目。在实际开发过程中，多个头文件的引用顺序通常并不会有很大的影响；但是从编码风格和项目维护等方面考虑，头文件的引用顺序确是值得注意的。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org2983688" class="outline-2">
+<h2 id="org2983688">头文件引用顺序</h2>
+<div class="outline-text-2" id="text-org2983688">
+<p>
+一般来讲，头文件的使用者并不需要关注头文件的引用顺序，只要代码能够正常编译即可，由头文件引用顺序导致的问题其实是头文件本身的问题。头文件的编写者应该保证提供的头文件不需要先包含其他头文件，并且在使用时尽量不影响其他头文件。<br></p>
+
+<ul class="org-ul">
+<li>头文件在使用时不需要先包含其他头文件。这要求在头文件编写时将自己依赖的头文件都引用进来，这样的头文件就是自给自足的（self contained）。<br>
+</li>
+<li>头文件在引用后不影响其他头文件。这要求在头文件中使用宏定义、结构体字节对齐等语法特性时要特别注意，因为这些语法的作用范围会扩散到随后引用的头文件中。<br>
+</li>
+</ul>
+<p>
+针对头文件的引用顺序有两种常见的编码风格，下面会进行展开说明。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org371ad58" class="outline-2">
+<h2 id="org371ad58">Google风格</h2>
+<div class="outline-text-2" id="text-org371ad58">
+<p>
+Google在其C++编码风格指南<sup><a id="fnr.1" class="footref" href="/posts/2021/cpp-header-include-sequence/#fn.1">1</a></sup>中提到了头文件引用顺序问题，其中给出的建议是：<br></p>
+
+<ol class="org-ol">
+<li>cpp文件对应的h文件<br>
+</li>
+<li>C标准库头文件<br>
+</li>
+<li>C++标准库头文件<br>
+</li>
+<li>第三方库头文件<br>
+</li>
+<li>本工程头文件<br>
+</li>
+</ol>
+<p>
+其中，每一类头文件之间要留一个空行方便区分。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org3b3cc3f" class="outline-2">
+<h2 id="org3b3cc3f">Lakos风格</h2>
+<div class="outline-text-2" id="text-org3b3cc3f">
+<p>
+Lakos在其编写的《Large Scale C++ Software Design》中推荐了下面的排序风格：<br></p>
+
+<ol class="org-ol">
+<li>cpp文件对应的h文件<br>
+</li>
+<li>本工程头文件<br>
+</li>
+<li>第三方库头文件<br>
+</li>
+<li>C++标准库头文件<br>
+</li>
+<li>C标准库头文件<br>
+</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-orgb11af74" class="outline-2">
+<h2 id="orgb11af74">小结</h2>
+<div class="outline-text-2" id="text-orgb11af74">
+<p>
+这两种风格都推荐将cpp文件对应的h文件放在引用顺序的最开始位置，因为这样能够帮我们检查自己编写的头文件是否是“自给自足”的，我们自己的cpp文件充当了对应h文件的第一个测试用例。<br></p>
+
+<p>
+对于后续的顺序，这两种风格所提倡的头文件引用顺序是正好相反的，我认为各有道理。从我的编程经验来看，标准库的头文件的质量通常是有保证的，出现头文件顺序的问题概率较小。而第三方库的头文件的质量就会有较大差异，而且多个个第三方库之间的头文件也会相互干扰。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org3b11441" class="outline-2">
+<h2 id="org3b11441">参考资料</h2>
+<div class="outline-text-2" id="text-org3b11441">
+<ul class="org-ul">
+<li>
+<a href="https://www.cplusplus.com/forum/articles/10627/">cplusplus.com</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/2762568/c-c-include-header-file-order">stackoverflow</a><br>
+</li>
+</ul>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef">
+<sup><a id="fn.1" class="footnum" href="/posts/2021/cpp-header-include-sequence/#fnr.1">1</a></sup><div class="footpara">
+<p class="footpara">
+<a href="https://google.github.io/styleguide/cppguide.html#Names_and_Order_of_Includes">谷歌风格</a><br></p>
+
+<p class="footpara">
+（全文完）<br></p>
+</div>
+</div>
+
+
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2020/chinese-garbled-text-demo/" rel="prev">Previous post
+        <br><span>常见的中文乱码示例</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2021/get-runtime-dll-path/" rel="next">Next post
+        <br><span>在运行时获取动态库的路径</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2021/cpp-header-include-sequence/",
+        disqus_title="C++\u5934\u6587\u4ef6\u7684\u5f15\u7528\u987a\u5e8f",
+        disqus_identifier="_cache/posts/2021/cpp-header-include-sequence.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>每周算法：调换链表中节点 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-swap-nodes-in-pairs/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/algorithm/algorithm-weekly-generate-parentheses/" title="每周算法：生成有效的括号组合" type="text/html">
+<link rel="next" href="/posts/algorithm/algorithm-weekly-remove-duplicates-from-sorted-array/" title="每周算法：删去有序数组中的重复元素" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="每周算法：调换链表中节点">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-swap-nodes-in-pairs/">
+<meta property="og:description" content="leetcode算法第24题，难度为medium。将链表中的节点成对翻转，考察链表结构的理解和节点的操作。
+
+
+
+
+
+Description
+
+
+Given a linked list, swap every two adjacent nodes and return its head.
+
+
+
+Example:
+
+
+Given 1-&gt;2-&gt;3-&gt;4, you should return the l">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-10-04T12:26:16+08:00">
+<meta property="article:tag" content="algorithm">
+<meta property="article:tag" content="leetcode">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">每周算法：调换链表中节点</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-10-04T12:26:16+08:00" itemprop="datePublished">Oct 04, 2018</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+leetcode算法第24题，难度为medium。将链表中的节点成对翻转，考察链表结构的理解和节点的操作。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org68ccc5b" class="outline-2">
+<h2 id="org68ccc5b">Description</h2>
+<div class="outline-text-2" id="text-org68ccc5b">
+<p>
+Given a linked list, swap every two adjacent nodes and return its head.<br></p>
+
+<p>
+<b>Example:</b><br></p>
+<pre class="example">
+Given 1-&gt;2-&gt;3-&gt;4, you should return the list as 2-&gt;1-&gt;4-&gt;3.
+</pre>
+
+<p>
+<b>Note:</b><br></p>
+<ul class="org-ul">
+<li>Your algorithm should use only constant extra space.<br>
+</li>
+<li>You may not modify the values in the list's nodes, only nodes itself may be changed.<br>
+</li>
+</ul>
+<p>
+来源：<a href="https://leetcode.com/problems/swap-nodes-in-pairs/description/">leetcode 24 swap nodes in pairs</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org80aba8e" class="outline-2">
+<h2 id="org80aba8e">Solution</h2>
+<div class="outline-text-2" id="text-org80aba8e">
+</div>
+<div id="outline-container-orgb6b68cd" class="outline-3">
+<h3 id="orgb6b68cd">Apporach 1</h3>
+<div class="outline-text-3" id="text-orgb6b68cd">
+<p>
+这道题还是对链表操作的考察，在熟悉链表之后还是比较容易想到答案的。下面就是我的解法:<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="nf">swapPairs</span><span class="p">(</span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">ListNode</span><span class="w"> </span><span class="n">preHead</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">preHead</span><span class="p">.</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">p0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">preHead</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">p1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p0</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">p2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p1</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">p1</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">p1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">p2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="n">p0</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p2</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">p1</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p2</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">p2</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p1</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">	</span><span class="n">p0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p1</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">p1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p0</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">p2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p1</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">p1</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">preHead</span><span class="p">.</span><span class="n">next</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgb944f57" class="outline-3">
+<h3 id="orgb944f57">Approach 2 recursive</h3>
+<div class="outline-text-3" id="text-orgb944f57">
+<p>
+这道题的另一种解法是使用递归，这种解法能够完成题目中要求的节点交换操作。不过需要注意的是递归会使用额外的空间，所以并不能满足题目中要求的常数空间复杂度。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">helper</span><span class="p">(</span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">preHead</span><span class="p">){</span><span class="w"></span>
+<span class="w">    </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">p1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">preHead</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">p2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p1</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">p1</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">p1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">p2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="k">return</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">preHead</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p2</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">p1</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p2</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">p2</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p1</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">helper</span><span class="p">(</span><span class="n">p1</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="nf">swapPairs</span><span class="p">(</span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">ListNode</span><span class="w"> </span><span class="n">preHead</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">preHead</span><span class="p">.</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">helper</span><span class="p">(</span><span class="o">&amp;</span><span class="n">preHead</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">preHead</span><span class="p">.</span><span class="n">next</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org6edf302" class="outline-2">
+<h2 id="org6edf302">Reference</h2>
+<div class="outline-text-2" id="text-org6edf302">
+<ul class="org-ul">
+<li>
+<a href="https://stackoverflow.com/questions/43298938/space-complexity-of-recursive-function">stackoverflow - space complexity of recursive function</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/algorithm/" rel="tag">algorithm</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/leetcode/" rel="tag">leetcode</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/algorithm/algorithm-weekly-generate-parentheses/" rel="prev">Previous post
+        <br><span>每周算法：生成有效的括号组合</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/algorithm/algorithm-weekly-remove-duplicates-from-sorted-array/" rel="next">Next post
+        <br><span>每周算法：删去有序数组中的重复元素</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-swap-nodes-in-pairs/",
+        disqus_title="\u6bcf\u5468\u7b97\u6cd5\uff1a\u8c03\u6362\u94fe\u8868\u4e2d\u8282\u70b9",
+        disqus_identifier="_cache/posts/algorithm/algorithm-weekly-swap-nodes-in-pairs.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

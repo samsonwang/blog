@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Windows常用命令行指令dumpbin | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2019/windows-command-examples-dumpbin/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2019/gnu-private-guard-cheatsheet/" title="gpg操作备忘" type="text/html">
+<link rel="next" href="/posts/2020/linux-turn-off-firewall/" title="在Linux中关闭防火墙" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="Windows常用命令行指令dumpbin">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2019/windows-command-examples-dumpbin/">
+<meta property="og:description" content="在Windows平台下，dumpbin是一个非常有用的命令行工具，主要用于查看可执行程序和动态库的内部信息。本文总结了dumpbin的几种常见用法，方便以后查阅。
+
+
+
+
+
+简介
+
+
+dumpbin常用于查看可执行程序和动态库文件，这类文件有个正式的名称Microsoft COFF，COFF全称为Common Object File Format。
+
+
+
+
+
+
+查看动态库中的导出函数接口
+
+
+使用">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2019-12-27T18:25:23+08:00">
+<meta property="article:tag" content="coff">
+<meta property="article:tag" content="dumpbin">
+<meta property="article:tag" content="windows">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">Windows常用命令行指令dumpbin</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2019-12-27T18:25:23+08:00" itemprop="datePublished">Dec 27, 2019</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+在Windows平台下，dumpbin是一个非常有用的命令行工具，主要用于查看可执行程序和动态库的内部信息。本文总结了dumpbin的几种常见用法，方便以后查阅。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org82f1de5" class="outline-2">
+<h2 id="org82f1de5">简介</h2>
+<div class="outline-text-2" id="text-org82f1de5">
+<p>
+dumpbin常用于查看可执行程序和动态库文件，这类文件有个正式的名称Microsoft COFF，COFF全称为Common Object File Format。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org839b08d" class="outline-2">
+<h2 id="org839b08d">查看动态库中的导出函数接口</h2>
+<div class="outline-text-2" id="text-org839b08d">
+<p>
+使用以下命令能够查看动态库的导出函数，可以用于辅助检查动态库是否正确地生成了指定名称的接口。<br></p>
+<div class="highlight"><pre><span></span>dumpbin /exports xxx.dll
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org5364055" class="outline-2">
+<h2 id="org5364055">查看程序或动态库是32位还是64位的</h2>
+<div class="outline-text-2" id="text-org5364055">
+<p>
+使用以下命令能够查看COFF文件的头信息，在头信息中包含机器架构信息，从而可以得知是文件是32位还是64位的。<br></p>
+<div class="highlight"><pre><span></span>dumpbin /headers xxxx.dll
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org75a2e00" class="outline-2">
+<h2 id="org75a2e00">查看程序所依赖的动态库</h2>
+<div class="outline-text-2" id="text-org75a2e00">
+<p>
+使用以下命令能够查看文件所依赖的动态库信息，执行后会将依赖动态库名称列出来。<br></p>
+<div class="highlight"><pre><span></span>dumpbin /dependents xxx.dll
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org67eafa4" class="outline-2">
+<h2 id="org67eafa4">查看静态库中的函数</h2>
+<div class="outline-text-2" id="text-org67eafa4">
+<p>
+使用以下命令能够查看静态库所包含的链接信息，用于辅助检查链接错误。<br></p>
+<div class="highlight"><pre><span></span>dumpbin /linkermember xxx.lib
+</pre></div>
+<p>
+对于Windows下还有一个关于链接方面的小知识点，在可以参考 <a href="/posts/library-linking-error-on-windows/" class="post-url">这篇</a> 文章。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org87d8478" class="outline-2">
+<h2 id="org87d8478">参考资料</h2>
+<div class="outline-text-2" id="text-org87d8478">
+<ul class="org-ul">
+<li>
+<a href="https://docs.microsoft.com/en-us/cpp/build/reference/dumpbin-reference">microsoft docs - dumpbin reference</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/coff/" rel="tag">coff</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/dumpbin/" rel="tag">dumpbin</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2019/gnu-private-guard-cheatsheet/" rel="prev">Previous post
+        <br><span>gpg操作备忘</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2020/linux-turn-off-firewall/" rel="next">Next post
+        <br><span>在Linux中关闭防火墙</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2019/windows-command-examples-dumpbin/",
+        disqus_title="Windows\u5e38\u7528\u547d\u4ee4\u884c\u6307\u4ee4dumpbin",
+        disqus_identifier="_cache/posts/2019/windows-command-examples-dumpbin.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

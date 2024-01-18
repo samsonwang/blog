@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>深入探索C++内存模型（4） | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2019/inside-the-cpp-object-model-4/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2019/inside-the-cpp-object-model-3/" title="深入探索C++内存模型（3）" type="text/html">
+<link rel="next" href="/posts/2019/redis-fundamental/" title="redis基础" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="深入探索C++内存模型（4）">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2019/inside-the-cpp-object-model-4/">
+<meta property="og:description" content="第四章是Function语意学，这一章主要介绍类相关函数的底层实现原理，就虚函数进行了展开讨论，通过实际代码的测试结果验证分析结论。对 inline 函数可能会出现的问题进行了分析，对 inline 函数的使用提出了指导意见。
+
+
+
+
+
+第4章 Function 语意学 （the semantics of function）
+
+
+
+4.1 Member 的各种调用方式
+
+
+
+Nonstatic M">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2019-04-22T10:27:22+08:00">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="digest">
+<meta property="article:tag" content="Lippman">
+<meta property="article:tag" content="memory layout">
+<meta property="article:tag" content="object model">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">深入探索C++内存模型（4）</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2019-04-22T10:27:22+08:00" itemprop="datePublished">Apr 22, 2019</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+第四章是Function语意学，这一章主要介绍类相关函数的底层实现原理，就虚函数进行了展开讨论，通过实际代码的测试结果验证分析结论。对 inline 函数可能会出现的问题进行了分析，对 inline 函数的使用提出了指导意见。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-orgdcbe598" class="outline-2">
+<h2 id="orgdcbe598">第4章 Function 语意学 （the semantics of function）</h2>
+<div class="outline-text-2" id="text-orgdcbe598">
+</div>
+<div id="outline-container-org8d3df61" class="outline-3">
+<h3 id="org8d3df61">4.1 Member 的各种调用方式</h3>
+<div class="outline-text-3" id="text-org8d3df61">
+</div>
+<div id="outline-container-orgddad1b5" class="outline-4">
+<h4 id="orgddad1b5">Nonstatic Member Functions（非静态成员函数）</h4>
+<div class="outline-text-4" id="text-orgddad1b5">
+<p>
+C++ 的设计准则之一就是：nonstatic member function 至少必须和一版的nonmember function有相同的效率。<br></p>
+
+<p>
+编译器会将member function重写成一个外部函数，对函数名称进行“mangling”处理，使它在程序中成为独一无二的语汇。在这过程中也会施行NRV优化。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org58f6fc6" class="outline-4">
+<h4 id="org58f6fc6">名称的特殊处理（name mangling）</h4>
+<div class="outline-text-4" id="text-org58f6fc6">
+<p>
+一版而言，member的名称前面汇被加上 class 名称，行程独一无二的命名。<br></p>
+
+<p>
+对于类中的成员变量也会进行换名，以应对可能在继承关系中引入的同名成员变量。<br></p>
+
+<p>
+两个实体如果拥有独一无二的 name mangling，那么任何不正确的调用操作在链接时期就因无法决议（resolved）而失败，有是由我们可以乐观地称此为“确保类型安全的链接行为”（type-safe linkage）。我说“乐观地”是因为它只可以捕捉函数的标记（signature，即函数名称 + 参数数目 + 参数类型）错误，如果“返回类型”声明错误，就没办法检查出来。<br></p>
+
+<p>
+当前的编译系统中，有一种所谓的 demangling 工具，用来拦截名称并将其转换回去，使用者仍然可以不关心其内部名称发生的转换。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgd8e46d6" class="outline-4">
+<h4 id="orgd8e46d6">virtual member functions（虚拟成员函数）</h4>
+<div class="outline-text-4" id="text-orgd8e46d6">
+<p>
+使用指针调用虚函数会从虚函数表找到对应的虚函数地址，使用该虚函数地址完成函数的调用。<br></p>
+
+<p>
+如果使用类域明确地调用虚函数，则会压制由于虚拟机制而产生的不必要的重复查找虚函数表操作。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org2abed81" class="outline-4">
+<h4 id="org2abed81">static member functions（静态成员函数）</h4>
+<div class="outline-text-4" id="text-org2abed81">
+<p>
+静态成员函数的特性：<br></p>
+<ol class="org-ol">
+<li>没有 this 指针<br>
+</li>
+<li>不能直接存取其 class 中的 nonstatic members<br>
+</li>
+<li>不能比声明为 const 、 volatile 或 virtual<br>
+</li>
+<li>不需要经由 class object 才被调用 （虽然大部分时候它是这样被调用的）<br>
+</li>
+</ol>
+<p>
+一个 static member function 当然会被体书于 class 声明之外，并给予一个经过“mangled”的适当名称。<br></p>
+
+<p>
+如果取一个 static member function 的地址，获得的是其在内存中的位置，也就其地址。由于 static member function 没有 this 指针，所以其地址的类型并不是一个 “指向 class member function 的指针”，而是一个 “nonmember function 的指针”。也就是说：<br></p>
+<div class="highlight"><pre><span></span><span class="o">&amp;</span><span class="n">Point3d</span><span class="o">::</span><span class="n">object_count</span><span class="p">();</span><span class="w"></span>
+</pre></div>
+<p>
+会得到一个数值，类型是：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">unsigned</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="p">)();</span><span class="w"></span>
+</pre></div>
+<p>
+而不是：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">unsigned</span><span class="w"> </span><span class="nf">int</span><span class="w"> </span><span class="p">(</span><span class="n">Point3d</span><span class="o">::*</span><span class="p">)();</span><span class="w"></span>
+</pre></div>
+
+<p>
+static member function 由于缺乏 this 指针，因此差不多等同于 nonmember function。它提供了一个意想不到的好处：成为一个 callback 函数，也可以应用在线程（thread）函数上。<br></p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org11aef1b" class="outline-3">
+<h3 id="org11aef1b">4.2 virtual member function (虚拟成员函数)</h3>
+<div class="outline-text-3" id="text-org11aef1b">
+<p>
+为了支持 virtual function 机制，必须首先能够对于多态对象有某种形式的“执行期判断法（runtime type resolution）”。在添加这些特性时，必定会增加类空间的负担，还需要考虑到对C语言的兼容性。<br></p>
+
+<p>
+在C++中，多态（polymorphism）表示“以一个public base class 的指针（或reference），寻址出一个 derived class object”的意思。<br></p>
+
+<p>
+指针的多态机能主要扮演一个输送机制（transport mechanism）的角色，我们可以通过它在程序的任何地方采用一组 public derived 类型。这种多态形式被称为是消极的，可以在编译时期完成。当被指出的对象真正被使用时，多态也就编程积极的（active）了。<br></p>
+
+<p>
+在runtime type identification （RTTI）性质于1993年被引入 C++ 语言之前， C++ 对“积极多态（active polymorphism）”的唯一支持，就是对于 virtual function call 的决议（resolution）操作。有了RTTI，就能够在执行期查询一个多态的 pointer 或多态的 reference 了。<br></p>
+
+<p>
+欲鉴定哪些 class 展现多态特性，我们需要额外的执行期信息。适当的方法就是看看啊它是否有任何 virtual function，只要 class 拥有一个 virtual function，它就需要这份额外的执行期信息。<br></p>
+
+<p>
+在 C++ 中， virtual functions可以在编译时期获知，这一组地址是固定不变的，执行期不可能新增或替换之。在程序执行时，表格的大小和内容都不会改变，多亿其构建和存取皆可以由编译器完全掌握，不需要执行期的任何介入。<br></p>
+
+<p>
+一个 class 只会有一个 virtual table，没一个 table 内含其对应的 class object 中所有 active virtual functions 函数实体的地址。这些 active virtual functions 包括：<br></p>
+<ol class="org-ol">
+<li>这个 class 所定义的函数实体，它会改写（overriding）一个可能存在的 base class virtual function 函数实体。<br>
+</li>
+<li>继承自 base class 的函数实体，这是在 derived class 决定不改写 virtual function 时才会出现的情况。<br>
+</li>
+<li>一个 pure<sub>virtual</sub><sub>called</sub>() 函数实体，它既可以扮演 pure virtual function 的空间保卫者角色，也可以当作执行期异常处理函数。<br>
+</li>
+</ol>
+<p>
+每一个 virtual function 都被指派一个固定的索引值，这个索引在整个继承体系中保持与特定的 virtual function 的关联。<br></p>
+
+<p>
+对于虚函数表在派生过程中的修改和拓展，在书中有很多详尽的代码示例可供参考。<br></p>
+
+<p>
+如何在编译时期设定 virtual function 的调用：<br></p>
+<ol class="org-ol">
+<li>我们并不知道 <code>ptr</code> 所指内向的真正类型，然而我知道，经由 ptr 可以存取到该对象的 virtual table。<br>
+</li>
+<li>虽然我不知道那个 <code>z()</code> 函数实体会被调用，但我知道每一个 <code>z()</code> 函数地址都被放在指定位置（slot4）。<br>
+</li>
+</ol>
+<p>
+这些信息使得编译器可以将该调用转化为：<br></p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="o">*</span><span class="n">ptr</span><span class="o">-&gt;</span><span class="n">vptr</span><span class="p">[</span><span class="mi">4</span><span class="p">])(</span><span class="n">ptr</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+
+<p>
+在一个单一继承体系中，virtual function 机制的行为十分良好，不但有效而且很容易塑造出模型来，但是在多重继承和虚拟继承之中，对 virtual functions 的支持就没有那么美好了。<br></p>
+</div>
+
+<div id="outline-container-org51545d8" class="outline-4">
+<h4 id="org51545d8">多重继承下的 virtual functions</h4>
+<div class="outline-text-4" id="text-org51545d8">
+<p>
+在多重继承中支持 virtual functions，其复杂度围绕在第二个及后继的 base class 身上，以及“必须在执行期调整 this 指针”这一点。<br></p>
+
+<p>
+对于 derived class 的必要的 this 指针调整操作，必须在执行期完成。即 offset 的大小，以及把 offset 加到 this 指针上头的那一小段程序代码，必须有编译器在某个地方插入。<br></p>
+
+<p>
+比较有效率的解决方法是利用所谓的 thunk (thunk 是 knuth 博士的倒拼字）。所谓 thunk 是一小段 assembly 码，用来（1）以适当的 offset 值调整 this 指针，（2）跳到 virtual function 去。<br></p>
+
+<p>
+Thunk 技术允许 virtual table slot 继续内含一个简单的指针，因此多重继承不需要任何空间上的额外负担。 slots 中的地址可以直接指向 virtual function，也可以指向一个相关的 thunk（如果需要调整 this 指针的话）。于是，对于那些不需要调整 this 指针的 virtual function，也就不需要承担效率上的额外负担。<br></p>
+
+<p>
+调整 this 指针的第二个额外负担就是，由于两种不同的可能：（1）经由 derived class （或第一个 base class）调用，（2）经由第二个（或其后继） base class 调用，同一函数在 virtual table 中可能需要多个对应的 slosts。例如：<br></p>
+<div class="highlight"><pre><span></span><span class="n">Base</span><span class="o">*</span><span class="w"> </span><span class="n">pbase1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Derived</span><span class="p">;</span><span class="w"></span>
+<span class="n">Base</span><span class="o">*</span><span class="w"> </span><span class="n">pbase2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Derived</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">delete</span><span class="w"> </span><span class="n">pbase1</span><span class="p">;</span><span class="w"></span>
+<span class="k">delete</span><span class="w"> </span><span class="n">pbase2</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+<p>
+虽然两个 delete 操作导致相同的 derived destructor，但它们需要两个不同的 virtual table slots：<br></p>
+<ol class="org-ol">
+<li>
+<code>pbase1</code> 不需要调整 this 指针（因为 Base1 是最左端 base class，它已经指向 Derived 对象的起始处），其 virtual table slot 需放置真正的 destructor 地址。<br>
+</li>
+<li>
+<code>pbase2</code> 需要调整 this 指针，其 virtual table slot 需要相关的 thunk 地址。<br>
+</li>
+</ol>
+<p>
+在多重继承下， 一个 derived class 内含 n-1 个额外的 virtual tables， n 表示其上一层 base class 的数目。因此，单一继承将不会有额外的 virtual table。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org1b5af94" class="outline-4">
+<h4 id="org1b5af94">虚继承下的 virtual function</h4>
+<div class="outline-text-4" id="text-org1b5af94">
+<p>
+在虚拟继承中，也需要调整 this 指针，至于在虚拟继承的情况下要消除 thunks，一般而言已经被证明是一项高难度技术。<br></p>
+
+<p>
+当一个 virtual base class 从另一个 virtual base class 派生而来，并且两者都支持 virtual function 和 nonstatic data member 时， 编译器对于 virtual base class 的支持简直就像进了迷宫一行。<br></p>
+
+<p>
+作者的建议是，不要在一个 virtual base class 中声明 nonstatic data members。<br></p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org8c1abc1" class="outline-3">
+<h3 id="org8c1abc1">4.3 函数的效能</h3>
+<div class="outline-text-3" id="text-org8c1abc1">
+<p>
+本章节主要针对前文中分析的各种函数调用情况，编写代码进行测试，并对实验结果进行了分析。<br></p>
+
+<p>
+按照前文的分析，nonmember 或 static member 或 nonstatic member 函数都被转化为完全相同的形式，所以从结果中能看到三者的效率完全相同。<br></p>
+
+<p>
+对于 inline 函数，未优化的情况提高了 25% 左右的效率，而其优化版本的表现提升十分明显。这归功于编译器将“被视为不变的表达式（expressions）”提到循环之外，因此只计算一次。此例显示，inline函数不仅能够节省一般函数调用所带来的额外负担，也提供了程序优化的额外机会。<br></p>
+
+<p>
+虚函数的执行效率降低了 4% 到 11% 不等，这是由虚拟机制产生的。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org7b7ebe6" class="outline-3">
+<h3 id="org7b7ebe6">4.4 指向 member function 的指针 （pointer to member functions）</h3>
+<div class="outline-text-3" id="text-org7b7ebe6">
+<p>
+由前文的论述中可以得知，取一个 nonstatic data member 的地址，得到的结果是该 member 在 class 布局中的 byte 位置（再加1）.可以想象它是一个不完整的值，需要被绑定于某个 class object 的地址上，才能够被存取。<br></p>
+
+<p>
+取一个 nonstatic member function 的地址，如果该函数是 nonvirtual，则得到的结果是它在内存中的真正地址。然而这个值也是不完全的，它也需要被绑定于某个 class object 的地址上，才能够通过它调用该函数。所有的 nonstatic member function 都需要对象的地址（以参数 this 指出）。<br></p>
+
+<p>
+使用一个 “member function 指针”，如果并不用于 virtual function、多重继承、virtual base class 等情况的话，并不会比使用一个“nonmember function 指针”的成本更高，编译器可以为它们提供相同的效率。<br></p>
+</div>
+
+
+<div id="outline-container-orga4f5535" class="outline-4">
+<h4 id="orga4f5535">支持“指向 virtual member function”的指针</h4>
+<div class="outline-text-4" id="text-orga4f5535">
+<p>
+注意下面的程序片段：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">float</span><span class="w"> </span><span class="p">(</span><span class="n">Point</span><span class="o">::*</span><span class="n">pmf</span><span class="p">)()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Point</span><span class="o">::</span><span class="n">z</span><span class="p">;</span><span class="w"></span>
+<span class="n">Point</span><span class="o">*</span><span class="w"> </span><span class="n">ptr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Point3d</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+<p>
+<code>pmf</code> , 一个指向 member function 的指针，被设置为 Point::z() (一个 virtual function) 的地址，ptr 则被指定以一个 Point3d 对象，如果直接由 <code>ptr</code> 调用 <code>z()</code> :<br></p>
+<div class="highlight"><pre><span></span><span class="n">ptr</span><span class="o">-&gt;</span><span class="n">z</span><span class="p">();</span><span class="w"></span>
+</pre></div>
+<p>
+则被调用的是 Point3d::z()，但如果我们从 <code>pmf</code> 间接调用 <code>z()</code> 呢？<br></p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="n">ptr</span><span class="o">-&gt;*</span><span class="n">pmf</span><span class="p">)();</span><span class="w"></span>
+</pre></div>
+<p>
+仍然是 Point3d::z() 被调用吗？答案是 yes，也就是说，虚拟机制仍然能够在使用“指向 member function 的指针”的情况下运行。<br></p>
+
+<p>
+结合前面章节，对一个 nonstatic member function 取其地址，将获得该函数在内存中的地址，然而对一个 virtual function，其地址在编译时期时候未知的，所能知道的近视 virtual function 在其相关 virtual table 中的索引值。也就是说，对一个 virtual member function 取其地址，所能获得的只是一个索引值。<br></p>
+
+<p>
+通过 <code>pmf</code> 来调用 <code>z()</code> 会被内部转化为一个编译时期的式子，一般形式如下：<br></p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="o">*</span><span class="n">ptr</span><span class="o">-&gt;</span><span class="n">vptr</span><span class="p">[(</span><span class="kt">int</span><span class="p">)</span><span class="n">pmf</span><span class="p">])(</span><span class="n">ptr</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgff76320" class="outline-4">
+<h4 id="orgff76320">多重继承下，指向 member function 的指针</h4>
+<div class="outline-text-4" id="text-orgff76320">
+<p>
+为了让指向 member function 的指针也能够支持多重继承和虚拟继承，Stroustrup设计了下面一个结构体：<br></p>
+<div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">__mptr</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">delta</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">union</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="n">ptrtofunc</span><span class="w"> </span><span class="n">faddr</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">v_offset</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">};</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+</pre></div>
+
+<p>
+<code>index</code> 和 <code>faddr</code> 分别（不同时）带有 virtual table 索引和 nonvirtual member function 地址。为了方便，当 index 不指向 virtual table 时，会被设置为 -1。<br></p>
+
+<p>
+在该模型之下，像这样的调用操作：<br></p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="n">ptr</span><span class="o">-&gt;*</span><span class="n">pmf</span><span class="p">)();</span><span class="w"></span>
+</pre></div>
+<p>
+会变成：<br></p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="n">pmf</span><span class="p">.</span><span class="n">index</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">  </span><span class="o">?</span><span class="w"> </span><span class="c1">// non-virtual invocation</span>
+<span class="w">  </span><span class="p">(</span><span class="o">*</span><span class="n">pmf</span><span class="p">.</span><span class="n">faddr</span><span class="p">)(</span><span class="n">ptr</span><span class="p">)</span><span class="w"></span>
+<span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="c1">// virtual invocation</span>
+<span class="w">  </span><span class="p">(</span><span class="o">*</span><span class="w"> </span><span class="n">ptr</span><span class="o">-&gt;</span><span class="n">vptr</span><span class="p">[</span><span class="n">pmf</span><span class="p">.</span><span class="n">index</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="n">ptr</span><span class="p">));</span><span class="w"></span>
+</pre></div>
+
+<p>
+这种方法的缺点是：<br></p>
+<ol class="org-ol">
+<li>每一个调用操作都得付出上述成本，检查其是否为 virtual 或 nonvirtual；<br>
+</li>
+<li>当传递一个不变值的指针给 member function 时，它需要产生一个临时性对象。<br>
+</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-org2f3d17b" class="outline-4">
+<h4 id="org2f3d17b">“指向 member function 的指针”的效率</h4>
+<div class="outline-text-4" id="text-org2f3d17b">
+<p>
+本节测试了函数经由一以方式调用的效率：<br></p>
+<ol class="org-ol">
+<li>指向 nonmember function 的指针；<br>
+</li>
+<li>指向 class member function 的指针；<br>
+</li>
+<li>指向 virtual member function 的指针；<br>
+</li>
+<li>多重继承下的 nonvirtual 及 virtual member function 调用；<br>
+</li>
+<li>虚拟继承下的 nonvirtual 及 virtual member function 调用。<br>
+</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org78a476c" class="outline-3">
+<h3 id="org78a476c">4.5 inline functions</h3>
+<div class="outline-text-3" id="text-org78a476c">
+<p>
+处理一个 inline 函数，有两个阶段：<br></p>
+<ol class="org-ol">
+<li>分析函数定义，以决定函数的“intrinsic inline ability”（本质的 inline 能力）。“intrinsic”（本质的、固有的）在这里意指“与编译器相关”。如果函数因其复杂度，或因其构建问题，被判断不可成为inline，它会被转为一个 static 函数，并在“被编译模块”内产生对应的函数定义。<br>
+</li>
+<li>真正的 inline 函数拓展操作是在调用的那一点上，这回带来参数的求值操作（evaluation）以及临时性对象的管理。同样是在拓展点上，编译器将决定这个调用是否“不可为inline”。<br>
+</li>
+</ol>
+<p>
+大部分编译器厂商（UNIX和PC都有）似乎认为不值得在 inline 支持技术上做详细的讨论，通常你必须进入到汇编器（assembler）中才能看到是否真的实现了 inline。<br></p>
+</div>
+
+<div id="outline-container-orgb94d4ec" class="outline-4">
+<h4 id="orgb94d4ec">形式参数（formal argument）</h4>
+<div class="outline-text-4" id="text-orgb94d4ec">
+<p>
+在 inline 拓展期间，每一个形式参数都会被对应的实际参数取代。其副作用为，不可以只是简单地塞入程序中出现的每一个形式参数，因为这将导致对于时间参数的多次求值操作（evaluation）。<br></p>
+
+<p>
+一般而言，面对“会带来副作用的实际参数”，通常都需要引入临时性对象。换句话说，如果实际参数十一个常量表达式（constant expression），我们可以在替换之间先完成其求值操作（evalutaion）；后继的 inline 替换，就可以把常量直接“绑”上去，如果既不是个常量表达式，也不是个带有副作用的表达式，那么就直接代换之。<br></p>
+
+<p>
+示例代码如下：<br></p>
+<div class="highlight"><pre><span></span><span class="kr">inline</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">min</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">j</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="c1">// 调用操作</span>
+<span class="kr">inline</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">bar</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">minval</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1024</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">val2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2048</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="cm">/*(1)*/</span><span class="w"> </span><span class="n">minval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">val1</span><span class="p">,</span><span class="w"> </span><span class="n">val2</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="cm">/*(2)*/</span><span class="w"> </span><span class="n">minval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">2048</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="cm">/*(3)*/</span><span class="w"> </span><span class="n">minval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">foo</span><span class="p">(),</span><span class="w"> </span><span class="n">bar</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">minval</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+<p>
+分析如下：<br>
+标记为（1）的那一行会被拓展为：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// 参数直接代换</span>
+<span class="n">minval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">val2</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">val1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">val2</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+
+<p>
+标记为（2）的那一行直接拥抱常量：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// 代换之后，直接使用常量</span>
+<span class="n">minval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1024</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+
+<p>
+标记为（3）的那一行则引发参数的副作用，它需要引入一个临时对象，以避免重复求值（multiple evaluation）：<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// 有副作用，所以导入临时对象</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">t1</span><span class="p">;</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="n">t2</span><span class="p">;</span><span class="w"></span>
+<span class="n">minval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">t1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">()),</span><span class="w"> </span><span class="p">(</span><span class="n">t2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bar</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">t1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">t2</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">t1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">t2</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgfc7fc56" class="outline-4">
+<h4 id="orgfc7fc56">局部变量（local variables）</h4>
+<div class="outline-text-4" id="text-orgfc7fc56">
+<p>
+如果在 inline 定义中加入一个局部变量，会怎样：<br></p>
+<div class="highlight"><pre><span></span><span class="kr">inline</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">min</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">minval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">j</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">minval</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+<p>
+这时，如果我们有一下的调用操作：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">local_var</span><span class="p">;</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="n">minval</span><span class="p">;</span><span class="w"></span>
+<span class="c1">// ...</span>
+<span class="n">minval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">val1</span><span class="p">,</span><span class="w"> </span><span class="n">val2</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+
+<p>
+会被转化为：<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">local_var</span><span class="p">;</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="n">minval</span><span class="p">;</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="n">__min_lv_minval</span><span class="p">;</span><span class="w"></span>
+<span class="n">minval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">__min_lv_minval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">val2</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">val1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">val2</span><span class="p">),</span><span class="w"></span>
+<span class="w">	  </span><span class="n">__min_lv_minval</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+
+<p>
+一般而言，inline 函数中的每一个局部变量都必须被放在函数调用的一个粉笔区段中，拥有一个独一无二的名称。如果 inline 函数以单一表达式（expression）拓展多次，那么每次拓展都需要自己的一组局部变量。如果 inline 函数以分离的多个式子（discrete statements）被拓展多次，那么只需要一组局部变量，就可以重复使用（因为它们被放在一个封闭区段中，有自己的 scope）。<br></p>
+
+<p>
+inline 函数中的局部变量，再加上有副作用的参数，可能会导致大量临时对象的产生。特别是如果它以单一表达式（expression）被拓展多次时。<br></p>
+
+<p>
+inline 函数对于封装提供了一种必要的支持，可以有效存取封装于 class 中的 nonpublic 数据。它同时也是 C 程序中大量使用的 <code>#define</code> （前置处理宏）的一个安全替代品，特别是如果红肿的参数有副作用的话。然而一个 inline 函数如果被调用太多次的话，会产生大量的拓展码，使程序的大小暴涨。<br></p>
+
+<p>
+对于既要安全又要效率的程序，inline函数提供了一个强而有力的工具。然而，与 non-inline 函数比起来，它们需要更加小心地处理。<br></p>
+
+<p>
+（全文完）<br></p>
+</div>
+</div>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/digest/" rel="tag">digest</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/lippman/" rel="tag">Lippman</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/memory-layout/" rel="tag">memory layout</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/object-model/" rel="tag">object model</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2019/inside-the-cpp-object-model-3/" rel="prev">Previous post
+        <br><span>深入探索C++内存模型（3）</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2019/redis-fundamental/" rel="next">Next post
+        <br><span>redis基础</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2019/inside-the-cpp-object-model-4/",
+        disqus_title="\u6df1\u5165\u63a2\u7d22C++\u5185\u5b58\u6a21\u578b\uff084\uff09",
+        disqus_identifier="_cache/posts/2019/inside-the-cpp-object-model-4.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

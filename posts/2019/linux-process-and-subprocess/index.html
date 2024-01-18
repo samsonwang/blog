@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tips on Linux Process and Subprocess | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2019/linux-process-and-subprocess/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2019/linux-errno-cheatsheet/" title="Linux系统errno速查表" type="text/html">
+<link rel="next" href="/posts/2019/cpp-python-hybird-programming/" title="C++(Qt)和Python混合编程的一些经验之谈" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="Tips on Linux Process and Subprocess">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2019/linux-process-and-subprocess/">
+<meta property="og:description" content="Here are some tips on Linux process and subprocess, such as orphan process, zombie process, process exit and close on exec flag.
+
+
+
+
+
+1 Orphan process
+
+
+
+1.1 What is orphan process?
+
+
+In Linux system,">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2019-01-25T16:50:23+08:00">
+<meta property="article:tag" content="close on exec">
+<meta property="article:tag" content="exit">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="orphan process">
+<meta property="article:tag" content="process">
+<meta property="article:tag" content="zombie process">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">Tips on Linux Process and Subprocess</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2019-01-25T16:50:23+08:00" itemprop="datePublished">Jan 25, 2019</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+Here are some tips on Linux process and subprocess, such as orphan process, zombie process, process exit and close on exec flag.<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org7e001f8" class="outline-2">
+<h2 id="org7e001f8">
+<span class="section-number-2">1</span> Orphan process</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+<div id="outline-container-org204c8c5" class="outline-3">
+<h3 id="org204c8c5">
+<span class="section-number-3">1.1</span> What is orphan process?</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+In Linux system, when parent process exits and child process is still running, the child process becomes an orphan process. Any orphaned process will be immediately adopted by the special init system process.<br></p>
+
+<p>
+Here is a demo code to make a orphan process.<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">switch</span><span class="p">(</span><span class="n">fork</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">-1</span><span class="o">:</span><span class="w"></span>
+<span class="w">	</span><span class="n">printf</span><span class="p">(</span><span class="s">"fail to create subprocess</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="k">break</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">0</span><span class="o">:</span><span class="w"></span>
+<span class="w">	</span><span class="n">printf</span><span class="p">(</span><span class="s">"child process, pid = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">getpid</span><span class="p">());</span><span class="w"></span>
+<span class="w">	</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="k">break</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">default</span><span class="o">:</span><span class="w"></span>
+<span class="w">	</span><span class="n">printf</span><span class="p">(</span><span class="s">"parent process, pid = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">getpid</span><span class="p">());</span><span class="w"></span>
+<span class="w">	</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="k">break</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org4b6fd8b" class="outline-3">
+<h3 id="org4b6fd8b">
+<span class="section-number-3">1.2</span> How to make child process exit after parent process exits?</h3>
+<div class="outline-text-3" id="text-1-2">
+<ol class="org-ol">
+<li>Child process can ask kernel to send a signal when its parent dies by <code>prctl()</code> system call. This works in Linux only.<br>
+</li>
+</ol>
+<p>
+Here is the demo code:<br></p>
+<div class="highlight"><pre><span></span><span class="n">prctl</span><span class="p">(</span><span class="n">PR_SET_PDEATHSIG</span><span class="p">,</span><span class="w"> </span><span class="n">SIGHUP</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+
+<ol class="org-ol">
+<li>As child process id is changed to 1 (the init pid) after parent process exits, the child process could poll its parent process id by <code>getppid()</code> . When its parent process id becomes 1, the child process is an orphan process.<br>
+</li>
+</ol>
+<p>
+Function to get process identification.<br></p>
+<div class="highlight"><pre><span></span><span class="c1">// get process id</span>
+<span class="kt">pid_t</span><span class="w"> </span><span class="nf">getpid</span><span class="p">();</span><span class="w"></span>
+<span class="c1">// get parent process id</span>
+<span class="kt">pid_t</span><span class="w"> </span><span class="nf">getppid</span><span class="p">();</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgf1c66e6" class="outline-2">
+<h2 id="orgf1c66e6">
+<span class="section-number-2">2</span> Zombie process</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-org221713a" class="outline-3">
+<h3 id="org221713a">
+<span class="section-number-3">2.1</span> What is a zombie process?</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+Zombie process is also called defunct process. When child process has finished the execution (via the <code>exit</code> system call) but still has entry in the process table: It is a process in the "Terminated state". The parent process should read (via the <code>wait</code> system call) its child's exit staus from process table, then the child process entry is removed from the process table and is said to be "reaped".<br></p>
+
+<p>
+A child process always first becomes a zombie before being removed from the resource table. In most cases, under normal system operation zombies are immediately waited on by their parent and then reaped by the system – processes that stay zombies for a long time are generally an error and cause a resource leak.<br></p>
+
+<p>
+Here is a demo code to make a zombie process.<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">switch</span><span class="p">(</span><span class="n">fork</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">-1</span><span class="o">:</span><span class="w"></span>
+<span class="w">	</span><span class="n">printf</span><span class="p">(</span><span class="s">"fail to create subprocess</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="k">break</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">0</span><span class="o">:</span><span class="w"></span>
+<span class="w">	</span><span class="n">printf</span><span class="p">(</span><span class="s">"child process, pid = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">getpid</span><span class="p">());</span><span class="w"></span>
+<span class="w">	</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="k">break</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">default</span><span class="o">:</span><span class="w"></span>
+<span class="w">	</span><span class="n">printf</span><span class="p">(</span><span class="s">"parent process, pid = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">getpid</span><span class="p">());</span><span class="w"></span>
+<span class="w">	</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="k">break</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+<p>
+Check out process tree using the following command.<br></p>
+<div class="highlight"><pre><span></span>ps -efx
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org52af819" class="outline-3">
+<h3 id="org52af819">
+<span class="section-number-3">2.2</span> How to kill a zombie process?</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+As a zombie process is already dead, so you can not <code>kill</code> it. The <code>kill</code> command has no effect on a zombie process.<br></p>
+
+<p>
+To clean up a zombie, it must be waited on by its parent, so killing the parent should work to eliminate the zombie. (After the parent dies, the zombie will be inherited by init process (pid 1), which will wait on it and clear its entry in the process table).<br></p>
+
+<p>
+The following command will kill all the parent processes that has a zombie child process. As this might kill processes that is running normally, it is not recommended. The better solution is to find out the very zombie process and stop its parent.<br></p>
+<div class="highlight"><pre><span></span><span class="nb">kill</span> <span class="k">$(</span>ps -A -ostat,ppid <span class="p">|</span> awk <span class="s1">'/[zZ]/ &amp;&amp; !a[$2]++ {print $2}'</span><span class="k">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgd90c8fb" class="outline-2">
+<h2 id="orgd90c8fb">
+<span class="section-number-2">3</span> Process exit</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-org1afd660" class="outline-3">
+<h3 id="org1afd660">
+<span class="section-number-3">3.1</span> <code>exit</code> function</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+<code>exit()</code> function performs some cleaning before termination of the program, such as the <code>atexit()</code> registered method and buffer flushing.<br></p>
+
+<p>
+Here is the demo code:<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">cleanup</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"cleanup ...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">// this will be printed</span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"process running ...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">atexit</span><span class="p">(</span><span class="n">cleanup</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"buffer information ..."</span><span class="p">);</span><span class="w"> </span><span class="c1">// this will be fulshed</span>
+<span class="w">    </span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org6bef55e" class="outline-3">
+<h3 id="org6bef55e">
+<span class="section-number-3">3.2</span> <code>_exit</code> or <code>_Exit</code> function</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+<code>_exit()</code> is equivalent to <code>_Exit()</code> . They all cause normal program termination to occur without completely cleaning the resources. The minor difference is <code>_Exit</code> is from C99 and <code>_exit</code> is from POSIX.<br></p>
+
+<p>
+Use <code>_exit</code> (or <code>_Exit</code> ) in child process to avoid unintended calling <code>atexit()</code> handlers and flushing buffers from parent process.<br></p>
+
+<p>
+Here is the demo code:<br></p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">cleanup</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"cleanup ...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">// this will not be printed</span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"process running ...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">atexit</span><span class="p">(</span><span class="n">cleanup</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"buffer information ..."</span><span class="p">);</span><span class="w">  </span><span class="c1">// this will not be fulshed</span>
+<span class="w">    </span><span class="n">_Exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orge9ea8ab" class="outline-2">
+<h2 id="orge9ea8ab">
+<span class="section-number-2">4</span> <code>close-on-exec</code> flag</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+The <code>close-on-exec</code> flag is set on file descriptor to indicate that the descriptor should be closed when an <code>exec</code> function is invoked. The flag is initially disabled on new descriptors, the descriptor will survive into the new program after <code>exec</code> , and resource is leaked. This would happen unintentionally when parent process forks a child and the child calls <code>exec</code> .<br></p>
+
+<p>
+It is a good programming practice to use this flag in order to close the descriptor automaticly by default.<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">fd1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">O_CLOEXEC</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">flags</span><span class="p">);</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="n">fd2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">socket</span><span class="p">(</span><span class="n">DOMAIN</span><span class="p">,</span><span class="w"> </span><span class="n">SOCK_CLOEXEC</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">PROTOCOL</span><span class="p">);</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="n">fd3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">accept4</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">sockfd</span><span class="p">,</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">sockaddr</span><span class="w"> </span><span class="o">*</span><span class="n">addr</span><span class="p">,</span><span class="w"></span>
+<span class="w">		  </span><span class="kt">socklen_t</span><span class="w"> </span><span class="o">*</span><span class="n">addrlen</span><span class="p">,</span><span class="w"> </span><span class="n">SOCK_CLOEXEC</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">flags</span><span class="p">);</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="n">fd4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fopen</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="s">"re"</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+
+<p>
+If you want to modify flags on an existing file descriptor, you should get the current flags with <code>F_GETFD</code> and modify the value. Don’t assume that the flags listed here are the only ones that are implemented; your program may be run years from now and more flags may exist then. For example, here is a function to set or clear the flag <code>FD_CLOEXEC</code> without altering any other flags:<br></p>
+
+<div class="highlight"><pre><span></span><span class="cm">/* Set the FD_CLOEXEC flag of desc if value is nonzero,</span>
+<span class="cm">   or clear the flag if value is 0.</span>
+<span class="cm">   Return 0 on success, or -1 on error with errno set. */</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">set_cloexec_flag</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">desc</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">oldflags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fcntl</span><span class="w"> </span><span class="p">(</span><span class="n">desc</span><span class="p">,</span><span class="w"> </span><span class="n">F_GETFD</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="cm">/* If reading the flags failed, return error indication now. */</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">oldflags</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="n">oldflags</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="cm">/* Set just the flag we want to set. */</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">value</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="n">oldflags</span><span class="w"> </span><span class="o">|=</span><span class="w"> </span><span class="n">FD_CLOEXEC</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">else</span><span class="w"></span>
+<span class="w">	</span><span class="n">oldflags</span><span class="w"> </span><span class="o">&amp;=</span><span class="w"> </span><span class="o">~</span><span class="n">FD_CLOEXEC</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="cm">/* Store modified flag word in the descriptor. */</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">fcntl</span><span class="w"> </span><span class="p">(</span><span class="n">desc</span><span class="p">,</span><span class="w"> </span><span class="n">F_SETFD</span><span class="p">,</span><span class="w"> </span><span class="n">oldflags</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-orgc0e78df" class="outline-2">
+<h2 id="orgc0e78df">
+<span class="section-number-2">5</span> Reference</h2>
+<div class="outline-text-2" id="text-5">
+<ol class="org-ol">
+<li>
+<a href="https://en.wikipedia.org/wiki/Orphan_process">wikipedia.org - orphan process</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Zombie_process">wikipedia.org - zombie process</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/16944886/how-to-kill-zombie-process">stackoverflow.com - how to kill zombie process</a><br>
+</li>
+<li>
+<a href="https://www.geeksforgeeks.org/zombie-and-orphan-processes-in-c/">geeksforgeeks.org - zombie and orphan process</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/5422831/what-is-the-difference-between-using-exit-exit-in-a-conventional-linux-fo">stackoverflow.com - difference between <code>exit</code> and <code>_exit</code></a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/c/program/_Exit">cppreference.com - <code>_Exit</code></a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/6125068/what-does-the-fd-cloexec-fcntl-flag-do">stackoverflow.com - what does <code>FD_CLOEXEC</code> flag do</a><br>
+</li>
+<li>
+<a href="https://www.gnu.org/software/libc/manual/html_node/Descriptor-Flags.html">gnu.org - descriptor flags</a><br>
+</li>
+</ol>
+<p>
+(The end)<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/close-on-exec/" rel="tag">close on exec</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/exit/" rel="tag">exit</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/orphan-process/" rel="tag">orphan process</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/process/" rel="tag">process</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/zombie-process/" rel="tag">zombie process</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2019/linux-errno-cheatsheet/" rel="prev">Previous post
+        <br><span>Linux系统errno速查表</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2019/cpp-python-hybird-programming/" rel="next">Next post
+        <br><span>C++(Qt)和Python混合编程的一些经验之谈</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2019/linux-process-and-subprocess/",
+        disqus_title="Tips on Linux Process and Subprocess",
+        disqus_identifier="_cache/posts/2019/linux-process-and-subprocess.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

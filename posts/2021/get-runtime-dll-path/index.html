@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>在运行时获取动态库的路径 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2021/get-runtime-dll-path/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2021/cpp-header-include-sequence/" title="C++头文件的引用顺序" type="text/html">
+<link rel="next" href="/posts/2021/check-for-nullptr-after-new-operator/" title="由new创建的指针不需要检查nullptr" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="在运行时获取动态库的路径">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2021/get-runtime-dll-path/">
+<meta property="og:description" content="最近在开发一个动态库，这个动态库需要在运行时动态地加载另一个动态库。在库发布时会同时提供这两个动态库。库的使用者会主动加载第一个动态库，问题出现在第一个动态库加载第二个动态库时，如何确定第二个动态库的位置。
+
+
+
+
+
+相似应用场景
+
+
+在发布一个动态库时将这个动态库所需要的数据文件与动态库放在一起。在这个动态库执行时能够通过其自身的路径找到对应的数据文件。
+
+
+
+其实，这个开发需求也可以交给库的调">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2021-06-11T18:19:06+08:00">
+<meta property="article:tag" content="c">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="windows">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">在运行时获取动态库的路径</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2021-06-11T18:19:06+08:00" itemprop="datePublished">Jun 11, 2021</time><span class="dt-updated"> / updated <time datetime="2021-08-27T09:13:00+08:00" itemprop="dateUpdated">Aug 27, 2021</time></span>
+
+      
+
+    </p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+最近在开发一个动态库，这个动态库需要在运行时动态地加载另一个动态库。在库发布时会同时提供这两个动态库。库的使用者会主动加载第一个动态库，问题出现在第一个动态库加载第二个动态库时，如何确定第二个动态库的位置。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org816b280" class="outline-2">
+<h2 id="org816b280">相似应用场景</h2>
+<div class="outline-text-2" id="text-org816b280">
+<p>
+在发布一个动态库时将这个动态库所需要的数据文件与动态库放在一起。在这个动态库执行时能够通过其自身的路径找到对应的数据文件。<br></p>
+
+<p>
+其实，这个开发需求也可以交给库的调用者解决，因为库的调用者更容易获得库的路径，动态库可以提供一个用于接收其自身路径的函数接口。但是这样就显得接口不够简洁，如果能在动态库内部获得其自身的路径是最好的。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org493f8f2" class="outline-2">
+<h2 id="org493f8f2">Windows平台</h2>
+<div class="outline-text-2" id="text-org493f8f2">
+<p>
+借助WIN32的 <code>GetModuleFilename</code> 接口<sup><a id="fnr.1" class="footref" href="/posts/2021/get-runtime-dll-path/#fn.1">1</a></sup>获得动态库的路径，示例代码如下：<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">test_dll_func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="n">HMODULE</span><span class="w"> </span><span class="n">hModule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">GetModuleHandleEx</span><span class="p">(</span><span class="n">GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT</span><span class="w"></span>
+<span class="w">			</span><span class="o">|</span><span class="w"> </span><span class="n">GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS</span><span class="p">,</span><span class="w"></span>
+<span class="w">			</span><span class="p">(</span><span class="n">LPCSTR</span><span class="p">)</span><span class="n">test_dll_func</span><span class="p">,</span><span class="w"></span>
+<span class="w">			</span><span class="o">&amp;</span><span class="n">hModule</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">szPath</span><span class="p">[</span><span class="n">MAX_PATH</span><span class="p">];</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">GetModuleFileName</span><span class="p">(</span><span class="n">hModule</span><span class="p">,</span><span class="w"> </span><span class="n">szPath</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">szPath</span><span class="p">))</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">      </span><span class="n">printf</span><span class="p">(</span><span class="s">"loaded from path = %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">szPath</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+<p>
+从上面的代码容易看出，先（调用 <code>GetModuleHandleEx</code> 函数<sup><a id="fnr.2" class="footref" href="/posts/2021/get-runtime-dll-path/#fn.2">2</a></sup>）用动态库中的函数指针获取动态库的句柄，再（调用 <code>GetModuleFileName</code> 函数）用动态库句柄获取动态库路径。<br></p>
+
+<p>
+也可以通过动态库的名字获得动态库句柄，调用 <code>GetModuleHandle</code> 函数<sup><a id="fnr.3" class="footref" href="/posts/2021/get-runtime-dll-path/#fn.3">3</a></sup>即可，但是动态库的文件名称可以被修改，所以这个方法有可能会失效。<br></p>
+
+<p>
+<b>update 2021/8/27</b><br>
+由于在windows下动态库的加载是将动态库文件映射到程序内存中，所以WIN32的 <code>GetMappedFileName</code> 接口<sup><a id="fnr.4" class="footref" href="/posts/2021/get-runtime-dll-path/#fn.4">4</a></sup>也能够获取当前动态库的路径，但是这个接口返回的路径并不是常见的以盘符起始的路径（例如 <code>\Device\HarddiskVolume5\bin\abc.dll</code> ，转换为常见的盘符路径为 <code>D:\bin\abc.dll</code> ）。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org8dc7ca2" class="outline-2">
+<h2 id="org8dc7ca2">Linux平台</h2>
+<div class="outline-text-2" id="text-org8dc7ca2">
+<p>
+借助 <code>dladdr</code> 函数<sup><a id="fnr.5" class="footref" href="/posts/2021/get-runtime-dll-path/#fn.5">5</a></sup>获得动态库路径，示例代码如下：<br></p>
+
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;dlfcn.h&gt;</span><span class="cp"></span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">test_so_func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="n">Dl_info</span><span class="w"> </span><span class="n">info</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">dladdr</span><span class="p">(</span><span class="n">test_so_func</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">info</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"loaded from path = %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">.</span><span class="n">dli_fname</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+<p>
+需要注意 <code>dladdr</code> 的第一个参数需要提供一个在动态库中实现的函数。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org9c63853" class="outline-2">
+<h2 id="org9c63853">开源库</h2>
+<div class="outline-text-2" id="text-org9c63853">
+<p>
+在检索相关资料时，我在Github上发现已经有开源库<sup><a id="fnr.6" class="footref" href="/posts/2021/get-runtime-dll-path/#fn.6">6</a></sup>提供这样的功能。这个开源库还提供了MACOS和Android等多个平台的获取当前程序路径和动态库（共享库）路径的支持。<br></p>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef">
+<sup><a id="fn.1" class="footnum" href="/posts/2021/get-runtime-dll-path/#fnr.1">1</a></sup><div class="footpara"><p class="footpara">
+<a href="https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulefilenamea">https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulefilenamea</a><br></p></div>
+</div>
+
+<div class="footdef">
+<sup><a id="fn.2" class="footnum" href="/posts/2021/get-runtime-dll-path/#fnr.2">2</a></sup><div class="footpara"><p class="footpara">
+<a href="https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandleexa">https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandleexa</a><br></p></div>
+</div>
+
+<div class="footdef">
+<sup><a id="fn.3" class="footnum" href="/posts/2021/get-runtime-dll-path/#fnr.3">3</a></sup><div class="footpara"><p class="footpara">
+<a href="https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandlea">https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandlea</a><br></p></div>
+</div>
+
+<div class="footdef">
+<sup><a id="fn.4" class="footnum" href="/posts/2021/get-runtime-dll-path/#fnr.4">4</a></sup><div class="footpara"><p class="footpara">
+<a href="https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getmappedfilenamea">https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getmappedfilenamea</a><br></p></div>
+</div>
+
+<div class="footdef">
+<sup><a id="fn.5" class="footnum" href="/posts/2021/get-runtime-dll-path/#fnr.5">5</a></sup><div class="footpara"><p class="footpara">
+<a href="https://man7.org/linux/man-pages/man3/dladdr1.3.html">https://man7.org/linux/man-pages/man3/dladdr1.3.html</a><br></p></div>
+</div>
+
+<div class="footdef">
+<sup><a id="fn.6" class="footnum" href="/posts/2021/get-runtime-dll-path/#fnr.6">6</a></sup><div class="footpara">
+<p class="footpara">
+<a href="https://github.com/gpakosz/whereami">https://github.com/gpakosz/whereami</a><br></p>
+
+<p class="footpara">
+（全文完）<br></p>
+</div>
+</div>
+
+
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/c/" rel="tag">c</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2021/cpp-header-include-sequence/" rel="prev">Previous post
+        <br><span>C++头文件的引用顺序</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2021/check-for-nullptr-after-new-operator/" rel="next">Next post
+        <br><span>由new创建的指针不需要检查nullptr</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2021/get-runtime-dll-path/",
+        disqus_title="\u5728\u8fd0\u884c\u65f6\u83b7\u53d6\u52a8\u6001\u5e93\u7684\u8def\u5f84",
+        disqus_identifier="_cache/posts/2021/get-runtime-dll-path.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

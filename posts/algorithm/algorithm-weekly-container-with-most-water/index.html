@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>每周算法：最大容器 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-container-with-most-water/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2018/why-front-end-libraries/" title="为什么要使用各种前端框架" type="text/html">
+<link rel="next" href="/posts/2018/non-blocking-socket-connect-tips/" title="客户端使用非阻塞socket进行connect的流程" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="每周算法：最大容器">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-container-with-most-water/">
+<meta property="og:description" content="Description
+
+
+Given n non-negative integers a1, a2, …, an , where each represents a point at coordinate (i, ai). n vertical lines are drawn such that the two endpoints of line i is at (i, ai) and (i, ">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-08-29T11:36:33+08:00">
+<meta property="article:tag" content="algorithm">
+<meta property="article:tag" content="leetcode">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">每周算法：最大容器</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-08-29T11:36:33+08:00" itemprop="datePublished">Aug 29, 2018</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <div id="outline-container-org713bb15" class="outline-2">
+<h2 id="org713bb15">Description</h2>
+<div class="outline-text-2" id="text-org713bb15">
+<p>
+Given n non-negative integers a1, a2, …, an , where each represents a point at coordinate (i, ai). n vertical lines are drawn such that the two endpoints of line i is at (i, ai) and (i, 0). Find two lines, which together with x-axis forms a container, such that the container contains the most water.<br></p>
+
+<p>
+<b>Note:</b> You may not slant the container and n is at least 2.<br></p>
+
+<p>
+<b>Example:</b><br>
+Input: [1,8,6,2,5,4,8,3,7]<br>
+Output: 49<br></p>
+
+<p>
+来源： <a href="https://leetcode.com/problems/container-with-most-water/description/">leetcode 11 Container with most water</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-orgd04e170" class="outline-2">
+<h2 id="orgd04e170">Solution</h2>
+<div class="outline-text-2" id="text-orgd04e170">
+</div>
+<div id="outline-container-org269dfd3" class="outline-3">
+<h3 id="org269dfd3">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org269dfd3">
+<p>
+暴力解法是最容易想到的解法了，然而暴力解法肯定不是本题的意图。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">maxArea</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">height</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">len</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">height</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	    </span><span class="kt">int</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">j</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">height</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">height</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span><span class="w"></span>
+<span class="w">	    </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">size</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+<p>
+使用这种解法只要把变量变化的范围想清楚就行了，没有什么特别的难点。<br>
+暴力解法的时间复杂度为 O(n<sup>2</sup>)，空间复杂度为 O(1)。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgdd3573c" class="outline-3">
+<h3 id="orgdd3573c">Approach 2</h3>
+<div class="outline-text-3" id="text-orgdd3573c">
+<p>
+我在leetcode上看到这样一种解法，这种解法从逻辑和形式上看上不复杂，但是我的疑问在是否有严密的数学推导和论证。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">maxArea</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">height</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">height</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">left</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">right</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">left</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">height</span><span class="p">[</span><span class="n">left</span><span class="p">],</span><span class="w"> </span><span class="n">height</span><span class="p">[</span><span class="n">right</span><span class="p">]);</span><span class="w"></span>
+
+<span class="w">	</span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">w</span><span class="o">*</span><span class="n">h</span><span class="p">,</span><span class="w"> </span><span class="n">ans</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">height</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">height</span><span class="p">[</span><span class="n">right</span><span class="p">])</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	    </span><span class="o">++</span><span class="n">left</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	    </span><span class="o">--</span><span class="n">right</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+<p>
+这个算法的主要思想是最大面积由两端边界较短的板决定；所以在移动边界时要将长板保留，移动短板。该算法的时间复杂度为 O(n)，空间复杂度为O（1）。<br></p>
+
+<p>
+在寻求该算法的数学推导时，我看到了 @nan15 给出的另外一种解释：<br></p>
+<blockquote>
+<p>
+We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</code> . Let's say the left one is shorter: <code>h[l] &lt; h[r]</code> . Then, this is already the largest container the left one can possibly form. There's no need to consider it again. Therefore, we just throw it away and start again with <code>l = 1</code> and <code>r = n - 1</code> .<br></p>
+</blockquote>
+<p>
+这个论证我认为是更加直观的：从最宽的容器开始，这时左边坐标 <code>l = 0</code> ，右边坐标 <code>r = n - 1</code> 。假设左边更短，也就是 <code>h[l] &lt; h[r]</code> 。那么，对于左边的板子，这是已经是它能够形成的最大的面积了，也就不需要再考虑它了。因此，将左边的板子丢掉，使用 <code>l = 1</code> 和 <code>r = n - 1</code> 重新开始。<br></p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5d436c2" class="outline-2">
+<h2 id="org5d436c2">Reference</h2>
+<div class="outline-text-2" id="text-org5d436c2">
+<ul class="org-ul">
+<li>
+<a href="https://leetcode.com/problems/container-with-most-water/solution/">leetcode problem solution</a><br>
+</li>
+<li>
+<a href="https://leetcode.com/problems/container-with-most-water/discuss/6089/anyone-who-has-a-on-algorithm">leetcode discuss algorithm proof 1</a><br>
+</li>
+<li>
+<a href="https://leetcode.com/problems/container-with-most-water/discuss/6099/yet-another-way-to-see-what-happens-in-the-on-algorithm">leetcode discuss algorithm proof 2</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/algorithm/" rel="tag">algorithm</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/leetcode/" rel="tag">leetcode</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2018/why-front-end-libraries/" rel="prev">Previous post
+        <br><span>为什么要使用各种前端框架</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2018/non-blocking-socket-connect-tips/" rel="next">Next post
+        <br><span>客户端使用非阻塞socket进行connect的流程</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-container-with-most-water/",
+        disqus_title="\u6bcf\u5468\u7b97\u6cd5\uff1a\u6700\u5927\u5bb9\u5668",
+        disqus_identifier="_cache/posts/algorithm/algorithm-weekly-container-with-most-water.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

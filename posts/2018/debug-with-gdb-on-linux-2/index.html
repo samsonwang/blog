@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linux下使用gdb的调试技巧（2） | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/debug-with-gdb-on-linux-2/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2018/change-linux-timezone-with-cli/" title="使用命令行修改Linux系统的时区" type="text/html">
+<link rel="next" href="/posts/2018/fifo-pipe-unix-domain-socket/" title="Linux下的FIFO、pipe、unix domain socket漫谈" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="Linux下使用gdb的调试技巧（2）">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/debug-with-gdb-on-linux-2/">
+<meta property="og:description" content="本文重点介绍在gdb模式下的常用命令。
+
+
+
+
+
+相关文章：Linux下使用gdb的调试技巧（1）
+
+
+
+查看帮助信息
+
+(gdb) help all
+
+
+
+查看线程信息
+
+(gdb) info thread
+
+
+
+切换到某一线程
+
+(gdb) thread 2
+
+
+
+查看调用堆栈信息
+
+(gdb) bt
+
+
+
+查看某个调用栈
+
+(gdb) frame 3
+
+
+
+增加断点
+断点格式：
+
+
+函数名
+">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-04-03T22:51:39+08:00">
+<meta property="article:tag" content="gdb">
+<meta property="article:tag" content="linux">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">Linux下使用gdb的调试技巧（2）</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-04-03T22:51:39+08:00" itemprop="datePublished">Apr 03, 2018</time><span class="dt-updated"> / updated <time datetime="2018-12-13T15:34:39+08:00" itemprop="dateUpdated">Dec 13, 2018</time></span>
+
+      
+
+    </p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+本文重点介绍在gdb模式下的常用命令。<br></p>
+
+<!-- TEASER_END -->
+
+<p>
+相关文章：<a href="https://samsonwang.me/posts/debug-with-gdb-on-linux/">Linux下使用gdb的调试技巧（1）</a><br></p>
+
+<p>
+查看帮助信息<br></p>
+<div class="highlight"><pre><span></span>(gdb) help all
+</pre></div>
+
+<p>
+查看线程信息<br></p>
+<div class="highlight"><pre><span></span>(gdb) info thread
+</pre></div>
+
+<p>
+切换到某一线程<br></p>
+<div class="highlight"><pre><span></span>(gdb) thread 2
+</pre></div>
+
+<p>
+查看调用堆栈信息<br></p>
+<div class="highlight"><pre><span></span>(gdb) bt
+</pre></div>
+
+<p>
+查看某个调用栈<br></p>
+<div class="highlight"><pre><span></span>(gdb) frame 3
+</pre></div>
+
+<p>
+增加断点<br>
+断点格式：<br></p>
+<ul class="org-ul">
+<li>函数名<br>
+</li>
+<li>文件名：行号<br>
+</li>
+<li>当前调试文件的行号<br>
+</li>
+</ul>
+<div class="highlight"><pre><span></span>(gdb) breakpoint xxx
+</pre></div>
+
+<p>
+删除断点<br></p>
+<div class="highlight"><pre><span></span>(gdb) delete xxx
+</pre></div>
+
+<p>
+启用/禁用断点<br></p>
+<div class="highlight"><pre><span></span>(gdb) disable/enable xxx
+</pre></div>
+
+<p>
+查看断点信息<br></p>
+<div class="highlight"><pre><span></span>(gdb) info break
+</pre></div>
+
+<p>
+临时断点，临时断点的使用方法与普通断点相同<br></p>
+<div class="highlight"><pre><span></span>(gdb) tb xxx
+</pre></div>
+
+<p>
+在gdb模式下，回车会执行上一次输入的命令<br></p>
+
+<p>
+运行到指定行<br></p>
+<div class="highlight"><pre><span></span>(gdb) until 81
+</pre></div>
+
+<p>
+在gdb中打印长字符串<br></p>
+<div class="highlight"><pre><span></span>(gdb) set print element 0
+</pre></div>
+
+<p>
+在gdb中强制在一个线程内调试运行<br></p>
+<div class="highlight"><pre><span></span>(gdb) set scheduler-locking step
+</pre></div>
+
+<p>
+在gdb中向程序发送信号<br></p>
+<div class="highlight"><pre><span></span>(gdb) signal
+</pre></div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/gdb/" rel="tag">gdb</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2018/change-linux-timezone-with-cli/" rel="prev">Previous post
+        <br><span>使用命令行修改Linux系统的时区</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2018/fifo-pipe-unix-domain-socket/" rel="next">Next post
+        <br><span>Linux下的FIFO、pipe、unix domain socket漫谈</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2018/debug-with-gdb-on-linux-2/",
+        disqus_title="Linux\u4e0b\u4f7f\u7528gdb\u7684\u8c03\u8bd5\u6280\u5de7\uff082\uff09",
+        disqus_identifier="_cache/posts/2018/debug-with-gdb-on-linux-2.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

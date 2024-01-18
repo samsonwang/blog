@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>查看操作系统中所有的共享内存 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2020/list-shared-memory-in-system/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2020/cpp11-memory-model/" title="C++11中的内存顺序" type="text/html">
+<link rel="next" href="/posts/2020/signed-char-and-unsigned-char/" title="char类型的符号特性" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="查看操作系统中所有的共享内存">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2020/list-shared-memory-in-system/">
+<meta property="og:description" content="最近在开发一个基于共享内存的跨平台数据缓存组件，核心思想是将数据存放在共享内存中以实现多进程间数据交换。在开发和调试过程中需要借助工具查看系统中的共享内存。本文记录了Linux和Windows下查看共享内存状态信息的方法。
+
+
+
+
+
+Linux系统
+
+
+使用 ipcs 能够查看系统中进程间交互所使用的共享资源。这个命令不仅能够查看共享内存信息，还能够查看Linux系统的消息队列（message q">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2020-08-14T10:40:12+08:00">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="shared memory">
+<meta property="article:tag" content="windows">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">查看操作系统中所有的共享内存</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2020-08-14T10:40:12+08:00" itemprop="datePublished">Aug 14, 2020</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+最近在开发一个基于共享内存的跨平台数据缓存组件，核心思想是将数据存放在共享内存中以实现多进程间数据交换。在开发和调试过程中需要借助工具查看系统中的共享内存。本文记录了Linux和Windows下查看共享内存状态信息的方法。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-orgc658156" class="outline-2">
+<h2 id="orgc658156">Linux系统</h2>
+<div class="outline-text-2" id="text-orgc658156">
+<p>
+使用 ipcs 能够查看系统中进程间交互所使用的共享资源。这个命令不仅能够查看共享内存信息，还能够查看Linux系统的消息队列（message queue）和信号量（semaphore）。<br></p>
+
+<p>
+这个软件一般是随系统附带安装好的，直接在shell中输入命令即可使用。<br></p>
+</div>
+
+<div id="outline-container-org27f4c52" class="outline-3">
+<h3 id="org27f4c52">查看所有的共享内存信息</h3>
+<div class="outline-text-3" id="text-org27f4c52">
+<div class="highlight"><pre><span></span>ipcs -m
+</pre></div>
+
+<p>
+以上命令能够输出当前系统中的共享内存信息，包括共享内存的id、创建用户、访问权限、空间大小、连接数量和状态。结果以表格形式输出，十分直观。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgaad88e8" class="outline-3">
+<h3 id="orgaad88e8">查看某个共享内存信息</h3>
+<div class="outline-text-3" id="text-orgaad88e8">
+<div class="highlight"><pre><span></span>ipcs -m -i &lt;shmid&gt;
+</pre></div>
+
+<p>
+通过指定共享内存id，以上命令能够查看这个id对应共享内存的更详细信息，包括连接时间、断开连接时间等。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org262e4a8" class="outline-3">
+<h3 id="org262e4a8">查看系统对共享内存的限制</h3>
+<div class="outline-text-3" id="text-org262e4a8">
+<div class="highlight"><pre><span></span>ipcs -m -l
+</pre></div>
+
+<p>
+以上命令能够查看操作系统中共享内存的限制，包括共享内存的最大数量、单块共享内存的最大大小和最小大小、所有共享内存的总大小。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgdb4fcf0" class="outline-3">
+<h3 id="orgdb4fcf0">以列表的格式展示共享内存的详细信息</h3>
+<div class="outline-text-3" id="text-orgdb4fcf0">
+<div class="highlight"><pre><span></span>ipcs -m -c
+</pre></div>
+
+<p>
+以上命令能够列出所有的共享内存和它们对应的创建用户id、用户组id和所有者用户id和用户组id。结果以表格的形式展现出来，方面比较和查找。<br></p>
+
+
+<div class="highlight"><pre><span></span>ipcs -m -p
+</pre></div>
+
+<p>
+以上命令能够列出所有的共享内存和它们对应的所有者、创建进程id、最后访问进程id。结果以表格形式展现出来。<br></p>
+</div>
+</div>
+</div>
+
+
+
+<div id="outline-container-org53db41d" class="outline-2">
+<h2 id="org53db41d">Windows系统</h2>
+<div class="outline-text-2" id="text-org53db41d">
+<p>
+在Windows下可以借助accesschk程序获取共享内存信息，但是需要自己对结果进行筛选和分析，不如Linux那样方便。<br></p>
+
+<p>
+使用以下命令能够将查询结果保存在 <code>objects.txt</code> 文件中。<br></p>
+
+<div class="highlight"><pre><span></span>accesschk.exe -osv &gt; objects.txt
+</pre></div>
+
+<p>
+建议使用一个高级文本编辑器将其打开并搜索 <code>Type: Section</code> ，搜索结果对应的条目就是共享内存信息。在Windows下，共享内存被称作section(handle)。<br></p>
+
+<p>
+目前从我的实践结果来看，能够从结果中找到 <code>Type: Section</code> 对应的条目。可以通过搜索共享内存的名字找到对应的共享内存，能够查到共享内存的访问权限等信息，但是无法获取共享内存的大小。<br></p>
+
+<p>
+accesschk并不是windows的自带软件，需要额外下载，下载地址见文末的参考资料。acssesschk是一款便携绿色软件，下载后无需安装直接运行即可。<br></p>
+</div>
+</div>
+
+
+
+<div id="outline-container-org8d6df30" class="outline-2">
+<h2 id="org8d6df30">参考资料</h2>
+<div class="outline-text-2" id="text-org8d6df30">
+<ul class="org-ul">
+<li>
+<a href="https://www.geeksforgeeks.org/ipcs-command-linux-examples/">geeksforgeeks - ipcs example</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/465378/program-to-view-shared-memory-in-windows">stackoverflow - view shared memory in windows</a><br>
+</li>
+<li>
+<a href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/accesschk">microsoft docs - accesschk download</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/shared-memory/" rel="tag">shared memory</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2020/cpp11-memory-model/" rel="prev">Previous post
+        <br><span>C++11中的内存顺序</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2020/signed-char-and-unsigned-char/" rel="next">Next post
+        <br><span>char类型的符号特性</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2020/list-shared-memory-in-system/",
+        disqus_title="\u67e5\u770b\u64cd\u4f5c\u7cfb\u7edf\u4e2d\u6240\u6709\u7684\u5171\u4eab\u5185\u5b58",
+        disqus_identifier="_cache/posts/2020/list-shared-memory-in-system.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

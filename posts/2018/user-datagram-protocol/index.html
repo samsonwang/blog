@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UDP协议（RFC768） | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/user-datagram-protocol/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2018/internet-protocol-stack-tcpdump-analysis/" title="网络协议的抓包分析" type="text/html">
+<link rel="next" href="/posts/algorithm/algorithm-weekly-combination-sum/" title="每周算法：找出指定求和的组合" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="UDP协议（RFC768）">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/user-datagram-protocol/">
+<meta property="og:description" content="UDP协议是一种无连接（connectless）的通信协议，UDP协议需要与IP协议配合使用。
+
+
+
+
+
+简介
+
+
+UDP适合不需要进行错误检查和更正的场景，或者交由应用层来完成错误检查工作，UDP能够在协议栈上避免对这部分功能过度操作。对于延迟比较敏感的程序通常使用UDP作为通信协议，相比于重新传输带来的延迟，丢包是可以接受的。
+
+
+
+
+
+协议规格
+
+
+UDP协议的格式如下图所示
+
+
+
+
+
+
+
+">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-11-08T21:30:01+08:00">
+<meta property="article:tag" content="ip">
+<meta property="article:tag" content="network">
+<meta property="article:tag" content="tcp">
+<meta property="article:tag" content="udp">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">UDP协议（RFC768）</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-11-08T21:30:01+08:00" itemprop="datePublished">Nov 08, 2018</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+UDP协议是一种无连接（connectless）的通信协议，UDP协议需要与IP协议配合使用。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org4e6a5d2" class="outline-2">
+<h2 id="org4e6a5d2">简介</h2>
+<div class="outline-text-2" id="text-org4e6a5d2">
+<p>
+UDP适合不需要进行错误检查和更正的场景，或者交由应用层来完成错误检查工作，UDP能够在协议栈上避免对这部分功能过度操作。对于延迟比较敏感的程序通常使用UDP作为通信协议，相比于重新传输带来的延迟，丢包是可以接受的。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgb4e90c4" class="outline-2">
+<h2 id="orgb4e90c4">协议规格</h2>
+<div class="outline-text-2" id="text-orgb4e90c4">
+<p>
+UDP协议的格式如下图所示<br></p>
+
+<p>
+<img src="/assets/images/spinner.svg" data-src="/images/post-user-datagram-protocol-1.png" alt="nil"><br></p>
+
+<p>
+Source Port is an optional field, when meaningful, it indicates the port of the sending process, and may be assumed to be the port to which a reply should be addressed in the absence of any other information. If not used, a value of zero is inserted.<br></p>
+
+<p>
+Destination Port has a meaning within the context of a particular internet destination address.<br></p>
+
+<p>
+Length is the length in octets of this user datagram including thisheader and the data. (This means the minimum value of the length is eight.)<br></p>
+
+<p>
+UDP的校验码的计算逻辑与TCP的相同。<br>
+Checksum is the 16-bit one’s complement of the one’s complement sum of a pseudo header of information from the IP header, the UDP header, and the data, padded with zero octets at the end (if necessary) to make a multiple of two octets. This checksum procedure is the same as is used in TCP.<br></p>
+
+
+<p>
+UDP协议在IP协议中的协议号为17。<br>
+This is protocol 17 (21 octal) when used in the Internet Protocol.<br></p>
+</div>
+</div>
+
+<div id="outline-container-org6ea4099" class="outline-2">
+<h2 id="org6ea4099">参考资料</h2>
+<div class="outline-text-2" id="text-org6ea4099">
+<ul class="org-ul">
+<li>
+<a href="https://tools.ietf.org/html/rfc768">https://tools.ietf.org/html/rfc768</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/ip/" rel="tag">ip</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/network/" rel="tag">network</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/tcp/" rel="tag">tcp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/udp/" rel="tag">udp</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2018/internet-protocol-stack-tcpdump-analysis/" rel="prev">Previous post
+        <br><span>网络协议的抓包分析</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/algorithm/algorithm-weekly-combination-sum/" rel="next">Next post
+        <br><span>每周算法：找出指定求和的组合</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2018/user-datagram-protocol/",
+        disqus_title="UDP\u534f\u8bae\uff08RFC768\uff09",
+        disqus_identifier="_cache/posts/2018/user-datagram-protocol.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

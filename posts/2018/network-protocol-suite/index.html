@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>网络通信协议 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/network-protocol-suite/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/algorithm/algorithm-weekly-four-sum/" title="每周算法：四数之和" type="text/html">
+<link rel="next" href="/posts/2018/internet-protocol/" title="IP协议（RFC791）" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="网络通信协议">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/network-protocol-suite/">
+<meta property="og:description" content="本文总结了两种常见的网络模型，OSI模型和TCP/IP模型，并比较了二者之间的区别。
+
+
+
+
+
+OSI模型
+
+
+OSI（open system interconnection）模型是一个概念模型，它特征化、标准化了计算机系统之间的通信过程。OSI模型分为7层，在模型中对端的同一层间使用相同的通信协议。
+
+
+
+OSI模型及其常见协议
+
+
+7 - Application（应用层）: DNS, HTTP">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-09-21T17:51:57+08:00">
+<meta property="article:tag" content="ip">
+<meta property="article:tag" content="network">
+<meta property="article:tag" content="osi">
+<meta property="article:tag" content="tcp">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">网络通信协议</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-09-21T17:51:57+08:00" itemprop="datePublished">Sep 21, 2018</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+本文总结了两种常见的网络模型，OSI模型和TCP/IP模型，并比较了二者之间的区别。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-orgbb497e9" class="outline-2">
+<h2 id="orgbb497e9">OSI模型</h2>
+<div class="outline-text-2" id="text-orgbb497e9">
+<p>
+OSI（open system interconnection）模型是一个概念模型，它特征化、标准化了计算机系统之间的通信过程。OSI模型分为7层，在模型中对端的同一层间使用相同的通信协议。<br></p>
+
+<p>
+<b>OSI模型及其常见协议</b><br></p>
+<ul class="org-ul">
+<li>7 - Application（应用层）: DNS, HTTP, NTP, SMTP, Telnet, DHCP<br>
+</li>
+<li>6 - Presentation（表示层）: MIME, XDR, ASN.1<br>
+</li>
+<li>5 - Session（会话层）: Named pipe, NetBIOS, SAP, PPTP, RTP, SOCKS<br>
+</li>
+<li>4 - Transport（传输层）: TCP, UDP, SCTP, DCCP, SPX<br>
+</li>
+<li>3 - Network（网络层）: IP, ICMP, IPsec, IGMP, IPX, AppleTalk<br>
+</li>
+<li>2 - Data link（链路层）: ARP, MAC, IEEE 802.2, L2TP, PPP<br>
+</li>
+<li>1 - Physical（物理层）: RS-232, USB, IEEE 1394, IEEE 802.3<br>
+</li>
+</ul>
+<p>
+<b>PDU与SDU的概念</b><br>
+在每一层上，在两个通信设备上互为同层的对端交换的是按照该层协议的PDU(protocol data units)。每个PDU中包含的载荷被称作SDU（service data units）。每个PDU包含该层协议的包头包尾与SDU。通俗地讲，上层协议在向下层传递时，会按照对应的协议增加包头和包尾。<br></p>
+
+<p>
+<b>常见通信方式都使用了哪些层协议</b><br>
+以太网（ethernet）的标准协议IEEE 802.3，无线网（Wi-Fi）的标准协议IEEE 802.11<br></p>
+</div>
+</div>
+
+<div id="outline-container-org3375f1a" class="outline-2">
+<h2 id="org3375f1a">TCP/IP协议（互联网协议）</h2>
+<div class="outline-text-2" id="text-org3375f1a">
+<p>
+互联网协议是以TCP协议（transmission control protocol）和IP协议（internet protocol）做为基础的，所以它也称为TCP/IP协议。<br></p>
+
+<p>
+<b>互联网协议分层</b><br></p>
+<ul class="org-ul">
+<li>Application（应用层）: SMTP, FTP, SSH, HTTP<br>
+</li>
+<li>Transport（传输层）: TCP, UDP<br>
+</li>
+<li>Internet（网络层）: IP, ICMP<br>
+</li>
+<li>Link（链路层）: ARP, MAC<br>
+</li>
+</ul>
+<p>
+<b>应用层</b><br>
+应用程序之间进行用户数据的交换就在应用层。应用程序或进程借助较底层提供的“管道”与其他进程实现信息交互。高层通信协议在这一层运作，常见的有SMTP、FTP、SSH、HTTP。通过端口号来够区分不同的服务。<br></p>
+
+<p>
+<b>传输层</b><br>
+传输层进行主机到主机（host-to-host）的通信，这个过程可以发生在同一个主机上，也可以借助路由放生在不同网络的主机之间。UDP是基本的传输层协议，提供一个不可靠的数据报服务。TCP提供拥塞控制（flow control）、连接建立和数据的可靠传输。<br></p>
+
+<p>
+<b>网络层</b><br>
+网络层提供一个统一的网络接口，将底层的网络拓扑和网络分布隐藏起来。这一层定义了网络寻址和路由结构。这一层的主要协议是IP协议，IP协议定义了IP地址。路由的功能是将数据报传输到距离终点更近的下一个路由上，最终完成数据包的传输。<br></p>
+
+<p>
+<b>链路层</b><br>
+链路层定义了除路由之外的本地网络连接之间的通信。这一层包括用于描述本地网络的拓扑结构的协议和相邻主机之间传输网络层数据包所需要的接口。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org275d795" class="outline-2">
+<h2 id="org275d795">TCP/IP协议与OSI模型的比较</h2>
+<div class="outline-text-2" id="text-org275d795">
+<p>
+两种网络协议的区别可以通过下面的图表看出来。<br></p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<colgroup>
+<col class="org-left">
+<col class="org-left">
+</colgroup>
+<thead><tr>
+<th scope="col" class="org-left">TCP/IP</th>
+<th scope="col" class="org-left">OSI</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="org-left">Application</td>
+<td class="org-left">Application</td>
+</tr>
+<tr>
+<td class="org-left"> </td>
+<td class="org-left">Presentation</td>
+</tr>
+<tr>
+<td class="org-left"> </td>
+<td class="org-left">Session</td>
+</tr>
+</tbody>
+<tbody><tr>
+<td class="org-left">Transport</td>
+<td class="org-left">Transport</td>
+</tr></tbody>
+<tbody><tr>
+<td class="org-left">Internet</td>
+<td class="org-left">Network</td>
+</tr></tbody>
+<tbody><tr>
+<td class="org-left">Link</td>
+<td class="org-left">Data link</td>
+</tr></tbody>
+<tbody><tr>
+<td class="org-left"> </td>
+<td class="org-left">Physical</td>
+</tr></tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-orgd72437d" class="outline-2">
+<h2 id="orgd72437d">参考资料</h2>
+<div class="outline-text-2" id="text-orgd72437d">
+<ul class="org-ul">
+<li>
+<a href="https://codeburst.io/learning-tcp-ip-protocol-suite-6947b601ea11">codeburst.io - tcp ip suite</a><br>
+</li>
+<li>
+<a href="https://zh.wikipedia.org/wiki/OSI%E6%A8%A1%E5%9E%8B">wikipedia - OSI网络模型</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Internet_protocol_suite">wikipedia - internet protocol suite</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Protocol_stack">wikipedia - protocol stack</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/ip/" rel="tag">ip</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/network/" rel="tag">network</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/osi/" rel="tag">osi</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/tcp/" rel="tag">tcp</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/algorithm/algorithm-weekly-four-sum/" rel="prev">Previous post
+        <br><span>每周算法：四数之和</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2018/internet-protocol/" rel="next">Next post
+        <br><span>IP协议（RFC791）</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2018/network-protocol-suite/",
+        disqus_title="\u7f51\u7edc\u901a\u4fe1\u534f\u8bae",
+        disqus_identifier="_cache/posts/2018/network-protocol-suite.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

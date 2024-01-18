@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GCC编译时的警告（warn）相关参数 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/gcc-warn-on-compile/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2018/linux-directory-structure/" title="Linux 系统目录结构" type="text/html">
+<link rel="next" href="/posts/2018/emacs-global-gtags-guide/" title="在emacs中使用GNU Global的配置指南" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="GCC编译时的警告（warn）相关参数">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/gcc-warn-on-compile/">
+<meta property="og:description" content="编译阶段警告信息有助于排查代码中错误，合理配置编译警告信息能够提高开发效率。
+通过了解编译警告，也能够了解到哪些代码风格是不好的，有哪些代码的书写格式是容易出现问题的，有助于让自己写出更高质量的代码。
+
+
+
+
+
+-fsyntax-only
+
+
+检查代码中的语法错误，但是不做任何处理，通常用作语法检查。
+在使用这个参数以后，编译器仅仅检查代码中的语法错误并予以提示，并不会生成目标文件。
+
+
+
+
+
+-">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2017-12-31T09:51:01+08:00">
+<meta property="article:tag" content="gcc">
+<meta property="article:tag" content="makefile">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">GCC编译时的警告（warn）相关参数</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2017-12-31T09:51:01+08:00" itemprop="datePublished">Dec 31, 2017</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+编译阶段警告信息有助于排查代码中错误，合理配置编译警告信息能够提高开发效率。<br>
+通过了解编译警告，也能够了解到哪些代码风格是不好的，有哪些代码的书写格式是容易出现问题的，有助于让自己写出更高质量的代码。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org241a759" class="outline-3">
+<h3 id="org241a759"><code>-fsyntax-only</code></h3>
+<div class="outline-text-3" id="text-org241a759">
+<p>
+检查代码中的语法错误，但是不做任何处理，通常用作语法检查。<br>
+在使用这个参数以后，编译器仅仅检查代码中的语法错误并予以提示，并不会生成目标文件。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org9694429" class="outline-3">
+<h3 id="org9694429"><code>-w</code></h3>
+<div class="outline-text-3" id="text-org9694429">
+<p>
+禁止所有的报警信息<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org96af2a9" class="outline-3">
+<h3 id="org96af2a9"><code>-Werror</code></h3>
+<div class="outline-text-3" id="text-org96af2a9">
+<p>
+将所有的警告视为错误<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgf4ebfb9" class="outline-3">
+<h3 id="orgf4ebfb9"><code>-Wfatal-errors</code></h3>
+<div class="outline-text-3" id="text-orgf4ebfb9">
+<p>
+在出现第一条错误信息停止编译<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org07521ec" class="outline-3">
+<h3 id="org07521ec"><code>-Wall</code></h3>
+<div class="outline-text-3" id="text-org07521ec">
+<p>
+启用以下警告<br></p>
+<pre class="example">
+-Waddress
+-Warray-bounds=1 (only with -O2)
+-Wbool-compare
+-Wbool-operation
+-Wc++11-compat  -Wc++14-compat
+-Wcatch-value (C++ and Objective-C++ only)
+-Wchar-subscripts
+-Wcomment
+-Wduplicate-decl-specifier (C and Objective-C only)
+-Wenum-compare (in C/ObjC; this is on by default in C++)
+-Wformat
+-Wint-in-bool-context
+-Wimplicit (C and Objective-C only)
+-Wimplicit-int (C and Objective-C only)
+-Wimplicit-function-declaration (C and Objective-C only)
+-Winit-self (only for C++)
+-Wlogical-not-parentheses
+-Wmain (only for C/ObjC and unless -ffreestanding)
+-Wmaybe-uninitialized
+-Wmemset-elt-size
+-Wmemset-transposed-args
+-Wmisleading-indentation (only for C/C++)
+-Wmissing-braces (only for C/ObjC)
+-Wmultistatement-macros
+-Wnarrowing (only for C++)
+-Wnonnull
+-Wnonnull-compare
+-Wopenmp-simd
+-Wparentheses
+-Wpointer-sign
+-Wreorder
+-Wrestrict
+-Wreturn-type
+-Wsequence-point
+-Wsign-compare (only in C++)
+-Wsizeof-pointer-div
+-Wsizeof-pointer-memaccess
+-Wstrict-aliasing
+-Wstrict-overflow=1
+-Wswitch
+-Wtautological-compare
+-Wtrigraphs
+-Wuninitialized
+-Wunknown-pragmas
+-Wunused-function
+-Wunused-label
+-Wunused-value
+-Wunused-variable
+-Wvolatile-register-var
+</pre>
+</div>
+</div>
+
+
+<div id="outline-container-org9842aef" class="outline-3">
+<h3 id="org9842aef"><code>-Wextra</code></h3>
+<div class="outline-text-3" id="text-org9842aef">
+<p>
+启用以下警告<br></p>
+<pre class="example">
+-Wclobbered
+-Wcast-function-type
+-Wempty-body
+-Wignored-qualifiers
+-Wimplicit-fallthrough=3
+-Wmissing-field-initializers
+-Wmissing-parameter-type (C only)
+-Wold-style-declaration (C only)
+-Woverride-init
+-Wsign-compare (C only)
+-Wtype-limits
+-Wuninitialized
+-Wshift-negative-value (in C++03 and in C99 and newer)
+-Wunused-parameter (only with -Wunused or -Wall)
+-Wunused-but-set-parameter (only with -Wunused or -Wall)
+</pre>
+</div>
+</div>
+
+
+<div id="outline-container-orge060506" class="outline-3">
+<h3 id="orge060506"><code>-Wdelete-incomplete</code></h3>
+<div class="outline-text-3" id="text-orge060506">
+<p>
+(C++ and Objective-C++ only)<br>
+析构一个指向不完整的类型的指针，可能会造成运行时错误未定义行为。<br>
+这个警告默认是开启的。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org0129c7c" class="outline-3">
+<h3 id="org0129c7c"><code>-Wuseless-cast</code></h3>
+<div class="outline-text-3" id="text-org0129c7c">
+<p>
+(C++ and Objective-C++ only)<br>
+变量被转换为自身类型。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org046c443" class="outline-3">
+<h3 id="org046c443"><code>-Wduplicated-branches</code></h3>
+<div class="outline-text-3" id="text-org046c443">
+<p>
+用于检查在 <code>if/else</code> 语句中是否存在返回值相同的结果返回值。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org547551f" class="outline-3">
+<h3 id="org547551f"><code>-Wduplicated-cond</code></h3>
+<div class="outline-text-3" id="text-org547551f">
+<p>
+用于检查在 <code>if/else</code> 语句中存在相同的条件<br></p>
+</div>
+</div>
+
+<div id="outline-container-org59c9020" class="outline-3">
+<h3 id="org59c9020"><code>-Wfloat-equal</code></h3>
+<div class="outline-text-3" id="text-org59c9020">
+<p>
+检查使用等号比较float相等的情况<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgf6be71a" class="outline-3">
+<h3 id="orgf6be71a"><code>-Wformat</code></h3>
+<div class="outline-text-3" id="text-orgf6be71a">
+<p>
+检查printf相关函数中的格式字符串是否符合与后续的实际参数对应。<br>
+该项检查在 <code>-Wall</code> 中默认开启，可以通过 <code>-Wformat=0</code> 进行关闭。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orga24c6aa" class="outline-2">
+<h2 id="orga24c6aa">配置范例</h2>
+<div class="outline-text-2" id="text-orga24c6aa">
+<p>
+这里是正在使用的警告相关的参数配置<br></p>
+<div class="highlight"><pre><span></span><span class="c">#编译时的警告信息</span>
+<span class="nv">WARNING_FLAG</span> <span class="o">=</span> -Wall -Wextra -Wfatal-errors -Wpedantic <span class="se">\</span>
+	     -Wswitch-default -Wundef -Wpointer-arith <span class="se">\</span>
+	     -Woverloaded-virtual -Wnon-virtual-dtor <span class="se">\</span>
+	     -Wno-unused-parameter <span class="se">\</span>
+	     -Wuseless-cast -Wformat-security -Wformat-nonliteral <span class="se">\</span>
+	     -Wduplicated-branches -Wduplicated-cond -Wfloat-equal
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org6d2cc09" class="outline-2">
+<h2 id="org6d2cc09">参考资料</h2>
+<div class="outline-text-2" id="text-org6d2cc09">
+<p>
+<a href="https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html">gcc online doc - warning options</a><br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/gcc/" rel="tag">gcc</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/makefile/" rel="tag">makefile</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2018/linux-directory-structure/" rel="prev">Previous post
+        <br><span>Linux 系统目录结构</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2018/emacs-global-gtags-guide/" rel="next">Next post
+        <br><span>在emacs中使用GNU Global的配置指南</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2018/gcc-warn-on-compile/",
+        disqus_title="GCC\u7f16\u8bd1\u65f6\u7684\u8b66\u544a\uff08warn\uff09\u76f8\u5173\u53c2\u6570",
+        disqus_identifier="_cache/posts/2018/gcc-warn-on-compile.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

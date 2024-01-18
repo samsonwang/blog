@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MapReduce模型 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/map-reduce/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/algorithm/algorithm-weekly-zigzag-conversion/" title="每周算法：字符串锯齿变换" type="text/html">
+<link rel="next" href="/posts/algorithm/algorithm-weekly-string-to-integer/" title="每周算法：字符串转整数" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="MapReduce模型">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/map-reduce/">
+<meta property="og:description" content="序言
+
+
+对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。
+
+
+
+
+
+什么是MapReduce
+
+
+MapReduce的深层概念远比两个函数来得复杂，它是一个编">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-08-20T10:09:10+08:00">
+<meta property="article:tag" content="big data">
+<meta property="article:tag" content="distributed system">
+<meta property="article:tag" content="hadoop">
+<meta property="article:tag" content="mapreduce">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">MapReduce模型</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-08-20T10:09:10+08:00" itemprop="datePublished">Aug 20, 2018</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <div id="outline-container-orgac1c591" class="outline-2">
+<h2 id="orgac1c591">序言</h2>
+<div class="outline-text-2" id="text-orgac1c591">
+<p>
+对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org91b428b" class="outline-2">
+<h2 id="org91b428b">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-org91b428b">
+<p>
+MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
+
+<p>
+百度百科中给出的定义比较全面，而且很准确。<br></p>
+<blockquote>
+<p>
+MapReduce是面向大数据并行处理的计算模型、框架和平台，它隐含了以下三层含义：<br>
+1）MapReduce是一个基于集群的高性能并行计算平台（Cluster Infrastructure）。它允许用市场上普通的商用服务器构成一个包含数十、数百至数千个节点的分布和并行计算集群。<br>
+2）MapReduce是一个并行计算与运行软件框架（Software Framework）。它提供了一个庞大但设计精良的并行计算软件框架，能自动完成计算任务的并行化处理，自动划分计算数据和计算任务，在集群节点上自动分配和执行任务以及收集计算结果，将数据分布存储、数据通信、容错处理等并行计算涉及到的很多系统底层的复杂细节交由系统负责处理，大大减少了软件开发人员的负担。<br>
+3）MapReduce是一个并行程序设计模型与方法（Programming Model &amp; Methodology）。它借助于函数式程序设计语言Lisp的设计思想，提供了一种简便的并行程序设计方法，用Map和Reduce两个函数编程实现基本的并行计算任务，提供了抽象的操作和并行编程接口，以简单方便地完成大规模数据的编程和计算处理。<br></p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-orge2adbc6" class="outline-2">
+<h2 id="orge2adbc6">map和reduce</h2>
+<div class="outline-text-2" id="text-orge2adbc6">
+<p>
+<b>从编程语言的角度上来说</b><br>
+map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
+reduce操作也会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程从前向后作用在列表成员上，最终得到一个列表中条目。<br></p>
+
+<p>
+<b>从分布式系统的角度上来说</b> (以下内容摘自百度百科)<br></p>
+<blockquote>
+<p>
+简单说来，一个映射函数就是对一些独立元素组成的概念上的列表（例如，一个测试成绩的列表）的每一个元素进行指定的操作（比如前面的例子里，有人发现所有学生的成绩都被高估了一分，它可以定义一个“减一”的映射函数，用来修正这个错误。）。事实上，每个元素都是被独立操作的，而原始列表没有被更改，因为这里创建了一个新的列表来保存新的答案。这就是说，Map操作是可以高度并行的，这对高性能要求的应用以及并行计算领域的需求非常有用。<br>
+而化简操作指的是对一个列表的元素进行适当的合并（继续看前面的例子，如果有人想知道班级的平均分该怎么做？它可以定义一个化简函数，通过让列表中的元素跟自己的相邻的元素相加的方式把列表减半，如此递归运算直到列表只剩下一个元素，然后用这个元素除以人数，就得到了平均分。）。虽然他不如映射函数那么并行，但是因为化简总是有一个简单的答案，大规模的运算相对独立，所以化简函数在高度并行环境下也很有用。<br></p>
+</blockquote>
+
+<p>
+我之前在学习语言层面的map和reduce时，很难理解其用途，结合分布式计算的背景知识，就能够较形象地理解map和reduce操作的过程和作用。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgba430e2" class="outline-2">
+<h2 id="orgba430e2">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-orgba430e2">
+<p>
+mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
+
+<p>
+mapreduce最初由google提出，并开发出了如下产品<br></p>
+<ul class="org-ul">
+<li>Google File System（大规模分散文件系统）<br>
+</li>
+<li>MapReduce （大规模分散FrameWork）<br>
+</li>
+<li>BigTable（大规模分散数据库）<br>
+</li>
+<li>Chubby（分散锁服务）<br>
+</li>
+</ul>
+<p>
+随后就有其对应的开源实现，也就是Hadoop。Hadoop是Apache软件基金会发起的一个项目，它是一种分布式数据和计算的框架，它包含许如下子项目。<br></p>
+<ul class="org-ul">
+<li>HDFS，hadoop distributed file system，是Google File System的开源实现<br>
+</li>
+<li>MapReduce，是Google MapReduce的开源实现<br>
+</li>
+<li>HBASE，类似Google BigTable的分布式NoSQL数据库<br>
+</li>
+<li>Zookeeper，分布式锁服务，类似Google Chubby<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org94d9e71" class="outline-2">
+<h2 id="org94d9e71">参考资料</h2>
+<div class="outline-text-2" id="text-org94d9e71">
+<ul class="org-ul">
+<li>
+<a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
+</li>
+<li>
+<a href="https://baike.baidu.com/item/MapReduce/133425">百度百科 mapreduce</a><br>
+</li>
+<li>
+<a href="https://hadoop.apache.org/">Hadoop主页</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/big-data/" rel="tag">big data</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/distributed-system/" rel="tag">distributed system</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/hadoop/" rel="tag">hadoop</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/mapreduce/" rel="tag">mapreduce</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/algorithm/algorithm-weekly-zigzag-conversion/" rel="prev">Previous post
+        <br><span>每周算法：字符串锯齿变换</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/algorithm/algorithm-weekly-string-to-integer/" rel="next">Next post
+        <br><span>每周算法：字符串转整数</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2018/map-reduce/",
+        disqus_title="MapReduce\u6a21\u578b",
+        disqus_identifier="_cache/posts/2018/map-reduce.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

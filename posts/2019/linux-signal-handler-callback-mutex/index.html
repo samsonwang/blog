@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>在Linux的信号处理函数中不要进行锁相关操作 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2019/linux-signal-handler-callback-mutex/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2019/msvc-cpp-project-unicode-and-mbcs/" title="MSVC工程里Unicode字符集和多字节字符集选项" type="text/html">
+<link rel="next" href="/posts/2019/c-array-address-tips/" title="C语言中数组地址的特性" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="在Linux的信号处理函数中不要进行锁相关操作">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2019/linux-signal-handler-callback-mutex/">
+<meta property="og:description" content="最近在写一个linux程序，其中一个逻辑是要等待信号（signal），我使用了条件变量（condition variable）来完成这个操作，但是实际效果却是整个程序卡住了，经过查阅资料后得知在信号处理函数中是不能进行锁操作的。
+
+
+
+
+
+1 问题现象
+
+
+最初的情况是，我在信号处理函数中打印了日志，在收到信号时有机率会导致整个程序卡死。使用 pstack 观察程序的运行状态，发现程序卡在写日志的">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2019-10-26T21:41:50+08:00">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="mutex">
+<meta property="article:tag" content="sigaction">
+<meta property="article:tag" content="signal">
+<meta property="article:tag" content="signal handler">
+<meta property="article:tag" content="sigtimedwait">
+<meta property="article:tag" content="sigwait">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">在Linux的信号处理函数中不要进行锁相关操作</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2019-10-26T21:41:50+08:00" itemprop="datePublished">Oct 26, 2019</time><span class="dt-updated"> / updated <time datetime="2020-10-09T22:30:00+08:00" itemprop="dateUpdated">Oct 09, 2020</time></span>
+
+      
+
+    </p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+最近在写一个linux程序，其中一个逻辑是要等待信号（signal），我使用了条件变量（condition variable）来完成这个操作，但是实际效果却是整个程序卡住了，经过查阅资料后得知在信号处理函数中是不能进行锁操作的。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org2398c24" class="outline-2">
+<h2 id="org2398c24">
+<span class="section-number-2">1</span> 问题现象</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+最初的情况是，我在信号处理函数中打印了日志，在收到信号时有机率会导致整个程序卡死。使用 <code>pstack</code> 观察程序的运行状态，发现程序卡在写日志的加锁操作中。由于程序是多线程的，所以为了保证在输出日志时线程间能够同步，在写日志时进行了加锁操作。然后我将写日志的语句注释掉后，程序就能够正常运行了。这样我开始怀疑是日志模块出了问题，但是经过反复排查后，并没有发现明显的问题，于是我选择暂时搁置这个问题。随着开发的推进，当我在信号处理函数中进行条件变量操作的时候，程序再一次卡死了，我开始怀疑是线程同步的相关操作中出现了问题。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orge5f7772" class="outline-2">
+<h2 id="orge5f7772">
+<span class="section-number-2">2</span> 信号处理函数中不进行锁操作</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+信号处理函数将会在同一个线程中执行，如果在信号处理函数中进行加锁，则可能会引起互锁。<br>
+如果必须要完成对锁的操作呢，妥协办法是在信号处理函数中创建一个线程，在该线程中进行锁相关的操作。<br></p>
+
+<p>
+实际上，在信号处理函数中的操作要求是“可重入的”（reentrancy），有很多系统调用也是受限制的。以下是 <b>可以</b> 在信号处理函数中调用的系统函数。<br></p>
+
+<div class="highlight"><pre><span></span>access       alarm         cfgetispeed   cfgetospeed    cfsetispeed   cfsetospeed
+chdir        chmod         chown         close          creat         dup
+dup2         execle        execve        _exit          fcntl         fork
+fstat        getgroups     getpgrp       getpid         getppid       getuid
+kill         link          lseek         mkdir          mkfifo        open
+pathconf     pause         pipe          read           rename        rmdir
+setgid       setpgid       setsid        setuid         sigaction     sigaddset
+sigdelset    sigemptyset   sigfillset    sigismember    sigpending    sigprocmask
+sigsuspend   sleep         stat          sysconf        tcdrain       tcflow
+tcflush      tcgetattr     tcgetpgrp     tcsendbreak    tcsetattr     tcsetgrp
+time         times         umask         uname          unlink        utime
+wait         waitpid       write
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org537b40a" class="outline-2">
+<h2 id="org537b40a">
+<span class="section-number-2">3</span> 题外话：使用 <code>sigwait</code> 和 <code>sigtimedwait</code> 等待信号</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+在需要等待某个信号（Linux signal），可以采用 <code>sigwait</code> 和 <code>sigtimedwait</code> 来实现。这两个函数会阻塞当前线程的执行以等待即将到来的信号。<br></p>
+
+<p>
+思考： <code>sigwait</code> 如何应对有多个信号需要等待，每个信号的所对应的处理流程都不一样，而且信号接收的顺序可能有变化。<br></p>
+
+<p>
+解决方法：可以用 <code>sigaction</code> 接口指定处理每个信号的回调函数，这些回调函数可以使用同一个函数作为入口，在函数中对信号进行区分和处理。但是 <code>sigaction</code> 并不是阻塞函数，并不能达到等待信号的效果，所以我们需要使用其他的同步机制（如：条件变量）达到阻塞的目的。<br></p>
+
+<p>
+<b>updated 2020/10/09:</b><br>
+其他问题：可以使用 <code>sigtimedwait</code> 等待即将到来的信号，但有可能在开始等待之前已经错过等待的信号。特别是在一些异步流程中，例如在进行一些操作后需要等待某个信号，在等待时需要思考信号到来时机的问题。可以单独启动一个线程等待指定的信号，这样就不会错过信号了，但在信号到来时会随机选择一个线程执行信号处理，这就需要为每个线程设置合理的 signal mask 以确保信号能够交给该线程处理。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgad2fab6" class="outline-2">
+<h2 id="orgad2fab6">
+<span class="section-number-2">4</span> 参考资料</h2>
+<div class="outline-text-2" id="text-4">
+<ul class="org-ul">
+<li>
+<a href="https://stackoverflow.com/questions/32413397/why-it-is-problematic-to-use-mutex-locks-within-signal-handers">stackoverflow - mutex locks within signal handler</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/12445618/accessing-shared-data-from-a-signal-handler">stackoverflow - access shared data from signal handler</a><br>
+</li>
+<li>
+<a href="http://maxim.int.ru/bookshelf/PthreadsProgram/htm/r_40.html">pthreads program - ch5 pthreads and unix</a><br>
+</li>
+<li>
+<a href="https://www.ibm.com/support/pages/mutex-bad-signal-context">ibm support - mutex bad signal context</a><br>
+</li>
+<li>
+<a href="https://linux.die.net/man/2/sigtimedwait">linux man - sigtimedwait</a><br>
+</li>
+<li>
+<a href="https://linux.die.net/man/3/sigwait">linux man - sigwait</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/mutex/" rel="tag">mutex</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/sigaction/" rel="tag">sigaction</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/signal/" rel="tag">signal</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/signal-handler/" rel="tag">signal handler</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/sigtimedwait/" rel="tag">sigtimedwait</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/sigwait/" rel="tag">sigwait</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2019/msvc-cpp-project-unicode-and-mbcs/" rel="prev">Previous post
+        <br><span>MSVC工程里Unicode字符集和多字节字符集选项</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2019/c-array-address-tips/" rel="next">Next post
+        <br><span>C语言中数组地址的特性</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2019/linux-signal-handler-callback-mutex/",
+        disqus_title="\u5728Linux\u7684\u4fe1\u53f7\u5904\u7406\u51fd\u6570\u4e2d\u4e0d\u8981\u8fdb\u884c\u9501\u76f8\u5173\u64cd\u4f5c",
+        disqus_identifier="_cache/posts/2019/linux-signal-handler-callback-mutex.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

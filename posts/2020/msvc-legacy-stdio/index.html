@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MSVC的stdio版本适配问题 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2020/msvc-legacy-stdio/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2020/timing-wheel-algorithm/" title="时间轮算法" type="text/html">
+<link rel="next" href="/posts/2020/stackoverflow-and-chkstk/" title="栈溢出问题和chkstk" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="MSVC的stdio版本适配问题">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2020/msvc-legacy-stdio/">
+<meta property="og:description" content="windows系统的向下兼容性一直是做的比较好的，一些老旧软件不需要修改就能跑在最新版的windows上。这篇文章主要讨论的是库（library）的向下兼容性，在开发中某些库可能是由较老的编译器生成的，当使用新版本的编译器进行链接时可能需要对stdio相关库进行适配。
+
+
+
+
+
+链接旧版本库时遇到的问题
+
+
+有个库是由MSVC2008编译的，我在MSVC2017中使用这个库进行链接时出现错误，提示">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2020-05-03T09:54:38+08:00">
+<meta property="article:tag" content="c">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="msvc">
+<meta property="article:tag" content="ucrt">
+<meta property="article:tag" content="vcrt">
+<meta property="article:tag" content="windows">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">MSVC的stdio版本适配问题</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2020-05-03T09:54:38+08:00" itemprop="datePublished">May 03, 2020</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+windows系统的向下兼容性一直是做的比较好的，一些老旧软件不需要修改就能跑在最新版的windows上。这篇文章主要讨论的是库（library）的向下兼容性，在开发中某些库可能是由较老的编译器生成的，当使用新版本的编译器进行链接时可能需要对stdio相关库进行适配。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org980446e" class="outline-2">
+<h2 id="org980446e">链接旧版本库时遇到的问题</h2>
+<div class="outline-text-2" id="text-org980446e">
+<p>
+有个库是由MSVC2008编译的，我在MSVC2017中使用这个库进行链接时出现错误，提示我缺少一些函数（如： <code>sprintf</code> 、 <code>_snprintf</code> 、 <code>__iob_func</code> 等）。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org75518e5" class="outline-2">
+<h2 id="org75518e5">为什么会出现这个问题</h2>
+<div class="outline-text-2" id="text-org75518e5">
+<p>
+在查阅了一些资料后发现，从MSVC2015开始，微软修改了C运行时库（C runtime），将其拆分为Universal CRT( <code>ucrtbase</code> ) 和 VC Runtime Library ( <code>vcruntime</code> )。其中，UCRT包含大部分的标准功能，VCRT包含与编译相关的功能（如异常处理等内部功能）。一些函数从UCRT中删掉了，导致链接时无法找到对应的符号（unresolved external symbol）。下面是微软官方的原文。<br></p>
+
+<blockquote>
+<p>
+The CRT Library has been refactored into a two different binaries: a Universal CRT (ucrtbase), which contains most of the standard functionality, and a VC Runtime Library (vcruntime). The vcruntime library contains the compiler-related functionality such as exception handling, and intrinsics.<br></p>
+</blockquote>
+
+<p>
+从软件的设计上来讲，将少量核心的功能抽出来，也是对变化的一种隔离方法。UCRT将不会标上版本号，每次更新直接替换旧的，而VCRT会不断迭代出新的版本，常见的库名称就是 <code>vcruntimexxx.dll</code> ，其中 <code>xxx</code> 就是版本号。<br></p>
+
+<blockquote>
+<p>
+For the CRT, mixing-and-matching was never supported, but it often just worked, at least until Visual Studio 2015 and the Universal CRT, because the API surface did not change much over time. The Universal CRT broke backwards compatibility so that in the future we can maintain backwards compatibility. In other words, we have no plans to introduce new, versioned Universal CRT binaries in the future. Instead, the existing Universal CRT is now updated in-place.<br></p>
+</blockquote>
+</div>
+</div>
+
+
+<div id="outline-container-org5cbccd2" class="outline-2">
+<h2 id="org5cbccd2">官方推荐的解决方案</h2>
+<div class="outline-text-2" id="text-org5cbccd2">
+<p>
+微软在MSVC2015后提供了 <code>legacy_stdio_definitions.lib</code> 库，能够提供大部分缺失的链接符号（symbol）。但仍有一些无法提供兼容的链接符号，如一些函数定义 <code>__iob_func</code> 或导出的数据 <code>__imp___iob</code> 、 <code>__imp___pctype</code> 、 <code>__imp___mb_cur_max</code> 。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org9f31f9f" class="outline-2">
+<h2 id="org9f31f9f">那 <code>__iob_func</code> 怎么处理呢？</h2>
+<div class="outline-text-2" id="text-org9f31f9f">
+<p>
+微软官方没有提供 <code>__iob_func</code> 的适配方案，但是我找到了另外的方法，即可以自己实现一个同名函数。<br></p>
+
+<div class="highlight"><pre><span></span><span class="cp">#if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1900)</span>
+<span class="cp">#if defined(__cplusplus)</span>
+<span class="k">extern</span><span class="w"> </span><span class="s">"C"</span><span class="w"> </span><span class="kt">FILE</span><span class="o">*</span><span class="w"> </span><span class="n">__iob_func</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">FILE</span><span class="w"> </span><span class="n">iob</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="o">*</span><span class="n">stdin</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">stdout</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">stderr</span><span class="p">};</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">iob</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="cp">#else</span>
+<span class="kt">FILE</span><span class="o">*</span><span class="w"> </span><span class="kr">__cdecl</span><span class="w"> </span><span class="n">__iob_func</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">FILE</span><span class="w"> </span><span class="n">iob</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span><span class="w"></span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">initialized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">initialized</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="n">initialized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">iob</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">stdin</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">iob</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">stdout</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">iob</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">stderr</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">iob</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+<span class="cp">#endif </span><span class="c1">// __cplusplus</span>
+<span class="cp">#endif </span><span class="c1">// _MSC_VER</span>
+</pre></div>
+
+<p>
+值得注意的是对编译器的版本进行了判断，并且为C编译器和C++编译器提供了不同的实现方法，主要是C++编译器会为函数换名，且C编译器不支持数据初始化列表。<br></p>
+
+<p>
+另外，也有其他的开发者反馈这种“旁门左道”并不奏效，我猜测可能是由于那些库对 <code>FILE</code> 结构体进行了直接操作，但是在MSVC2015中结构体的内部成员变量发生了变化，由此产生了内存越界访问，引起程序异常。在这种情况，比较稳妥的方法是用最新的编译器重新编译源码。<br></p>
+
+<p>
+MSVC2015中的 <code>FILE</code> 结构体定义：<br></p>
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">_iobuf</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">_Placeholder</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="kt">FILE</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+
+<p>
+MSVC2008中的 <code>FILE</code> 结构体定义：<br></p>
+<div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">_iobuf</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">_ptr</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w">   </span><span class="n">_cnt</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">_base</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w">   </span><span class="n">_flag</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w">   </span><span class="n">_file</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w">   </span><span class="n">_charbuf</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w">   </span><span class="n">_bufsiz</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">_tmpfname</span><span class="p">;</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">_iobuf</span><span class="w"> </span><span class="kt">FILE</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org0dcb5c1" class="outline-2">
+<h2 id="org0dcb5c1">参考资料</h2>
+<div class="outline-text-2" id="text-org0dcb5c1">
+<ul class="org-ul">
+<li>
+<a href="https://docs.microsoft.com/en-us/cpp/porting/overview-of-potential-upgrade-issues-visual-cpp">microsoft docs - potential upgrade issues</a><br>
+</li>
+<li>
+<a href="https://docs.microsoft.com/en-us/cpp/porting/visual-cpp-change-history-2003-2015">microsoft docs - visual cpp change history</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/30412951/unresolved-external-symbol-imp-fprintf-and-imp-iob-func-sdl2">stackoverflow - unresolved external symbol</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/c/" rel="tag">c</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/msvc/" rel="tag">msvc</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/ucrt/" rel="tag">ucrt</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/vcrt/" rel="tag">vcrt</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2020/timing-wheel-algorithm/" rel="prev">Previous post
+        <br><span>时间轮算法</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/2020/stackoverflow-and-chkstk/" rel="next">Next post
+        <br><span>栈溢出问题和chkstk</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2020/msvc-legacy-stdio/",
+        disqus_title="MSVC\u7684stdio\u7248\u672c\u9002\u914d\u95ee\u9898",
+        disqus_identifier="_cache/posts/2020/msvc-legacy-stdio.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

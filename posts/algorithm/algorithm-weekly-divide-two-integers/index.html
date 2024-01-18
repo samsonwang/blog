@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>每周算法：两整数相除 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-divide-two-integers/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2018/emacs-directory-variables/" title="在EMACS中对目录进行独立配置" type="text/html">
+<link rel="next" href="/posts/algorithm/algorithm-weekly-next-permutation/" title="每周算法：下一个组合" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="每周算法：两整数相除">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-divide-two-integers/">
+<meta property="og:description" content="leetcode算法题第29道，难度为medium。从题目描述上来看，这道题考察两数相除的计算，貌似很简单，但如果仔细研究下来，就会发现这道题所考察的知识很综合。
+
+
+
+
+
+Description
+
+
+Given two integers dividend and divisor, divide two integers without using multiplication, division">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2018-10-11T17:59:07+08:00">
+<meta property="article:tag" content="algorithm">
+<meta property="article:tag" content="leetcode">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">每周算法：两整数相除</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2018-10-11T17:59:07+08:00" itemprop="datePublished">Oct 11, 2018</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+leetcode算法题第29道，难度为medium。从题目描述上来看，这道题考察两数相除的计算，貌似很简单，但如果仔细研究下来，就会发现这道题所考察的知识很综合。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org1f21ff0" class="outline-2">
+<h2 id="org1f21ff0">Description</h2>
+<div class="outline-text-2" id="text-org1f21ff0">
+<p>
+Given two integers dividend and divisor, divide two integers without using multiplication, division and mod operator.<br>
+Return the quotient after dividing dividend by divisor.<br>
+The integer division should truncate toward zero.<br></p>
+
+<p>
+<b>Example 1:</b><br></p>
+<pre class="example">
+Input: dividend = 10, divisor = 3
+Output: 3
+</pre>
+
+<p>
+<b>Example 2:</b><br></p>
+<pre class="example">
+Input: dividend = 7, divisor = -3
+Output: -2
+</pre>
+
+<p>
+<b>Note:</b><br></p>
+<ul class="org-ul">
+<li>Both dividend and divisor will be 32-bit signed integers.<br>
+</li>
+<li>The divisor will never be 0.<br>
+</li>
+<li>Assume we are dealing with an environment which could only store integers within the 32-bit signed integer range: [−2<sup>31</sup>,  2<sup>31</sup> − 1]. For the purpose of this problem, assume that your function returns 2<sup>31</sup> − 1 when the division result overflows.<br>
+</li>
+</ul>
+<p>
+来源：<a href="https://leetcode.com/problems/divide-two-integers/description/">leetcode 29 divide to integers</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-orgbcf91d1" class="outline-2">
+<h2 id="orgbcf91d1">Solution</h2>
+<div class="outline-text-2" id="text-orgbcf91d1">
+</div>
+<div id="outline-container-org912cd9f" class="outline-3">
+<h3 id="org912cd9f">Approach 1 brute force</h3>
+<div class="outline-text-3" id="text-org912cd9f">
+<p>
+使用暴力解法，将被除数减去除数，记录被除数可被减去的次数。这种方法必定能够得到结果，只是耗时很多，提交leetcode的结果为超时。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">divide</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">dividend</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">divisor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">d1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dividend</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">d2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">divisor</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// 符号转换</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">neg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">d1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="n">neg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="n">neg</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">d1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">d1</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">d2</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="n">neg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="n">neg</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">d2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">d2</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// 这样两个数的符号都是正的了</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">d1</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">d2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="n">d1</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">d2</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="o">++</span><span class="n">ans</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="c1">// overflow</span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ans</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	    </span><span class="k">return</span><span class="w"> </span><span class="mh">0x7fffffff</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">neg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="o">-</span><span class="n">ans</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+
+<p>
+<b>对溢出问题的思考</b><br>
+为了防止结果溢出，上面的方法使用了 <code>int64_t</code> 作为中间内容的存储。在解这个问题的过程中，我对整数的存储形式进行了比较，发现了一些比较有趣的现象。<br></p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<colgroup>
+<col class="org-right">
+<col class="org-left">
+<col class="org-left">
+<col class="org-right">
+<col class="org-left">
+</colgroup>
+<thead><tr>
+<th scope="col" class="org-right">NO.</th>
+<th scope="col" class="org-left">pow</th>
+<th scope="col" class="org-left">hex</th>
+<th scope="col" class="org-right">dec</th>
+<th scope="col" class="org-left">type</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="org-right">1</td>
+<td class="org-left">-</td>
+<td class="org-left">0x0000 0005</td>
+<td class="org-right">5</td>
+<td class="org-left"><code>int32_t</code></td>
+</tr>
+<tr>
+<td class="org-right">2</td>
+<td class="org-left">-</td>
+<td class="org-left">0xffff fffb</td>
+<td class="org-right">-5</td>
+<td class="org-left"><code>int32_t</code></td>
+</tr>
+<tr>
+<td class="org-right">3</td>
+<td class="org-left">2<sup>31</sup>
+</td>
+<td class="org-left">0x8000 0000</td>
+<td class="org-right">2147483648</td>
+<td class="org-left"><code>int64_t</code></td>
+</tr>
+<tr>
+<td class="org-right">4</td>
+<td class="org-left">-2<sup>31</sup>
+</td>
+<td class="org-left">0x8000 0000</td>
+<td class="org-right">-2147483648</td>
+<td class="org-left"><code>int32_t</code></td>
+</tr>
+<tr>
+<td class="org-right">5</td>
+<td class="org-left">2<sup>31</sup> - 1</td>
+<td class="org-left">0x7fff ffff</td>
+<td class="org-right">2147483647</td>
+<td class="org-left"><code>int32_t</code></td>
+</tr>
+</tbody>
+</table>
+<p>
+从上面的表格中可以看出正负数以及的他们的存储形式的一些特点。<br></p>
+<ul class="org-ul">
+<li>通过比较第1条和第2条信息，可以发现正数和负数的存储是完全不同的。最高bit位代表的是符号位，0表示正数，1表示负数。通过16进制 解析出其10进制形式的步骤为：按位取反再加1。<br>
+</li>
+<li>通过比较第3条和第4条信息，可以发现相同的二进制内容，放在不同宽度的数据上具有不同的数值表示。当然第三条数据的宽度为64bit，其高位都是0，所以略去了，这使其在进行符号判断时为正数。<br>
+</li>
+<li>第5条数据所表示的是宽度为32bit的有符号数所能存储的最大正数值。可以从16进制的表示上来看，如果再加1，则它就会从正数变为负数。<br>
+</li>
+<li>第4条数据所表示的是宽度为32bit的有符号数所能存储的最大负数值。同理，如果再减1，它就会变为正数。有趣的是，最大正数和最小负数只有一步之遥。<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org806548b" class="outline-3">
+<h3 id="org806548b">Approach 2 bit move</h3>
+<div class="outline-text-3" id="text-org806548b">
+<p>
+这个答案从leetcode的discuss中找到的，使用位操作的方法完成。<br>
+举一个例子，在计算 <code>10/3</code> 时，可以将10分解为 3*2<sup>1</sup> + 3*2<sup>0</sup> + 1，而每次向左移位代表着数值上扩大两倍，这样就能够通过移位操作将除数成倍放大。这实际上是借助按位左移的数值特性使用了精简版的乘法操作。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">divide</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">dividend</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">divisor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">divisor</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="n">dividend</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">INT_MIN</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">divisor</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">-1</span><span class="p">))</span><span class="w"></span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">sign</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">dividend</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">(</span><span class="n">divisor</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">dvd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labs</span><span class="p">(</span><span class="n">dividend</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">dvs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labs</span><span class="p">(</span><span class="n">divisor</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">dvd</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">dvs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dvs</span><span class="p">,</span><span class="w"> </span><span class="n">multiple</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">dvd</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="p">(</span><span class="n">temp</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	    </span><span class="n">temp</span><span class="w"> </span><span class="o">&lt;&lt;=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="w">	    </span><span class="n">multiple</span><span class="w"> </span><span class="o">&lt;&lt;=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="n">dvd</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span><span class="w"></span>
+<span class="w">	</span><span class="n">res</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">multiple</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">sign</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="n">res</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgbb74d46" class="outline-3">
+<h3 id="orgbb74d46">Approach 3 bit move reversed</h3>
+<div class="outline-text-3" id="text-orgbb74d46">
+<p>
+这个方法是从leetcode的submission提取出来的sample，是耗时最短的解法之一。<br>
+我之前都是以除数为操作对象的，而这个方法使用被除数作为操作对象。这相当于使用从大到小的方向进行除数的搜索。这个解法使用无符号数对中间结果进行存储，这样就不需要提高数据的宽度了。<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">divide</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">dividend</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">divisor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">dividend</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="o">?</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">dividend</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">dividend</span><span class="p">));</span><span class="w"></span>
+
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">divisor</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="o">?</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">divisor</span><span class="p">)</span><span class="w"></span>
+<span class="w">	</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">divisor</span><span class="p">));</span><span class="w"></span>
+
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="o">++</span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="o">--</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="p">(</span><span class="n">b</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	    </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w"></span>
+<span class="w">	    </span><span class="n">a</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="p">(</span><span class="n">b</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">dividend</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="p">(</span><span class="n">divisor</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">min</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">INT_MAX</span><span class="p">)));</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">result</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgc890f51" class="outline-2">
+<h2 id="orgc890f51">Reference</h2>
+<div class="outline-text-2" id="text-orgc890f51">
+<ul class="org-ul">
+<li>
+<a href="https://en.cppreference.com/w/cpp/types/integer">cppreference.com integer types</a><br>
+</li>
+<li>
+<a href="https://leetcode.com/problems/divide-two-integers/discuss/13407">leetcode.com discuss</a><br>
+</li>
+</ul>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/algorithm/" rel="tag">algorithm</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/leetcode/" rel="tag">leetcode</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2018/emacs-directory-variables/" rel="prev">Previous post
+        <br><span>在EMACS中对目录进行独立配置</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/posts/algorithm/algorithm-weekly-next-permutation/" rel="next">Next post
+        <br><span>每周算法：下一个组合</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/algorithm/algorithm-weekly-divide-two-integers/",
+        disqus_title="\u6bcf\u5468\u7b97\u6cd5\uff1a\u4e24\u6574\u6570\u76f8\u9664",
+        disqus_identifier="_cache/posts/algorithm/algorithm-weekly-divide-two-integers.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>
