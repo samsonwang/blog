@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>高斯函数在图像处理中的应用  | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
+<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://blog.wangzhl.com/posts/2024/guassian-function-in-image-processing/">
+<link rel="icon" href="/favicon.ico" sizes="64x64">
+<link rel="prev" href="/posts/2023/database-data-model/" title="数据库使用的数据模型" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="高斯函数在图像处理中的应用 ">
+<meta property="og:url" content="https://blog.wangzhl.com/posts/2024/guassian-function-in-image-processing/">
+<meta property="og:description" content="高斯模糊是一种常见图像模糊算法。本文介绍其算法原理和在图像处理中的操作细节。
+
+
+
+
+
+高斯模糊
+
+
+高斯模糊是一种图像处理中常用的平滑技术，用于减少图像中噪音或细节，并产生一种模糊的效果。这种模糊效果是应用高斯函数对图像进行卷积来实现的。
+
+
+
+高斯模糊的基本思想是在图像的每个像素周围应用一个二维高斯卷积核。该卷积核的形状和大小由高斯函数的参数（标准差，standard deviation）决定">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2024-01-18T10:40:43+08:00">
+<meta property="article:tag" content="algorithm">
+<meta property="article:tag" content="computer vision">
+<meta property="article:tag" content="image processing">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/">Home</a>
+            <a class="page-link" href="/archive/">Archive</a>
+            <a class="page-link" href="/tags/">Tags</a>
+            <a class="page-link" href="/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">高斯函数在图像处理中的应用 </h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2024-01-18T10:40:43+08:00" itemprop="datePublished">Jan 18, 2024</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+高斯模糊是一种常见图像模糊算法。本文介绍其算法原理和在图像处理中的操作细节。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org9702ad9" class="outline-2">
+<h2 id="org9702ad9">高斯模糊</h2>
+<div class="outline-text-2" id="text-org9702ad9">
+<p>
+高斯模糊是一种图像处理中常用的平滑技术，用于减少图像中噪音或细节，并产生一种模糊的效果。这种模糊效果是应用高斯函数对图像进行卷积来实现的。<br></p>
+
+<p>
+高斯模糊的基本思想是在图像的每个像素周围应用一个二维高斯卷积核。该卷积核的形状和大小由高斯函数的参数（标准差，standard deviation）决定。高斯函数在中心附近有较高的权重，而在边缘附近权重逐渐减小，这使得模糊操作更加自然，不会引入突兀的边缘效果。<br></p>
+
+<p>
+高斯模糊过程，可以简单地理解成一个计算均值的过程，将每一个像素都替换为周边像素的平均值。这个计算均值的过程使用的是一个加权均值，距离近的权重较高，距离远的权重较低。按照高斯分布计算周围像素点的权重，高斯分布有一个更被人熟知的名字“正态分布”。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgda9419f" class="outline-2">
+<h2 id="orgda9419f">高斯函数</h2>
+<div class="outline-text-2" id="text-orgda9419f">
+<p>
+一维高斯函数的公式如下：<br><img src="/assets/images/spinner.svg" data-src="/images/post-guassian-function-in-image-processing-1.svg" alt="guassian function in one dimension"><br>
+σ是x的方差。<br></p>
+
+<p>
+<img src="/assets/images/spinner.svg" data-src="/images/post-guassian-function-in-image-processing-2.png" alt="guassian function in one dimension plot"><br></p>
+
+<p>
+图像是一个二维数据，在处理时需要使用二维的高斯函数，其公式如下：<br><img src="/assets/images/spinner.svg" data-src="/images/post-guassian-function-in-image-processing-3.svg" alt="guassian function in two dimensions"><br></p>
+
+<p>
+<img src="/assets/images/spinner.svg" data-src="/images/post-guassian-function-in-image-processing-4.png" alt="guassian function in two dimension plot"><br></p>
+
+
+<p>
+高斯函数的特点如下：<br></p>
+
+<ol class="org-ol">
+<li>钟形曲线： 高斯函数的图像呈现出典型的钟形曲线形状。曲线在均值处达到最大值，而且在均值两侧逐渐下降。这种形状反映了高斯分布的对称性。<br>
+</li>
+
+<li>对称性：二维高斯函数具有旋转对阵性，在各个方向上的平滑程度是相同的。在滤波前无法确定一个方向上比另一个方向上需要更多的平滑。旋转对称性意味着使用高斯平滑滤波器在后续的边缘检测中不会偏向任一方向。<br>
+</li>
+
+<li>唯一的最大值： 在高斯分布中，均值是曲线的对称轴，也是曲线上唯一的最大值所在的点。高斯分布是使得均值处具有最大概率密度的分布。<br>
+</li>
+
+<li>标准差影响宽度： 高斯函数的宽度由标准差控制。标准差越大，曲线越宽，反之亦然。标准差影响着曲线的分布形状，决定了曲线的扁平或陡峭程度。<br>
+</li>
+
+<li>积分为1： 高斯函数在整个实数域上的积分等于1，即它是一个概率密度函数。这是因为高斯分布是概率论中常用的分布之一，用于描述许多自然现象中的随机变量。<br>
+</li>
+
+<li>傅里叶变换： 高斯函数的傅里叶变换仍然是一个高斯函数。这使得高斯函数在信号处理和频谱分析中具有一些重要的性质。<br>
+</li>
+
+<li>中心极限定理： 高斯分布在中心极限定理中起着重要的作用。根据中心极限定理，大量独立同分布的随机变量的和趋向于服从高斯分布。<br>
+</li>
+
+<li>无穷尾部： 高斯分布的尾部是无穷的，即在离均值较远的地方，分布的概率密度不会完全趋于零。<br>
+</li>
+</ol>
+<p>
+这些特点使得高斯函数在概率论、统计学、信号处理等领域中具有广泛的应用。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgdc3798b" class="outline-2">
+<h2 id="orgdc3798b">卷积操作</h2>
+<div class="outline-text-2" id="text-orgdc3798b">
+<p>
+卷积操作(convolution)是一种数学运算，常用于信号处理、图像处理和深度学习中。在图像处理和深度学习领域，卷积操作用于从输入数据中提取特征或进行滤波操作。<br></p>
+
+<p>
+在二维图像卷积中，卷积操作的步骤如下：<br></p>
+
+<ol class="org-ol">
+<li>定义卷积核： 选择一个小的二维卷积核（也称为滤波器），它是一个矩阵，包含一组权重。这个卷积核的大小通常是3x3或5x5。<br>
+</li>
+
+<li>将卷积核应用于输入图像： 将卷积核从图像的左上角开始，通过滑动的方式在整个图像上移动。在每个位置，卷积核与图像的对应区域进行逐元素相乘，然后将所有乘积结果相加，得到一个新的值，作为输出图像的对应位置的值。<br>
+</li>
+
+<li>重复操作： 重复这一过程，将卷积核在整个输入图像上滑动，直到覆盖整个图像。这样就得到了一个新的输出图像，称为卷积结果或特征图。<br>
+</li>
+</ol>
+<p>
+卷积操作的主要作用包括特征提取和图像处理。在深度学习中，卷积操作是卷积神经网络（CNN）的核心操作之一，用于学习图像中的层次性特征表示。通过不同的卷积核，网络可以学到图像的不同特征，从边缘到纹理再到更高级的语义特征。<br></p>
+
+<p>
+总的来说，卷积操作通过卷积核与输入数据的逐元素相乘和累加，实现了对输入数据的特征提取和图像处理。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org620b0bc" class="outline-2">
+<h2 id="org620b0bc">低通滤波和高通滤波</h2>
+<div class="outline-text-2" id="text-org620b0bc">
+<p>
+低通滤波会过滤掉高频信号，保留高频信号；而高通滤波相反。<br></p>
+
+<p>
+图像中的噪声信息大多是高频信号，这意味着能够使用低通滤波抑制噪声信号，保留图像的主要特征。<br></p>
+
+<p>
+一般使用高通滤波来识别边缘信息。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgafe6701" class="outline-2">
+<h2 id="orgafe6701">参考资料</h2>
+<div class="outline-text-2" id="text-orgafe6701">
+<ul class="org-ul">
+<li>
+<a href="https://www.ruanyifeng.com/blog/2012/11/gaussian_blur.html">ruanyifeng - guassian blur</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Gaussian_blur">wikipedia - guassian blur</a>  <br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Convolution">wikipedia - convolution</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/tags/algorithm/" rel="tag">algorithm</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/computer-vision/" rel="tag">computer vision</a>
+    </li>
+    <li>
+      <a class="badge" href="/tags/image-processing/" rel="tag">image processing</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/posts/2023/database-data-model/" rel="prev">Previous post
+        <br><span>数据库使用的数据模型</span>
+      </a>
+    </li>
+    <li class="next">
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://blog.wangzhl.com/posts/2024/guassian-function-in-image-processing/",
+        disqus_title="\u9ad8\u65af\u51fd\u6570\u5728\u56fe\u50cf\u5904\u7406\u4e2d\u7684\u5e94\u7528 ",
+        disqus_identifier="_cache/posts/2024/guassian-function-in-image-processing.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/rss.xml">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

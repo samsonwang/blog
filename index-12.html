@@ -49,6 +49,89 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Feb 05, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/2018/shadowsock-server-setup-guide/">ss服务器的配置指南</a>
+    </h3>
+
+    <p>
+租一个服务器自己搭建梯子是科学上网方便稳定快捷的好方法。<br>
+本文主要是自己部署vpn服务端的笔记，作为备忘留存下来。<br></p>
+
+<div id="outline-container-org9b0bd55" class="outline-2">
+<h2 id="org9b0bd55">安装ss服务程序</h2>
+<div class="outline-text-2" id="text-org9b0bd55">
+<p>
+安装环境为CentOS7, 需要使用python的包管理工具pip完成对ss-server的安装。<br></p>
+<div class="highlight"><pre><span></span>sudo yum install m2crypto python-setuptools
+sudo easy_install pip
+sudo pip install shadowsocks
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org10dede5" class="outline-2">
+<h2 id="org10dede5">配置ss服务器</h2>
+<div class="outline-text-2" id="text-org10dede5">
+<p>
+<b>配置文件示例</b> :<br>
+这份配置中使用了多个端口作供ss-server使用<br></p>
+<div class="highlight"><pre><span></span>{
+    "server":"your-server-ip",
+    "local_address":"127.0.0.1",
+    "local_port":1080,
+    "port_password":
+    {
+	"32366":"shadowsocks",
+	"32367":"shadowsocks",
+	"32368":"shadowsocks",
+	"32369":"shadowsocks",
+	"52369":"shadowsocks"
+    },
+    "timeout":300,
+    "method":"aes-256-cfb",
+    "fast_open": false
+}
+</pre></div>
+
+
+<p>
+<b>启动脚本示例</b> :<br>
+直接在命令行直接输入指令也能够完成ss服务的启动和停止，使用脚本只是为了方便一些。<br></p>
+<div class="highlight"><pre><span></span>#!/bin/bash
+ss_start()
+{
+  ssserver -c /root/shadowsocks/shadowsocks.json -d start
+}
+ss_stop()
+{
+  ssserver -c /root/shadowsocks/shadowsocks.json -d stop
+}
+# shell script main
+if [ "$#" -eq "0" ]; then
+  ss_start
+else
+  case "$1" in
+  start)
+    ss_start
+    exit;;
+  stop)
+    ss_stop
+    exit;;
+  esac
+fi
+</pre></div>
+
+<p>
+<b>增加系统启动项</b><br>
+可以将启动脚本加入系统启动项，这样就能够保证在每次reboot后，服务都能自动开启。<br></p>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Jan 19, 2018</span>
     <h3>
       <a class="post-link" href="/posts/2018/git-cheatsheet/">常用git操作备忘</a>
@@ -68,9 +151,9 @@
 
     <p>
 本文主要介绍在emacs中对一个目录中的很多文件进行字符串查找和替换操作的方法。参考了 <a href="http://ergoemacs.org/emacs/blog.html">XahLee</a> 的教程后，在此记录做个备份。<br></p>
-<div id="outline-container-org52bf667" class="outline-2">
-<h2 id="org52bf667">操作步骤</h2>
-<div class="outline-text-2" id="text-org52bf667">
+<div id="outline-container-org0260e7f" class="outline-2">
+<h2 id="org0260e7f">操作步骤</h2>
+<div class="outline-text-2" id="text-org0260e7f">
 <p>
 <b>进入dired模式</b> ： 我的快捷键配置为 <code>C-x d</code>, 也可以使用 <code>M-x &lt;dired&gt;</code> .<br><b>标记需要查找的文件</b> ： 在进入dired模式后，对需要操作的文件或目录进行操作。<br></p>
 <ul class="org-ul">
@@ -109,9 +192,9 @@
 </div>
 </div>
 
-<div id="outline-container-org47beb83" class="outline-2">
-<h2 id="org47beb83">相关技巧</h2>
-<div class="outline-text-2" id="text-org47beb83">
+<div id="outline-container-org55362ef" class="outline-2">
+<h2 id="org55362ef">相关技巧</h2>
+<div class="outline-text-2" id="text-org55362ef">
 <p>
 如果需要批量查找(不进行替换)，可以在dired模式中 <code>M-x &lt;dired-do-search&gt;</code> 进行查找，对于查找结果使用 <code>M-x tags-loop-continue</code> 进行逐条浏览。<br></p>
 </div>
@@ -126,9 +209,9 @@
       <a class="post-link" href="/posts/2018/stl-iterator-invalidate/">STL容器的迭代器失效问题</a>
     </h3>
 
-    <div id="outline-container-org95db812" class="outline-2">
-<h2 id="org95db812">1 引言</h2>
-<div class="outline-text-2" id="text-org95db812">
+    <div id="outline-container-org88c608f" class="outline-2">
+<h2 id="org88c608f">1 引言</h2>
+<div class="outline-text-2" id="text-org88c608f">
 <p>
 常见的STL容器都能使用迭代器访问容器内元素，迭代器相同于一个指向容器内元素的指针，可以通过移动迭代器实现遍历容器。<br>
 但是在使用迭代器时需要考虑STL容器的失效问题；迭代器失效主要出现在对容器进行了增删操作之后，迭代器不再指向原本的元素。<br>
@@ -136,17 +219,17 @@
 </div>
 </div>
 
-<div id="outline-container-org78d9ec4" class="outline-2">
-<h2 id="org78d9ec4">2 map容器</h2>
-<div class="outline-text-2" id="text-org78d9ec4">
+<div id="outline-container-org7f27328" class="outline-2">
+<h2 id="org7f27328">2 map容器</h2>
+<div class="outline-text-2" id="text-org7f27328">
 <p>
 <b>内部数据结构</b> ：红黑树<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入都红黑树中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org9c03ce4" class="outline-2">
-<h2 id="org9c03ce4">3 vector容器</h2>
-<div class="outline-text-2" id="text-org9c03ce4">
+<div id="outline-container-org4763016" class="outline-2">
+<h2 id="org4763016">3 vector容器</h2>
+<div class="outline-text-2" id="text-org4763016">
 <p>
 <b>内部数据结构</b> ：数组(一段连续内存空间)<br><b>插入操作</b> ：由于vector使用的是一段有长度限制的连续空间，插入( <code>push_back</code> / <code>insert</code> )操作在vector中加入新的元素时需要分情况考虑。<br></p>
 <ul class="org-ul">
@@ -161,17 +244,17 @@
 </div>
 </div>
 
-<div id="outline-container-orgc911dc4" class="outline-2">
-<h2 id="orgc911dc4">4 list容器</h2>
-<div class="outline-text-2" id="text-orgc911dc4">
+<div id="outline-container-org1c34aad" class="outline-2">
+<h2 id="org1c34aad">4 list容器</h2>
+<div class="outline-text-2" id="text-org1c34aad">
 <p>
 <b>内部数据结构</b> ：双向环状链表<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入到链表中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org63610a7" class="outline-2">
-<h2 id="org63610a7">5 小结</h2>
-<div class="outline-text-2" id="text-org63610a7">
+<div id="outline-container-org0d9fcab" class="outline-2">
+<h2 id="org0d9fcab">5 小结</h2>
+<div class="outline-text-2" id="text-org0d9fcab">
 <p>
 在操作STL容器时，对容器增删（ <code>erase</code> / <code>insert</code> ）之后应该注意接收返回值，这样可以有效避免迭代器失效的产生。<br>
 对容器进行遍历删除操作时，另一种语法技巧是在 <code>erase</code> 接口中对迭代器进行后自增（it++），这种写法也能够保证遍历正常进行。理解这种写法需要参考运算符重载的相关知识，后自增操作会产生一个临时变量用于函数返回。<br></p>
@@ -187,42 +270,42 @@
       <a class="post-link" href="/posts/2018/size_t-and-size_type/">关于size_t和size_type的比较</a>
     </h3>
 
-    <div id="outline-container-org7bb58df" class="outline-2">
-<h2 id="org7bb58df">1 引言</h2>
-<div class="outline-text-2" id="text-org7bb58df">
+    <div id="outline-container-orgfadcf09" class="outline-2">
+<h2 id="orgfadcf09">1 引言</h2>
+<div class="outline-text-2" id="text-orgfadcf09">
 <p>
 编程中常见的表示两种大小的类型标识符有 <code>size_t</code> 和 <code>size_type</code> ，这两种类型十分相似，非常容易混淆。本文对他们的使用场景进行了比较，并提供了示例代码。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org64e4802" class="outline-2">
-<h2 id="org64e4802">2 <code>size_t</code> 类型</h2>
-<div class="outline-text-2" id="text-org64e4802">
+<div id="outline-container-org2edc1bd" class="outline-2">
+<h2 id="org2edc1bd">2 <code>size_t</code> 类型</h2>
+<div class="outline-text-2" id="text-org2edc1bd">
 <p>
 当需要描述某个对象的大小（size）时都应该使用 <code>size_t</code> ，其大小被限制为 0 到 <code>SIZE_MAX</code> 之间。<br><code>size_t</code> 的定义在 <code>&lt;cstddef&gt;</code> 中， <code>SIZE_MAX</code> 的定义在 <code>&lt;climits&gt;</code> 中。<br><code>size_t</code> 一般会作为 <code>sizeof</code> 运算符的返回结果，可以理解为在给定的平台中是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org610c15e" class="outline-2">
-<h2 id="org610c15e">3 <code>size_type</code> 类型</h2>
-<div class="outline-text-2" id="text-org610c15e">
+<div id="outline-container-org7e20009" class="outline-2">
+<h2 id="org7e20009">3 <code>size_type</code> 类型</h2>
+<div class="outline-text-2" id="text-org7e20009">
 <p>
 在 <code>STL</code> 中定义了 <code>size_type</code> 是与 <code>Allocator::size_tpye</code> 相对应的。而 <code>Allocator</code> 是模板的一个参数。<br><code>size_type</code> 可以理解为在给定容器范围内是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0267e89" class="outline-2">
-<h2 id="org0267e89">4 二者之间的比较</h2>
-<div class="outline-text-2" id="text-org0267e89">
+<div id="outline-container-orgd8085ab" class="outline-2">
+<h2 id="orgd8085ab">4 二者之间的比较</h2>
+<div class="outline-text-2" id="text-orgd8085ab">
 <p>
 这两种类型主要是为了提高代码的可移植性。一般情况来说，这两种类型是没有区别的，因为使用标准库默认的 <code>Allocator</code> 所对应的 <code>size_type</code> 就是 <code>size_t</code> 。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org12c6528" class="outline-2">
-<h2 id="org12c6528">5 示例代码</h2>
-<div class="outline-text-2" id="text-org12c6528">
+<div id="outline-container-orgea3bd3d" class="outline-2">
+<h2 id="orgea3bd3d">5 示例代码</h2>
+<div class="outline-text-2" id="text-orgea3bd3d">
 <p>
 注意 <code>size_type</code> 在使用时需要加上容器类型限定。<br></p>
 <div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">n1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span><span class="w"></span>
@@ -236,9 +319,9 @@
 </div>
 </div>
 
-<div id="outline-container-org866896d" class="outline-2">
-<h2 id="org866896d">6 参考资料</h2>
-<div class="outline-text-2" id="text-org866896d">
+<div id="outline-container-orgb78eecf" class="outline-2">
+<h2 id="orgb78eecf">6 参考资料</h2>
+<div class="outline-text-2" id="text-orgb78eecf">
 <ul class="org-ul">
 <li>
 <a href="http://en.cppreference.com/w/cpp/types/size_t">http://en.cppreference.com/w/cpp/types/size_t</a><br>
@@ -259,9 +342,9 @@
       <a class="post-link" href="/posts/2018/frequent-improper-syntax-warning-on-compile/">常见的由于语法不当引起的编译警告</a>
     </h3>
 
-    <div id="outline-container-orge05cc74" class="outline-2">
-<h2 id="orge05cc74">1 引言</h2>
-<div class="outline-text-2" id="text-orge05cc74">
+    <div id="outline-container-org72405ce" class="outline-2">
+<h2 id="org72405ce">1 引言</h2>
+<div class="outline-text-2" id="text-org72405ce">
 <p>
 本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。<br>
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
@@ -278,9 +361,9 @@
       <a class="post-link" href="/posts/2018/emacs-global-gtags-guide/">在emacs中使用GNU Global的配置指南</a>
     </h3>
 
-    <div id="outline-container-orgde0b0a6" class="outline-2">
-<h2 id="orgde0b0a6">1 引言</h2>
-<div class="outline-text-2" id="text-orgde0b0a6">
+    <div id="outline-container-orgd93582f" class="outline-2">
+<h2 id="orgd93582f">1 引言</h2>
+<div class="outline-text-2" id="text-orgd93582f">
 <p>
 本文主要针对emacs中的global的配置和使用方法做了简要介绍。global是代码标签化索引工具，能够在许多源码中快速定位函数的实现位置。我主要使用global来辅助代码跳转；还有一种用法是用来辅助代码补全，目前正在研究中。<br></p>
 
@@ -309,29 +392,29 @@
       <a class="post-link" href="/posts/2018/linux-directory-structure/">Linux 系统目录结构</a>
     </h3>
 
-    <div id="outline-container-org3d80aac" class="outline-2">
-<h2 id="org3d80aac">Linux系统的目录结构以及各个目录的作用</h2>
-<div class="outline-text-2" id="text-org3d80aac">
+    <div id="outline-container-orgb053b26" class="outline-2">
+<h2 id="orgb053b26">Linux系统的目录结构以及各个目录的作用</h2>
+<div class="outline-text-2" id="text-orgb053b26">
 </div>
-<div id="outline-container-orgb7c615c" class="outline-3">
-<h3 id="orgb7c615c"><code>/bin</code></h3>
-<div class="outline-text-3" id="text-orgb7c615c">
+<div id="outline-container-orgedfb0cf" class="outline-3">
+<h3 id="orgedfb0cf"><code>/bin</code></h3>
+<div class="outline-text-3" id="text-orgedfb0cf">
 <p>
 bin是binary的缩写，这个目录存放使用者最经常使用的命令<br></p>
 </div>
 </div>
 
-<div id="outline-container-org67edd4b" class="outline-3">
-<h3 id="org67edd4b"><code>/boot</code></h3>
-<div class="outline-text-3" id="text-org67edd4b">
+<div id="outline-container-orgb129055" class="outline-3">
+<h3 id="orgb129055"><code>/boot</code></h3>
+<div class="outline-text-3" id="text-orgb129055">
 <p>
 这里存放的是启动linux时使用的一些核心文件<br></p>
 </div>
 </div>
 
-<div id="outline-container-org1c266c9" class="outline-3">
-<h3 id="org1c266c9"><code>/etc</code></h3>
-<div class="outline-text-3" id="text-org1c266c9">
+<div id="outline-container-orgd3f425d" class="outline-3">
+<h3 id="orgd3f425d"><code>/etc</code></h3>
+<div class="outline-text-3" id="text-orgd3f425d">
 <p>
 这个目录用来存放系统管理所需要的配置文件和子目录<br></p>
 
@@ -349,17 +432,17 @@ bin是binary的缩写，这个目录存放使用者最经常使用的命令<br><
     </h3>
 
     <div>
-<div id="outline-container-org7672d60" class="outline-2">
-<h2 id="org7672d60">1 代码编译阶段</h2>
-<div class="outline-text-2" id="text-org7672d60">
+<div id="outline-container-orgf83d874" class="outline-2">
+<h2 id="orgf83d874">1 代码编译阶段</h2>
+<div class="outline-text-2" id="text-orgf83d874">
 <p>
 在调试C/C++代码时，在编译阶段使用 <code>gcc/g++ -g</code> 命令编译，将调试信息生成在目标文件中。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org5b0b7a2" class="outline-2">
-<h2 id="org5b0b7a2">2 开启gdb模式</h2>
-<div class="outline-text-2" id="text-org5b0b7a2">
+<div id="outline-container-org4befe2d" class="outline-2">
+<h2 id="org4befe2d">2 开启gdb模式</h2>
+<div class="outline-text-2" id="text-org4befe2d">
 <ul class="org-ul">
 <li>直接进入gdb模式: <code>gdb</code> <br>
 </li>
@@ -381,9 +464,9 @@ bin是binary的缩写，这个目录存放使用者最经常使用的命令<br><
       <a class="post-link" href="/posts/2018/blog-open-up/">终于，博客开通了</a>
     </h3>
 
-    <div id="outline-container-org7990f50" class="outline-2">
-<h2 id="org7990f50">1 前言</h2>
-<div class="outline-text-2" id="text-org7990f50">
+    <div id="outline-container-orgdf11448" class="outline-2">
+<h2 id="orgdf11448">1 前言</h2>
+<div class="outline-text-2" id="text-orgdf11448">
 <p>
 Samson的博客开通了。<br>
 作为码农，一直想要有个博客作为学习与积累的记录。<br>
