@@ -238,7 +238,7 @@ POSTS = (
 #    ("archives/*.org", "posts", "post.tmpl"),
 )
 
-for d in os.scandir("archives"):
+for d in os.scandir("posts"):
     if d.is_dir():
         POSTS += ((d.path+"/*.org", "posts", "post.tmpl"),)
 # print (POSTS)
