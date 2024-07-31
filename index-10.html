@@ -50,6 +50,177 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Jun 26, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/2018/asynchronous-synchronous-and-blocking-unblocking/">同步和异步、阻塞和非阻塞</a>
+    </h3>
+
+    <div id="outline-container-orgf971a37" class="outline-2">
+<h2 id="orgf971a37">
+<span class="section-number-2">1</span> 同步和异步</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+同步和异步指的是在进行I/O操作完成之前，是否允许其他处理步骤继续执行。<br>
+计算机中的I/O操作相对于数据处理操作时十分耗时的。<br></p>
+
+<p>
+一个简单的I/O操作方式就是启动连接并等待操作完成，但是这样的操作（同步阻塞I/O）在通信过程中会阻塞进程的处理进度。<br>
+相应的，可以在启动通信的同时进行其他的处理，并不需要等待I/O操作的完成，这样的操作就被称作是异步I/O。那些依赖于I/O操作执行完成的任务会阻塞等待I/O操作的完成，其他不依赖与I/O操作的任务能够继续执行。<br></p>
+
+<p>
+同步模型常用的函数接口： <code>read</code> , <code>write</code> , <code>send</code> , <code>recv</code><br>
+异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
+</div>
+
+<div id="outline-container-org5125d2a" class="outline-3">
+<h3 id="org5125d2a">
+<span class="section-number-3">1.1</span> POSIX AIO</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+在头文件 <code>aio.h</code> 中定义，链接时使用 <code>-lrt</code><br></p>
+
+<p>
+<b>函数接口</b><br>
+异步写操作<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">aio_read</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">aiocb</span><span class="o">*</span><span class="w"> </span><span class="n">aiocbp</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+
+<p>
+异步读操作<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">aio_write</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">aiocb</span><span class="o">*</span><span class="w"> </span><span class="n">aiocbp</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+
+<p>
+获取异步操作结果<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">aio_return</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">aiocb</span><span class="o">*</span><span class="w"> </span><span class="n">aiocbp</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+
+<p>
+获取异步操作中的错误<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">aio_error</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">aiocb</span><span class="o">*</span><span class="w"> </span><span class="n">aiocbp</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+
+<p>
+示例代码： <a href="https://gist.github.com/rsms/771059">github gist</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-orga823b6b" class="outline-3">
+<h3 id="orga823b6b">
+<span class="section-number-3">1.2</span> Linux AIO</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+在头文件 <code>libaio.h</code> 中定义，链接时使用 <code>-laio</code><br></p>
+
+<p>
+<b>函数接口</b><br>
+需要注意的是aio的函数接口需要借助 <code>syscall</code> 进行调用。<br>
+创建aio context对象<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">io_setup</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">nr</span><span class="p">,</span><span class="w"> </span><span class="n">aio_context_t</span><span class="o">*</span><span class="w"> </span><span class="n">ctxp</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+<p>
+销毁aio context对象<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">io_destroy</span><span class="p">(</span><span class="n">aio_context_t</span><span class="w"> </span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+<p>
+提交异步操作<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">io_submit</span><span class="p">(</span><span class="n">aio_context_t</span><span class="w"> </span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">nr</span><span class="p">,</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iocb</span><span class="o">**</span><span class="w"> </span><span class="n">iocbpp</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+<p>
+获取异步操作结果<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">io_getevents</span><span class="p">(</span><span class="n">aio_context_t</span><span class="w"> </span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">min_nr</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">max_nr</span><span class="p">,</span><span class="w"></span>
+<span class="w">		 </span><span class="n">io_event</span><span class="o">*</span><span class="w"> </span><span class="n">events</span><span class="p">,</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="o">*</span><span class="w"> </span><span class="n">timeout</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+
+<p>
+示例代码:<br></p>
+<ul class="org-ul">
+<li>
+<a href="https://gist.github.com/larytet/87f90b08643ac3de934df2cadff4989c">github gist</a><br>
+</li>
+<li>
+<a href="http://www.xmailserver.org/eventfd-aio-test.c">xmailserver.org</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org7a6cf2e" class="outline-3">
+<h3 id="org7a6cf2e">
+<span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+摘自 <a href="https://stackoverflow.com/questions/8768083/difference-between-posix-aio-and-libaio-on-linux">stackoverflow.com</a><br></p>
+<blockquote>
+<p>
+On linux, the two AIO implementations are fundamentally different.<br>
+The POSIX AIO is a user-level implementation that performs normal blocking I/O in multiple threads, hence giving the illusion that the I/Os are asynchronous. The main reason to do this is that:<br></p>
+<ul class="org-ul">
+<li>it works with any filesystem<br>
+</li>
+<li>it works (essentially) on any operating system (keep in mind that gnu's libc is portable)<br>
+</li>
+<li>it works on files with buffering enabled (i.e. no O<sub>DIRECT</sub> flag set)<br>
+</li>
+</ul>
+<p>
+The main drawback is that your queue depth (i.e. the number of outstanding operations you can have in practice) is limited by the number of threads you choose to have, which also means that a slow operation on one disk may block an operation going to a different disk. It also affects which I/Os (or how many) is seen by the kernel and the disk scheduler as well.<br>
+The kernel AIO (i.e. io<sub>submit</sub>() et.al.) is kernel support for asynchronous I/O operations, where the io requests are actually queued up in the kernel, sorted by whatever disk scheduler you have, presumably some of them are forwarded (in somewhat optimal order one would hope) to the actual disk as asynchronous operations (using TCQ or NCQ). The main restriction with this approach is that not all filesystems work that well or at all with async I/O (and may fall back to blocking semantics), files have to be opened with O<sub>DIRECT</sub> which comes with a whole lot of other restrictions on the I/O requests. If you fail to open your files with O<sub>DIRECT</sub>, it may still "work", as in you get the right data back, but it probably isn't done asynchronously, but is falling back to blocking semantics.<br>
+Also keep in mind that io<sub>submit</sub>() can actually block on the disk under certain circumstances.<br></p>
+</blockquote>
+<p>
+在Linux上两种AIO是完全不同的；<br>
+POSIX AIO实现在用户层，实际上进行的操作是普通的多线程阻塞操作，表现为I/O操作是异步的，这种AIO的优点是兼容性和可移植性好，缺点是操作队列长度受限于最大线程数量。<br>
+Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核中维护，这种AIO的缺点是并不支持所有的文件系统，Linux AIO在某些情况下的磁盘操作是会阻塞的。<br></p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orga32d2f6" class="outline-2">
+<h2 id="orga32d2f6">
+<span class="section-number-2">2</span> 阻塞和非阻塞</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+阻塞与非阻塞的概念针对的是函数是否会立即返回。<br>
+非阻塞模型常与IO复用技术组合使用。<br>
+可以通过函数将IO设备设置为非阻塞模式。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgd43f371" class="outline-2">
+<h2 id="orgd43f371">
+<span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+在处理 IO 的时候，阻塞和非阻塞都是同步 IO。<br>
+只有使用了特殊的 API 才是异步 IO。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgbf30fd0" class="outline-2">
+<h2 id="orgbf30fd0">
+<span class="section-number-2">4</span> 参考资料</h2>
+<div class="outline-text-2" id="text-4">
+<ul class="org-ul">
+<li>
+<a href="https://blog.csdn.net/hguisu/article/details/38638183">csdn.net</a><br>
+</li>
+<li>
+<a href="https://github.com/littledan/linux-aio%20repo">github.com linux-aio</a><br>
+</li>
+<li>
+<a href="https://www.ibm.com/developerworks/linux/library/l-async/index.html">ibm developerworks</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Jun 20, 2018</span>
     <h3>
       <a class="post-link" href="/posts/2018/check-system-information-on-linux/">查看Linux系统的相关信息</a>
@@ -58,9 +229,9 @@
     <p>
 查看Linux系统相关信息有助于排查和解决软件和硬件的兼容性问题。系统信息包括硬件信息和软件信息，硬件信息主要有CPU信息、内存信息、PCI信息、USB信息、硬盘信息等等。软件信息主要有系统版本、分区使用状态等等。本文主要介绍了获取当前Linux系统信息的命令。<br></p>
 
-<div id="outline-container-org6841fa5" class="outline-2">
-<h2 id="org6841fa5">查看系统相关信息</h2>
-<div class="outline-text-2" id="text-org6841fa5">
+<div id="outline-container-org3b4723f" class="outline-2">
+<h2 id="org3b4723f">查看系统相关信息</h2>
+<div class="outline-text-2" id="text-org3b4723f">
 <p>
 <code>uname</code> 指令提供了查询系统信息的功能，使用该命令能够快速获取操作系统信息概览。<br></p>
 
@@ -99,25 +270,25 @@ hostnamectl
 </div>
 </div>
 
-<div id="outline-container-orgc1b28b8" class="outline-2">
-<h2 id="orgc1b28b8">查看CPU相关信息</h2>
-<div class="outline-text-2" id="text-orgc1b28b8">
+<div id="outline-container-org95e6963" class="outline-2">
+<h2 id="org95e6963">查看CPU相关信息</h2>
+<div class="outline-text-2" id="text-org95e6963">
 <p>
 <code>lscpu</code> 指令能够查看当前系统中CPU的详细信息，包括型号、主频、构架、大小端等信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org08f9478" class="outline-2">
-<h2 id="org08f9478">查看硬盘相关信息</h2>
-<div class="outline-text-2" id="text-org08f9478">
+<div id="outline-container-org48396ce" class="outline-2">
+<h2 id="org48396ce">查看硬盘相关信息</h2>
+<div class="outline-text-2" id="text-org48396ce">
 <p>
 <code>lsblk</code> 指令能够查看块设备（block device）的详细信息，块设备主要指系统中的存储设备如硬盘和闪存。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgc75a546" class="outline-2">
-<h2 id="orgc75a546">查看PCI设备的相关信息</h2>
-<div class="outline-text-2" id="text-orgc75a546">
+<div id="outline-container-orgcc6a018" class="outline-2">
+<h2 id="orgcc6a018">查看PCI设备的相关信息</h2>
+<div class="outline-text-2" id="text-orgcc6a018">
 <p>
 <code>lspci</code> 指令能够查看PCI设备的信息，PCI设备包括USB、显卡、串口、网卡等其他外围设备。<br></p>
 
@@ -134,17 +305,17 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-org13c71be" class="outline-2">
-<h2 id="org13c71be">查看USB设备的相关信息</h2>
-<div class="outline-text-2" id="text-org13c71be">
+<div id="outline-container-orgda953f0" class="outline-2">
+<h2 id="orgda953f0">查看USB设备的相关信息</h2>
+<div class="outline-text-2" id="text-orgda953f0">
 <p>
 <code>lsusb</code> 指令能够查看USBS设备的信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org48f2139" class="outline-2">
-<h2 id="org48f2139">查看文件系统相关信息</h2>
-<div class="outline-text-2" id="text-org48f2139">
+<div id="outline-container-orgf43163c" class="outline-2">
+<h2 id="orgf43163c">查看文件系统相关信息</h2>
+<div class="outline-text-2" id="text-orgf43163c">
 <p>
 <code>fdisk</code> 命令能够查看和操作linux系统的分区表。<br></p>
 
@@ -163,9 +334,9 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-org6ffc41d" class="outline-2">
-<h2 id="org6ffc41d">参考资料</h2>
-<div class="outline-text-2" id="text-org6ffc41d">
+<div id="outline-container-orga5d015f" class="outline-2">
+<h2 id="orga5d015f">参考资料</h2>
+<div class="outline-text-2" id="text-orga5d015f">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/commands-to-collect-system-and-hardware-information-in-linux/">tecmint.com</a><br>
@@ -189,15 +360,15 @@ lspci -vv
     <p>
 linux的top命令能够动态显示当前系统的运行状态。它能够显示操作系统的汇总信息和当前系统上的正在运行的进程列表。<br></p>
 
-<div id="outline-container-org205dcdd" class="outline-2">
-<h2 id="org205dcdd">统计信息说明</h2>
-<div class="outline-text-2" id="text-org205dcdd">
+<div id="outline-container-orgc6e745c" class="outline-2">
+<h2 id="orgc6e745c">统计信息说明</h2>
+<div class="outline-text-2" id="text-orgc6e745c">
 <p>
 (可以通过配置文件修改通计信息区的显示格式，下文所描述的都是在默认配置下的显示内容)<br></p>
 </div>
-<div id="outline-container-org85ea279" class="outline-3">
-<h3 id="org85ea279">第1行</h3>
-<div class="outline-text-3" id="text-org85ea279">
+<div id="outline-container-org3d48950" class="outline-3">
+<h3 id="org3d48950">第1行</h3>
+<div class="outline-text-3" id="text-org3d48950">
 <ul class="org-ul">
 <li>当前系统时间<br>
 </li>
@@ -212,9 +383,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 这一行信息也可以通过 <code>uptime</code> 和 <code>w</code> 指令获得<br></p>
 </div>
 </div>
-<div id="outline-container-orgdcd1387" class="outline-3">
-<h3 id="orgdcd1387">第2行</h3>
-<div class="outline-text-3" id="text-orgdcd1387">
+<div id="outline-container-orgbd4f20e" class="outline-3">
+<h3 id="orgbd4f20e">第2行</h3>
+<div class="outline-text-3" id="text-orgbd4f20e">
 <ul class="org-ul">
 <li>总进程数<br>
 </li>
@@ -229,9 +400,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </ul>
 </div>
 </div>
-<div id="outline-container-org2a4864e" class="outline-3">
-<h3 id="org2a4864e">第3行</h3>
-<div class="outline-text-3" id="text-org2a4864e">
+<div id="outline-container-orgc15a75f" class="outline-3">
+<h3 id="orgc15a75f">第3行</h3>
+<div class="outline-text-3" id="text-orgc15a75f">
 <ul class="org-ul">
 <li>us 用户空间占用CPU百分比<br>
 </li>
@@ -253,9 +424,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orgc772e0c" class="outline-3">
-<h3 id="orgc772e0c">第4行</h3>
-<div class="outline-text-3" id="text-orgc772e0c">
+<div id="outline-container-org7063d10" class="outline-3">
+<h3 id="org7063d10">第4行</h3>
+<div class="outline-text-3" id="text-org7063d10">
 <ul class="org-ul">
 <li>物理内存总量<br>
 </li>
@@ -269,9 +440,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org6679a52" class="outline-3">
-<h3 id="org6679a52">第5行</h3>
-<div class="outline-text-3" id="text-org6679a52">
+<div id="outline-container-org33d3d34" class="outline-3">
+<h3 id="org33d3d34">第5行</h3>
+<div class="outline-text-3" id="text-org33d3d34">
 <ul class="org-ul">
 <li>交换区总量<br>
 </li>
@@ -286,9 +457,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orgf3a7275" class="outline-2">
-<h2 id="orgf3a7275">进程信息</h2>
-<div class="outline-text-2" id="text-orgf3a7275">
+<div id="outline-container-org1d227df" class="outline-2">
+<h2 id="org1d227df">进程信息</h2>
+<div class="outline-text-2" id="text-org1d227df">
 <p>
 在top命令中按f按可以查看显示的列信息，按对应字母来开启/关闭列，大写字母表示开启，小写字母表示关闭。带*号的是默认列。<br></p>
 
@@ -323,9 +494,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-org405b30f" class="outline-2">
-<h2 id="org405b30f">参考资料</h2>
-<div class="outline-text-2" id="text-org405b30f">
+<div id="outline-container-org83a1a36" class="outline-2">
+<h2 id="org83a1a36">参考资料</h2>
+<div class="outline-text-2" id="text-org83a1a36">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/12-top-command-examples-in-linux/">tecmint.com</a><br>
@@ -361,9 +532,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
     <p>
 由于C++是兼容C的，所以使用C++进行文件操作时，会发现有两套库函数可以使用，它们分别是C风格的和C++风格的。<br></p>
 
-<div id="outline-container-orgbc23626" class="outline-2">
-<h2 id="orgbc23626">C风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-orgbc23626">
+<div id="outline-container-orgd517933" class="outline-2">
+<h2 id="orgd517933">C风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-orgd517933">
 <p>
 <b>打开文件，关闭文件</b><br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
@@ -392,9 +563,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-org9d64398" class="outline-2">
-<h2 id="org9d64398">C++风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-org9d64398">
+<div id="outline-container-org371ecb8" class="outline-2">
+<h2 id="org371ecb8">C++风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-org371ecb8">
 <p>
 C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件实际上就会对应一个 <code>fstream</code> 对象，一下函数都是 <code>fstream</code> 的成员函数。<br>
 文件打开和关闭<br></p>
@@ -412,9 +583,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 </div>
 
 
-<div id="outline-container-org2ecf574" class="outline-2">
-<h2 id="org2ecf574">题外话</h2>
-<div class="outline-text-2" id="text-org2ecf574">
+<div id="outline-container-org862f2dc" class="outline-2">
+<h2 id="org862f2dc">题外话</h2>
+<div class="outline-text-2" id="text-org862f2dc">
 <p>
 在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。<br></p>
 </div>
@@ -429,9 +600,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
       <a class="post-link" href="/posts/2018/endianness-and-union-type/">字节序与union类型</a>
     </h3>
 
-    <div id="outline-container-org0de6d78" class="outline-2">
-<h2 id="org0de6d78">字节序是什么</h2>
-<div class="outline-text-2" id="text-org0de6d78">
+    <div id="outline-container-orgc52f3a5" class="outline-2">
+<h2 id="orgc52f3a5">字节序是什么</h2>
+<div class="outline-text-2" id="text-orgc52f3a5">
 <p>
 字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。字节序分为大端字节序和小端字节序，两种字节序不能混用。<br></p>
 
@@ -457,9 +628,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 
 
 
-<div id="outline-container-org7516478" class="outline-2">
-<h2 id="org7516478">提供字节序转换功能的函数接口</h2>
-<div class="outline-text-2" id="text-org7516478">
+<div id="outline-container-org70a4b8d" class="outline-2">
+<h2 id="org70a4b8d">提供字节序转换功能的函数接口</h2>
+<div class="outline-text-2" id="text-org70a4b8d">
 <p>
 在网络通信接口中提供了转换主机字节序和网络字节序之间的函数接口，如下所示。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">htonl</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">hostlong</span><span class="p">);</span><span class="w"></span>
@@ -545,9 +716,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 
 
 
-<div id="outline-container-org929a161" class="outline-2">
-<h2 id="org929a161">查看当前系统的字节序</h2>
-<div class="outline-text-2" id="text-org929a161">
+<div id="outline-container-orgd446d9c" class="outline-2">
+<h2 id="orgd446d9c">查看当前系统的字节序</h2>
+<div class="outline-text-2" id="text-orgd446d9c">
 <p>
 通过 <code>lscpu</code> 命令，能得到cpu的大端和小端信息。<br></p>
 <div class="highlight"><pre><span></span>lscpu <span class="p">|</span> grep -i endian
@@ -596,9 +767,9 @@ hexdump -n <span class="m">6</span> -C /bin/bash
 </div>
 
 
-<div id="outline-container-orga92fade" class="outline-2">
-<h2 id="orga92fade">参考资料</h2>
-<div class="outline-text-2" id="text-orga92fade">
+<div id="outline-container-org52a870c" class="outline-2">
+<h2 id="org52a870c">参考资料</h2>
+<div class="outline-text-2" id="text-org52a870c">
 <ul class="org-ul">
 <li>
 <a href="https://en.wikipedia.org/wiki/Endianness">wikipedia.com - endianness</a><br>
@@ -646,9 +817,9 @@ Python内置了日志模块，在默认情况下输出的日志是不带文件�
       <a class="post-link" href="/posts/2018/linux-command-examples-xargs/">Linux常用命令行指令 - xargs</a>
     </h3>
 
-    <div id="outline-container-org87c63e9" class="outline-2">
-<h2 id="org87c63e9">基础用法</h2>
-<div class="outline-text-2" id="text-org87c63e9">
+    <div id="outline-container-org81e2cef" class="outline-2">
+<h2 id="org81e2cef">基础用法</h2>
+<div class="outline-text-2" id="text-org81e2cef">
 <p>
 <code>xargs</code> 指令默认情况下从 <code>stdin</code> 中读取信息，按照空格分或换行区分开，并且执行输入的命令（默认的命令是 <code>/bin/echo</code> ）。命令可以通过 <code>xargs</code> 的参数指定执行一次或多次，命令的执行参数为自身初始参数追加上由 <code>stdin</code> 读到的内容，命令在执行时会忽略空行。<br></p>
 
@@ -669,10 +840,10 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org28911f0" class="outline-2">
-<h2 id="org28911f0">
+<div id="outline-container-orgffc6673" class="outline-2">
+<h2 id="orgffc6673">
 <code>xargs</code> 与 <code>find</code> 组合使用</h2>
-<div class="outline-text-2" id="text-org28911f0">
+<div class="outline-text-2" id="text-orgffc6673">
 <p>
 常见的使用方法是使用 <code>find</code> 指令找到指定的文件，组合以 <code>xargs</code> 指令实现对指定文件的操作。<br></p>
 <div class="highlight"><pre><span></span>find . -name "demo_" | xargs file -i
@@ -684,10 +855,10 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org078eb45" class="outline-2">
-<h2 id="org078eb45">
+<div id="outline-container-org780dcd4" class="outline-2">
+<h2 id="org780dcd4">
 <code>xargs</code> 与 <code>grep</code> 组合使用</h2>
-<div class="outline-text-2" id="text-org078eb45">
+<div class="outline-text-2" id="text-org780dcd4">
 <p>
 常用命令如下，能够实现对指定规则文件的搜索匹配。<br></p>
 <div class="highlight"><pre><span></span>find . -name "*.log" | xargs grep error
@@ -695,9 +866,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org666c9b7" class="outline-2">
-<h2 id="org666c9b7">使用 <code>-n</code> 参数让 <code>xargs</code> 的命令重复执行</h2>
-<div class="outline-text-2" id="text-org666c9b7">
+<div id="outline-container-org47ed4e6" class="outline-2">
+<h2 id="org47ed4e6">使用 <code>-n</code> 参数让 <code>xargs</code> 的命令重复执行</h2>
+<div class="outline-text-2" id="text-org47ed4e6">
 <p>
 如果想用 <code>find</code> 指令完成多个匹配规则的搜索，则可以使用 <code>-n</code> 参数将 <code>xargs</code> 的内容分割成多个。<br>
 下面的命令会执行3次 <code>find</code> 命令， <code>xargs</code> 会将接收的到的内容按照单词数为“1”分割，分3次传送给 <code>find</code> 指令。<br></p>
@@ -706,9 +877,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orga4282b8" class="outline-2">
-<h2 id="orga4282b8">使用 <code>-t</code> 参数让 <code>xargs</code> 打印将要执行的命令</h2>
-<div class="outline-text-2" id="text-orga4282b8">
+<div id="outline-container-org22dfa61" class="outline-2">
+<h2 id="org22dfa61">使用 <code>-t</code> 参数让 <code>xargs</code> 打印将要执行的命令</h2>
+<div class="outline-text-2" id="text-org22dfa61">
 <p>
 让 <code>xargs</code> 将指令的命令打印出来主要是方便查看命令执行情况，也方便在出现错误时进行调试。<br></p>
 <div class="highlight"><pre><span></span>find . -name *.log | xargs -t rm -f
@@ -716,9 +887,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org38d6d7e" class="outline-2">
-<h2 id="org38d6d7e">使用 <code>-p</code> 参数让 <code>xargs</code> 在执行命令前询问用户</h2>
-<div class="outline-text-2" id="text-org38d6d7e">
+<div id="outline-container-orgde47d35" class="outline-2">
+<h2 id="orgde47d35">使用 <code>-p</code> 参数让 <code>xargs</code> 在执行命令前询问用户</h2>
+<div class="outline-text-2" id="text-orgde47d35">
 <p>
 增加 <code>-p</code> 参数后， <code>xargs</code> 在每次执行命令前会将指令打印出来并询问用户，只有用户输入 “y” 时才会真正执行该条命令。<br></p>
 <div class="highlight"><pre><span></span>echo "*.c" "*.cpp" "*.h" | xargs -n 1 -p find . -name
@@ -726,9 +897,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org318dc91" class="outline-2">
-<h2 id="org318dc91">使用 <code>-I</code> 参数让 <code>xargs</code> 进行参数替换</h2>
-<div class="outline-text-2" id="text-org318dc91">
+<div id="outline-container-orgc90d4ed" class="outline-2">
+<h2 id="orgc90d4ed">使用 <code>-I</code> 参数让 <code>xargs</code> 进行参数替换</h2>
+<div class="outline-text-2" id="text-orgc90d4ed">
 <p>
 <code>xargs</code> 默认会将读取到的内容追加在指令命令后面作为参数，使用 <code>-I</code> 参数能够控制命令参数的组合方式。<br>
 以下命令会将当前目录中的可执行文件移动到bin文件夹下。<br></p>
@@ -737,9 +908,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orgda5f8e9" class="outline-2">
-<h2 id="orgda5f8e9">参考资料</h2>
-<div class="outline-text-2" id="text-orgda5f8e9">
+<div id="outline-container-org6cb9fe1" class="outline-2">
+<h2 id="org6cb9fe1">参考资料</h2>
+<div class="outline-text-2" id="text-org6cb9fe1">
 <ol class="org-ol">
 <li>
 <a href="http://man7.org/linux/man-pages/man1/xargs.1.html">http://man7.org/linux/man-pages/man1/xargs.1.html</a><br>
@@ -770,9 +941,9 @@ a b c d
 Q：每个进程都有自己的地址空间和独立的用户空间，那么进程间是如何通信的呢？<br>
 A：内核，也就是操作系统的心脏，它能够访问整个操作系统的内存。我们可以要求内核分配一块用于进程间交互的空间。<br></p>
 
-<div id="outline-container-org58264a6" class="outline-2">
-<h2 id="org58264a6">几种进程间通信的方法</h2>
-<div class="outline-text-2" id="text-org58264a6">
+<div id="outline-container-orgb4dae6b" class="outline-2">
+<h2 id="orgb4dae6b">几种进程间通信的方法</h2>
+<div class="outline-text-2" id="text-orgb4dae6b">
 <p>
 进程间通信的方法有很多，有些支持同机器上进程的信息交互，有些支持跨机器的进程交互。<br></p>
 <ul class="org-ul">
@@ -792,9 +963,9 @@ A：内核，也就是操作系统的心脏，它能够访问整个操作系统�
 </div>
 </div>
 
-<div id="outline-container-orgc03bee7" class="outline-2">
-<h2 id="orgc03bee7">常用ipcs指令</h2>
-<div class="outline-text-2" id="text-orgc03bee7">
+<div id="outline-container-orgad02577" class="outline-2">
+<h2 id="orgad02577">常用ipcs指令</h2>
+<div class="outline-text-2" id="text-orgad02577">
 <p>
 <b>列出所有的IPC设备</b><br></p>
 <div class="highlight"><pre><span></span>ipcs -a
@@ -856,9 +1027,9 @@ A：内核，也就是操作系统的心脏，它能够访问整个操作系统�
       <a class="post-link" href="/posts/2018/debug-with-gdb-on-multi-thread-programs/">使用gdb调试多线程程序</a>
     </h3>
 
-    <div id="outline-container-org7c8f206" class="outline-2">
-<h2 id="org7c8f206">查看当前线程信息</h2>
-<div class="outline-text-2" id="text-org7c8f206">
+    <div id="outline-container-orga45dd7e" class="outline-2">
+<h2 id="orga45dd7e">查看当前线程信息</h2>
+<div class="outline-text-2" id="text-orga45dd7e">
 <p>
 <b>将进程中的各个线程信息显示出来</b><br></p>
 <div class="highlight"><pre><span></span>(gdb) info threads
@@ -886,9 +1057,9 @@ A：内核，也就是操作系统的心脏，它能够访问整个操作系统�
 </div>
 </div>
 
-<div id="outline-container-orga237abf" class="outline-2">
-<h2 id="orga237abf">为指定的线程设置断点</h2>
-<div class="outline-text-2" id="text-orga237abf">
+<div id="outline-container-org48ed5dd" class="outline-2">
+<h2 id="org48ed5dd">为指定的线程设置断点</h2>
+<div class="outline-text-2" id="text-org48ed5dd">
 <p>
 含有多线程的程序，可以为单独的线程设置断点<br></p>
 <div class="highlight"><pre><span></span>(gdb) break linespec thread tid
@@ -903,9 +1074,9 @@ Whenever your program stops under GDB for any reason, all threads of execution s
 </div>
 </div>
 
-<div id="outline-container-orga9a88d6" class="outline-2">
-<h2 id="orga9a88d6">防止gdb自动切换线程</h2>
-<div class="outline-text-2" id="text-orga9a88d6">
+<div id="outline-container-org1acc961" class="outline-2">
+<h2 id="org1acc961">防止gdb自动切换线程</h2>
+<div class="outline-text-2" id="text-org1acc961">
 <p>
 在调试gdb程序时，在单步执行时，会出现线程间跳转切换，这样对跟踪代码执行状态十分不方便。<br>
 可以通过设置 <code>scheduler-locking</code> 让gdb在所调试的线程中运行，防止线程的自动切换。<br></p>
@@ -936,9 +1107,9 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 </div>
 
 
-<div id="outline-container-org3a73849" class="outline-2">
-<h2 id="org3a73849">参考资料</h2>
-<div class="outline-text-2" id="text-org3a73849">
+<div id="outline-container-org5fdb139" class="outline-2">
+<h2 id="org5fdb139">参考资料</h2>
+<div class="outline-text-2" id="text-org5fdb139">
 <ol class="org-ol">
 <li>
 <a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_39.html">gnu manual 1</a><br>
@@ -1042,61 +1213,6 @@ Set the scheduler locking mode. If it is off, then there is no locking and any t
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Apr 17, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/2018/linux-command-examples-scp/">Linux常用命令行指令 - scp</a>
-    </h3>
-
-    <p>
-<code>scp</code> 命令代表的是 secure copy，与 <code>cp</code> 命令的本地拷贝十分相似，主要区别就在于 <code>scp</code> 的路径可以是一个远程机器的路径。使用 <code>scp</code> 进行文件拷贝时，文件的传输时加密的。<br></p>
-<div class="highlight"><pre><span></span>cp source_path dest_path
-</pre></div>
-
-<div id="outline-container-orgb6b7a58" class="outline-2">
-<h2 id="orgb6b7a58">从远程机器向本地拷贝</h2>
-<div class="outline-text-2" id="text-orgb6b7a58">
-<p>
-以下命令会把 <code>host</code> 主机上的 <code>src_path</code> 文件拷贝到本地 <code>dest_path</code> 目录中。<br></p>
-<div class="highlight"><pre><span></span>scp user@host:src_path dest_path
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgc88885e" class="outline-2">
-<h2 id="orgc88885e">从本地向远程机器拷贝</h2>
-<div class="outline-text-2" id="text-orgc88885e">
-<p>
-以下命令会把本地 <code>src_path</code> 的文件拷贝打 <code>host</code> 主机上的 <code>dest_path</code> 路径上。<br></p>
-<div class="highlight"><pre><span></span>scp src_path user@host:dest_path
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org062b74d" class="outline-2">
-<h2 id="org062b74d">拷贝目录下的所有文件</h2>
-<div class="outline-text-2" id="text-org062b74d">
-<p>
-可以使用 <code>-r</code> 参数完成目录的递归拷贝， <code>r</code> 代表 <code>recursive</code> 递归。<br></p>
-<div class="highlight"><pre><span></span>scp -r user@host:/src_path dest_path
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgd48ccd3" class="outline-2">
-<h2 id="orgd48ccd3">在拷贝时限制带宽</h2>
-<div class="outline-text-2" id="text-orgd48ccd3">
-<p>
-可以使用 <code>-l</code> 参数限制传输的带宽， <code>l</code> 代表 <code>limit</code> 限制，限制带宽的单位是 <code>kbps</code> 。<br>
-命令会在将拷贝传输的速度限制为 100kbps。<br></p>
-<div class="highlight"><pre><span></span>scp -l 100 src_path dest_path
-</pre></div>
-</div>
-</div>
 
   </li>
 

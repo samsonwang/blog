@@ -50,14 +50,120 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Aug 20, 2018</span>
+    <h3>
+      <a class="post-link" href="/posts/2018/map-reduce/">MapReduce模型</a>
+    </h3>
+
+    <div id="outline-container-org0d78f1b" class="outline-2">
+<h2 id="org0d78f1b">序言</h2>
+<div class="outline-text-2" id="text-org0d78f1b">
+<p>
+对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org9f6729c" class="outline-2">
+<h2 id="org9f6729c">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-org9f6729c">
+<p>
+MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
+
+<p>
+百度百科中给出的定义比较全面，而且很准确。<br></p>
+<blockquote>
+<p>
+MapReduce是面向大数据并行处理的计算模型、框架和平台，它隐含了以下三层含义：<br>
+1）MapReduce是一个基于集群的高性能并行计算平台（Cluster Infrastructure）。它允许用市场上普通的商用服务器构成一个包含数十、数百至数千个节点的分布和并行计算集群。<br>
+2）MapReduce是一个并行计算与运行软件框架（Software Framework）。它提供了一个庞大但设计精良的并行计算软件框架，能自动完成计算任务的并行化处理，自动划分计算数据和计算任务，在集群节点上自动分配和执行任务以及收集计算结果，将数据分布存储、数据通信、容错处理等并行计算涉及到的很多系统底层的复杂细节交由系统负责处理，大大减少了软件开发人员的负担。<br>
+3）MapReduce是一个并行程序设计模型与方法（Programming Model &amp; Methodology）。它借助于函数式程序设计语言Lisp的设计思想，提供了一种简便的并行程序设计方法，用Map和Reduce两个函数编程实现基本的并行计算任务，提供了抽象的操作和并行编程接口，以简单方便地完成大规模数据的编程和计算处理。<br></p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-org9867505" class="outline-2">
+<h2 id="org9867505">map和reduce</h2>
+<div class="outline-text-2" id="text-org9867505">
+<p>
+<b>从编程语言的角度上来说</b><br>
+map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
+reduce操作也会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程从前向后作用在列表成员上，最终得到一个列表中条目。<br></p>
+
+<p>
+<b>从分布式系统的角度上来说</b> (以下内容摘自百度百科)<br></p>
+<blockquote>
+<p>
+简单说来，一个映射函数就是对一些独立元素组成的概念上的列表（例如，一个测试成绩的列表）的每一个元素进行指定的操作（比如前面的例子里，有人发现所有学生的成绩都被高估了一分，它可以定义一个“减一”的映射函数，用来修正这个错误。）。事实上，每个元素都是被独立操作的，而原始列表没有被更改，因为这里创建了一个新的列表来保存新的答案。这就是说，Map操作是可以高度并行的，这对高性能要求的应用以及并行计算领域的需求非常有用。<br>
+而化简操作指的是对一个列表的元素进行适当的合并（继续看前面的例子，如果有人想知道班级的平均分该怎么做？它可以定义一个化简函数，通过让列表中的元素跟自己的相邻的元素相加的方式把列表减半，如此递归运算直到列表只剩下一个元素，然后用这个元素除以人数，就得到了平均分。）。虽然他不如映射函数那么并行，但是因为化简总是有一个简单的答案，大规模的运算相对独立，所以化简函数在高度并行环境下也很有用。<br></p>
+</blockquote>
+
+<p>
+我之前在学习语言层面的map和reduce时，很难理解其用途，结合分布式计算的背景知识，就能够较形象地理解map和reduce操作的过程和作用。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org6328b6a" class="outline-2">
+<h2 id="org6328b6a">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-org6328b6a">
+<p>
+mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
+
+<p>
+mapreduce最初由google提出，并开发出了如下产品<br></p>
+<ul class="org-ul">
+<li>Google File System（大规模分散文件系统）<br>
+</li>
+<li>MapReduce （大规模分散FrameWork）<br>
+</li>
+<li>BigTable（大规模分散数据库）<br>
+</li>
+<li>Chubby（分散锁服务）<br>
+</li>
+</ul>
+<p>
+随后就有其对应的开源实现，也就是Hadoop。Hadoop是Apache软件基金会发起的一个项目，它是一种分布式数据和计算的框架，它包含许如下子项目。<br></p>
+<ul class="org-ul">
+<li>HDFS，hadoop distributed file system，是Google File System的开源实现<br>
+</li>
+<li>MapReduce，是Google MapReduce的开源实现<br>
+</li>
+<li>HBASE，类似Google BigTable的分布式NoSQL数据库<br>
+</li>
+<li>Zookeeper，分布式锁服务，类似Google Chubby<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org29697a8" class="outline-2">
+<h2 id="org29697a8">参考资料</h2>
+<div class="outline-text-2" id="text-org29697a8">
+<ul class="org-ul">
+<li>
+<a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
+</li>
+<li>
+<a href="https://baike.baidu.com/item/MapReduce/133425">百度百科 mapreduce</a><br>
+</li>
+<li>
+<a href="https://hadoop.apache.org/">Hadoop主页</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Aug 16, 2018</span>
     <h3>
       <a class="post-link" href="/posts/algorithm/algorithm-weekly-zigzag-conversion/">每周算法：字符串锯齿变换</a>
     </h3>
 
-    <div id="outline-container-org7046e4f" class="outline-2">
-<h2 id="org7046e4f">Description</h2>
-<div class="outline-text-2" id="text-org7046e4f">
+    <div id="outline-container-orgd737ae8" class="outline-2">
+<h2 id="orgd737ae8">Description</h2>
+<div class="outline-text-2" id="text-orgd737ae8">
 <p>
 The string "PAYPALISHIRING" is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)<br></p>
 
@@ -92,13 +198,13 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-orgee31861" class="outline-2">
-<h2 id="orgee31861">Solution</h2>
-<div class="outline-text-2" id="text-orgee31861">
+<div id="outline-container-org4302ca3" class="outline-2">
+<h2 id="org4302ca3">Solution</h2>
+<div class="outline-text-2" id="text-org4302ca3">
 </div>
-<div id="outline-container-orge15f172" class="outline-3">
-<h3 id="orge15f172">Approach 1 找规律</h3>
-<div class="outline-text-3" id="text-orge15f172">
+<div id="outline-container-org0b8fe0f" class="outline-3">
+<h3 id="org0b8fe0f">Approach 1 找规律</h3>
+<div class="outline-text-3" id="text-org0b8fe0f">
 <p>
 我想到的第一个方法就是找规律，通过寻找每一行的变化规律，编写相应的计算逻辑。<br>
 需要注意:<br></p>
@@ -160,9 +266,9 @@ P     I
 </div>
 
 
-<div id="outline-container-org5285d60" class="outline-3">
-<h3 id="org5285d60">Approach 2 Sort by Row</h3>
-<div class="outline-text-3" id="text-org5285d60">
+<div id="outline-container-org953ff95" class="outline-3">
+<h3 id="org953ff95">Approach 2 Sort by Row</h3>
+<div class="outline-text-3" id="text-org953ff95">
 <p>
 这个方法是leetcode提供的一个方法，主要思路是使用一个二维矩阵将字符串按照顺序存储起来，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(n)</code> 。<br></p>
 
@@ -190,9 +296,9 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-org73be077" class="outline-3">
-<h3 id="org73be077">Approach 3 Visit by Row</h3>
-<div class="outline-text-3" id="text-org73be077">
+<div id="outline-container-org03370b4" class="outline-3">
+<h3 id="org03370b4">Approach 3 Visit by Row</h3>
+<div class="outline-text-3" id="text-org03370b4">
 <p>
 这个方法是leetcode提供的另一个方法，通过计算下标完成字符串的转换，实际上也是对转换的规律进行了总结，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(1)</code> 。<br>
 对于空间复杂度，实际上需要额外的空间存储结果字符串，如果忽略函数所返回的结果字符串，则空间复杂度为 <code>O(1)</code> 。<br></p>
@@ -226,17 +332,17 @@ P     I
       <a class="post-link" href="/posts/2018/css-flexbox-layout-cheatsheet/">css flexbox 总结</a>
     </h3>
 
-    <div id="outline-container-orge357084" class="outline-2">
-<h2 id="orge357084">引言</h2>
-<div class="outline-text-2" id="text-orge357084">
+    <div id="outline-container-org274ae2f" class="outline-2">
+<h2 id="org274ae2f">引言</h2>
+<div class="outline-text-2" id="text-org274ae2f">
 <p>
 本文主要对css flexbox的关键点了总结，方便以后在以后的查阅。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgc2d5151" class="outline-2">
-<h2 id="orgc2d5151">容器的属性</h2>
-<div class="outline-text-2" id="text-orgc2d5151">
+<div id="outline-container-orgfe5258f" class="outline-2">
+<h2 id="orgfe5258f">容器的属性</h2>
+<div class="outline-text-2" id="text-orgfe5258f">
 <p>
 对于容器需要指定其显示方式为flexbox<br></p>
 <div class="highlight"><pre><span></span><span class="nt">display</span><span class="o">:</span><span class="w"> </span><span class="nt">flex</span><span class="o">;</span><span class="w"></span>
@@ -268,9 +374,9 @@ P     I
 </div>
 </div>
 
-<div id="outline-container-org67938b6" class="outline-2">
-<h2 id="org67938b6">条目的属性</h2>
-<div class="outline-text-2" id="text-org67938b6">
+<div id="outline-container-orgc4ed4f2" class="outline-2">
+<h2 id="orgc4ed4f2">条目的属性</h2>
+<div class="outline-text-2" id="text-orgc4ed4f2">
 <p>
 用于调整顺序<br></p>
 <div class="highlight"><pre><span></span><span class="nt">order</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nt">integer</span><span class="o">&gt;;</span><span class="w"> </span><span class="c">/* default 0 */</span><span class="w"></span>
@@ -304,9 +410,9 @@ P     I
 </div>
 
 
-<div id="outline-container-orgca07dbb" class="outline-2">
-<h2 id="orgca07dbb">参考资料</h2>
-<div class="outline-text-2" id="text-orgca07dbb">
+<div id="outline-container-orgd7e8a8a" class="outline-2">
+<h2 id="orgd7e8a8a">参考资料</h2>
+<div class="outline-text-2" id="text-orgd7e8a8a">
 <ul class="org-ul">
 <li>
 <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">css-tricks.com</a><br>
@@ -356,9 +462,9 @@ P     I
       <a class="post-link" href="/posts/algorithm/algorithm-weekly-longest-palindromic-substring/">每周算法：最长对称子串</a>
     </h3>
 
-    <div id="outline-container-orgd8d1c2c" class="outline-2">
-<h2 id="orgd8d1c2c">Description</h2>
-<div class="outline-text-2" id="text-orgd8d1c2c">
+    <div id="outline-container-org9ef9afa" class="outline-2">
+<h2 id="org9ef9afa">Description</h2>
+<div class="outline-text-2" id="text-org9ef9afa">
 <p>
 Given a string s, find the longest palindromic substring in s. You may assume that the maximum length of s is 1000.<br></p>
 
@@ -378,16 +484,16 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd36605d" class="outline-2">
-<h2 id="orgd36605d">Solution</h2>
-<div class="outline-text-2" id="text-orgd36605d">
+<div id="outline-container-org8ead53a" class="outline-2">
+<h2 id="org8ead53a">Solution</h2>
+<div class="outline-text-2" id="text-org8ead53a">
 <p>
 我想到了两种方法：暴力解法、从中心展开<br></p>
 </div>
 
-<div id="outline-container-org9c78246" class="outline-3">
-<h3 id="org9c78246">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org9c78246">
+<div id="outline-container-org63fafd0" class="outline-3">
+<h3 id="org63fafd0">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org63fafd0">
 <p>
 暴击解法的时间复杂度为 <code>O(n3)</code> , 找出所有子串的时间复杂度为 <code>O(n2)</code> , 判断一个子串的时间复杂度为 <code>O(n)</code> ; 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -442,9 +548,9 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-org6809c17" class="outline-3">
-<h3 id="org6809c17">Approach 2 从中心展开</h3>
-<div class="outline-text-3" id="text-org6809c17">
+<div id="outline-container-org404df8e" class="outline-3">
+<h3 id="org404df8e">Approach 2 从中心展开</h3>
+<div class="outline-text-3" id="text-org404df8e">
 <p>
 从中心展开方法的时间复杂度为 <code>O(n2)</code> , 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -518,9 +624,9 @@ leetcode上还有一个解法，使用java完成的，它的坐标计算也很�
 </div>
 </div>
 
-<div id="outline-container-orgc89e227" class="outline-3">
-<h3 id="orgc89e227">Approach 3 动态规划（dynamic programming）</h3>
-<div class="outline-text-3" id="text-orgc89e227">
+<div id="outline-container-org7ad7b66" class="outline-3">
+<h3 id="org7ad7b66">Approach 3 动态规划（dynamic programming）</h3>
+<div class="outline-text-3" id="text-org7ad7b66">
 <p>
 leetcode上还给给出了使用DP解决这个问题的方法。<br>
 我在leetcode上的discuss上找了个java写的解法。<br></p>
@@ -550,9 +656,9 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
 </div>
 </div>
 
-<div id="outline-container-org2333774" class="outline-3">
-<h3 id="org2333774">Approach 4 Manacher算法</h3>
-<div class="outline-text-3" id="text-org2333774">
+<div id="outline-container-org9c26fda" class="outline-3">
+<h3 id="org9c26fda">Approach 4 Manacher算法</h3>
+<div class="outline-text-3" id="text-org9c26fda">
 <p>
 这个算法思路实在是新奇，感兴趣的同学可以 <a href="https://articles.leetcode.com/longest-palindromic-substring-part-ii/">去看看</a> 。<br></p>
 </div>
@@ -568,9 +674,9 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
       <a class="post-link" href="/posts/algorithm/algorithm-weekly-longest-substring-without-repeating-characters/">每周算法：最长不含重复字符的子串</a>
     </h3>
 
-    <div id="outline-container-orgb8067db" class="outline-2">
-<h2 id="orgb8067db">Description</h2>
-<div class="outline-text-2" id="text-orgb8067db">
+    <div id="outline-container-org48fd8e5" class="outline-2">
+<h2 id="org48fd8e5">Description</h2>
+<div class="outline-text-2" id="text-org48fd8e5">
 <p>
 Given a string, find the length of the longest substring without repeating characters.<br></p>
 
@@ -585,16 +691,16 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 </div>
 
-<div id="outline-container-orgbb03376" class="outline-2">
-<h2 id="orgbb03376">Solution</h2>
-<div class="outline-text-2" id="text-orgbb03376">
+<div id="outline-container-orga780faf" class="outline-2">
+<h2 id="orga780faf">Solution</h2>
+<div class="outline-text-2" id="text-orga780faf">
 <p>
 好久没刷算法题了，手有点生，没有什么思路，下面的答案是看过提示之后才写出来的。<br></p>
 </div>
 
-<div id="outline-container-orge74a2b8" class="outline-3">
-<h3 id="orge74a2b8">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-orge74a2b8">
+<div id="outline-container-org4e62874" class="outline-3">
+<h3 id="org4e62874">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org4e62874">
 <p>
 将所有的子串都穷举出来，并对它们进行判断，就能够得到最长子串的长度。这个算法很显然需要耗费很长时间。<br>
 需要注意的是： C++20中才支持 <code>std::set::contains</code> 这个接口（根据cppreference.com）。<br></p>
@@ -639,9 +745,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-orgc80bc34" class="outline-3">
-<h3 id="orgc80bc34">Approach 2 滑动窗口</h3>
-<div class="outline-text-3" id="text-orgc80bc34">
+<div id="outline-container-org1b936fd" class="outline-3">
+<h3 id="org1b936fd">Approach 2 滑动窗口</h3>
+<div class="outline-text-3" id="text-org1b936fd">
 <p>
 滑动窗口的概念在字符串处理问题中十分常用，保持子串的左端点不动，不断拓展右侧端点，就能穷举出所有满足条件的子串。<br>
 需要注意的是这句话： <code>lengthMax = max(lengthMax, int(j-i+1));</code><br></p>
@@ -684,9 +790,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-org04cc8b9" class="outline-3">
-<h3 id="org04cc8b9">Approach 3 优化的滑动窗口</h3>
-<div class="outline-text-3" id="text-org04cc8b9">
+<div id="outline-container-org2a411e5" class="outline-3">
+<h3 id="org2a411e5">Approach 3 优化的滑动窗口</h3>
+<div class="outline-text-3" id="text-org2a411e5">
 <p>
 使用 <code>map</code> 对字母出现的位置进行记录，这样在出现相同字母时，就能够从上一次出现的位置向后开始寻找。<br>
 需要注意句话 <code>it-&gt;second+1&gt;=i</code> , 需要对位置加1后再比较，这样才能保证 <code>i</code> 的坐标计算正确。<br></p>
@@ -731,8 +837,8 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
       <a class="post-link" href="/posts/2018/navigation-and-selection-effectively-in-emacs/">提高emacs中浏览和选择操作效率的技巧</a>
     </h3>
 
-    <div id="outline-container-org065c6f2" class="outline-2">
-<h2 id="org065c6f2">
+    <div id="outline-container-org94173e3" class="outline-2">
+<h2 id="org94173e3">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -747,8 +853,8 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-org4af209c" class="outline-2">
-<h2 id="org4af209c">
+<div id="outline-container-org22dac59" class="outline-2">
+<h2 id="org22dac59">
 <span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -760,13 +866,13 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-org3496d15" class="outline-2">
-<h2 id="org3496d15">
+<div id="outline-container-org5f97d5f" class="outline-2">
+<h2 id="org5f97d5f">
 <span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-orgdbc53e2" class="outline-3">
-<h3 id="orgdbc53e2">
+<div id="outline-container-org0b3c0d4" class="outline-3">
+<h3 id="org0b3c0d4">
 <span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -811,8 +917,8 @@ Point and mark interchanged
 </div>
 </div>
 
-<div id="outline-container-org80b185a" class="outline-3">
-<h3 id="org80b185a">
+<div id="outline-container-org1046cde" class="outline-3">
+<h3 id="org1046cde">
 <span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -850,8 +956,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org5d5af66" class="outline-3">
-<h3 id="org5d5af66">
+<div id="outline-container-org7477dd2" class="outline-3">
+<h3 id="org7477dd2">
 <span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
 </h3>
 <div class="outline-text-3" id="text-3-3">
@@ -865,16 +971,16 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org92b4219" class="outline-2">
-<h2 id="org92b4219">
+<div id="outline-container-org218ea5e" class="outline-2">
+<h2 id="org218ea5e">
 <span class="section-number-2">4</span> 其他插件支持</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
 </div>
 
-<div id="outline-container-org4aa1e16" class="outline-3">
-<h3 id="org4aa1e16">
+<div id="outline-container-orgc3c3857" class="outline-3">
+<h3 id="orgc3c3857">
 <span class="section-number-3">4.1</span> helm swoop</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
@@ -888,8 +994,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org60514b9" class="outline-3">
-<h3 id="org60514b9">
+<div id="outline-container-org3fd2704" class="outline-3">
+<h3 id="org3fd2704">
 <span class="section-number-3">4.2</span> avy</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
@@ -905,8 +1011,8 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org670b7e3" class="outline-2">
-<h2 id="org670b7e3">
+<div id="outline-container-orgb3232fb" class="outline-2">
+<h2 id="orgb3232fb">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -932,17 +1038,17 @@ interface FooProps {}
       <a class="post-link" href="/posts/2018/shell-output-redirections/">shell的输出重定向</a>
     </h3>
 
-    <div id="outline-container-org6662610" class="outline-2">
-<h2 id="org6662610">引言</h2>
-<div class="outline-text-2" id="text-org6662610">
+    <div id="outline-container-orgcdade98" class="outline-2">
+<h2 id="orgcdade98">引言</h2>
+<div class="outline-text-2" id="text-orgcdade98">
 <p>
 在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga42cc94" class="outline-2">
-<h2 id="orga42cc94">使用尖括号完成重定向</h2>
-<div class="outline-text-2" id="text-orga42cc94">
+<div id="outline-container-org5a0103e" class="outline-2">
+<h2 id="org5a0103e">使用尖括号完成重定向</h2>
+<div class="outline-text-2" id="text-org5a0103e">
 <p>
 示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
 <div class="highlight"><pre><span></span>ls . &gt; ls-output.txt
@@ -951,25 +1057,25 @@ interface FooProps {}
 可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
 </div>
 
-<div id="outline-container-orgf305f99" class="outline-3">
-<h3 id="orgf305f99">重定向 <code>stdout</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-orgf305f99">
+<div id="outline-container-orgef1b2d2" class="outline-3">
+<h3 id="orgef1b2d2">重定向 <code>stdout</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-orgef1b2d2">
 <div class="highlight"><pre><span></span>ls . <span class="m">1</span>&gt; ls-output.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org98b01d2" class="outline-3">
-<h3 id="org98b01d2">重定向 <code>stderr</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org98b01d2">
+<div id="outline-container-orgb4a05f5" class="outline-3">
+<h3 id="orgb4a05f5">重定向 <code>stderr</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-orgb4a05f5">
 <div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt; ls-error.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org5b81366" class="outline-3">
-<h3 id="org5b81366">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
-<div class="outline-text-3" id="text-org5b81366">
+<div id="outline-container-orgcddf5f2" class="outline-3">
+<h3 id="orgcddf5f2">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
+<div class="outline-text-3" id="text-orgcddf5f2">
 <div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> ls-output-and-error.txt
 </pre></div>
 <p>
@@ -979,9 +1085,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org232905c" class="outline-3">
-<h3 id="org232905c">将程序的输出丢掉</h3>
-<div class="outline-text-3" id="text-org232905c">
+<div id="outline-container-org8dd3a1a" class="outline-3">
+<h3 id="org8dd3a1a">将程序的输出丢掉</h3>
+<div class="outline-text-3" id="text-org8dd3a1a">
 <p>
 可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
 <div class="highlight"><pre><span></span>program &gt; /dev/null
@@ -989,9 +1095,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-orgf503393" class="outline-3">
-<h3 id="orgf503393">将输出追加到指定文件尾部</h3>
-<div class="outline-text-3" id="text-orgf503393">
+<div id="outline-container-orgb0a2830" class="outline-3">
+<h3 id="orgb0a2830">将输出追加到指定文件尾部</h3>
+<div class="outline-text-3" id="text-orgb0a2830">
 <p>
 使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="nb">echo</span> <span class="nb">test</span> &gt;&gt; file-output.txt
@@ -1000,9 +1106,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org530aadc" class="outline-2">
-<h2 id="org530aadc">使用管道完成重定向</h2>
-<div class="outline-text-2" id="text-org530aadc">
+<div id="outline-container-org2291539" class="outline-2">
+<h2 id="org2291539">使用管道完成重定向</h2>
+<div class="outline-text-2" id="text-org2291539">
 <p>
 使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
 <div class="highlight"><pre><span></span>ls <span class="p">|</span> grep &lt;pattern&gt;
@@ -1019,9 +1125,9 @@ interface FooProps {}
       <a class="post-link" href="/posts/2018/notes-on-libshmcache/">libshmcache源码阅读笔记</a>
     </h3>
 
-    <div id="outline-container-org506137f" class="outline-2">
-<h2 id="org506137f">引言</h2>
-<div class="outline-text-2" id="text-org506137f">
+    <div id="outline-container-orgd6b6a0a" class="outline-2">
+<h2 id="orgd6b6a0a">引言</h2>
+<div class="outline-text-2" id="text-orgd6b6a0a">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -1046,9 +1152,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-orgc0c3944" class="outline-2">
-<h2 id="orgc0c3944">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-orgc0c3944">
+<div id="outline-container-org3e287f6" class="outline-2">
+<h2 id="org3e287f6">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-org3e287f6">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -1092,9 +1198,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org27064c3" class="outline-2">
-<h2 id="org27064c3">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-org27064c3">
+<div id="outline-container-orgad855c4" class="outline-2">
+<h2 id="orgad855c4">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-orgad855c4">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -1103,18 +1209,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orgfe75531" class="outline-2">
-<h2 id="orgfe75531">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-orgfe75531">
+<div id="outline-container-org7eb93e6" class="outline-2">
+<h2 id="org7eb93e6">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-org7eb93e6">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgc59e2a0" class="outline-2">
-<h2 id="orgc59e2a0">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-orgc59e2a0">
+<div id="outline-container-orgbc16656" class="outline-2">
+<h2 id="orgbc16656">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-orgbc16656">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -1123,9 +1229,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org273935f" class="outline-2">
-<h2 id="org273935f">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-org273935f">
+<div id="outline-container-org1405743" class="outline-2">
+<h2 id="org1405743">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-org1405743">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
@@ -1140,9 +1246,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
       <a class="post-link" href="/posts/2018/cpp-bit-field/">C/C++中的位域</a>
     </h3>
 
-    <div id="outline-container-org2818ee4" class="outline-2">
-<h2 id="org2818ee4">什么是位域</h2>
-<div class="outline-text-2" id="text-org2818ee4">
+    <div id="outline-container-org3a24bc0" class="outline-2">
+<h2 id="org3a24bc0">什么是位域</h2>
+<div class="outline-text-2" id="text-org3a24bc0">
 <p>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">维基百科</a> 给出了以下解释<br></p>
 <blockquote>
@@ -1171,9 +1277,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgfc5b844" class="outline-2">
-<h2 id="orgfc5b844">位域的语法</h2>
-<div class="outline-text-2" id="text-orgfc5b844">
+<div id="outline-container-orgb657a8b" class="outline-2">
+<h2 id="orgb657a8b">位域的语法</h2>
+<div class="outline-text-2" id="text-orgb657a8b">
 <p>
 下面就是位域的语法格式。<br></p>
 <div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">size</span><span class="w"></span>
@@ -1220,9 +1326,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgfb7a129" class="outline-3">
-<h3 id="orgfb7a129">在 <code>size</code> 取0时如何理解</h3>
-<div class="outline-text-3" id="text-orgfb7a129">
+<div id="outline-container-org19d2144" class="outline-3">
+<h3 id="org19d2144">在 <code>size</code> 取0时如何理解</h3>
+<div class="outline-text-3" id="text-org19d2144">
 <p>
 对于 <code>size</code> 取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。<br>
 如下所示，定义了如下几种情况。<br></p>
@@ -1307,10 +1413,10 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org0eb7f69" class="outline-3">
-<h3 id="org0eb7f69">
+<div id="outline-container-orgc912af6" class="outline-3">
+<h3 id="orgc912af6">
 <code>struct</code> 与 <code>class</code> 关键字</h3>
-<div class="outline-text-3" id="text-org0eb7f69">
+<div class="outline-text-3" id="text-orgc912af6">
 <p>
 多数例子都是以 <code>struct</code> 作为位域的组织标识，在C++中能否使用 <code>class</code> 作为位域的标识符呢？<br>
 经过测试，是可以使用 <code>class</code> 关键字的，但是需要注意 <code>class</code> 的默认访问控制属性为 <code>private</code> 。<br></p>
@@ -1319,9 +1425,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org47b5c19" class="outline-2">
-<h2 id="org47b5c19">位域的常见应用场景</h2>
-<div class="outline-text-2" id="text-org47b5c19">
+<div id="outline-container-orgf7ed9bd" class="outline-2">
+<h2 id="orgf7ed9bd">位域的常见应用场景</h2>
+<div class="outline-text-2" id="text-orgf7ed9bd">
 <p>
 为什么要使用位域？位域适合那些情况？<br></p>
 
@@ -1334,18 +1440,18 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org325a7ec" class="outline-2">
-<h2 id="org325a7ec">C++中的位操作接口</h2>
-<div class="outline-text-2" id="text-org325a7ec">
+<div id="outline-container-orgf7cae73" class="outline-2">
+<h2 id="orgf7cae73">C++中的位操作接口</h2>
+<div class="outline-text-2" id="text-orgf7cae73">
 <p>
 C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接口提供了指定比特位数据的操作接口。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgf452ab4" class="outline-2">
-<h2 id="orgf452ab4">参考资料</h2>
-<div class="outline-text-2" id="text-orgf452ab4">
+<div id="outline-container-org594c3ec" class="outline-2">
+<h2 id="org594c3ec">参考资料</h2>
+<div class="outline-text-2" id="text-org594c3ec">
 <ul class="org-ul">
 <li>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">wikipedia - bit field</a><br>
@@ -1377,8 +1483,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
       <a class="post-link" href="/posts/2018/gcc-built-in-functions-for-atomic-memory-access/">GCC的内存原子化操作函数接口</a>
     </h3>
 
-    <div id="outline-container-orgbdd9b3b" class="outline-2">
-<h2 id="orgbdd9b3b">
+    <div id="outline-container-org4955233" class="outline-2">
+<h2 id="org4955233">
 <span class="section-number-2">1</span> 原子化操作</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -1398,177 +1504,6 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 
     <p>
 调试 C/C++ 程序时，需要打印指定内存地址的内容。我最近调试程序中的序列化模块时，需要将类对象按照指定的格式转化为二进制流，为了验证转化结果，在调试时就需要将指定内存地址中的内容打印出来。<br></p>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Jun 26, 2018</span>
-    <h3>
-      <a class="post-link" href="/posts/2018/asynchronous-synchronous-and-blocking-unblocking/">同步和异步、阻塞和非阻塞</a>
-    </h3>
-
-    <div id="outline-container-org426a85e" class="outline-2">
-<h2 id="org426a85e">
-<span class="section-number-2">1</span> 同步和异步</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-同步和异步指的是在进行I/O操作完成之前，是否允许其他处理步骤继续执行。<br>
-计算机中的I/O操作相对于数据处理操作时十分耗时的。<br></p>
-
-<p>
-一个简单的I/O操作方式就是启动连接并等待操作完成，但是这样的操作（同步阻塞I/O）在通信过程中会阻塞进程的处理进度。<br>
-相应的，可以在启动通信的同时进行其他的处理，并不需要等待I/O操作的完成，这样的操作就被称作是异步I/O。那些依赖于I/O操作执行完成的任务会阻塞等待I/O操作的完成，其他不依赖与I/O操作的任务能够继续执行。<br></p>
-
-<p>
-同步模型常用的函数接口： <code>read</code> , <code>write</code> , <code>send</code> , <code>recv</code><br>
-异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
-</div>
-
-<div id="outline-container-org2246c9f" class="outline-3">
-<h3 id="org2246c9f">
-<span class="section-number-3">1.1</span> POSIX AIO</h3>
-<div class="outline-text-3" id="text-1-1">
-<p>
-在头文件 <code>aio.h</code> 中定义，链接时使用 <code>-lrt</code><br></p>
-
-<p>
-<b>函数接口</b><br>
-异步写操作<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">aio_read</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">aiocb</span><span class="o">*</span><span class="w"> </span><span class="n">aiocbp</span><span class="p">);</span><span class="w"></span>
-</pre></div>
-
-<p>
-异步读操作<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">aio_write</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">aiocb</span><span class="o">*</span><span class="w"> </span><span class="n">aiocbp</span><span class="p">);</span><span class="w"></span>
-</pre></div>
-
-<p>
-获取异步操作结果<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">aio_return</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">aiocb</span><span class="o">*</span><span class="w"> </span><span class="n">aiocbp</span><span class="p">);</span><span class="w"></span>
-</pre></div>
-
-<p>
-获取异步操作中的错误<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">aio_error</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">aiocb</span><span class="o">*</span><span class="w"> </span><span class="n">aiocbp</span><span class="p">);</span><span class="w"></span>
-</pre></div>
-
-<p>
-示例代码： <a href="https://gist.github.com/rsms/771059">github gist</a><br></p>
-</div>
-</div>
-
-<div id="outline-container-org672595c" class="outline-3">
-<h3 id="org672595c">
-<span class="section-number-3">1.2</span> Linux AIO</h3>
-<div class="outline-text-3" id="text-1-2">
-<p>
-在头文件 <code>libaio.h</code> 中定义，链接时使用 <code>-laio</code><br></p>
-
-<p>
-<b>函数接口</b><br>
-需要注意的是aio的函数接口需要借助 <code>syscall</code> 进行调用。<br>
-创建aio context对象<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">io_setup</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">nr</span><span class="p">,</span><span class="w"> </span><span class="n">aio_context_t</span><span class="o">*</span><span class="w"> </span><span class="n">ctxp</span><span class="p">);</span><span class="w"></span>
-</pre></div>
-<p>
-销毁aio context对象<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">io_destroy</span><span class="p">(</span><span class="n">aio_context_t</span><span class="w"> </span><span class="n">ctx</span><span class="p">);</span><span class="w"></span>
-</pre></div>
-<p>
-提交异步操作<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">io_submit</span><span class="p">(</span><span class="n">aio_context_t</span><span class="w"> </span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">nr</span><span class="p">,</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">iocb</span><span class="o">**</span><span class="w"> </span><span class="n">iocbpp</span><span class="p">);</span><span class="w"></span>
-</pre></div>
-<p>
-获取异步操作结果<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">io_getevents</span><span class="p">(</span><span class="n">aio_context_t</span><span class="w"> </span><span class="n">ctx</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">min_nr</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">max_nr</span><span class="p">,</span><span class="w"></span>
-<span class="w">		 </span><span class="n">io_event</span><span class="o">*</span><span class="w"> </span><span class="n">events</span><span class="p">,</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="o">*</span><span class="w"> </span><span class="n">timeout</span><span class="p">);</span><span class="w"></span>
-</pre></div>
-
-<p>
-示例代码:<br></p>
-<ul class="org-ul">
-<li>
-<a href="https://gist.github.com/larytet/87f90b08643ac3de934df2cadff4989c">github gist</a><br>
-</li>
-<li>
-<a href="http://www.xmailserver.org/eventfd-aio-test.c">xmailserver.org</a><br>
-</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-org7a8ff59" class="outline-3">
-<h3 id="org7a8ff59">
-<span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
-<div class="outline-text-3" id="text-1-3">
-<p>
-摘自 <a href="https://stackoverflow.com/questions/8768083/difference-between-posix-aio-and-libaio-on-linux">stackoverflow.com</a><br></p>
-<blockquote>
-<p>
-On linux, the two AIO implementations are fundamentally different.<br>
-The POSIX AIO is a user-level implementation that performs normal blocking I/O in multiple threads, hence giving the illusion that the I/Os are asynchronous. The main reason to do this is that:<br></p>
-<ul class="org-ul">
-<li>it works with any filesystem<br>
-</li>
-<li>it works (essentially) on any operating system (keep in mind that gnu's libc is portable)<br>
-</li>
-<li>it works on files with buffering enabled (i.e. no O<sub>DIRECT</sub> flag set)<br>
-</li>
-</ul>
-<p>
-The main drawback is that your queue depth (i.e. the number of outstanding operations you can have in practice) is limited by the number of threads you choose to have, which also means that a slow operation on one disk may block an operation going to a different disk. It also affects which I/Os (or how many) is seen by the kernel and the disk scheduler as well.<br>
-The kernel AIO (i.e. io<sub>submit</sub>() et.al.) is kernel support for asynchronous I/O operations, where the io requests are actually queued up in the kernel, sorted by whatever disk scheduler you have, presumably some of them are forwarded (in somewhat optimal order one would hope) to the actual disk as asynchronous operations (using TCQ or NCQ). The main restriction with this approach is that not all filesystems work that well or at all with async I/O (and may fall back to blocking semantics), files have to be opened with O<sub>DIRECT</sub> which comes with a whole lot of other restrictions on the I/O requests. If you fail to open your files with O<sub>DIRECT</sub>, it may still "work", as in you get the right data back, but it probably isn't done asynchronously, but is falling back to blocking semantics.<br>
-Also keep in mind that io<sub>submit</sub>() can actually block on the disk under certain circumstances.<br></p>
-</blockquote>
-<p>
-在Linux上两种AIO是完全不同的；<br>
-POSIX AIO实现在用户层，实际上进行的操作是普通的多线程阻塞操作，表现为I/O操作是异步的，这种AIO的优点是兼容性和可移植性好，缺点是操作队列长度受限于最大线程数量。<br>
-Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核中维护，这种AIO的缺点是并不支持所有的文件系统，Linux AIO在某些情况下的磁盘操作是会阻塞的。<br></p>
-</div>
-</div>
-</div>
-
-<div id="outline-container-orgcb8d226" class="outline-2">
-<h2 id="orgcb8d226">
-<span class="section-number-2">2</span> 阻塞和非阻塞</h2>
-<div class="outline-text-2" id="text-2">
-<p>
-阻塞与非阻塞的概念针对的是函数是否会立即返回。<br>
-非阻塞模型常与IO复用技术组合使用。<br>
-可以通过函数将IO设备设置为非阻塞模式。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-orgb9becb6" class="outline-2">
-<h2 id="orgb9becb6">
-<span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
-<div class="outline-text-2" id="text-3">
-<p>
-在处理 IO 的时候，阻塞和非阻塞都是同步 IO。<br>
-只有使用了特殊的 API 才是异步 IO。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-org7faa515" class="outline-2">
-<h2 id="org7faa515">
-<span class="section-number-2">4</span> 参考资料</h2>
-<div class="outline-text-2" id="text-4">
-<ul class="org-ul">
-<li>
-<a href="https://blog.csdn.net/hguisu/article/details/38638183">csdn.net</a><br>
-</li>
-<li>
-<a href="https://github.com/littledan/linux-aio%20repo">github.com linux-aio</a><br>
-</li>
-<li>
-<a href="https://www.ibm.com/developerworks/linux/library/l-async/index.html">ibm developerworks</a><br>
-</li>
-</ul>
-</div>
-</div>
 
   </li>
 
