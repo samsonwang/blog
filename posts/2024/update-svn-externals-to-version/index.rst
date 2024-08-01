@@ -5,13 +5,13 @@
 .. link: 
 .. description: 
 
-svn的externals功能用于将代码库中其他位置的代码链接到本目录中来。最近我尝试将代码回退到某个历史版本时发现externals链接过来的代码并没有回退到历史版本，仍然是库中最新的版本。
+svn的 `externals` 功能用于将代码库中其他位置的代码链接到本目录中来。最近我尝试将代码回退到某个历史版本时发现 `externals` 链接过来的代码并没有回退到历史版本，仍然是库中最新的版本。
 
 .. TEASER_END
 
-查阅了资料后发现，externals链接过来的代码是可以指定svn版本的，svn的externals功能其实类似于git的submodule，本意是用来引用第三方模块的代码，所以在使用时应该标注引用模块的版本。
+查阅了资料后发现， `externals` 链接过来的代码是可以指定svn版本的，svn的 `externals` 功能其实类似于git的 `submodule` ，本意是用来引用第三方模块的代码，所以在使用时应该标注引用模块的版本。
 
-当然，如果希望externals代码跟随其他代码一起回退到指定版本，也是有办法的，我在stackoverflow上找到了一个脚本实现此功能。其原理就是递归该目录，并对每个子目录执行svn的更新操作。
+当然，如果希望 `externals` 代码跟随其他代码一起回退到指定版本，也是有办法的，我在stackoverflow上找到了一个脚本实现此功能。其原理就是递归该目录，并对每个子目录执行svn的更新操作。
 
 
 Unix: ``find . -name .svn -execdir svn update -r {2010-08-30} \;``
