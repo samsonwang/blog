@@ -123,7 +123,7 @@ contextual information."
 (defun org-custom-link-img-url-export (path desc format)
   (cond
    ((eq format 'html)
-    (format "<img src=\"/assets/images/spinner.svg\" data-src=\"/%s\" alt=\"%s\"/>"
+    (format "<img src=\"/assets/images/spinner.svg\" data-src=\"/blog/%s\" alt=\"%s\"/>"
             (if (string-match "\\`[ \t\n\r/]+" path) ;; trim path from left
                 (replace-match "" t t path)
               s)
