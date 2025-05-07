@@ -70,18 +70,18 @@ windows系统的向下兼容性一直是做的比较好的，一些老旧软件�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org016b548" class="outline-2">
-<h2 id="org016b548">链接旧版本库时遇到的问题</h2>
-<div class="outline-text-2" id="text-org016b548">
+<div id="outline-container-orgd1f0133" class="outline-2">
+<h2 id="orgd1f0133">链接旧版本库时遇到的问题</h2>
+<div class="outline-text-2" id="text-orgd1f0133">
 <p>
 有个库是由MSVC2008编译的，我在MSVC2017中使用这个库进行链接时出现错误，提示我缺少一些函数（如： <code>sprintf</code> 、 <code>_snprintf</code> 、 <code>__iob_func</code> 等）。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orged52224" class="outline-2">
-<h2 id="orged52224">为什么会出现这个问题</h2>
-<div class="outline-text-2" id="text-orged52224">
+<div id="outline-container-org595f276" class="outline-2">
+<h2 id="org595f276">为什么会出现这个问题</h2>
+<div class="outline-text-2" id="text-org595f276">
 <p>
 在查阅了一些资料后发现，从MSVC2015开始，微软修改了C运行时库（C runtime），将其拆分为Universal CRT( <code>ucrtbase</code> ) 和 VC Runtime Library ( <code>vcruntime</code> )。其中，UCRT包含大部分的标准功能，VCRT包含与编译相关的功能（如异常处理等内部功能）。一些函数从UCRT中删掉了，导致链接时无法找到对应的符号（unresolved external symbol）。下面是微软官方的原文。<br></p>
 
@@ -101,18 +101,18 @@ For the CRT, mixing-and-matching was never supported, but it often just worked, 
 </div>
 
 
-<div id="outline-container-orga615dcf" class="outline-2">
-<h2 id="orga615dcf">官方推荐的解决方案</h2>
-<div class="outline-text-2" id="text-orga615dcf">
+<div id="outline-container-org85544de" class="outline-2">
+<h2 id="org85544de">官方推荐的解决方案</h2>
+<div class="outline-text-2" id="text-org85544de">
 <p>
 微软在MSVC2015后提供了 <code>legacy_stdio_definitions.lib</code> 库，能够提供大部分缺失的链接符号（symbol）。但仍有一些无法提供兼容的链接符号，如一些函数定义 <code>__iob_func</code> 或导出的数据 <code>__imp___iob</code> 、 <code>__imp___pctype</code> 、 <code>__imp___mb_cur_max</code> 。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orged05c94" class="outline-2">
-<h2 id="orged05c94">那 <code>__iob_func</code> 怎么处理呢？</h2>
-<div class="outline-text-2" id="text-orged05c94">
+<div id="outline-container-orgde9eb12" class="outline-2">
+<h2 id="orgde9eb12">那 <code>__iob_func</code> 怎么处理呢？</h2>
+<div class="outline-text-2" id="text-orgde9eb12">
 <p>
 微软官方没有提供 <code>__iob_func</code> 的适配方案，但是我找到了另外的方法，即可以自己实现一个同名函数。<br></p>
 
@@ -168,9 +168,9 @@ MSVC2008中的 <code>FILE</code> 结构体定义：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4b98822" class="outline-2">
-<h2 id="org4b98822">参考资料</h2>
-<div class="outline-text-2" id="text-org4b98822">
+<div id="outline-container-org033746d" class="outline-2">
+<h2 id="org033746d">参考资料</h2>
+<div class="outline-text-2" id="text-org033746d">
 <ul class="org-ul">
 <li>
 <a href="https://docs.microsoft.com/en-us/cpp/porting/overview-of-potential-upgrade-issues-visual-cpp">microsoft docs - potential upgrade issues</a><br>
