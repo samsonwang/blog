@@ -8,16 +8,16 @@
 <title>栈溢出问题和chkstk | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2020/stackoverflow-and-chkstk/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2020/msvc-legacy-stdio/" title="MSVC的stdio版本适配问题" type="text/html">
-<link rel="next" href="/posts/2020/self-defined-deleter-in-cpp-smart-pointer/" title="在C++智能指针中使用自定义的deleter" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2020/stackoverflow-and-chkstk/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2020/msvc-legacy-stdio/" title="MSVC的stdio版本适配问题" type="text/html">
+<link rel="next" href="/blog/posts/2020/self-defined-deleter-in-cpp-smart-pointer/" title="在C++智能指针中使用自定义的deleter" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="栈溢出问题和chkstk">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2020/stackoverflow-and-chkstk/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2020/stackoverflow-and-chkstk/">
 <meta property="og:description" content="最近在调试程序时遇到了一个栈溢出的问题，栈溢出通常是由程序错误引起的，通过修正程序的bug就能解决问题。但是这次的栈溢出，从代码上看并没有错误，经过一番排查和调试，我找到了解决问题的方法，同时也加深了对操作系统中一些概念的理解。
 
 
@@ -38,17 +38,17 @@
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -69,9 +69,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgc8372cf" class="outline-2">
-<h2 id="orgc8372cf">栈溢出的一般情况</h2>
-<div class="outline-text-2" id="text-orgc8372cf">
+<div id="outline-container-orgdd0f266" class="outline-2">
+<h2 id="orgdd0f266">栈溢出的一般情况</h2>
+<div class="outline-text-2" id="text-orgdd0f266">
 <p>
 在我之前的编程经验中，在递归调用层次过深时会出现栈溢出（stack overflow）错误。由于函数在调用时会将当前的运行状态压入栈（stack）中，当没有设置好递归函数的退出条件时，函数会出现无限次递归调用，但是栈的空间是有限的，在递归到一定次数时程序就栈溢出了。<br></p>
 
@@ -80,9 +80,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgc623284" class="outline-2">
-<h2 id="orgc623284">这次的栈溢出的现象</h2>
-<div class="outline-text-2" id="text-orgc623284">
+<div id="outline-container-org2c92f39" class="outline-2">
+<h2 id="org2c92f39">这次的栈溢出的现象</h2>
+<div class="outline-text-2" id="text-org2c92f39">
 <p>
 这次的现象出比较隐蔽，导致我一开始并没有意识到这是个栈溢出的错误。<br></p>
 
@@ -94,9 +94,9 @@
 </div>
 </div>
 
-<div id="outline-container-org484b795" class="outline-2">
-<h2 id="org484b795">chkstk</h2>
-<div class="outline-text-2" id="text-org484b795">
+<div id="outline-container-org7273f56" class="outline-2">
+<h2 id="org7273f56">chkstk</h2>
+<div class="outline-text-2" id="text-org7273f56">
 <p>
 在查阅了一些资料后，我意识到这是个栈溢出错误。<br></p>
 
@@ -108,9 +108,9 @@
 </div>
 </div>
 
-<div id="outline-container-org48f1f53" class="outline-2">
-<h2 id="org48f1f53">提高栈区空间的上限</h2>
-<div class="outline-text-2" id="text-org48f1f53">
+<div id="outline-container-org80ced86" class="outline-2">
+<h2 id="org80ced86">提高栈区空间的上限</h2>
+<div class="outline-text-2" id="text-org80ced86">
 <p>
 在windows系统下，可以通过调整链接参数提高这个上限。<br></p>
 
@@ -130,9 +130,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgf4ad7e4" class="outline-2">
-<h2 id="orgf4ad7e4">最终的解决方法</h2>
-<div class="outline-text-2" id="text-orgf4ad7e4">
+<div id="outline-container-org762583b" class="outline-2">
+<h2 id="org762583b">最终的解决方法</h2>
+<div class="outline-text-2" id="text-org762583b">
 <p>
 当然，我尝试了通过调整编译参数来增大栈区的方法。这种虽然有效，但是总感觉不是那么的优雅。<br></p>
 
@@ -144,9 +144,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgb2c514c" class="outline-2">
-<h2 id="orgb2c514c">参考资料</h2>
-<div class="outline-text-2" id="text-orgb2c514c">
+<div id="outline-container-orgeb48a3d" class="outline-2">
+<h2 id="orgeb48a3d">参考资料</h2>
+<div class="outline-text-2" id="text-orgeb48a3d">
 <ul class="org-ul">
 <li>
 <a href="https://docs.microsoft.com/zh-cn/windows/win32/devnotes/-win32-chkstk">microsoft docs - win32 chkstk</a><br>
@@ -169,28 +169,28 @@
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/c/" rel="tag">c</a>
+      <a class="badge" href="/blog/tags/c/" rel="tag">c</a>
     </li>
     <li>
-      <a class="badge" href="/tags/chkstk/" rel="tag">chkstk</a>
+      <a class="badge" href="/blog/tags/chkstk/" rel="tag">chkstk</a>
     </li>
     <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/stack-overflow/" rel="tag">stack overflow</a>
+      <a class="badge" href="/blog/tags/stack-overflow/" rel="tag">stack overflow</a>
     </li>
     <li>
-      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+      <a class="badge" href="/blog/tags/windows/" rel="tag">windows</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2020/msvc-legacy-stdio/" rel="prev">Previous post
+      <a href="/blog/posts/2020/msvc-legacy-stdio/" rel="prev">Previous post
         <br><span>MSVC的stdio版本适配问题</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2020/self-defined-deleter-in-cpp-smart-pointer/" rel="next">Next post
+      <a href="/blog/posts/2020/self-defined-deleter-in-cpp-smart-pointer/" rel="next">Next post
         <br><span>在C++智能指针中使用自定义的deleter</span>
       </a>
     </li>
@@ -198,7 +198,7 @@
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2020/stackoverflow-and-chkstk/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2020/stackoverflow-and-chkstk/",
         disqus_title="\u6808\u6ea2\u51fa\u95ee\u9898\u548cchkstk",
         disqus_identifier="_cache/posts/2020/stackoverflow-and-chkstk.html",
         disqus_config = function () {
@@ -225,17 +225,17 @@
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -251,7 +251,7 @@
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

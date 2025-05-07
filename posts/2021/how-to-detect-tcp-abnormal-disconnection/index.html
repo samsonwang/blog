@@ -8,16 +8,16 @@
 <title>如何检测TCP连接的异常断开 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2021/how-to-detect-tcp-abnormal-disconnection/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2021/check-for-nullptr-after-new-operator/" title="由new创建的指针不需要检查nullptr" type="text/html">
-<link rel="next" href="/posts/2021/cpp-pragma-pack-pitfall/" title="结构体字节对齐的陷阱" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2021/how-to-detect-tcp-abnormal-disconnection/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2021/check-for-nullptr-after-new-operator/" title="由new创建的指针不需要检查nullptr" type="text/html">
+<link rel="next" href="/blog/posts/2021/cpp-pragma-pack-pitfall/" title="结构体字节对齐的陷阱" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="如何检测TCP连接的异常断开">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2021/how-to-detect-tcp-abnormal-disconnection/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2021/how-to-detect-tcp-abnormal-disconnection/">
 <meta property="og:description" content="在以往的开发中，我会通过 recv() 接口的返回值来判断连接是否断开。但有时候我发现TCP连接已经无法正常收发数据了 recv() 的返回值仍然不是0。
 
 
@@ -40,17 +40,17 @@ When a stream socket peer has performed ">
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -71,10 +71,10 @@ When a stream socket peer has performed ">
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org24d90b5" class="outline-2">
-<h2 id="org24d90b5">在TCP连接正常关闭时 <code>recv()</code> 才会返回 <code>0</code>
+<div id="outline-container-orgefa907b" class="outline-2">
+<h2 id="orgefa907b">在TCP连接正常关闭时 <code>recv()</code> 才会返回 <code>0</code>
 </h2>
-<div class="outline-text-2" id="text-org24d90b5">
+<div class="outline-text-2" id="text-orgefa907b">
 <p>
 按照我以往的理解，在TCP连接断开时 <code>recv()</code> 接口就会返回0，事实上并不是这样的。<br></p>
 
@@ -91,9 +91,9 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
 </div>
 </div>
 
-<div id="outline-container-org0586b9d" class="outline-2">
-<h2 id="org0586b9d">使用心跳机制检测连接是否正常</h2>
-<div class="outline-text-2" id="text-org0586b9d">
+<div id="outline-container-org1efed42" class="outline-2">
+<h2 id="org1efed42">使用心跳机制检测连接是否正常</h2>
+<div class="outline-text-2" id="text-org1efed42">
 <p>
 为了能尽快察觉到TCP连接异常，常见的做法是周期性的发送心跳包验证与对端的连接状态。心跳包是应用层的特殊命令，属于TCP协议之上。在连接异常时发送心跳包 <code>send()</code> 接口会返回 <code>-1</code> ，这样在本端就能感知连接异常了。<br></p>
 
@@ -102,9 +102,9 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
 </div>
 </div>
 
-<div id="outline-container-org4204da1" class="outline-2">
-<h2 id="org4204da1">借助TCP的keepalive特性识别异常断开</h2>
-<div class="outline-text-2" id="text-org4204da1">
+<div id="outline-container-orgc5671fb" class="outline-2">
+<h2 id="orgc5671fb">借助TCP的keepalive特性识别异常断开</h2>
+<div class="outline-text-2" id="text-orgc5671fb">
 <p>
 还有另一种非侵入的方式检测异常连接，即借助TCP的keepalive特性定期发送数据包，但是  <b>并不</b> 推荐使用这种方法。<br></p>
 
@@ -122,9 +122,9 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
 </div>
 
 
-<div id="outline-container-org9a17a22" class="outline-2">
-<h2 id="org9a17a22">参考资料</h2>
-<div class="outline-text-2" id="text-org9a17a22">
+<div id="outline-container-org14dee2a" class="outline-2">
+<h2 id="org14dee2a">参考资料</h2>
+<div class="outline-text-2" id="text-org14dee2a">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/q/14782143/5080719">how to dectect disconnected network</a><br>
@@ -144,19 +144,19 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/network/" rel="tag">network</a>
+      <a class="badge" href="/blog/tags/network/" rel="tag">network</a>
     </li>
     <li>
-      <a class="badge" href="/tags/tcp/" rel="tag">tcp</a>
+      <a class="badge" href="/blog/tags/tcp/" rel="tag">tcp</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2021/check-for-nullptr-after-new-operator/" rel="prev">Previous post
+      <a href="/blog/posts/2021/check-for-nullptr-after-new-operator/" rel="prev">Previous post
         <br><span>由new创建的指针不需要检查nullptr</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2021/cpp-pragma-pack-pitfall/" rel="next">Next post
+      <a href="/blog/posts/2021/cpp-pragma-pack-pitfall/" rel="next">Next post
         <br><span>结构体字节对齐的陷阱</span>
       </a>
     </li>
@@ -164,7 +164,7 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2021/how-to-detect-tcp-abnormal-disconnection/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2021/how-to-detect-tcp-abnormal-disconnection/",
         disqus_title="\u5982\u4f55\u68c0\u6d4bTCP\u8fde\u63a5\u7684\u5f02\u5e38\u65ad\u5f00",
         disqus_identifier="_cache/posts/2021/how-to-detect-tcp-abnormal-disconnection.html",
         disqus_config = function () {
@@ -191,17 +191,17 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -217,7 +217,7 @@ When a stream socket peer has performed an orderly shutdown, the return value wi
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

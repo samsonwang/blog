@@ -8,16 +8,16 @@
 <title>文件操作函数接口的比较 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2019/fopen-api-compare/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2019/why-condition-variable-requires-mutex/" title="为什么条件变量需要与互斥锁配合使用" type="text/html">
-<link rel="next" href="/posts/2019/gnu-private-guard-cheatsheet/" title="gpg操作备忘" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/fopen-api-compare/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2019/why-condition-variable-requires-mutex/" title="为什么条件变量需要与互斥锁配合使用" type="text/html">
+<link rel="next" href="/blog/posts/2019/gnu-private-guard-cheatsheet/" title="gpg操作备忘" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="文件操作函数接口的比较">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2019/fopen-api-compare/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2019/fopen-api-compare/">
 <meta property="og:description" content="最近在维护一个老项目时发现，该程序的日志在程序运行时是不能够被其他程序打开的，也就不能通过日志实时地观察程序的运行状态。在我的印象里，我一直认为打开的文件都是共享的，这应该是个错觉。本篇日志主要总结了在打开一个文件时所使用函数接口，方便以后查阅。
 
 
@@ -41,17 +41,17 @@ FILE* fopen(const c">
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -72,13 +72,13 @@ FILE* fopen(const c">
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org689a059" class="outline-2">
-<h2 id="org689a059"><code>fopen</code></h2>
-<div class="outline-text-2" id="text-org689a059">
+<div id="outline-container-org61d479f" class="outline-2">
+<h2 id="org61d479f"><code>fopen</code></h2>
+<div class="outline-text-2" id="text-org61d479f">
 <p>
 <code>fopen</code> 应该是最普通也是最常见的文件操作接口了，属于标准C接口，其完整形式如下。<br></p>
-<div class="highlight"><pre><span></span><span class="kt">FILE</span><span class="o">*</span><span class="w"> </span><span class="nf">fopen</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span><span class="w"></span>
-<span class="w">	    </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">mode</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="kt">FILE</span><span class="o">*</span><span class="w"> </span><span class="nf">fopen</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span>
+<span class="w">	    </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">mode</span><span class="p">);</span>
 </pre></div>
 
 <p>
@@ -86,14 +86,14 @@ FILE* fopen(const c">
 </div>
 </div>
 
-<div id="outline-container-org2bb1882" class="outline-2">
-<h2 id="org2bb1882"><code>fopen_s</code></h2>
-<div class="outline-text-2" id="text-org2bb1882">
+<div id="outline-container-orga3f9f5f" class="outline-2">
+<h2 id="orga3f9f5f"><code>fopen_s</code></h2>
+<div class="outline-text-2" id="text-orga3f9f5f">
 <p>
 <code>fopen_s</code> 较前一个接口提升了安全性，是C11标准中的接口，其完整形式如下。<br></p>
-<div class="highlight"><pre><span></span><span class="n">errno_t</span><span class="w"> </span><span class="nf">fopen_s</span><span class="p">(</span><span class="kt">FILE</span><span class="w"> </span><span class="o">*</span><span class="kr">restrict</span><span class="w"> </span><span class="o">*</span><span class="kr">restrict</span><span class="w"> </span><span class="n">streamptr</span><span class="p">,</span><span class="w"></span>
-<span class="w">		</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="kr">restrict</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span><span class="w"></span>
-<span class="w">		</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="kr">restrict</span><span class="w"> </span><span class="n">mode</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="n">errno_t</span><span class="w"> </span><span class="nf">fopen_s</span><span class="p">(</span><span class="kt">FILE</span><span class="w"> </span><span class="o">*</span><span class="kr">restrict</span><span class="w"> </span><span class="o">*</span><span class="kr">restrict</span><span class="w"> </span><span class="n">streamptr</span><span class="p">,</span>
+<span class="w">		</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="kr">restrict</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span>
+<span class="w">		</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="kr">restrict</span><span class="w"> </span><span class="n">mode</span><span class="p">);</span>
 </pre></div>
 
 <p>
@@ -101,14 +101,14 @@ FILE* fopen(const c">
 </div>
 </div>
 
-<div id="outline-container-orgfec77db" class="outline-2">
-<h2 id="orgfec77db"><code>_fsopen</code></h2>
-<div class="outline-text-2" id="text-orgfec77db">
+<div id="outline-container-org4aba94a" class="outline-2">
+<h2 id="org4aba94a"><code>_fsopen</code></h2>
+<div class="outline-text-2" id="text-org4aba94a">
 <p>
 <code>_fsopen</code> 是windows平台专属的接口，可以在打开文件时指定共享权限，其完整形式如下。<br></p>
-<div class="highlight"><pre><span></span><span class="kt">FILE</span><span class="w"> </span><span class="o">*</span><span class="nf">_fsopen</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">filename</span><span class="p">,</span><span class="w"></span>
-<span class="w">	      </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">mode</span><span class="p">,</span><span class="w"></span>
-<span class="w">	      </span><span class="kt">int</span><span class="w"> </span><span class="n">shflag</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="kt">FILE</span><span class="w"> </span><span class="o">*</span><span class="nf">_fsopen</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">filename</span><span class="p">,</span>
+<span class="w">	      </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">mode</span><span class="p">,</span>
+<span class="w">	      </span><span class="kt">int</span><span class="w"> </span><span class="n">shflag</span><span class="p">);</span>
 </pre></div>
 
 <p>
@@ -122,14 +122,14 @@ FILE* fopen(const c">
 </div>
 </div>
 
-<div id="outline-container-orgc32a709" class="outline-2">
-<h2 id="orgc32a709"><code>fstream</code></h2>
-<div class="outline-text-2" id="text-orgc32a709">
+<div id="outline-container-org6287273" class="outline-2">
+<h2 id="org6287273"><code>fstream</code></h2>
+<div class="outline-text-2" id="text-org6287273">
 <p>
 上面介绍的几种接口都是C风格的，而 <code>std::fstream</code> 是C++风格的接口，其完整形式如下。<br></p>
 <div class="highlight"><pre><span></span><span class="c1">// constructor</span>
-<span class="k">explicit</span><span class="w"> </span><span class="n">basic_fstream</span><span class="p">(</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span><span class="w"></span>
-<span class="w">	       </span><span class="n">std</span><span class="o">::</span><span class="n">ios_base</span><span class="o">::</span><span class="n">openmode</span><span class="w"> </span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ios_base</span><span class="o">::</span><span class="n">in</span><span class="o">|</span><span class="n">ios_base</span><span class="o">::</span><span class="n">out</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
+<span class="k">explicit</span><span class="w"> </span><span class="n">basic_fstream</span><span class="p">(</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span>
+<span class="w">	       </span><span class="n">std</span><span class="o">::</span><span class="n">ios_base</span><span class="o">::</span><span class="n">openmode</span><span class="w"> </span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ios_base</span><span class="o">::</span><span class="n">in</span><span class="o">|</span><span class="n">ios_base</span><span class="o">::</span><span class="n">out</span><span class="w"> </span><span class="p">);</span>
 </pre></div>
 
 <p>
@@ -138,9 +138,9 @@ FILE* fopen(const c">
 </div>
 
 
-<div id="outline-container-org7ae68c8" class="outline-2">
-<h2 id="org7ae68c8">参考资料</h2>
-<div class="outline-text-2" id="text-org7ae68c8">
+<div id="outline-container-org1b8bf9a" class="outline-2">
+<h2 id="org1b8bf9a">参考资料</h2>
+<div class="outline-text-2" id="text-org1b8bf9a">
 <ul class="org-ul">
 <li>
 <a href="https://en.cppreference.com/w/c/io/fopen">cppreference.com - fopen</a><br>
@@ -158,31 +158,31 @@ FILE* fopen(const c">
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/c/" rel="tag">c</a>
+      <a class="badge" href="/blog/tags/c/" rel="tag">c</a>
     </li>
     <li>
-      <a class="badge" href="/tags/c11/" rel="tag">c11</a>
+      <a class="badge" href="/blog/tags/c11/" rel="tag">c11</a>
     </li>
     <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/cpp11/" rel="tag">cpp11</a>
+      <a class="badge" href="/blog/tags/cpp11/" rel="tag">cpp11</a>
     </li>
     <li>
-      <a class="badge" href="/tags/file/" rel="tag">file</a>
+      <a class="badge" href="/blog/tags/file/" rel="tag">file</a>
     </li>
     <li>
-      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+      <a class="badge" href="/blog/tags/windows/" rel="tag">windows</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2019/why-condition-variable-requires-mutex/" rel="prev">Previous post
+      <a href="/blog/posts/2019/why-condition-variable-requires-mutex/" rel="prev">Previous post
         <br><span>为什么条件变量需要与互斥锁配合使用</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2019/gnu-private-guard-cheatsheet/" rel="next">Next post
+      <a href="/blog/posts/2019/gnu-private-guard-cheatsheet/" rel="next">Next post
         <br><span>gpg操作备忘</span>
       </a>
     </li>
@@ -190,7 +190,7 @@ FILE* fopen(const c">
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2019/fopen-api-compare/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2019/fopen-api-compare/",
         disqus_title="\u6587\u4ef6\u64cd\u4f5c\u51fd\u6570\u63a5\u53e3\u7684\u6bd4\u8f83",
         disqus_identifier="_cache/posts/2019/fopen-api-compare.html",
         disqus_config = function () {
@@ -217,17 +217,17 @@ FILE* fopen(const c">
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -243,7 +243,7 @@ FILE* fopen(const c">
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

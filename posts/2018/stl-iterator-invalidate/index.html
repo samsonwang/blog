@@ -8,16 +8,16 @@
 <title>STL容器的迭代器失效问题 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/stl-iterator-invalidate/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2018/size_t-and-size_type/" title="关于size_t和size_type的比较" type="text/html">
-<link rel="next" href="/posts/2018/emacs-find-replace-string-in-directory/" title="使用emacs查找替换指定目录所有文件中字符串" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/stl-iterator-invalidate/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2018/size_t-and-size_type/" title="关于size_t和size_type的比较" type="text/html">
+<link rel="next" href="/blog/posts/2018/emacs-find-replace-string-in-directory/" title="使用emacs查找替换指定目录所有文件中字符串" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="STL容器的迭代器失效问题">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/stl-iterator-invalidate/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2018/stl-iterator-invalidate/">
 <meta property="og:description" content="1 引言
 
 
@@ -42,17 +42,17 @@
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -68,9 +68,9 @@
       
     <time class="dt-published" datetime="2018-01-10T22:06:04+08:00" itemprop="datePublished">Jan 10, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orgeb5025c" class="outline-2">
-<h2 id="orgeb5025c">1 引言</h2>
-<div class="outline-text-2" id="text-orgeb5025c">
+    <div id="outline-container-orgcf4a89c" class="outline-2">
+<h2 id="orgcf4a89c">1 引言</h2>
+<div class="outline-text-2" id="text-orgcf4a89c">
 <p>
 常见的STL容器都能使用迭代器访问容器内元素，迭代器相同于一个指向容器内元素的指针，可以通过移动迭代器实现遍历容器。<br>
 但是在使用迭代器时需要考虑STL容器的失效问题；迭代器失效主要出现在对容器进行了增删操作之后，迭代器不再指向原本的元素。<br>
@@ -78,17 +78,17 @@
 </div>
 </div>
 
-<div id="outline-container-orgef48038" class="outline-2">
-<h2 id="orgef48038">2 map容器</h2>
-<div class="outline-text-2" id="text-orgef48038">
+<div id="outline-container-orgbe63e89" class="outline-2">
+<h2 id="orgbe63e89">2 map容器</h2>
+<div class="outline-text-2" id="text-orgbe63e89">
 <p>
 <b>内部数据结构</b> ：红黑树<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入都红黑树中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgfbb1926" class="outline-2">
-<h2 id="orgfbb1926">3 vector容器</h2>
-<div class="outline-text-2" id="text-orgfbb1926">
+<div id="outline-container-org5a9b682" class="outline-2">
+<h2 id="org5a9b682">3 vector容器</h2>
+<div class="outline-text-2" id="text-org5a9b682">
 <p>
 <b>内部数据结构</b> ：数组(一段连续内存空间)<br><b>插入操作</b> ：由于vector使用的是一段有长度限制的连续空间，插入( <code>push_back</code> / <code>insert</code> )操作在vector中加入新的元素时需要分情况考虑。<br></p>
 <ul class="org-ul">
@@ -103,17 +103,17 @@
 </div>
 </div>
 
-<div id="outline-container-orgb3213a0" class="outline-2">
-<h2 id="orgb3213a0">4 list容器</h2>
-<div class="outline-text-2" id="text-orgb3213a0">
+<div id="outline-container-orgfd02372" class="outline-2">
+<h2 id="orgfd02372">4 list容器</h2>
+<div class="outline-text-2" id="text-orgfd02372">
 <p>
 <b>内部数据结构</b> ：双向环状链表<br><b>插入操作</b> ：插入操作会申请新的节点空间，然后加入到链表中，原来的迭代器指向的内存空间都未改变，故不会出现迭代器失效。<br><b>删除操作</b> ：删除操作只会引起被删除节点的迭代器失效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgc04b640" class="outline-2">
-<h2 id="orgc04b640">5 小结</h2>
-<div class="outline-text-2" id="text-orgc04b640">
+<div id="outline-container-org22fcdb5" class="outline-2">
+<h2 id="org22fcdb5">5 小结</h2>
+<div class="outline-text-2" id="text-org22fcdb5">
 <p>
 在操作STL容器时，对容器增删（ <code>erase</code> / <code>insert</code> ）之后应该注意接收返回值，这样可以有效避免迭代器失效的产生。<br>
 对容器进行遍历删除操作时，另一种语法技巧是在 <code>erase</code> 接口中对迭代器进行后自增（it++），这种写法也能够保证遍历正常进行。理解这种写法需要参考运算符重载的相关知识，后自增操作会产生一个临时变量用于函数返回。<br></p>
@@ -123,22 +123,22 @@
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/stl/" rel="tag">STL</a>
+      <a class="badge" href="/blog/tags/stl/" rel="tag">STL</a>
     </li>
     <li>
-      <a class="badge" href="/tags/syntax/" rel="tag">syntax</a>
+      <a class="badge" href="/blog/tags/syntax/" rel="tag">syntax</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2018/size_t-and-size_type/" rel="prev">Previous post
+      <a href="/blog/posts/2018/size_t-and-size_type/" rel="prev">Previous post
         <br><span>关于size_t和size_type的比较</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2018/emacs-find-replace-string-in-directory/" rel="next">Next post
+      <a href="/blog/posts/2018/emacs-find-replace-string-in-directory/" rel="next">Next post
         <br><span>使用emacs查找替换指定目录所有文件中字符串</span>
       </a>
     </li>
@@ -146,7 +146,7 @@
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2018/stl-iterator-invalidate/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2018/stl-iterator-invalidate/",
         disqus_title="STL\u5bb9\u5668\u7684\u8fed\u4ee3\u5668\u5931\u6548\u95ee\u9898",
         disqus_identifier="_cache/posts/2018/stl-iterator-invalidate.html",
         disqus_config = function () {
@@ -173,17 +173,17 @@
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -199,7 +199,7 @@
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

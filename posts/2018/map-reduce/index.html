@@ -8,16 +8,16 @@
 <title>MapReduce模型 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/map-reduce/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/algorithm/algorithm-weekly-zigzag-conversion/" title="每周算法：字符串锯齿变换" type="text/html">
-<link rel="next" href="/posts/algorithm/algorithm-weekly-string-to-integer/" title="每周算法：字符串转整数" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/map-reduce/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/algorithm/algorithm-weekly-zigzag-conversion/" title="每周算法：字符串锯齿变换" type="text/html">
+<link rel="next" href="/blog/posts/algorithm/algorithm-weekly-string-to-integer/" title="每周算法：字符串转整数" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="MapReduce模型">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/map-reduce/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2018/map-reduce/">
 <meta property="og:description" content="序言
 
 
@@ -40,17 +40,17 @@ MapReduce的深层概念远比两个函数来得复杂，它是一个编">
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -66,17 +66,17 @@ MapReduce的深层概念远比两个函数来得复杂，它是一个编">
       
     <time class="dt-published" datetime="2018-08-20T10:09:10+08:00" itemprop="datePublished">Aug 20, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org6cc1730" class="outline-2">
-<h2 id="org6cc1730">序言</h2>
-<div class="outline-text-2" id="text-org6cc1730">
+    <div id="outline-container-orgec2db02" class="outline-2">
+<h2 id="orgec2db02">序言</h2>
+<div class="outline-text-2" id="text-orgec2db02">
 <p>
 对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org8e9b8ae" class="outline-2">
-<h2 id="org8e9b8ae">什么是MapReduce</h2>
-<div class="outline-text-2" id="text-org8e9b8ae">
+<div id="outline-container-orgb23132b" class="outline-2">
+<h2 id="orgb23132b">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-orgb23132b">
 <p>
 MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
 
@@ -92,9 +92,9 @@ MapReduce是面向大数据并行处理的计算模型、框架和平台，它�
 </div>
 </div>
 
-<div id="outline-container-org6cae768" class="outline-2">
-<h2 id="org6cae768">map和reduce</h2>
-<div class="outline-text-2" id="text-org6cae768">
+<div id="outline-container-orga4b9dc0" class="outline-2">
+<h2 id="orga4b9dc0">map和reduce</h2>
+<div class="outline-text-2" id="text-orga4b9dc0">
 <p>
 <b>从编程语言的角度上来说</b><br>
 map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
@@ -113,9 +113,9 @@ reduce操作也会接收到两个参数，一个列表和一个变换过程，�
 </div>
 </div>
 
-<div id="outline-container-org941f461" class="outline-2">
-<h2 id="org941f461">并行计算与大数据</h2>
-<div class="outline-text-2" id="text-org941f461">
+<div id="outline-container-orgfe0002a" class="outline-2">
+<h2 id="orgfe0002a">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-orgfe0002a">
 <p>
 mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
 
@@ -146,9 +146,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge740aa7" class="outline-2">
-<h2 id="orge740aa7">参考资料</h2>
-<div class="outline-text-2" id="text-orge740aa7">
+<div id="outline-container-org341fb81" class="outline-2">
+<h2 id="org341fb81">参考资料</h2>
+<div class="outline-text-2" id="text-org341fb81">
 <ul class="org-ul">
 <li>
 <a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>
@@ -166,25 +166,25 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/big-data/" rel="tag">big data</a>
+      <a class="badge" href="/blog/tags/big-data/" rel="tag">big data</a>
     </li>
     <li>
-      <a class="badge" href="/tags/distributed-system/" rel="tag">distributed system</a>
+      <a class="badge" href="/blog/tags/distributed-system/" rel="tag">distributed system</a>
     </li>
     <li>
-      <a class="badge" href="/tags/hadoop/" rel="tag">hadoop</a>
+      <a class="badge" href="/blog/tags/hadoop/" rel="tag">hadoop</a>
     </li>
     <li>
-      <a class="badge" href="/tags/mapreduce/" rel="tag">mapreduce</a>
+      <a class="badge" href="/blog/tags/mapreduce/" rel="tag">mapreduce</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/algorithm/algorithm-weekly-zigzag-conversion/" rel="prev">Previous post
+      <a href="/blog/posts/algorithm/algorithm-weekly-zigzag-conversion/" rel="prev">Previous post
         <br><span>每周算法：字符串锯齿变换</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/algorithm/algorithm-weekly-string-to-integer/" rel="next">Next post
+      <a href="/blog/posts/algorithm/algorithm-weekly-string-to-integer/" rel="next">Next post
         <br><span>每周算法：字符串转整数</span>
       </a>
     </li>
@@ -192,7 +192,7 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2018/map-reduce/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2018/map-reduce/",
         disqus_title="MapReduce\u6a21\u578b",
         disqus_identifier="_cache/posts/2018/map-reduce.html",
         disqus_config = function () {
@@ -219,17 +219,17 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -245,7 +245,7 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

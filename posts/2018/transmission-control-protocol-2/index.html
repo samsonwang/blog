@@ -8,16 +8,16 @@
 <title>TCP协议（RFC793）-2- | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/transmission-control-protocol-2/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/algorithm/algorithm-weekly-valid-sudoku/" title="每周算法：验证数独有效性" type="text/html">
-<link rel="next" href="/posts/2018/internet-protocol-stack-tcpdump-analysis/" title="网络协议的抓包分析" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/transmission-control-protocol-2/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/algorithm/algorithm-weekly-valid-sudoku/" title="每周算法：验证数独有效性" type="text/html">
+<link rel="next" href="/blog/posts/2018/internet-protocol-stack-tcpdump-analysis/" title="网络协议的抓包分析" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="TCP协议（RFC793）-2-">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/transmission-control-protocol-2/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2018/transmission-control-protocol-2/">
 <meta property="og:description" content="本文主要内容是TCP协议的规格描述，包括具体的协议格式、相关术语解释、协议实现指导等。
 
 
@@ -52,17 +52,17 @@ The destination port number.
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -83,14 +83,14 @@ The destination port number.
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org91b6643" class="outline-2">
-<h2 id="org91b6643">协议规格</h2>
-<div class="outline-text-2" id="text-org91b6643">
+<div id="outline-container-org0986f99" class="outline-2">
+<h2 id="org0986f99">协议规格</h2>
+<div class="outline-text-2" id="text-org0986f99">
 <p>
 本节介绍TCP协议的具体格式，详细描述了TCP协议数据包的构成。<br></p>
 
 <p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-transmission-control-protocol-2-1.png" alt="tcp header format"><br></p>
+<img src="/blog/assets/images/spinner.svg" data-src="/images/post-transmission-control-protocol-2-1.png" alt="tcp header format"><br></p>
 
 <p>
 <b>Source Port:</b> 16 bits<br>
@@ -149,9 +149,9 @@ Options may occupy space at the end of the TCP header and are a multiple of 8 bi
 The TCP header padding is used to ensure that the TCP header ends and data begins on a 32 bit boundary. The padding is composed of zeros.<br></p>
 </div>
 
-<div id="outline-container-orgc11b776" class="outline-3">
-<h3 id="orgc11b776">相关术语</h3>
-<div class="outline-text-3" id="text-orgc11b776">
+<div id="outline-container-org974fbbf" class="outline-3">
+<h3 id="org974fbbf">相关术语</h3>
+<div class="outline-text-3" id="text-org974fbbf">
 <p>
 The maintenance of a TCP connection requires the remembering of several variables. We conceive of these variables being stored in a connection record called a Transmission Control Block or TCB. Among the variables stored in the TCB are the local and remote socket numbers, the security and precedence of the connection, pointers to the user’s send and receive buffers, pointers to the retransmit queue and to the current segment. In addition several variables relating to the send and receive sequence numbers are stored in the TCB.<br></p>
 
@@ -197,9 +197,9 @@ CLOSED - represents no connection state at all.<br></p>
 </div>
 </div>
 
-<div id="outline-container-org47f672f" class="outline-3">
-<h3 id="org47f672f">序列号</h3>
-<div class="outline-text-3" id="text-org47f672f">
+<div id="outline-container-org3bc9282" class="outline-3">
+<h3 id="org3bc9282">序列号</h3>
+<div class="outline-text-3" id="text-org3bc9282">
 <p>
 在启动连接时，实际上是对序列号进行同步。<br></p>
 
@@ -224,9 +224,9 @@ every segment emitted occupies one or more sequence numbers in the sequence spac
 </div>
 </div>
 
-<div id="outline-container-org2b671cf" class="outline-3">
-<h3 id="org2b671cf">连接的建立</h3>
-<div class="outline-text-3" id="text-org2b671cf">
+<div id="outline-container-org0492f79" class="outline-3">
+<h3 id="org0492f79">连接的建立</h3>
+<div class="outline-text-3" id="text-org0492f79">
 <p>
 在RFC793的原文中，给出了许多种连接建立的方式，包括一些异常情况下建立连接的流程，不过最常用的还是三次握手方式。<br></p>
 
@@ -259,9 +259,9 @@ There are three groups of states:<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgbe0bda0" class="outline-3">
-<h3 id="orgbe0bda0">连接的断开</h3>
-<div class="outline-text-3" id="text-orgbe0bda0">
+<div id="outline-container-orgc457b89" class="outline-3">
+<h3 id="orgc457b89">连接的断开</h3>
+<div class="outline-text-3" id="text-orgc457b89">
 <p>
 关闭的含义是没有更多的数据需要发送。<br>
 CLOSE is an operation meaning "I have no more data to send."<br></p>
@@ -314,9 +314,9 @@ There are essentially three cases:<br></p>
 </div>
 </div>
 
-<div id="outline-container-org603d1c1" class="outline-3">
-<h3 id="org603d1c1">优先权和安全性</h3>
-<div class="outline-text-3" id="text-org603d1c1">
+<div id="outline-container-org48fdd34" class="outline-3">
+<h3 id="org48fdd34">优先权和安全性</h3>
+<div class="outline-text-3" id="text-org48fdd34">
 <p>
 安全性要求必须完全相同，优先权取最高的。<br>
 The intent is that connection be allowed only between ports operating with exactly the same security and compartment values and at the higher of the precedence level requested by the two ports.<br></p>
@@ -330,9 +330,9 @@ A connection attempt with mismatched security/compartment values or a lower prec
 </div>
 </div>
 
-<div id="outline-container-org759e356" class="outline-3">
-<h3 id="org759e356">数据传输</h3>
-<div class="outline-text-3" id="text-org759e356">
+<div id="outline-container-orgb14a997" class="outline-3">
+<h3 id="orgb14a997">数据传输</h3>
+<div class="outline-text-3" id="text-orgb14a997">
 <p>
 Once the connection is established data is communicated by the exchange of segments. Because segments may be lost due to errors (checksum test failure), or network congestion, TCP uses retransmission (after a timeout) to ensure delivery of every segment. Duplicate segments may arrive due to network or TCP retransmission.<br></p>
 
@@ -354,9 +354,9 @@ Indicating a large window encourages transmissions. If more data arrives than ca
 </div>
 </div>
 
-<div id="outline-container-org3bf7444" class="outline-3">
-<h3 id="org3bf7444">接口</h3>
-<div class="outline-text-3" id="text-org3bf7444">
+<div id="outline-container-orgfe80063" class="outline-3">
+<h3 id="orgfe80063">接口</h3>
+<div class="outline-text-3" id="text-orgfe80063">
 <p>
 讨论到接口，就有两种TCP接口可谈，它们分别是向上的和向下的两种。向上的接口负责与用户进行对接的接口，向下的接口是与更底层进行交互的接口。<br>
 There are of course two interfaces of concern: the user/TCP interface and the TCP/lower-level interface. We have a fairly elaborate model of the user/TCP interface, but the interface to the lower level protocol module is left unspecified here, since it will be specified in detail by the specification of the lowel level protocol.<br></p>
@@ -366,9 +366,9 @@ There are of course two interfaces of concern: the user/TCP interface and the TC
 </div>
 </div>
 
-<div id="outline-container-orgeb44575" class="outline-3">
-<h3 id="orgeb44575">事件的处理</h3>
-<div class="outline-text-3" id="text-orgeb44575">
+<div id="outline-container-orgd4f4150" class="outline-3">
+<h3 id="orgd4f4150">事件的处理</h3>
+<div class="outline-text-3" id="text-orgd4f4150">
 <p>
 本节主要给出了一种协议的实现方式。<br>
 The processing depicted in this section is an example of one possible implementation. Other implementations may have slightly different processing sequences, but they should differ from those in this section only in detail, not in substance.<br></p>
@@ -383,9 +383,9 @@ The activity of the TCP can be characterized as responding to events. The events
 </div>
 </div>
 
-<div id="outline-container-org0c52ea7" class="outline-2">
-<h2 id="org0c52ea7">参考资料</h2>
-<div class="outline-text-2" id="text-org0c52ea7">
+<div id="outline-container-org3d0e0d2" class="outline-2">
+<h2 id="org3d0e0d2">参考资料</h2>
+<div class="outline-text-2" id="text-org3d0e0d2">
 <ul class="org-ul">
 <li>
 <a href="https://tools.ietf.org/html/rfc793">ietf.com - rfc793</a><br>
@@ -399,22 +399,22 @@ The activity of the TCP can be characterized as responding to events. The events
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/ip/" rel="tag">ip</a>
+      <a class="badge" href="/blog/tags/ip/" rel="tag">ip</a>
     </li>
     <li>
-      <a class="badge" href="/tags/network/" rel="tag">network</a>
+      <a class="badge" href="/blog/tags/network/" rel="tag">network</a>
     </li>
     <li>
-      <a class="badge" href="/tags/tcp/" rel="tag">tcp</a>
+      <a class="badge" href="/blog/tags/tcp/" rel="tag">tcp</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/algorithm/algorithm-weekly-valid-sudoku/" rel="prev">Previous post
+      <a href="/blog/posts/algorithm/algorithm-weekly-valid-sudoku/" rel="prev">Previous post
         <br><span>每周算法：验证数独有效性</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2018/internet-protocol-stack-tcpdump-analysis/" rel="next">Next post
+      <a href="/blog/posts/2018/internet-protocol-stack-tcpdump-analysis/" rel="next">Next post
         <br><span>网络协议的抓包分析</span>
       </a>
     </li>
@@ -422,7 +422,7 @@ The activity of the TCP can be characterized as responding to events. The events
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2018/transmission-control-protocol-2/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2018/transmission-control-protocol-2/",
         disqus_title="TCP\u534f\u8bae\uff08RFC793\uff09-2-",
         disqus_identifier="_cache/posts/2018/transmission-control-protocol-2.html",
         disqus_config = function () {
@@ -449,17 +449,17 @@ The activity of the TCP can be characterized as responding to events. The events
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -475,7 +475,7 @@ The activity of the TCP can be characterized as responding to events. The events
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

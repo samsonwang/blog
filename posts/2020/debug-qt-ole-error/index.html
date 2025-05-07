@@ -8,16 +8,16 @@
 <title>Qt程序中OLE错误的调试记录 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2020/debug-qt-ole-error/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2020/facade-design-pattern/" title="软件设计模式-门面模式" type="text/html">
-<link rel="next" href="/posts/2020/network-programming-reactor-and-proactor/" title="网络编程中的Reactor和Proactor模式" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2020/debug-qt-ole-error/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2020/facade-design-pattern/" title="软件设计模式-门面模式" type="text/html">
+<link rel="next" href="/blog/posts/2020/network-programming-reactor-and-proactor/" title="网络编程中的Reactor和Proactor模式" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="Qt程序中OLE错误的调试记录">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2020/debug-qt-ole-error/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2020/debug-qt-ole-error/">
 <meta property="og:description" content="最近解决了一个Launchy的 bug ，通过剪贴版向excel拷贝内容时会报OLE错误。我认为这个bug的排查过程比较有意义，在此记录下来。
 
 
@@ -37,17 +37,17 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -68,17 +68,17 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgaf25f0e" class="outline-2">
-<h2 id="orgaf25f0e">什么是OLE错误</h2>
-<div class="outline-text-2" id="text-orgaf25f0e">
+<div id="outline-container-orgef217b5" class="outline-2">
+<h2 id="orgef217b5">什么是OLE错误</h2>
+<div class="outline-text-2" id="text-orgef217b5">
 <p>
 OLE的全称是Object Linking and Embedding，主要用在Windows Office软件中，它支持编辑类应用程序向另一个应用程序发送当前文档的一部分。出现OLE错误时大多是应用程序没有及时响应OLE操作，错误的完整提示为“Microsoft Excel is waiting for another application to complete an OLE action”。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgfeda08a" class="outline-2">
-<h2 id="orgfeda08a">不要在非GUI线程中调用QClipboard</h2>
-<div class="outline-text-2" id="text-orgfeda08a">
+<div id="outline-container-orgb18d7c0" class="outline-2">
+<h2 id="orgb18d7c0">不要在非GUI线程中调用QClipboard</h2>
+<div class="outline-text-2" id="text-orgb18d7c0">
 <p>
 出现这个问题，我首先想到的是Qt相关的bug，因为剪切版能够在一般的程序中正常完成复制和粘粘操作，只会在excel中出现错误。<br></p>
 
@@ -87,18 +87,18 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 
 <p>
 之后我编写了下面这样的代码辅助判断QClipboard是否是在GUI线程（主线程）中执行。<br></p>
-<div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">QApplication</span><span class="o">::</span><span class="n">instance</span><span class="p">()</span><span class="o">-&gt;</span><span class="kr">thread</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">QThread</span><span class="o">::</span><span class="n">currentThread</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">qDebug</span><span class="p">(</span><span class="s">"running in main thread"</span><span class="p">);</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">QApplication</span><span class="o">::</span><span class="n">instance</span><span class="p">()</span><span class="o">-&gt;</span><span class="kr">thread</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">QThread</span><span class="o">::</span><span class="n">currentThread</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">qDebug</span><span class="p">(</span><span class="s">"running in main thread"</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 <p>
 结果是所有QClipboard都是在GUI线程中调用的，所以这个bug并不是由线程引起的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgef655fc" class="outline-2">
-<h2 id="orgef655fc">在nativeEventFilter中过滤消息时需要格外谨慎</h2>
-<div class="outline-text-2" id="text-orgef655fc">
+<div id="outline-container-org1e4db78" class="outline-2">
+<h2 id="org1e4db78">在nativeEventFilter中过滤消息时需要格外谨慎</h2>
+<div class="outline-text-2" id="text-org1e4db78">
 <p>
 我开始怀疑是自己使用QClipboard的方法不正确，于是新建了一个应用程序工程，在这个工程中只加入了一个简单界面，在控件的槽函数中使用QClipboard。结果是这个新应用程序能够成功完成与excel的复制粘粘的数据交互，然后我又将这个简单界面挪到Launchy中，发现在Launchy工程中使用这个界面就会出现OLE错误。这样以来，能够确定是问题并不是QClipboard的使用出现了错误，也不是由于界面部分引起的错误，问题被缩小到QApplication相关的的代码中。<br></p>
 
@@ -113,9 +113,9 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 </div>
 </div>
 
-<div id="outline-container-org581aaa8" class="outline-2">
-<h2 id="org581aaa8">参考资料</h2>
-<div class="outline-text-2" id="text-org581aaa8">
+<div id="outline-container-org1c1c150" class="outline-2">
+<h2 id="org1c1c150">参考资料</h2>
+<div class="outline-text-2" id="text-org1c1c150">
 <ul class="org-ul">
 <li>
 <a href="https://windowsreport.com/excel-is-waiting-for-ole/">windowsreport.com - excel is waiting for ole</a><br>
@@ -130,25 +130,25 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/ole/" rel="tag">ole</a>
+      <a class="badge" href="/blog/tags/ole/" rel="tag">ole</a>
     </li>
     <li>
-      <a class="badge" href="/tags/qt/" rel="tag">qt</a>
+      <a class="badge" href="/blog/tags/qt/" rel="tag">qt</a>
     </li>
     <li>
-      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+      <a class="badge" href="/blog/tags/windows/" rel="tag">windows</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2020/facade-design-pattern/" rel="prev">Previous post
+      <a href="/blog/posts/2020/facade-design-pattern/" rel="prev">Previous post
         <br><span>软件设计模式-门面模式</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2020/network-programming-reactor-and-proactor/" rel="next">Next post
+      <a href="/blog/posts/2020/network-programming-reactor-and-proactor/" rel="next">Next post
         <br><span>网络编程中的Reactor和Proactor模式</span>
       </a>
     </li>
@@ -156,7 +156,7 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2020/debug-qt-ole-error/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2020/debug-qt-ole-error/",
         disqus_title="Qt\u7a0b\u5e8f\u4e2dOLE\u9519\u8bef\u7684\u8c03\u8bd5\u8bb0\u5f55",
         disqus_identifier="_cache/posts/2020/debug-qt-ole-error.html",
         disqus_config = function () {
@@ -183,17 +183,17 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -209,7 +209,7 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

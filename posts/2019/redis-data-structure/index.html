@@ -8,16 +8,16 @@
 <title>redis中的数据结构 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2019/redis-data-structure/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2019/makefile_cheatsheet/" title="Makefile 要点备忘" type="text/html">
-<link rel="next" href="/posts/2019/bit-field-and-union-type/" title="位域与联合体的内存布局" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/redis-data-structure/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2019/makefile_cheatsheet/" title="Makefile 要点备忘" type="text/html">
+<link rel="next" href="/blog/posts/2019/bit-field-and-union-type/" title="位域与联合体的内存布局" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="redis中的数据结构">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2019/redis-data-structure/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2019/redis-data-structure/">
 <meta property="og:description" content="本文主要介绍了 redis 中的底层数据结构类型，并比较了操作这些数据时的时间复杂度。
 
 
@@ -67,17 +67,17 @@ string
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -98,8 +98,8 @@ string
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org238b5b0" class="outline-2">
-<h2 id="org238b5b0">
+<div id="outline-container-org0346b6f" class="outline-2">
+<h2 id="org0346b6f">
 <span class="section-number-2">1</span> 简介</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -214,16 +214,16 @@ redis 常用的类型主要是 String、List、Hash、Set、ZSet 这5种。<br><
 </div>
 
 
-<div id="outline-container-org3ce8e16" class="outline-2">
-<h2 id="org3ce8e16">
+<div id="outline-container-orgae9b6b6" class="outline-2">
+<h2 id="orgae9b6b6">
 <span class="section-number-2">2</span> redis 的底层存储对象 redisObject</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 redis 每个对象由一个 redisObject 结构表示，它的 ptr 指针指向底层实现的数据结构，而数据结构由 encoding 属性决定。<br>
 可以使用 object encoding <code>key_name</code> 获得 key 对应的底层数据结构，操作示例：<br></p>
-<div class="highlight"><pre><span></span><span class="m">127</span>.0.0.1:6379&gt; <span class="nb">set</span> hello world
+<div class="highlight"><pre><span></span><span class="m">127</span>.0.0.1:6379&gt;<span class="w"> </span><span class="nb">set</span><span class="w"> </span>hello<span class="w"> </span>world
 OK
-<span class="m">127</span>.0.0.1:6379&gt; object encoding hello
+<span class="m">127</span>.0.0.1:6379&gt;<span class="w"> </span>object<span class="w"> </span>encoding<span class="w"> </span>hello
 <span class="s2">"embstr"</span>
 </pre></div>
 
@@ -277,8 +277,8 @@ redis 所有的数据结构类型<br></p>
 </div>
 
 
-<div id="outline-container-org8a5c702" class="outline-2">
-<h2 id="org8a5c702">
+<div id="outline-container-org60738ac" class="outline-2">
+<h2 id="org60738ac">
 <span class="section-number-2">3</span> string 类型</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -301,8 +301,8 @@ raw：大于39个字节的字符串<br></p>
 </div>
 
 
-<div id="outline-container-orga103615" class="outline-2">
-<h2 id="orga103615">
+<div id="outline-container-orge9146b9" class="outline-2">
+<h2 id="orge9146b9">
 <span class="section-number-2">4</span> list 类型</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -326,8 +326,8 @@ List对象的底层实现是quicklist（快速列表，是ziplist 压缩列表 �
 </div>
 
 
-<div id="outline-container-org193a627" class="outline-2">
-<h2 id="org193a627">
+<div id="outline-container-orgd06adc5" class="outline-2">
+<h2 id="orgd06adc5">
 <span class="section-number-2">5</span> hash 类型</h2>
 <div class="outline-text-2" id="text-5">
 <p>
@@ -347,8 +347,8 @@ hashtable哈希表可以实现O(1)复杂度的读写操作，因此效率很高�
 </div>
 
 
-<div id="outline-container-orgfea93ee" class="outline-2">
-<h2 id="orgfea93ee">
+<div id="outline-container-orge46744a" class="outline-2">
+<h2 id="orge46744a">
 <span class="section-number-2">6</span> set 类型</h2>
 <div class="outline-text-2" id="text-6">
 <p>
@@ -368,8 +368,8 @@ Set集合对象的底层实现可以是intset（整数集合）或者hashtable�
 </div>
 
 
-<div id="outline-container-org25757a4" class="outline-2">
-<h2 id="org25757a4">
+<div id="outline-container-orgbdc2aba" class="outline-2">
+<h2 id="orgbdc2aba">
 <span class="section-number-2">7</span> sorted set 类型</h2>
 <div class="outline-text-2" id="text-7">
 <p>
@@ -388,8 +388,8 @@ ZSet有序集合对象底层实现可以是ziplist（压缩列表）或者skipli
 </div>
 
 
-<div id="outline-container-orgd846d92" class="outline-2">
-<h2 id="orgd846d92">
+<div id="outline-container-org7bd7304" class="outline-2">
+<h2 id="org7bd7304">
 <span class="section-number-2">8</span> 参考资料</h2>
 <div class="outline-text-2" id="text-8">
 <ul class="org-ul">
@@ -408,22 +408,22 @@ ZSet有序集合对象底层实现可以是ziplist（压缩列表）或者skipli
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/data-structure/" rel="tag">data structure</a>
+      <a class="badge" href="/blog/tags/data-structure/" rel="tag">data structure</a>
     </li>
     <li>
-      <a class="badge" href="/tags/nosql/" rel="tag">nosql</a>
+      <a class="badge" href="/blog/tags/nosql/" rel="tag">nosql</a>
     </li>
     <li>
-      <a class="badge" href="/tags/redis/" rel="tag">redis</a>
+      <a class="badge" href="/blog/tags/redis/" rel="tag">redis</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2019/makefile_cheatsheet/" rel="prev">Previous post
+      <a href="/blog/posts/2019/makefile_cheatsheet/" rel="prev">Previous post
         <br><span>Makefile 要点备忘</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2019/bit-field-and-union-type/" rel="next">Next post
+      <a href="/blog/posts/2019/bit-field-and-union-type/" rel="next">Next post
         <br><span>位域与联合体的内存布局</span>
       </a>
     </li>
@@ -431,7 +431,7 @@ ZSet有序集合对象底层实现可以是ziplist（压缩列表）或者skipli
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2019/redis-data-structure/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2019/redis-data-structure/",
         disqus_title="redis\u4e2d\u7684\u6570\u636e\u7ed3\u6784",
         disqus_identifier="_cache/posts/2019/redis-data-structure.html",
         disqus_config = function () {
@@ -458,17 +458,17 @@ ZSet有序集合对象底层实现可以是ziplist（压缩列表）或者skipli
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -484,7 +484,7 @@ ZSet有序集合对象底层实现可以是ziplist（压缩列表）或者skipli
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

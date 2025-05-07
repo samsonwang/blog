@@ -8,16 +8,16 @@
 <title>静态初始化顺序问题 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2020/static-initialization-order-problem/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2020/cpp-access-container-by-iterator-or-position/" title="使用迭代器和下标访问C++容器的比较" type="text/html">
-<link rel="next" href="/posts/2020/linux-signal-programming-tips/" title="处理Linux信号需要注意的几个问题" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2020/static-initialization-order-problem/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2020/cpp-access-container-by-iterator-or-position/" title="使用迭代器和下标访问C++容器的比较" type="text/html">
+<link rel="next" href="/blog/posts/2020/linux-signal-programming-tips/" title="处理Linux信号需要注意的几个问题" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="静态初始化顺序问题">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2020/static-initialization-order-problem/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2020/static-initialization-order-problem/">
 <meta property="og:description" content="本文介绍了静态变量构造顺序和析构顺序所带来的一系列问题，由于这些问题的出现条件都比较特殊，它们在使用中常常会被忽略。但是在设计和开发中这些问题却是不可忽略的，最严重的可能导致程序崩溃。在开发时注意了这些问题后，你的代码会更加稳健。
 
 
@@ -36,17 +36,17 @@
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -71,9 +71,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org990b1d6" class="outline-2">
-<h2 id="org990b1d6">静态初始化顺序</h2>
-<div class="outline-text-2" id="text-org990b1d6">
+<div id="outline-container-org3231273" class="outline-2">
+<h2 id="org3231273">静态初始化顺序</h2>
+<div class="outline-text-2" id="text-org3231273">
 <p>
 静态初始化顺序问题的英文名称是 static initialization order problem，这个问题所涉及到的对象有：类域中的静态变量、文件中的和命名空间中的（全局）变量。<br></p>
 
@@ -94,19 +94,19 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-org5e1e463" class="outline-2">
-<h2 id="org5e1e463">使用指针的单例模式</h2>
-<div class="outline-text-2" id="text-org5e1e463">
+<div id="outline-container-org3128cb8" class="outline-2">
+<h2 id="org3128cb8">使用指针的单例模式</h2>
+<div class="outline-text-2" id="text-org3128cb8">
 <p>
 使用单例模式能够解决全局变量初始化问题。在单例模式中通常会有个静态函数用于返回单例类（class）的对象（object）的引用，这样就保证了在使用这个单例对象时该对象肯定是被初始化了的。<br></p>
 
 <p>
 单例模式能够保证类仅有实例化出一个对象，在代码实现上还需要搭配私有的类构造函数。如果仅需要保证对象在使用前被初始化，我们可以仿照单例模式的写法，通过函数返回静态变量的引用，示例代码如下。<br></p>
 
-<div class="highlight"><pre><span></span><span class="n">Singleton</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">Instance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">s_pObj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Singleton</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">*</span><span class="n">s_pObj</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="n">Singleton</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">Instance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">s_pObj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Singleton</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">*</span><span class="n">s_pObj</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 
 <p>
@@ -115,16 +115,16 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-orgcbebc37" class="outline-2">
-<h2 id="orgcbebc37">使用对象的单例模式</h2>
-<div class="outline-text-2" id="text-orgcbebc37">
+<div id="outline-container-org328d9b0" class="outline-2">
+<h2 id="org328d9b0">使用对象的单例模式</h2>
+<div class="outline-text-2" id="text-org328d9b0">
 <p>
 直接使用静态的类对象就能够避免内存泄漏问题。与使用对象指针的写法不同，静态变量在程序退出前一定会销毁，其析构函数一定会被调用。示例代码如下所示。<br></p>
 
-<div class="highlight"><pre><span></span><span class="n">Singleton</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">Instance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="w"> </span><span class="n">s_obj</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">s_obj</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="n">Singleton</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">Instance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="w"> </span><span class="n">s_obj</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">s_obj</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 
 <p>
@@ -133,62 +133,62 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-orgaf3b9c0" class="outline-2">
-<h2 id="orgaf3b9c0">终极形式的单例模式</h2>
-<div class="outline-text-2" id="text-orgaf3b9c0">
+<div id="outline-container-org3751988" class="outline-2">
+<h2 id="org3751988">终极形式的单例模式</h2>
+<div class="outline-text-2" id="text-org3751988">
 <p>
 那么是否有一种单例模式的范例能够同时解决内存泄漏问题和析构顺序问题呢？答案是有的，只不过写法稍微复杂，并且存在一定的性能损失。示例代码如下：<br></p>
 
 <p>
 <code>singleton.h</code> 文件内容：<br></p>
-<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Singleton</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Instance</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="k">class</span><span class="w"> </span><span class="nc">Init</span><span class="p">;</span><span class="w"></span>
-<span class="k">private</span><span class="o">:</span><span class="w"></span>
-<span class="w">    </span><span class="n">Singleton</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="n">Singleton</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Singleton</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">delete</span><span class="p">;</span><span class="w"></span>
-<span class="k">private</span><span class="o">:</span><span class="w"></span>
-<span class="w">    </span><span class="k">friend</span><span class="w"> </span><span class="n">Init</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">s_pObj</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Singleton</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Instance</span><span class="p">();</span>
+<span class="w">    </span><span class="k">class</span><span class="w"> </span><span class="nc">Init</span><span class="p">;</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">    </span><span class="n">Singleton</span><span class="p">();</span>
+<span class="w">    </span><span class="n">Singleton</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Singleton</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">delete</span><span class="p">;</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">    </span><span class="k">friend</span><span class="w"> </span><span class="n">Init</span><span class="p">;</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">s_pObj</span><span class="p">;</span>
+<span class="p">};</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Singleton</span><span class="o">::</span><span class="n">Init</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">    </span><span class="n">Init</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="o">~</span><span class="n">Init</span><span class="p">();</span><span class="w"></span>
-<span class="k">private</span><span class="o">:</span><span class="w"></span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">s_count</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Singleton</span><span class="o">::</span><span class="n">Init</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="n">Init</span><span class="p">();</span>
+<span class="w">    </span><span class="o">~</span><span class="n">Init</span><span class="p">();</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">s_count</span><span class="p">;</span>
+<span class="p">};</span>
 
 <span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="o">::</span><span class="n">Init</span><span class="w"> </span><span class="n">s_init</span><span class="p">;</span><span class="w"> </span><span class="c1">// 关键变量</span>
 </pre></div>
 
 <p>
 <code>singleton.cpp</code> 文件内容如下<br></p>
-<div class="highlight"><pre><span></span><span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">Singleton</span><span class="o">::</span><span class="n">s_pObj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span><span class="w"></span>
-<span class="kt">unsigned</span><span class="w"> </span><span class="n">Singleton</span><span class="o">::</span><span class="n">Init</span><span class="o">::</span><span class="n">s_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">Singleton</span><span class="o">::</span><span class="n">s_pObj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="n">Singleton</span><span class="o">::</span><span class="n">Init</span><span class="o">::</span><span class="n">s_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 
-<span class="n">Singleton</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">Singleton::Instance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">*</span><span class="n">s_pObj</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-<span class="n">Singleton</span><span class="o">::</span><span class="n">Singleton</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Singleton::Singleton</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-<span class="kt">void</span><span class="w"> </span><span class="n">Singleton</span><span class="o">::</span><span class="n">Foo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Singleton::Foo</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="n">Singleton</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">Singleton::Instance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">*</span><span class="n">s_pObj</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">Singleton</span><span class="o">::</span><span class="n">Singleton</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Singleton::Singleton</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">Singleton</span><span class="o">::</span><span class="n">Foo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Singleton::Foo</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
 
-<span class="n">Singleton</span><span class="o">::</span><span class="n">Init</span><span class="o">::</span><span class="n">Init</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">s_count</span><span class="o">++</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">	</span><span class="n">Singleton</span><span class="o">::</span><span class="n">s_pObj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Singleton</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-<span class="n">Singleton</span><span class="o">::</span><span class="n">Init</span><span class="o">::~</span><span class="n">Init</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">--</span><span class="n">s_count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">	</span><span class="k">delete</span><span class="w"> </span><span class="n">Singleton</span><span class="o">::</span><span class="n">s_pObj</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="n">Singleton</span><span class="o">::</span><span class="n">Init</span><span class="o">::</span><span class="n">Init</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">s_count</span><span class="o">++</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="n">Singleton</span><span class="o">::</span><span class="n">s_pObj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Singleton</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="n">Singleton</span><span class="o">::</span><span class="n">Init</span><span class="o">::~</span><span class="n">Init</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">--</span><span class="n">s_count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="k">delete</span><span class="w"> </span><span class="n">Singleton</span><span class="o">::</span><span class="n">s_pObj</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 <p>
@@ -203,9 +203,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-org8a37f9d" class="outline-2">
-<h2 id="org8a37f9d">总结</h2>
-<div class="outline-text-2" id="text-org8a37f9d">
+<div id="outline-container-orgfdb31ec" class="outline-2">
+<h2 id="orgfdb31ec">总结</h2>
+<div class="outline-text-2" id="text-orgfdb31ec">
 <p>
 下面对这几种方案进行了比较：<br></p>
 
@@ -237,9 +237,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-org1c3d153" class="outline-2">
-<h2 id="org1c3d153">参考资料</h2>
-<div class="outline-text-2" id="text-org1c3d153">
+<div id="outline-container-org064ef42" class="outline-2">
+<h2 id="org064ef42">参考资料</h2>
+<div class="outline-text-2" id="text-org064ef42">
 <ul class="org-ul">
 <li>
 <a href="http://www.cs.technion.ac.il/users/yechiel/c++-faq/static-init-order-on-first-use.html">C++ FAQs - static init order on first use</a><br>
@@ -259,22 +259,22 @@ The nightmare scenario occurs when there is an order dependency between initiali
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/singleton/" rel="tag">singleton</a>
+      <a class="badge" href="/blog/tags/singleton/" rel="tag">singleton</a>
     </li>
     <li>
-      <a class="badge" href="/tags/static/" rel="tag">static</a>
+      <a class="badge" href="/blog/tags/static/" rel="tag">static</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2020/cpp-access-container-by-iterator-or-position/" rel="prev">Previous post
+      <a href="/blog/posts/2020/cpp-access-container-by-iterator-or-position/" rel="prev">Previous post
         <br><span>使用迭代器和下标访问C++容器的比较</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2020/linux-signal-programming-tips/" rel="next">Next post
+      <a href="/blog/posts/2020/linux-signal-programming-tips/" rel="next">Next post
         <br><span>处理Linux信号需要注意的几个问题</span>
       </a>
     </li>
@@ -282,7 +282,7 @@ The nightmare scenario occurs when there is an order dependency between initiali
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2020/static-initialization-order-problem/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2020/static-initialization-order-problem/",
         disqus_title="\u9759\u6001\u521d\u59cb\u5316\u987a\u5e8f\u95ee\u9898",
         disqus_identifier="_cache/posts/2020/static-initialization-order-problem.html",
         disqus_config = function () {
@@ -309,17 +309,17 @@ The nightmare scenario occurs when there is an order dependency between initiali
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -335,7 +335,7 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

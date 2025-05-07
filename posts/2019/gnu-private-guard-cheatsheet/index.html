@@ -8,16 +8,16 @@
 <title>gpg操作备忘 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2019/gnu-private-guard-cheatsheet/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2019/fopen-api-compare/" title="文件操作函数接口的比较" type="text/html">
-<link rel="next" href="/posts/2019/windows-command-examples-dumpbin/" title="Windows常用命令行指令dumpbin" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/gnu-private-guard-cheatsheet/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2019/fopen-api-compare/" title="文件操作函数接口的比较" type="text/html">
+<link rel="next" href="/blog/posts/2019/windows-command-examples-dumpbin/" title="Windows常用命令行指令dumpbin" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="gpg操作备忘">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2019/gnu-private-guard-cheatsheet/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2019/gnu-private-guard-cheatsheet/">
 <meta property="og:description" content="gpg的全称是gnu privacy guard，用于实现网络传输时的加密和解密。它有点类似于ssh的加解密过程，都有公钥和私钥，使用私钥加密公钥解密。我有一个应用场景需要在emacs中自动对org mode进行加密，使用了gpg完成加密过程。本文主要总结了gpg的常用命令。
 
 
@@ -37,17 +37,17 @@
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -68,40 +68,40 @@ gpg的全称是gnu privacy guard，用于实现网络传输时的加密和解密
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org7a21504" class="outline-2">
-<h2 id="org7a21504">生成一个新的key</h2>
-<div class="outline-text-2" id="text-org7a21504">
+<div id="outline-container-orgea40175" class="outline-2">
+<h2 id="orgea40175">生成一个新的key</h2>
+<div class="outline-text-2" id="text-orgea40175">
 <p>
 当初次使用时，需要新生成一个key，这个key包含一个公钥和一个私钥，这两个密钥组成了一个密钥对。<br>
 使用以下命令就能够生成一个新的key，执行这个命令会进入命令行交互界面，跟随指引填写对应的信息即可。<br></p>
-<div class="highlight"><pre><span></span>gpg --gen-key
+<div class="highlight"><pre><span></span>gpg<span class="w"> </span>--gen-key
 </pre></div>
 </div>
 </div>
 
 
-<div id="outline-container-org1def28e" class="outline-2">
-<h2 id="org1def28e">查看系统中的key</h2>
-<div class="outline-text-2" id="text-org1def28e">
+<div id="outline-container-orge148a03" class="outline-2">
+<h2 id="orge148a03">查看系统中的key</h2>
+<div class="outline-text-2" id="text-orge148a03">
 <p>
 我们在生成key以后，可以使用以下命令查看刚刚生成的key。<br></p>
 
 <p>
 查看所有公钥和私钥<br></p>
-<div class="highlight"><pre><span></span>gpg --list-keys
+<div class="highlight"><pre><span></span>gpg<span class="w"> </span>--list-keys
 </pre></div>
 
 <p>
 查看所有私钥<br></p>
-<div class="highlight"><pre><span></span>gpg --list-secret-keys
+<div class="highlight"><pre><span></span>gpg<span class="w"> </span>--list-secret-keys
 </pre></div>
 </div>
 </div>
 
 
-<div id="outline-container-orgd47cb60" class="outline-2">
-<h2 id="orgd47cb60">导出key</h2>
-<div class="outline-text-2" id="text-orgd47cb60">
+<div id="outline-container-orgaa4f6cc" class="outline-2">
+<h2 id="orgaa4f6cc">导出key</h2>
+<div class="outline-text-2" id="text-orgaa4f6cc">
 <p>
 在生成key之后有以下几种情况我需要将key导出：<br></p>
 <ol class="org-ol">
@@ -114,37 +114,37 @@ gpg的全称是gnu privacy guard，用于实现网络传输时的加密和解密
 </ol>
 <p>
 导出ascii码形式的私钥的命令如下<br></p>
-<div class="highlight"><pre><span></span>gpg --output private.pgp --armor --export-secret-key username@email
+<div class="highlight"><pre><span></span>gpg<span class="w"> </span>--output<span class="w"> </span>private.pgp<span class="w"> </span>--armor<span class="w"> </span>--export-secret-key<span class="w"> </span>username@email
 </pre></div>
 
 <p>
 导出二进制形式的私钥的命令如下<br></p>
-<div class="highlight"><pre><span></span>gpg --output private --export-secret-key username@email
+<div class="highlight"><pre><span></span>gpg<span class="w"> </span>--output<span class="w"> </span>private<span class="w"> </span>--export-secret-key<span class="w"> </span>username@email
 </pre></div>
 
 <p>
 导出ascii码形式的公钥的命令如下<br></p>
-<div class="highlight"><pre><span></span>gpg --output public.pgp --armor --export username@email
+<div class="highlight"><pre><span></span>gpg<span class="w"> </span>--output<span class="w"> </span>public.pgp<span class="w"> </span>--armor<span class="w"> </span>--export<span class="w"> </span>username@email
 </pre></div>
 
 <p>
 导出二进制形式的公钥的命令如下<br></p>
-<div class="highlight"><pre><span></span>gpg --output public.pgp --export username@email
+<div class="highlight"><pre><span></span>gpg<span class="w"> </span>--output<span class="w"> </span>public.pgp<span class="w"> </span>--export<span class="w"> </span>username@email
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgb03d3b4" class="outline-2">
-<h2 id="orgb03d3b4">导入key</h2>
-<div class="outline-text-2" id="text-orgb03d3b4">
+<div id="outline-container-orgd2cc4af" class="outline-2">
+<h2 id="orgd2cc4af">导入key</h2>
+<div class="outline-text-2" id="text-orgd2cc4af">
 <p>
 导入key的命令如下<br></p>
-<div class="highlight"><pre><span></span>gpg --import my_key.pgp
+<div class="highlight"><pre><span></span>gpg<span class="w"> </span>--import<span class="w"> </span>my_key.pgp
 </pre></div>
 
 <p>
 刚导入的key的状态为unknown，可以使用以下命令将其设置为ultimate。<br></p>
-<div class="highlight"><pre><span></span>gpg --edit-key <span class="o">{</span>KEY<span class="o">}</span> trust quit
+<div class="highlight"><pre><span></span>gpg<span class="w"> </span>--edit-key<span class="w"> </span><span class="o">{</span>KEY<span class="o">}</span><span class="w"> </span>trust<span class="w"> </span>quit
 <span class="c1"># enter 5&lt;RETURN&gt; (I trust ultimately)</span>
 <span class="c1"># enter y&lt;RETURN&gt; (Really set this key to ultimate trust - Yes)</span>
 </pre></div>
@@ -152,9 +152,9 @@ gpg的全称是gnu privacy guard，用于实现网络传输时的加密和解密
 </div>
 
 
-<div id="outline-container-org8a94616" class="outline-2">
-<h2 id="org8a94616">缓存passphrase</h2>
-<div class="outline-text-2" id="text-org8a94616">
+<div id="outline-container-orgb3b08cb" class="outline-2">
+<h2 id="orgb3b08cb">缓存passphrase</h2>
+<div class="outline-text-2" id="text-orgb3b08cb">
 <p>
 在进行加密和解密时都要输入key对应的passphrase，这个passphrase默认会缓存一段时间，这个时间是可以在配置文件中修改的，配置文件为 <code>~/.gnupg/gpg-agent.conf</code> 。<br>
 可以通过加入以下两行配置来延长passphrase的时间，两项配置数值的单位均为秒。<br></p>
@@ -166,33 +166,33 @@ max-cache-ttl 34560000
 
 <p>
 在修改配置文件后可以使用以下命令使配置生效并查看配置结果。<br></p>
-<div class="highlight"><pre><span></span>gpgconf --reload gpg-agent
-gpgconf --list-options gpg-agent
+<div class="highlight"><pre><span></span>gpgconf<span class="w"> </span>--reload<span class="w"> </span>gpg-agent
+gpgconf<span class="w"> </span>--list-options<span class="w"> </span>gpg-agent
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org3151eea" class="outline-2">
-<h2 id="org3151eea">加密解密过程</h2>
-<div class="outline-text-2" id="text-org3151eea">
+<div id="outline-container-orge0e8736" class="outline-2">
+<h2 id="orge0e8736">加密解密过程</h2>
+<div class="outline-text-2" id="text-orge0e8736">
 <p>
 解密一个文件<br></p>
-<div class="highlight"><pre><span></span>gpg -d xxx.gpg &gt; xxx
-gpg --output doc.gpg --encrypt --recipient blake@cyb.org doc
+<div class="highlight"><pre><span></span>gpg<span class="w"> </span>-d<span class="w"> </span>xxx.gpg<span class="w"> </span>&gt;<span class="w"> </span>xxx
+gpg<span class="w"> </span>--output<span class="w"> </span>doc.gpg<span class="w"> </span>--encrypt<span class="w"> </span>--recipient<span class="w"> </span>blake@cyb.org<span class="w"> </span>doc
 </pre></div>
 
 <p>
 加密一个文件<br></p>
-<div class="highlight"><pre><span></span>gpg -e xxx
-gpg --output doc --decrypt doc.gpg
+<div class="highlight"><pre><span></span>gpg<span class="w"> </span>-e<span class="w"> </span>xxx
+gpg<span class="w"> </span>--output<span class="w"> </span>doc<span class="w"> </span>--decrypt<span class="w"> </span>doc.gpg
 </pre></div>
 </div>
 </div>
 
 
-<div id="outline-container-orgaf7959e" class="outline-2">
-<h2 id="orgaf7959e">参考资料</h2>
-<div class="outline-text-2" id="text-orgaf7959e">
+<div id="outline-container-org1e35f81" class="outline-2">
+<h2 id="org1e35f81">参考资料</h2>
+<div class="outline-text-2" id="text-org1e35f81">
 <ul class="org-ul">
 <li>
 <a href="https://unix.stackexchange.com/questions/481939/how-to-export-a-gpg-private-key-and-public-key-to-a-file">stackexchange.com - export gpg key</a><br>
@@ -213,25 +213,25 @@ gpg --output doc --decrypt doc.gpg
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/cheatsheet/" rel="tag">cheatsheet</a>
+      <a class="badge" href="/blog/tags/cheatsheet/" rel="tag">cheatsheet</a>
     </li>
     <li>
-      <a class="badge" href="/tags/gnu/" rel="tag">gnu</a>
+      <a class="badge" href="/blog/tags/gnu/" rel="tag">gnu</a>
     </li>
     <li>
-      <a class="badge" href="/tags/gpg/" rel="tag">gpg</a>
+      <a class="badge" href="/blog/tags/gpg/" rel="tag">gpg</a>
     </li>
     <li>
-      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+      <a class="badge" href="/blog/tags/linux/" rel="tag">linux</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2019/fopen-api-compare/" rel="prev">Previous post
+      <a href="/blog/posts/2019/fopen-api-compare/" rel="prev">Previous post
         <br><span>文件操作函数接口的比较</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2019/windows-command-examples-dumpbin/" rel="next">Next post
+      <a href="/blog/posts/2019/windows-command-examples-dumpbin/" rel="next">Next post
         <br><span>Windows常用命令行指令dumpbin</span>
       </a>
     </li>
@@ -239,7 +239,7 @@ gpg --output doc --decrypt doc.gpg
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2019/gnu-private-guard-cheatsheet/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2019/gnu-private-guard-cheatsheet/",
         disqus_title="gpg\u64cd\u4f5c\u5907\u5fd8",
         disqus_identifier="_cache/posts/2019/gnu-private-guard-cheatsheet.html",
         disqus_config = function () {
@@ -266,17 +266,17 @@ gpg --output doc --decrypt doc.gpg
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -292,7 +292,7 @@ gpg --output doc --decrypt doc.gpg
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

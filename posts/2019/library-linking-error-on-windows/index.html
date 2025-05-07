@@ -8,16 +8,16 @@
 <title>排查Windows平台动态库和静态库链接失败问题 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2019/library-linking-error-on-windows/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2019/cpp-delete-keyword-common-mistakes/" title="C++中delete关键字常见错误" type="text/html">
-<link rel="next" href="/posts/2019/gdb-print-variable-in-hex/" title="在gdb中以16进制的方式打印变量" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/library-linking-error-on-windows/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2019/cpp-delete-keyword-common-mistakes/" title="C++中delete关键字常见错误" type="text/html">
+<link rel="next" href="/blog/posts/2019/gdb-print-variable-in-hex/" title="在gdb中以16进制的方式打印变量" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="排查Windows平台动态库和静态库链接失败问题">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2019/library-linking-error-on-windows/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2019/library-linking-error-on-windows/">
 <meta property="og:description" content="最近帮同事查了一个C++链接过程的问题，这个问题比较隐蔽，也非常有代表性，记录下来方便后面查阅。
 
 
@@ -37,17 +37,17 @@
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -68,28 +68,28 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org67b9be5" class="outline-2">
-<h2 id="org67b9be5">动态库和静态库</h2>
-<div class="outline-text-2" id="text-org67b9be5">
+<div id="outline-container-org6e4046a" class="outline-2">
+<h2 id="org6e4046a">动态库和静态库</h2>
+<div class="outline-text-2" id="text-org6e4046a">
 <p>
 在软件开发中，通常将相似或具有关联性的代码归入一个模块中，这个模块会以动态库或静态库的形式独立出来。每个静态库或动态库会作为独立的编译单元生成目标文件，这些目标文件最终会被链接在一起。这些静态库和动态库之间大多具有依赖关系，在链接过程中如果所依赖的函数出现了缺失就会链接失败。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgcb26023" class="outline-2">
-<h2 id="orgcb26023">以 <code>__imp_</code> 开头的函数缺失</h2>
-<div class="outline-text-2" id="text-orgcb26023">
+<div id="outline-container-org3757cc4" class="outline-2">
+<h2 id="org3757cc4">以 <code>__imp_</code> 开头的函数缺失</h2>
+<div class="outline-text-2" id="text-org3757cc4">
 <p>
 同事的这个工程在以静态库方式链接时出现以 <code>__imp_</code> 开头的函数缺失，通常情况下报这个问题是因为该函数没有定义。但是，在仔细观察函数的名称后发现该函数已经被定义出来了，这就很奇怪了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org21e71ae" class="outline-2">
-<h2 id="org21e71ae">使用dumpbin工具插件动态库的函数</h2>
-<div class="outline-text-2" id="text-org21e71ae">
+<div id="outline-container-orge0a68a4" class="outline-2">
+<h2 id="orge0a68a4">使用dumpbin工具插件动态库的函数</h2>
+<div class="outline-text-2" id="text-orge0a68a4">
 <p>
 查看与链接相关的函数名称<br></p>
-<div class="highlight"><pre><span></span>dumpbin /linkermember xxx.lib
+<div class="highlight"><pre><span></span>dumpbin<span class="w"> </span>/linkermember<span class="w"> </span>xxx.lib
 </pre></div>
 
 <p>
@@ -100,29 +100,29 @@
 </div>
 </div>
 
-<div id="outline-container-org1e10d43" class="outline-2">
-<h2 id="org1e10d43">tips:其他实用的dumpbin指令</h2>
-<div class="outline-text-2" id="text-org1e10d43">
+<div id="outline-container-orga71fd4a" class="outline-2">
+<h2 id="orga71fd4a">tips:其他实用的dumpbin指令</h2>
+<div class="outline-text-2" id="text-orga71fd4a">
 <p>
 查看静态库中的函数<br></p>
-<div class="highlight"><pre><span></span>dumpbin /symbols xxx.lib
+<div class="highlight"><pre><span></span>dumpbin<span class="w"> </span>/symbols<span class="w"> </span>xxx.lib
 </pre></div>
 
 <p>
 查看动态库中的导出函数<br></p>
-<div class="highlight"><pre><span></span>dumpbin /exports xxx.dll
+<div class="highlight"><pre><span></span>dumpbin<span class="w"> </span>/exports<span class="w"> </span>xxx.dll
 </pre></div>
 
 <p>
 查看动态库的依赖库<br></p>
-<div class="highlight"><pre><span></span>dumpbin /dependents xxx.dll
+<div class="highlight"><pre><span></span>dumpbin<span class="w"> </span>/dependents<span class="w"> </span>xxx.dll
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org7dbeb91" class="outline-2">
-<h2 id="org7dbeb91">参考资料</h2>
-<div class="outline-text-2" id="text-org7dbeb91">
+<div id="outline-container-org8a8f84a" class="outline-2">
+<h2 id="org8a8f84a">参考资料</h2>
+<div class="outline-text-2" id="text-org8a8f84a">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/5159353/how-can-i-get-rid-of-the-imp-prefix-in-the-linker-in-vc">stackoverflow.com - imp prefix linking problem</a><br>
@@ -134,25 +134,25 @@
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/dumpbin/" rel="tag">dumpbin</a>
+      <a class="badge" href="/blog/tags/dumpbin/" rel="tag">dumpbin</a>
     </li>
     <li>
-      <a class="badge" href="/tags/linking/" rel="tag">linking</a>
+      <a class="badge" href="/blog/tags/linking/" rel="tag">linking</a>
     </li>
     <li>
-      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+      <a class="badge" href="/blog/tags/windows/" rel="tag">windows</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2019/cpp-delete-keyword-common-mistakes/" rel="prev">Previous post
+      <a href="/blog/posts/2019/cpp-delete-keyword-common-mistakes/" rel="prev">Previous post
         <br><span>C++中delete关键字常见错误</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2019/gdb-print-variable-in-hex/" rel="next">Next post
+      <a href="/blog/posts/2019/gdb-print-variable-in-hex/" rel="next">Next post
         <br><span>在gdb中以16进制的方式打印变量</span>
       </a>
     </li>
@@ -160,7 +160,7 @@
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2019/library-linking-error-on-windows/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2019/library-linking-error-on-windows/",
         disqus_title="\u6392\u67e5Windows\u5e73\u53f0\u52a8\u6001\u5e93\u548c\u9759\u6001\u5e93\u94fe\u63a5\u5931\u8d25\u95ee\u9898",
         disqus_identifier="_cache/posts/2019/library-linking-error-on-windows.html",
         disqus_config = function () {
@@ -187,17 +187,17 @@
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -213,7 +213,7 @@
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

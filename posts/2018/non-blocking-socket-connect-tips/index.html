@@ -8,16 +8,16 @@
 <title>客户端使用非阻塞socket进行connect的流程 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/non-blocking-socket-connect-tips/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/algorithm/algorithm-weekly-container-with-most-water/" title="每周算法：最大容器" type="text/html">
-<link rel="next" href="/posts/2018/static-member-initialization-and-private-member-function/" title="静态成员变量初始化相关问题" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/non-blocking-socket-connect-tips/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/algorithm/algorithm-weekly-container-with-most-water/" title="每周算法：最大容器" type="text/html">
+<link rel="next" href="/blog/posts/2018/static-member-initialization-and-private-member-function/" title="静态成员变量初始化相关问题" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="客户端使用非阻塞socket进行connect的流程">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/non-blocking-socket-connect-tips/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2018/non-blocking-socket-connect-tips/">
 <meta property="og:description" content="问题
 
 
@@ -43,17 +43,17 @@ if (res &lt; 0 &amp;&amp; errno != EINPROGRE">
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -69,30 +69,30 @@ if (res &lt; 0 &amp;&amp; errno != EINPROGRE">
       
     <time class="dt-published" datetime="2018-08-31T17:04:19+08:00" itemprop="datePublished">Aug 31, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orgdd79358" class="outline-2">
-<h2 id="orgdd79358">问题</h2>
-<div class="outline-text-2" id="text-orgdd79358">
+    <div id="outline-container-orgd54e310" class="outline-2">
+<h2 id="orgd54e310">问题</h2>
+<div class="outline-text-2" id="text-orgd54e310">
 <p>
 使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
 </div>
 </div>
 
-<div id="outline-container-org99de9e3" class="outline-2">
-<h2 id="org99de9e3">解答</h2>
-<div class="outline-text-2" id="text-org99de9e3">
+<div id="outline-container-org28691c4" class="outline-2">
+<h2 id="org28691c4">解答</h2>
+<div class="outline-text-2" id="text-org28691c4">
 <p>
 客户端建立连接的示例代码如下：<br></p>
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span><span class="w"></span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">res</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">errno</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EINPROGRESS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">res</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">errno</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EINPROGRESS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// case1. error, fail somehow, close socket</span>
-<span class="w">    </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
 
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">res</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">res</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// case2. connection has succeeded immediately</span>
-<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// case3. connection attempt is in progress</span>
-<span class="p">}</span><span class="w"></span>
+<span class="p">}</span>
 </pre></div>
 <p>
 由于是非阻塞模式，所以 <code>connect</code> 之后会直接返回，根据返回值 <code>res</code> 和 <code>errno</code> 能够判断建立连接的结果。<br></p>
@@ -112,26 +112,26 @@ if (res &lt; 0 &amp;&amp; errno != EINPROGRE">
 <li>case6，表示连接建立成功，可以开始 <code>read</code> 和 <code>write</code> 了。<br>
 </li>
 </ul>
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w"></span>
-<span class="kt">socklen_t</span><span class="w"> </span><span class="n">result_len</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">result</span><span class="p">);</span><span class="w"></span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">getsockopt</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">SOL_SOCKET</span><span class="p">,</span><span class="w"> </span><span class="n">SO_ERROR</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result_len</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+<span class="kt">socklen_t</span><span class="w"> </span><span class="n">result_len</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">getsockopt</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">SOL_SOCKET</span><span class="p">,</span><span class="w"> </span><span class="n">SO_ERROR</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result_len</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// case4. error, fail somehow, close socket</span>
-<span class="w">    </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
 
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// case5. connection failed; error code is in 'result'</span>
-<span class="w">    </span><span class="k">return</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
 
 <span class="c1">// case6. socket is ready for read()/write()</span>
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org9e3a8b8" class="outline-2">
-<h2 id="org9e3a8b8">参考资料</h2>
-<div class="outline-text-2" id="text-org9e3a8b8">
+<div id="outline-container-orgf8eb4a1" class="outline-2">
+<h2 id="orgf8eb4a1">参考资料</h2>
+<div class="outline-text-2" id="text-orgf8eb4a1">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
@@ -143,25 +143,25 @@ if (res &lt; 0 &amp;&amp; errno != EINPROGRE">
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/network/" rel="tag">network</a>
+      <a class="badge" href="/blog/tags/network/" rel="tag">network</a>
     </li>
     <li>
-      <a class="badge" href="/tags/nio/" rel="tag">nio</a>
+      <a class="badge" href="/blog/tags/nio/" rel="tag">nio</a>
     </li>
     <li>
-      <a class="badge" href="/tags/non-blocking/" rel="tag">non-blocking</a>
+      <a class="badge" href="/blog/tags/non-blocking/" rel="tag">non-blocking</a>
     </li>
     <li>
-      <a class="badge" href="/tags/socket/" rel="tag">socket</a>
+      <a class="badge" href="/blog/tags/socket/" rel="tag">socket</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/algorithm/algorithm-weekly-container-with-most-water/" rel="prev">Previous post
+      <a href="/blog/posts/algorithm/algorithm-weekly-container-with-most-water/" rel="prev">Previous post
         <br><span>每周算法：最大容器</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2018/static-member-initialization-and-private-member-function/" rel="next">Next post
+      <a href="/blog/posts/2018/static-member-initialization-and-private-member-function/" rel="next">Next post
         <br><span>静态成员变量初始化相关问题</span>
       </a>
     </li>
@@ -169,7 +169,7 @@ if (res &lt; 0 &amp;&amp; errno != EINPROGRE">
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2018/non-blocking-socket-connect-tips/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2018/non-blocking-socket-connect-tips/",
         disqus_title="\u5ba2\u6237\u7aef\u4f7f\u7528\u975e\u963b\u585esocket\u8fdb\u884cconnect\u7684\u6d41\u7a0b",
         disqus_identifier="_cache/posts/2018/non-blocking-socket-connect-tips.html",
         disqus_config = function () {
@@ -196,17 +196,17 @@ if (res &lt; 0 &amp;&amp; errno != EINPROGRE">
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -222,7 +222,7 @@ if (res &lt; 0 &amp;&amp; errno != EINPROGRE">
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

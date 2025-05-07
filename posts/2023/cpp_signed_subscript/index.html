@@ -8,16 +8,16 @@
 <title>在C++中使用有符号数作为容器下标 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2023/cpp_signed_subscript/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2023/tcp_error_research_note/" title="记录一次TCP异常分析" type="text/html">
-<link rel="next" href="/posts/2023/ood-principles/" title="面向对象设计中的五大原则" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2023/cpp_signed_subscript/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2023/tcp_error_research_note/" title="记录一次TCP异常分析" type="text/html">
+<link rel="next" href="/blog/posts/2023/ood-principles/" title="面向对象设计中的五大原则" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="在C++中使用有符号数作为容器下标">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2023/cpp_signed_subscript/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2023/cpp_signed_subscript/">
 <meta property="og:description" content="在C++20中引入了 std::span 特性，针对容器下标和容器大小该使用有符号数 signed 还是无符号数 unsigned ，大家开始讨论。综合来看，在旧标准的设计中使用无符号数作为容器下标是有历史原因的；但是在后来的使用中也发现了许多弊端。
 
 
@@ -29,17 +29,17 @@
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -63,9 +63,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org021b91a" class="outline-2">
-<h2 id="org021b91a">Bjarne Stroustrup 的观点</h2>
-<div class="outline-text-2" id="text-org021b91a">
+<div id="outline-container-org4a0de67" class="outline-2">
+<h2 id="org4a0de67">Bjarne Stroustrup 的观点</h2>
+<div class="outline-text-2" id="text-org4a0de67">
 <p>
 C++创始人Bjarne Stroustrup针对此问题发表了一些观点（见参考资料1），其中对比了两种方案的优势和劣势，会在下文中详细展开讲讲。<br></p>
 
@@ -116,9 +116,9 @@ Bjarne的最终观点是：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org6f959c4" class="outline-2">
-<h2 id="org6f959c4">无符号数存在的问题</h2>
-<div class="outline-text-2" id="text-org6f959c4">
+<div id="outline-container-org3eb4c4b" class="outline-2">
+<h2 id="org3eb4c4b">无符号数存在的问题</h2>
+<div class="outline-text-2" id="text-org3eb4c4b">
 <p>
 混用无符号数和有符号数非常容易引起混淆和bug。然而，在以下两种情况会容易出现有符号数和无符号数的混用。<br></p>
 <ul class="org-ul">
@@ -130,10 +130,10 @@ Bjarne的最终观点是：<br></p>
 <p>
 在下面的这种情况<br></p>
 <div class="highlight"><pre><span></span><span class="c1">// calculate area</span>
-<span class="kt">unsigned</span><span class="w"> </span><span class="nf">area</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">y</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-<span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">area</span><span class="p">(</span><span class="n">height1</span><span class="o">-</span><span class="n">height2</span><span class="p">,</span><span class="w"> </span><span class="n">length1</span><span class="o">-</span><span class="n">length2</span><span class="p">);</span><span class="w"></span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="nf">area</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">y</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">area</span><span class="p">(</span><span class="n">height1</span><span class="o">-</span><span class="n">height2</span><span class="p">,</span><span class="w"> </span><span class="n">length1</span><span class="o">-</span><span class="n">length2</span><span class="p">);</span>
 </pre></div>
 
 <p>
@@ -142,41 +142,41 @@ Bjarne的最终观点是：<br></p>
 <p>
 在 <code>for</code> 循环中使用无符号数也有很多种容易出错的情况<br></p>
 
-<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">	</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">;</span><span class="w">	</span>
-<span class="p">}</span><span class="w"></span>
+<span class="p">}</span>
 </pre></div>
 
 <p>
 混用了有符号数和无符号数，这样容易出错。<br></p>
 
-<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">size_type</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">	</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">size_type</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 
 <p>
 改成这样就能避免问题了，但是对于STL专家来讲，为什么要将容器中数据类型放在 <code>for</code> 循环中呢。<br></p>
 
-<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">&gt;::</span><span class="n">size_type</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">	</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">&gt;::</span><span class="n">size_type</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 
 <p>
 下面的写法也非常容易出错，因为 <code>i</code> 是无符号数，所以终止条件判断会永远成立，这个循环是一个无限循环。<br></p>
 
-<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="o">--</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="o">--</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">	</span><span class="c1">// ...</span>
-<span class="p">}</span><span class="w"></span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>
 
 
-<div id="outline-container-orgf17e214" class="outline-2">
-<h2 id="orgf17e214">专有名词</h2>
-<div class="outline-text-2" id="text-orgf17e214">
+<div id="outline-container-orgbb11dbb" class="outline-2">
+<h2 id="orgbb11dbb">专有名词</h2>
+<div class="outline-text-2" id="text-orgbb11dbb">
 <ul class="org-ul">
 <li>modular arithmetic - 模算术<br>
 </li>
@@ -197,9 +197,9 @@ EWG 的目标是使 C++ 语言更加现代、安全、高效和易于使用。EW
 </div>
 
 
-<div id="outline-container-org2dade15" class="outline-2">
-<h2 id="org2dade15">参考资料</h2>
-<div class="outline-text-2" id="text-org2dade15">
+<div id="outline-container-orgeefc4d3" class="outline-2">
+<h2 id="orgeefc4d3">参考资料</h2>
+<div class="outline-text-2" id="text-orgeefc4d3">
 <ol class="org-ol">
 <li>
 <a href="https://open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1428r0.pdf">open std - paper p1428</a><br>
@@ -216,16 +216,16 @@ EWG 的目标是使 C++ 语言更加现代、安全、高效和易于使用。EW
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2023/tcp_error_research_note/" rel="prev">Previous post
+      <a href="/blog/posts/2023/tcp_error_research_note/" rel="prev">Previous post
         <br><span>记录一次TCP异常分析</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2023/ood-principles/" rel="next">Next post
+      <a href="/blog/posts/2023/ood-principles/" rel="next">Next post
         <br><span>面向对象设计中的五大原则</span>
       </a>
     </li>
@@ -233,7 +233,7 @@ EWG 的目标是使 C++ 语言更加现代、安全、高效和易于使用。EW
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2023/cpp_signed_subscript/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2023/cpp_signed_subscript/",
         disqus_title="\u5728C++\u4e2d\u4f7f\u7528\u6709\u7b26\u53f7\u6570\u4f5c\u4e3a\u5bb9\u5668\u4e0b\u6807",
         disqus_identifier="_cache/posts/2023/cpp_signed_subscript.html",
         disqus_config = function () {
@@ -260,17 +260,17 @@ EWG 的目标是使 C++ 语言更加现代、安全、高效和易于使用。EW
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -286,7 +286,7 @@ EWG 的目标是使 C++ 语言更加现代、安全、高效和易于使用。EW
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

@@ -8,16 +8,16 @@
 <title>MSVC工程里Unicode字符集和多字节字符集选项 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2019/msvc-cpp-project-unicode-and-mbcs/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2019/gdb-print-variable-in-hex/" title="在gdb中以16进制的方式打印变量" type="text/html">
-<link rel="next" href="/posts/2019/linux-signal-handler-callback-mutex/" title="在Linux的信号处理函数中不要进行锁相关操作" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/msvc-cpp-project-unicode-and-mbcs/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2019/gdb-print-variable-in-hex/" title="在gdb中以16进制的方式打印变量" type="text/html">
+<link rel="next" href="/blog/posts/2019/linux-signal-handler-callback-mutex/" title="在Linux的信号处理函数中不要进行锁相关操作" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="MSVC工程里Unicode字符集和多字节字符集选项">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2019/msvc-cpp-project-unicode-and-mbcs/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2019/msvc-cpp-project-unicode-and-mbcs/">
 <meta property="og:description" content="在Visual Studio的C++工程中，有个一选项可以设置当前工程的字符集，本文主要围绕着该设置置项展开。
 
 
@@ -41,17 +41,17 @@ Unicode 是基于 wchar_t 的宽字节字符串，其中的字符以UTF-16方式
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -72,9 +72,9 @@ Unicode 是基于 wchar_t 的宽字节字符串，其中的字符以UTF-16方式
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgb1a4e1a" class="outline-2">
-<h2 id="orgb1a4e1a">Unicode和MBCS</h2>
-<div class="outline-text-2" id="text-orgb1a4e1a">
+<div id="outline-container-org58f97a3" class="outline-2">
+<h2 id="org58f97a3">Unicode和MBCS</h2>
+<div class="outline-text-2" id="text-org58f97a3">
 <p>
 该选项主要是针对MFC库中函数的来设置的，用于支持国际化的多语言开发。例如，中文的字符集就很大，MFC库提供了Unicode和MBCS来解决这个问题。<br></p>
 <ul class="org-ul">
@@ -88,11 +88,11 @@ Unicode 是基于 wchar_t 的宽字节字符串，其中的字符以UTF-16方式
 </div>
 </div>
 
-<div id="outline-container-org41a0fce" class="outline-2">
-<h2 id="org41a0fce">
+<div id="outline-container-org918d3a1" class="outline-2">
+<h2 id="org918d3a1">
 <code>CString</code> 和 <code>TCHAR</code>
 </h2>
-<div class="outline-text-2" id="text-org41a0fce">
+<div class="outline-text-2" id="text-org918d3a1">
 <p>
 <code>CString</code> 是基于 <code>TCHAR</code> 的数据结构， <code>TCHAR</code> 会根据当前配置来决定其底层的数据类型。当存在 <code>_UNICODE</code> 宏定义时是Unicode字符集模式，在Unicode下是 <code>wchar_t</code> 16bit字符格式；当存在 <code>_MBCS</code> 宏定义时是多字节字符集模式，在MBCS下是 <code>char</code> 常用的8bit字符格式。<br></p>
 
@@ -112,11 +112,11 @@ Unicode 是基于 wchar_t 的宽字节字符串，其中的字符以UTF-16方式
 </div>
 </div>
 
-<div id="outline-container-orgc8b4a68" class="outline-2">
-<h2 id="orgc8b4a68">
+<div id="outline-container-org1b1b2aa" class="outline-2">
+<h2 id="org1b1b2aa">
 <code>std::string</code> 和 <code>std::wstring</code>
 </h2>
-<div class="outline-text-2" id="text-orgc8b4a68">
+<div class="outline-text-2" id="text-org1b1b2aa">
 <p>
 <code>std::string</code> 是以 <code>char</code> 实例化的 <code>basic_string</code> 模板，而 <code>std::wstring</code> 是以 <code>wchar_t</code> 实例化的。<br></p>
 
@@ -135,9 +135,9 @@ Unicode 是基于 wchar_t 的宽字节字符串，其中的字符以UTF-16方式
 </div>
 
 
-<div id="outline-container-orgf83cfb1" class="outline-2">
-<h2 id="orgf83cfb1">参考资料</h2>
-<div class="outline-text-2" id="text-orgf83cfb1">
+<div id="outline-container-org96fdcd7" class="outline-2">
+<h2 id="org96fdcd7">参考资料</h2>
+<div class="outline-text-2" id="text-org96fdcd7">
 <ul class="org-ul">
 <li>
 <a href="https://docs.microsoft.com/en-us/cpp/text/unicode-and-mbcs">microsoft - unicode and mbcs</a><br>
@@ -161,28 +161,28 @@ Unicode 是基于 wchar_t 的宽字节字符串，其中的字符以UTF-16方式
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/charset/" rel="tag">charset</a>
+      <a class="badge" href="/blog/tags/charset/" rel="tag">charset</a>
     </li>
     <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/mbcs/" rel="tag">MBCS</a>
+      <a class="badge" href="/blog/tags/mbcs/" rel="tag">MBCS</a>
     </li>
     <li>
-      <a class="badge" href="/tags/unicode/" rel="tag">unicode</a>
+      <a class="badge" href="/blog/tags/unicode/" rel="tag">unicode</a>
     </li>
     <li>
-      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+      <a class="badge" href="/blog/tags/windows/" rel="tag">windows</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2019/gdb-print-variable-in-hex/" rel="prev">Previous post
+      <a href="/blog/posts/2019/gdb-print-variable-in-hex/" rel="prev">Previous post
         <br><span>在gdb中以16进制的方式打印变量</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2019/linux-signal-handler-callback-mutex/" rel="next">Next post
+      <a href="/blog/posts/2019/linux-signal-handler-callback-mutex/" rel="next">Next post
         <br><span>在Linux的信号处理函数中不要进行锁相关操作</span>
       </a>
     </li>
@@ -190,7 +190,7 @@ Unicode 是基于 wchar_t 的宽字节字符串，其中的字符以UTF-16方式
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2019/msvc-cpp-project-unicode-and-mbcs/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2019/msvc-cpp-project-unicode-and-mbcs/",
         disqus_title="MSVC\u5de5\u7a0b\u91ccUnicode\u5b57\u7b26\u96c6\u548c\u591a\u5b57\u8282\u5b57\u7b26\u96c6\u9009\u9879",
         disqus_identifier="_cache/posts/2019/msvc-cpp-project-unicode-and-mbcs.html",
         disqus_config = function () {
@@ -217,17 +217,17 @@ Unicode 是基于 wchar_t 的宽字节字符串，其中的字符以UTF-16方式
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -243,7 +243,7 @@ Unicode 是基于 wchar_t 的宽字节字符串，其中的字符以UTF-16方式
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

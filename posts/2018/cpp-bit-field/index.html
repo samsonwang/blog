@@ -8,16 +8,16 @@
 <title>C/C++中的位域 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/cpp-bit-field/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2018/gcc-built-in-functions-for-atomic-memory-access/" title="GCC的内存原子化操作函数接口" type="text/html">
-<link rel="next" href="/posts/2018/notes-on-libshmcache/" title="libshmcache源码阅读笔记" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/cpp-bit-field/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2018/gcc-built-in-functions-for-atomic-memory-access/" title="GCC的内存原子化操作函数接口" type="text/html">
+<link rel="next" href="/blog/posts/2018/notes-on-libshmcache/" title="libshmcache源码阅读笔记" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="C/C++中的位域">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/cpp-bit-field/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2018/cpp-bit-field/">
 <meta property="og:description" content="什么是位域
 
 
@@ -44,17 +44,17 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -74,9 +74,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 
     </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orgf2c3ffa" class="outline-2">
-<h2 id="orgf2c3ffa">什么是位域</h2>
-<div class="outline-text-2" id="text-orgf2c3ffa">
+    <div id="outline-container-orgb0f2a69" class="outline-2">
+<h2 id="orgb0f2a69">什么是位域</h2>
+<div class="outline-text-2" id="text-orgb0f2a69">
 <p>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">维基百科</a> 给出了以下解释<br></p>
 <blockquote>
@@ -105,12 +105,12 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgbc32bda" class="outline-2">
-<h2 id="orgbc32bda">位域的语法</h2>
-<div class="outline-text-2" id="text-orgbc32bda">
+<div id="outline-container-orgc1639a7" class="outline-2">
+<h2 id="orgc1639a7">位域的语法</h2>
+<div class="outline-text-2" id="text-orgc1639a7">
 <p>
 下面就是位域的语法格式。<br></p>
-<div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">size</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">size</span>
 </pre></div>
 
 <p>
@@ -129,122 +129,122 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 <p>
 以下为代码示例。<br></p>
 
-<div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">S1</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">S1</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// will usually occupy 2 bytes:</span>
 <span class="w">    </span><span class="c1">// 3 bits: value of b1</span>
 <span class="w">    </span><span class="c1">// 2 bits: unused</span>
 <span class="w">    </span><span class="c1">// 6 bits: value of b2</span>
 <span class="w">    </span><span class="c1">// 2 bits: value of b3</span>
 <span class="w">    </span><span class="c1">// 3 bits: unused</span>
-<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">b2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="n">b3</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">b2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="n">b3</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="p">};</span>
 
-<span class="k">struct</span><span class="w"> </span><span class="nc">S2</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">S2</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// will usually occupy 2 bytes:</span>
 <span class="w">    </span><span class="c1">// 3 bits: value of b1</span>
 <span class="w">    </span><span class="c1">// 5 bits: unused</span>
 <span class="w">    </span><span class="c1">// 6 bits: value of b2</span>
 <span class="w">    </span><span class="c1">// 2 bits: value of b3</span>
-<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
 <span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">:</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">// start a new byte</span>
-<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b3</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b3</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="p">};</span>
 </pre></div>
 </div>
 
 
-<div id="outline-container-orgddb9491" class="outline-3">
-<h3 id="orgddb9491">在 <code>size</code> 取0时如何理解</h3>
-<div class="outline-text-3" id="text-orgddb9491">
+<div id="outline-container-org53a3153" class="outline-3">
+<h3 id="org53a3153">在 <code>size</code> 取0时如何理解</h3>
+<div class="outline-text-3" id="text-org53a3153">
 <p>
 对于 <code>size</code> 取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。<br>
 如下所示，定义了如下几种情况。<br></p>
 
 <p>
 <b>case1</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"></span>
-<span class="w">	</span><span class="nl">int</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">	</span><span class="nl">int</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+<span class="p">};</span>
 </pre></div>
 
 <p>
 对联合体中的结构体位段进行赋值，并将联合体中的内容打印出来。<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="n">u1</span><span class="p">;</span><span class="w"></span>
-<span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
-<span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
-<span class="n">printf</span><span class="p">(</span><span class="s">"union u1.n1=0x%08x sizeof(un1)=%zu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">u1</span><span class="p">.</span><span class="n">n1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">));</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="n">u1</span><span class="p">;</span>
+<span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"union u1.n1=0x%08x sizeof(un1)=%zu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">u1</span><span class="p">.</span><span class="n">n1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">));</span>
 </pre></div>
 
 <p>
 输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000001</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">8</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000001</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">8</span>
 </pre></div>
 
 <p>
 <b>case2</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"></span>
-<span class="w">	</span><span class="nl">char</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">	</span><span class="nl">char</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+<span class="p">};</span>
 </pre></div>
 
 <p>
 输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
 </pre></div>
 
 <p>
 <b>case3</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"></span>
-<span class="w">	</span><span class="nl">short</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">	</span><span class="nl">short</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+<span class="p">};</span>
 </pre></div>
 
 <p>
 输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00010001</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00010001</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
 </pre></div>
 
 
 <p>
 <b>case4</b><br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span><span class="w"></span>
-<span class="w">	</span><span class="nl">char</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span>
+<span class="w">	</span><span class="nl">char</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+<span class="p">};</span>
 </pre></div>
 
 <p>
 输出结果为<br></p>
-<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
 </pre></div>
 </div>
 </div>
 
 
-<div id="outline-container-orgca1e2de" class="outline-3">
-<h3 id="orgca1e2de">
+<div id="outline-container-org0dc70a7" class="outline-3">
+<h3 id="org0dc70a7">
 <code>struct</code> 与 <code>class</code> 关键字</h3>
-<div class="outline-text-3" id="text-orgca1e2de">
+<div class="outline-text-3" id="text-org0dc70a7">
 <p>
 多数例子都是以 <code>struct</code> 作为位域的组织标识，在C++中能否使用 <code>class</code> 作为位域的标识符呢？<br>
 经过测试，是可以使用 <code>class</code> 关键字的，但是需要注意 <code>class</code> 的默认访问控制属性为 <code>private</code> 。<br></p>
@@ -253,9 +253,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org8aeb17d" class="outline-2">
-<h2 id="org8aeb17d">位域的常见应用场景</h2>
-<div class="outline-text-2" id="text-org8aeb17d">
+<div id="outline-container-orgdcf7991" class="outline-2">
+<h2 id="orgdcf7991">位域的常见应用场景</h2>
+<div class="outline-text-2" id="text-orgdcf7991">
 <p>
 为什么要使用位域？位域适合那些情况？<br></p>
 
@@ -268,18 +268,18 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org91cc23b" class="outline-2">
-<h2 id="org91cc23b">C++中的位操作接口</h2>
-<div class="outline-text-2" id="text-org91cc23b">
+<div id="outline-container-org0686edd" class="outline-2">
+<h2 id="org0686edd">C++中的位操作接口</h2>
+<div class="outline-text-2" id="text-org0686edd">
 <p>
 C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接口提供了指定比特位数据的操作接口。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org3b642f7" class="outline-2">
-<h2 id="org3b642f7">参考资料</h2>
-<div class="outline-text-2" id="text-org3b642f7">
+<div id="outline-container-orgb2bf875" class="outline-2">
+<h2 id="orgb2bf875">参考资料</h2>
+<div class="outline-text-2" id="text-orgb2bf875">
 <ul class="org-ul">
 <li>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">wikipedia - bit field</a><br>
@@ -305,25 +305,25 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/bit-field/" rel="tag">bit field</a>
+      <a class="badge" href="/blog/tags/bit-field/" rel="tag">bit field</a>
     </li>
     <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/struct/" rel="tag">struct</a>
+      <a class="badge" href="/blog/tags/struct/" rel="tag">struct</a>
     </li>
     <li>
-      <a class="badge" href="/tags/union/" rel="tag">union</a>
+      <a class="badge" href="/blog/tags/union/" rel="tag">union</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2018/gcc-built-in-functions-for-atomic-memory-access/" rel="prev">Previous post
+      <a href="/blog/posts/2018/gcc-built-in-functions-for-atomic-memory-access/" rel="prev">Previous post
         <br><span>GCC的内存原子化操作函数接口</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2018/notes-on-libshmcache/" rel="next">Next post
+      <a href="/blog/posts/2018/notes-on-libshmcache/" rel="next">Next post
         <br><span>libshmcache源码阅读笔记</span>
       </a>
     </li>
@@ -331,7 +331,7 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2018/cpp-bit-field/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2018/cpp-bit-field/",
         disqus_title="C/C++\u4e2d\u7684\u4f4d\u57df",
         disqus_identifier="_cache/posts/2018/cpp-bit-field.html",
         disqus_config = function () {
@@ -358,17 +358,17 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -384,7 +384,7 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

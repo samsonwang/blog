@@ -8,16 +8,16 @@
 <title>软件设计模式-门面模式 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2020/facade-design-pattern/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2020/linux-turn-off-firewall/" title="在Linux中关闭防火墙" type="text/html">
-<link rel="next" href="/posts/2020/debug-qt-ole-error/" title="Qt程序中OLE错误的调试记录" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2020/facade-design-pattern/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2020/linux-turn-off-firewall/" title="在Linux中关闭防火墙" type="text/html">
+<link rel="next" href="/blog/posts/2020/debug-qt-ole-error/" title="Qt程序中OLE错误的调试记录" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="软件设计模式-门面模式">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2020/facade-design-pattern/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2020/facade-design-pattern/">
 <meta property="og:description" content="最近在看一些开源的日志库时了解到了门面模式，查了些资料学习了一下。门面模式是我们在设计中经常会使用到的模式，只是在以前的开发中并没有意识到这个是门面模式。
 
 
@@ -45,17 +45,17 @@
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -76,17 +76,17 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgf8f904f" class="outline-2">
-<h2 id="orgf8f904f">门面模式</h2>
-<div class="outline-text-2" id="text-orgf8f904f">
+<div id="outline-container-orga35ab96" class="outline-2">
+<h2 id="orga35ab96">门面模式</h2>
+<div class="outline-text-2" id="text-orga35ab96">
 <p>
 英文单词为 facade，音标为 <code>/fəˈsäd/</code> ，单词的释义为楼房的表面。门面模式将内部复杂的实现逻辑隐藏了起来，对外仅提供简单的接口方便调用者使用。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgdd3547e" class="outline-2">
-<h2 id="orgdd3547e">适用场景</h2>
-<div class="outline-text-2" id="text-orgdd3547e">
+<div id="outline-container-org15bceff" class="outline-2">
+<h2 id="org15bceff">适用场景</h2>
+<div class="outline-text-2" id="text-org15bceff">
 <ul class="org-ul">
 <li>给复杂的系统提供一个简单的接口<br>
 </li>
@@ -100,58 +100,58 @@
 </div>
 </div>
 
-<div id="outline-container-org7e6e3b8" class="outline-2">
-<h2 id="org7e6e3b8">示例代码</h2>
-<div class="outline-text-2" id="text-org7e6e3b8">
+<div id="outline-container-org7b73999" class="outline-2">
+<h2 id="org7b73999">示例代码</h2>
+<div class="outline-text-2" id="text-org7b73999">
 <p>
 以下是对电脑的面向对象设计的抽象代码，采用了门面模式将电脑内部的复杂结构封装了起来，代码使用C++实现。<br></p>
 
-<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;memory&gt;</span><span class="cp"></span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;memory&gt;</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Cpu</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w"> </span><span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">Freeze</span><span class="p">();</span><span class="w"></span>
-<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">Jump</span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="n">position</span><span class="p">);</span><span class="w"></span>
-<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">Execute</span><span class="p">();</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Cpu</span><span class="w"> </span><span class="p">{</span>
+<span class="w"> </span><span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">Freeze</span><span class="p">();</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">Jump</span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="n">position</span><span class="p">);</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">Execute</span><span class="p">();</span>
+<span class="p">};</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">HardDrive</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w"> </span><span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">  </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">Read</span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="n">lba</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">size</span><span class="p">);</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HardDrive</span><span class="w"> </span><span class="p">{</span>
+<span class="w"> </span><span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">Read</span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="n">lba</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">size</span><span class="p">);</span>
+<span class="p">};</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Memory</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w"> </span><span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">Load</span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="n">position</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">data</span><span class="p">);</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Memory</span><span class="w"> </span><span class="p">{</span>
+<span class="w"> </span><span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">Load</span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="n">position</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">data</span><span class="p">);</span>
+<span class="p">};</span>
 
 <span class="c1">// Facade:</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">ComputerFacade</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w"> </span><span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">Start</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">cpu_</span><span class="o">-&gt;</span><span class="n">Freeze</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="n">memory_</span><span class="o">-&gt;</span><span class="n">Load</span><span class="p">(</span><span class="n">kBootAddress</span><span class="p">,</span><span class="w"> </span><span class="n">hard_drive_</span><span class="o">-&gt;</span><span class="n">Read</span><span class="p">(</span><span class="n">kBootSector</span><span class="p">,</span><span class="w"> </span><span class="n">kSectorSize</span><span class="p">));</span><span class="w"></span>
-<span class="w">    </span><span class="n">cpu_</span><span class="o">-&gt;</span><span class="n">Jump</span><span class="p">(</span><span class="n">kBootAddress</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="n">cpu_</span><span class="o">-&gt;</span><span class="n">Execute</span><span class="p">();</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComputerFacade</span><span class="w"> </span><span class="p">{</span>
+<span class="w"> </span><span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">Start</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">cpu_</span><span class="o">-&gt;</span><span class="n">Freeze</span><span class="p">();</span>
+<span class="w">    </span><span class="n">memory_</span><span class="o">-&gt;</span><span class="n">Load</span><span class="p">(</span><span class="n">kBootAddress</span><span class="p">,</span><span class="w"> </span><span class="n">hard_drive_</span><span class="o">-&gt;</span><span class="n">Read</span><span class="p">(</span><span class="n">kBootSector</span><span class="p">,</span><span class="w"> </span><span class="n">kSectorSize</span><span class="p">));</span>
+<span class="w">    </span><span class="n">cpu_</span><span class="o">-&gt;</span><span class="n">Jump</span><span class="p">(</span><span class="n">kBootAddress</span><span class="p">);</span>
+<span class="w">    </span><span class="n">cpu_</span><span class="o">-&gt;</span><span class="n">Execute</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
 
-<span class="w"> </span><span class="k">private</span><span class="o">:</span><span class="w"></span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Cpu</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cpu_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Cpu</span><span class="o">&gt;</span><span class="p">();</span><span class="w"></span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Memory</span><span class="o">&gt;</span><span class="w"> </span><span class="n">memory_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Memory</span><span class="o">&gt;</span><span class="p">();</span><span class="w"></span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">HardDrive</span><span class="o">&gt;</span><span class="w"> </span><span class="n">hard_drive_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">HardDrive</span><span class="o">&gt;</span><span class="p">();</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<span class="w"> </span><span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Cpu</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cpu_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Cpu</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Memory</span><span class="o">&gt;</span><span class="w"> </span><span class="n">memory_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Memory</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">HardDrive</span><span class="o">&gt;</span><span class="w"> </span><span class="n">hard_drive_</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">HardDrive</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="p">};</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="n">ComputerFacade</span><span class="w"> </span><span class="n">computer</span><span class="p">;</span><span class="w"></span>
-<span class="w">  </span><span class="n">computer</span><span class="p">.</span><span class="n">Start</span><span class="p">();</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">ComputerFacade</span><span class="w"> </span><span class="n">computer</span><span class="p">;</span>
+<span class="w">  </span><span class="n">computer</span><span class="p">.</span><span class="n">Start</span><span class="p">();</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org31e9c58" class="outline-2">
-<h2 id="org31e9c58">参考链接</h2>
-<div class="outline-text-2" id="text-org31e9c58">
+<div id="outline-container-orgcd4e8b1" class="outline-2">
+<h2 id="orgcd4e8b1">参考链接</h2>
+<div class="outline-text-2" id="text-orgcd4e8b1">
 <ul class="org-ul">
 <li>
 <a href="https://en.wikipedia.org/wiki/Facade_pattern">wikipedia.org - facade pattern</a><br>
@@ -163,19 +163,19 @@
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/design-pattern/" rel="tag">design pattern</a>
+      <a class="badge" href="/blog/tags/design-pattern/" rel="tag">design pattern</a>
     </li>
     <li>
-      <a class="badge" href="/tags/facade/" rel="tag">facade</a>
+      <a class="badge" href="/blog/tags/facade/" rel="tag">facade</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2020/linux-turn-off-firewall/" rel="prev">Previous post
+      <a href="/blog/posts/2020/linux-turn-off-firewall/" rel="prev">Previous post
         <br><span>在Linux中关闭防火墙</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2020/debug-qt-ole-error/" rel="next">Next post
+      <a href="/blog/posts/2020/debug-qt-ole-error/" rel="next">Next post
         <br><span>Qt程序中OLE错误的调试记录</span>
       </a>
     </li>
@@ -183,7 +183,7 @@
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2020/facade-design-pattern/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2020/facade-design-pattern/",
         disqus_title="\u8f6f\u4ef6\u8bbe\u8ba1\u6a21\u5f0f-\u95e8\u9762\u6a21\u5f0f",
         disqus_identifier="_cache/posts/2020/facade-design-pattern.html",
         disqus_config = function () {
@@ -210,17 +210,17 @@
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -236,7 +236,7 @@
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

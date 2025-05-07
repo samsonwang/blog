@@ -8,16 +8,16 @@
 <title>网络编程中的Reactor和Proactor模式 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2020/network-programming-reactor-and-proactor/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2020/debug-qt-ole-error/" title="Qt程序中OLE错误的调试记录" type="text/html">
-<link rel="next" href="/posts/2020/git-undo-last-local-commit/" title="在git中撤回最后一次本地提交" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2020/network-programming-reactor-and-proactor/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2020/debug-qt-ole-error/" title="Qt程序中OLE错误的调试记录" type="text/html">
+<link rel="next" href="/blog/posts/2020/git-undo-last-local-commit/" title="在git中撤回最后一次本地提交" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="网络编程中的Reactor和Proactor模式">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2020/network-programming-reactor-and-proactor/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2020/network-programming-reactor-and-proactor/">
 <meta property="og:description" content="本文介绍了两种常用的网络编程模式：Reactor模式和Proactor模式。这两种设计模式比较相似，它们的典型应用案例都是处理网络编程的并发请求，但是它们在具体的请求分派方式上又有区别。
 
 
@@ -38,17 +38,17 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -69,9 +69,9 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org2bd9eb3" class="outline-2">
-<h2 id="org2bd9eb3">Reactor模式简介</h2>
-<div class="outline-text-2" id="text-org2bd9eb3">
+<div id="outline-container-orgb3d201d" class="outline-2">
+<h2 id="orgb3d201d">Reactor模式简介</h2>
+<div class="outline-text-2" id="text-orgb3d201d">
 <p>
 Reactor模式是一种事件驱动的设计模式，用于处理多输入源的并发服务请求。D.C.shmidt提出了Reactor模式，并在他的ACE框架中广泛使用了该设计模式。<br>
 服务处理者（service handler）将接收到的服务请求同步地（synchronously）分发（demultiplex）给每个请求处理者（request handler）。<br>
@@ -79,16 +79,16 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 </div>
 </div>
 
-<div id="outline-container-org6004f46" class="outline-2">
-<h2 id="org6004f46">Reactor模式的优缺点</h2>
-<div class="outline-text-2" id="text-org6004f46">
+<div id="outline-container-orgc1a7592" class="outline-2">
+<h2 id="orgc1a7592">Reactor模式的优缺点</h2>
+<div class="outline-text-2" id="text-orgc1a7592">
 <p>
 这一节通过剖析Reactor模式的优缺点，详细地介绍了Reactor模式的设计思想。其中，英文内容节选自 DC.Shmidt 的论文，中文内容为我的翻译和总结。<br></p>
 </div>
 
-<div id="outline-container-org234502b" class="outline-3">
-<h3 id="org234502b">优点</h3>
-<div class="outline-text-3" id="text-org234502b">
+<div id="outline-container-org0343c46" class="outline-3">
+<h3 id="org0343c46">优点</h3>
+<div class="outline-text-3" id="text-org0343c46">
 <ul class="org-ul">
 <li>关注点分离：将服务请求分发机制与具体的服务请求处理分离开，以实现代码的复用和解耦合。<br>
 </li>
@@ -127,9 +127,9 @@ Provides coarse-grained concurrency control: The Reactor pattern serializes the 
 </div>
 </div>
 
-<div id="outline-container-orgb45024e" class="outline-3">
-<h3 id="orgb45024e">缺点</h3>
-<div class="outline-text-3" id="text-orgb45024e">
+<div id="outline-container-orgd05ecfd" class="outline-3">
+<h3 id="orgd05ecfd">缺点</h3>
+<div class="outline-text-3" id="text-orgd05ecfd">
 <ul class="org-ul">
 <li>有限的应用场景：Recator模式只有操作系统支持描述符（handle）时才最有效率。<br>
 </li>
@@ -160,29 +160,29 @@ Hard to debug: Applications written with the Reactor pattern can be hard to debu
 </div>
 </div>
 
-<div id="outline-container-orgd1fbb84" class="outline-2">
-<h2 id="orgd1fbb84">使用Reactor模式的网络通信库</h2>
-<div class="outline-text-2" id="text-orgd1fbb84">
+<div id="outline-container-org29a775f" class="outline-2">
+<h2 id="org29a775f">使用Reactor模式的网络通信库</h2>
+<div class="outline-text-2" id="text-org29a775f">
 <p>
 libevent库的设计中就使用了Reactor模式，这个库的使用教程和示例代码在它的官方网站上很容易找到。libevent库解决了不同操作系统IO复用器有差别的问题，能够在具体的系统上选用最合适的系统接口，并为库的使用者抽象出了一套统一的应用接口。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org126ddc5" class="outline-2">
-<h2 id="org126ddc5">Proactor模式简介</h2>
-<div class="outline-text-2" id="text-org126ddc5">
+<div id="outline-container-orgd944ec1" class="outline-2">
+<h2 id="orgd944ec1">Proactor模式简介</h2>
+<div class="outline-text-2" id="text-orgd944ec1">
 <p>
 Proactor模式与Reactor模式相似，也是一种事件驱动的设计模式。与Reactor不同是，Proactor在分发请求时使用的是异步IO，所以需要为异步IO预先申请存储数据的缓存空间，并要指定异步IO完成是调用的回调函数。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org6a226e1" class="outline-2">
-<h2 id="org6a226e1">Proactor模式的优缺点</h2>
-<div class="outline-text-2" id="text-org6a226e1">
+<div id="outline-container-orgffebea5" class="outline-2">
+<h2 id="orgffebea5">Proactor模式的优缺点</h2>
+<div class="outline-text-2" id="text-orgffebea5">
 </div>
-<div id="outline-container-org19eea22" class="outline-3">
-<h3 id="org19eea22">优点</h3>
-<div class="outline-text-3" id="text-org19eea22">
+<div id="outline-container-org439907a" class="outline-3">
+<h3 id="org439907a">优点</h3>
+<div class="outline-text-3" id="text-org439907a">
 <ul class="org-ul">
 <li>关注点分离：这点与Reactor模式相同，事件分发框架提供事件调度的逻辑，具体的事件处理函数无需关注调度策略。<br>
 </li>
@@ -199,9 +199,9 @@ Proactor模式与Reactor模式相似，也是一种事件驱动的设计模式�
 </ul>
 </div>
 </div>
-<div id="outline-container-org0d296da" class="outline-3">
-<h3 id="org0d296da">缺点</h3>
-<div class="outline-text-3" id="text-org0d296da">
+<div id="outline-container-org34c214c" class="outline-3">
+<h3 id="org34c214c">缺点</h3>
+<div class="outline-text-3" id="text-org34c214c">
 <ul class="org-ul">
 <li>无法控制事件顺序：这也是异步操作的特性，每个IO操作都由操作系统完成，相互并行的，无法控制顺序。<br>
 </li>
@@ -214,17 +214,17 @@ Proactor模式与Reactor模式相似，也是一种事件驱动的设计模式�
 </div>
 </div>
 
-<div id="outline-container-orgf380bb3" class="outline-2">
-<h2 id="orgf380bb3">使用Proactor模式的网络通信库</h2>
-<div class="outline-text-2" id="text-orgf380bb3">
+<div id="outline-container-org751d944" class="outline-2">
+<h2 id="org751d944">使用Proactor模式的网络通信库</h2>
+<div class="outline-text-2" id="text-org751d944">
 <p>
 Boost库的ASIO使用的Proactor模式，它同时提供同步操作接口和异步操作接口。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org43d3814" class="outline-2">
-<h2 id="org43d3814">参考资料</h2>
-<div class="outline-text-2" id="text-org43d3814">
+<div id="outline-container-org5c7fda9" class="outline-2">
+<h2 id="org5c7fda9">参考资料</h2>
+<div class="outline-text-2" id="text-org5c7fda9">
 <ul class="org-ul">
 <li>
 <a href="https://en.wikipedia.org/wiki/Reactor_pattern">wikipedia - reactor pattern</a><br>
@@ -248,25 +248,25 @@ Boost库的ASIO使用的Proactor模式，它同时提供同步操作接口和异
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/design-pattern/" rel="tag">design pattern</a>
+      <a class="badge" href="/blog/tags/design-pattern/" rel="tag">design pattern</a>
     </li>
     <li>
-      <a class="badge" href="/tags/network/" rel="tag">network</a>
+      <a class="badge" href="/blog/tags/network/" rel="tag">network</a>
     </li>
     <li>
-      <a class="badge" href="/tags/proactor/" rel="tag">proactor</a>
+      <a class="badge" href="/blog/tags/proactor/" rel="tag">proactor</a>
     </li>
     <li>
-      <a class="badge" href="/tags/reactor/" rel="tag">reactor</a>
+      <a class="badge" href="/blog/tags/reactor/" rel="tag">reactor</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2020/debug-qt-ole-error/" rel="prev">Previous post
+      <a href="/blog/posts/2020/debug-qt-ole-error/" rel="prev">Previous post
         <br><span>Qt程序中OLE错误的调试记录</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2020/git-undo-last-local-commit/" rel="next">Next post
+      <a href="/blog/posts/2020/git-undo-last-local-commit/" rel="next">Next post
         <br><span>在git中撤回最后一次本地提交</span>
       </a>
     </li>
@@ -274,7 +274,7 @@ Boost库的ASIO使用的Proactor模式，它同时提供同步操作接口和异
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2020/network-programming-reactor-and-proactor/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2020/network-programming-reactor-and-proactor/",
         disqus_title="\u7f51\u7edc\u7f16\u7a0b\u4e2d\u7684Reactor\u548cProactor\u6a21\u5f0f",
         disqus_identifier="_cache/posts/2020/network-programming-reactor-and-proactor.html",
         disqus_config = function () {
@@ -301,17 +301,17 @@ Boost库的ASIO使用的Proactor模式，它同时提供同步操作接口和异
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -327,7 +327,7 @@ Boost库的ASIO使用的Proactor模式，它同时提供同步操作接口和异
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

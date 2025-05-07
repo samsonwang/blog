@@ -8,16 +8,16 @@
 <title>由new创建的指针不需要检查nullptr | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2021/check-for-nullptr-after-new-operator/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2021/get-runtime-dll-path/" title="在运行时获取动态库的路径" type="text/html">
-<link rel="next" href="/posts/2021/how-to-detect-tcp-abnormal-disconnection/" title="如何检测TCP连接的异常断开" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2021/check-for-nullptr-after-new-operator/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2021/get-runtime-dll-path/" title="在运行时获取动态库的路径" type="text/html">
+<link rel="next" href="/blog/posts/2021/how-to-detect-tcp-abnormal-disconnection/" title="如何检测TCP连接的异常断开" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="由new创建的指针不需要检查nullptr">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2021/check-for-nullptr-after-new-operator/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2021/check-for-nullptr-after-new-operator/">
 <meta property="og:description" content="我们会检查空指针来判断指针是否有效。一直以来，在申请动态内存后，我都会习惯性地检查得到的指针是否为空，但是查阅了一些资料后发现这个操作是多余的。
 
 
@@ -35,17 +35,17 @@ TIPS ：在 C++ 标准中规定， new 关键字在失败时会抛出 std::bad_a
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -72,12 +72,12 @@ TIPS ：在 C++ 标准中规定， new 关键字在失败时会抛出 std::bad_a
 <p>
 所以，不需要对 <code>new</code> 的返回值进行空指针判断， <code>new</code> 不会返回空指针，这点与C语言中的 <code>malloc</code> 有区别。C++中正确处理申请内存失败的写法如下。<br></p>
 
-<div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="n">Foo</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Foo</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-<span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">bad_alloc</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"bad_alloc: "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">Foo</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Foo</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">bad_alloc</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"bad_alloc: "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 
 <p>
@@ -96,15 +96,15 @@ TIPS ：在 C++ 标准中规定， new 关键字在失败时会抛出 std::bad_a
 </ol>
 <p>
 写法如下，加上了 <code>std::nothrow</code> 关键字之后， <code>new</code> 就不会抛出异常而是会返回空指针。<br></p>
-<div class="highlight"><pre><span></span><span class="n">Foo</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">nothrow</span><span class="p">)</span><span class="w"> </span><span class="n">Foo</span><span class="p">;</span><span class="w"></span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">p</span><span class="p">){</span><span class="w"></span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"fail to allocate"</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="n">Foo</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">nothrow</span><span class="p">)</span><span class="w"> </span><span class="n">Foo</span><span class="p">;</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">p</span><span class="p">){</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"fail to allocate"</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 
-<div id="outline-container-org16158fc" class="outline-2">
-<h2 id="org16158fc">参考资料</h2>
-<div class="outline-text-2" id="text-org16158fc">
+<div id="outline-container-org141685f" class="outline-2">
+<h2 id="org141685f">参考资料</h2>
+<div class="outline-text-2" id="text-org141685f">
 <ul class="org-ul">
 <li>
 <a href="https://www.cs.technion.ac.il/users/yechiel/c++-faq/new-never-returns-null.html">C++ FAQ - new never returns null</a><br>
@@ -121,16 +121,16 @@ TIPS ：在 C++ 标准中规定， new 关键字在失败时会抛出 std::bad_a
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/c%2B%2B/" rel="tag">c++</a>
+      <a class="badge" href="/blog/tags/c%2B%2B/" rel="tag">c++</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2021/get-runtime-dll-path/" rel="prev">Previous post
+      <a href="/blog/posts/2021/get-runtime-dll-path/" rel="prev">Previous post
         <br><span>在运行时获取动态库的路径</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2021/how-to-detect-tcp-abnormal-disconnection/" rel="next">Next post
+      <a href="/blog/posts/2021/how-to-detect-tcp-abnormal-disconnection/" rel="next">Next post
         <br><span>如何检测TCP连接的异常断开</span>
       </a>
     </li>
@@ -138,7 +138,7 @@ TIPS ：在 C++ 标准中规定， new 关键字在失败时会抛出 std::bad_a
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2021/check-for-nullptr-after-new-operator/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2021/check-for-nullptr-after-new-operator/",
         disqus_title="\u7531new\u521b\u5efa\u7684\u6307\u9488\u4e0d\u9700\u8981\u68c0\u67e5nullptr",
         disqus_identifier="_cache/posts/2021/check-for-nullptr-after-new-operator.html",
         disqus_config = function () {
@@ -165,17 +165,17 @@ TIPS ：在 C++ 标准中规定， new 关键字在失败时会抛出 std::bad_a
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -191,7 +191,7 @@ TIPS ：在 C++ 标准中规定， new 关键字在失败时会抛出 std::bad_a
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

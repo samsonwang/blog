@@ -8,16 +8,16 @@
 <title>关于size_t和size_type的比较 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/size_t-and-size_type/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2018/frequent-improper-syntax-warning-on-compile/" title="常见的由于语法不当引起的编译警告" type="text/html">
-<link rel="next" href="/posts/2018/stl-iterator-invalidate/" title="STL容器的迭代器失效问题" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/size_t-and-size_type/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2018/frequent-improper-syntax-warning-on-compile/" title="常见的由于语法不当引起的编译警告" type="text/html">
+<link rel="next" href="/blog/posts/2018/stl-iterator-invalidate/" title="STL容器的迭代器失效问题" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="关于size_t和size_type的比较">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/size_t-and-size_type/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2018/size_t-and-size_type/">
 <meta property="og:description" content="1 引言
 
 
@@ -39,17 +39,17 @@ size_t 的定义在 &lt;cstddef&gt; 中， SIZE_MAX">
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -65,58 +65,58 @@ size_t 的定义在 &lt;cstddef&gt; 中， SIZE_MAX">
       
     <time class="dt-published" datetime="2018-01-08T17:27:13+08:00" itemprop="datePublished">Jan 08, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org6f59dd7" class="outline-2">
-<h2 id="org6f59dd7">1 引言</h2>
-<div class="outline-text-2" id="text-org6f59dd7">
+    <div id="outline-container-org47c00d2" class="outline-2">
+<h2 id="org47c00d2">1 引言</h2>
+<div class="outline-text-2" id="text-org47c00d2">
 <p>
 编程中常见的表示两种大小的类型标识符有 <code>size_t</code> 和 <code>size_type</code> ，这两种类型十分相似，非常容易混淆。本文对他们的使用场景进行了比较，并提供了示例代码。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org35789be" class="outline-2">
-<h2 id="org35789be">2 <code>size_t</code> 类型</h2>
-<div class="outline-text-2" id="text-org35789be">
+<div id="outline-container-org7ee7195" class="outline-2">
+<h2 id="org7ee7195">2 <code>size_t</code> 类型</h2>
+<div class="outline-text-2" id="text-org7ee7195">
 <p>
 当需要描述某个对象的大小（size）时都应该使用 <code>size_t</code> ，其大小被限制为 0 到 <code>SIZE_MAX</code> 之间。<br><code>size_t</code> 的定义在 <code>&lt;cstddef&gt;</code> 中， <code>SIZE_MAX</code> 的定义在 <code>&lt;climits&gt;</code> 中。<br><code>size_t</code> 一般会作为 <code>sizeof</code> 运算符的返回结果，可以理解为在给定的平台中是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4a5664a" class="outline-2">
-<h2 id="org4a5664a">3 <code>size_type</code> 类型</h2>
-<div class="outline-text-2" id="text-org4a5664a">
+<div id="outline-container-orge4463d9" class="outline-2">
+<h2 id="orge4463d9">3 <code>size_type</code> 类型</h2>
+<div class="outline-text-2" id="text-orge4463d9">
 <p>
 在 <code>STL</code> 中定义了 <code>size_type</code> 是与 <code>Allocator::size_tpye</code> 相对应的。而 <code>Allocator</code> 是模板的一个参数。<br><code>size_type</code> 可以理解为在给定容器范围内是统一的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb2e2322" class="outline-2">
-<h2 id="orgb2e2322">4 二者之间的比较</h2>
-<div class="outline-text-2" id="text-orgb2e2322">
+<div id="outline-container-orgfbedb3b" class="outline-2">
+<h2 id="orgfbedb3b">4 二者之间的比较</h2>
+<div class="outline-text-2" id="text-orgfbedb3b">
 <p>
 这两种类型主要是为了提高代码的可移植性。一般情况来说，这两种类型是没有区别的，因为使用标准库默认的 <code>Allocator</code> 所对应的 <code>size_type</code> 就是 <code>size_t</code> 。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org7d53105" class="outline-2">
-<h2 id="org7d53105">5 示例代码</h2>
-<div class="outline-text-2" id="text-org7d53105">
+<div id="outline-container-orged65545" class="outline-2">
+<h2 id="orged65545">5 示例代码</h2>
+<div class="outline-text-2" id="text-orged65545">
 <p>
 注意 <code>size_type</code> 在使用时需要加上容器类型限定。<br></p>
-<div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">n1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">n1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">);</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"></span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">size_type</span><span class="w"> </span><span class="n">n2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">size_type</span><span class="w"> </span><span class="n">n2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">;</span><span class="w"></span>
-<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">::</span><span class="n">size_type</span><span class="w"> </span><span class="n">n3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">::</span><span class="n">size_type</span><span class="w"> </span><span class="n">n3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org887b646" class="outline-2">
-<h2 id="org887b646">6 参考资料</h2>
-<div class="outline-text-2" id="text-org887b646">
+<div id="outline-container-org69ed2ce" class="outline-2">
+<h2 id="org69ed2ce">6 参考资料</h2>
+<div class="outline-text-2" id="text-org69ed2ce">
 <ul class="org-ul">
 <li>
 <a href="http://en.cppreference.com/w/cpp/types/size_t">http://en.cppreference.com/w/cpp/types/size_t</a><br>
@@ -131,19 +131,19 @@ size_t 的定义在 &lt;cstddef&gt; 中， SIZE_MAX">
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/syntax/" rel="tag">syntax</a>
+      <a class="badge" href="/blog/tags/syntax/" rel="tag">syntax</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2018/frequent-improper-syntax-warning-on-compile/" rel="prev">Previous post
+      <a href="/blog/posts/2018/frequent-improper-syntax-warning-on-compile/" rel="prev">Previous post
         <br><span>常见的由于语法不当引起的编译警告</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2018/stl-iterator-invalidate/" rel="next">Next post
+      <a href="/blog/posts/2018/stl-iterator-invalidate/" rel="next">Next post
         <br><span>STL容器的迭代器失效问题</span>
       </a>
     </li>
@@ -151,7 +151,7 @@ size_t 的定义在 &lt;cstddef&gt; 中， SIZE_MAX">
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2018/size_t-and-size_type/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2018/size_t-and-size_type/",
         disqus_title="\u5173\u4e8esize_t\u548csize_type\u7684\u6bd4\u8f83",
         disqus_identifier="_cache/posts/2018/size_t-and-size_type.html",
         disqus_config = function () {
@@ -178,17 +178,17 @@ size_t 的定义在 &lt;cstddef&gt; 中， SIZE_MAX">
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -204,7 +204,7 @@ size_t 的定义在 &lt;cstddef&gt; 中， SIZE_MAX">
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

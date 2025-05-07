@@ -8,16 +8,16 @@
 <title>网络协议的抓包分析 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/internet-protocol-stack-tcpdump-analysis/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2018/transmission-control-protocol-2/" title="TCP协议（RFC793）-2-" type="text/html">
-<link rel="next" href="/posts/2018/user-datagram-protocol/" title="UDP协议（RFC768）" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/internet-protocol-stack-tcpdump-analysis/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2018/transmission-control-protocol-2/" title="TCP协议（RFC793）-2-" type="text/html">
+<link rel="next" href="/blog/posts/2018/user-datagram-protocol/" title="UDP协议（RFC768）" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="网络协议的抓包分析">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/internet-protocol-stack-tcpdump-analysis/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2018/internet-protocol-stack-tcpdump-analysis/">
 <meta property="og:description" content="本文主要内容是对tcpdump所抓取的数据包进行分析，按照网络协议解出每个字节所代表的含义。
 通过前面几篇博客的学习和总结，我对网络协议有了一定的了解，这时需要理论结合实际，使学到的知识记忆更加深刻。
 
@@ -40,17 +40,17 @@ tcpdump：Linux常用命令行">
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -75,16 +75,16 @@ tcpdump：Linux常用命令行">
 <p>
 阅读本文需要了解tcp、ip、tcpdump的相关知识，可以参考我之前的文章：<br></p>
 <ul class="org-ul">
-<li>tcp：<a href="/posts/transmission-control-protocol-2/" class="post-url">TCP协议（RFC798）</a><br>
+<li>tcp：<a href="/blog/posts/transmission-control-protocol-2/" class="post-url">TCP协议（RFC798）</a><br>
 </li>
-<li>ip：<a href="/posts/internet-protocol/" class="post-url">IP协议（RFC791）</a><br>
+<li>ip：<a href="/blog/posts/internet-protocol/" class="post-url">IP协议（RFC791）</a><br>
 </li>
-<li>tcpdump：<a href="/posts/linux-command-examples-tcpdump/" class="post-url">Linux常用命令行指令 - tcpdump</a><br>
+<li>tcpdump：<a href="/blog/posts/linux-command-examples-tcpdump/" class="post-url">Linux常用命令行指令 - tcpdump</a><br>
 </li>
 </ul>
-<div id="outline-container-orgca88bd6" class="outline-2">
-<h2 id="orgca88bd6">抓包</h2>
-<div class="outline-text-2" id="text-orgca88bd6">
+<div id="outline-container-org467b69f" class="outline-2">
+<h2 id="org467b69f">抓包</h2>
+<div class="outline-text-2" id="text-org467b69f">
 <p>
 这是在实验室环境下的局域网进行抓包，抓包的命令如下。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i any 'dst host 169.10.36.66 port 20014' -XX -nn -vv
@@ -113,9 +113,9 @@ tcpdump：Linux常用命令行">
 </div>
 </div>
 
-<div id="outline-container-orge8d4078" class="outline-2">
-<h2 id="orge8d4078">链路协议分析</h2>
-<div class="outline-text-2" id="text-orge8d4078">
+<div id="outline-container-org69a15e9" class="outline-2">
+<h2 id="org69a15e9">链路协议分析</h2>
+<div class="outline-text-2" id="text-org69a15e9">
 <p>
 最开始的部分是链路层协议<br></p>
 <pre class="example">
@@ -128,9 +128,9 @@ tcpdump：Linux常用命令行">
 </div>
 </div>
 
-<div id="outline-container-orgbb48d54" class="outline-2">
-<h2 id="orgbb48d54">IP协议分析</h2>
-<div class="outline-text-2" id="text-orgbb48d54">
+<div id="outline-container-org17f5d93" class="outline-2">
+<h2 id="org17f5d93">IP协议分析</h2>
+<div class="outline-text-2" id="text-org17f5d93">
 <p>
 接下来的部分是IP协议内容，16进程格式表示如下。IP协议部分共有20字节。<br></p>
 <pre class="example">
@@ -159,9 +159,9 @@ a90a 2442     dst addr
 </div>
 </div>
 
-<div id="outline-container-orgcf0fad0" class="outline-2">
-<h2 id="orgcf0fad0">TCP协议分析</h2>
-<div class="outline-text-2" id="text-orgcf0fad0">
+<div id="outline-container-org20c4319" class="outline-2">
+<h2 id="org20c4319">TCP协议分析</h2>
+<div class="outline-text-2" id="text-org20c4319">
 <p>
 接下来是TCP协议，除去IP协议包头长，则TCP协议的数据为37字节。<br></p>
 <pre class="example">
@@ -200,25 +200,25 @@ aea7 b9c6      ack
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/ip/" rel="tag">ip</a>
+      <a class="badge" href="/blog/tags/ip/" rel="tag">ip</a>
     </li>
     <li>
-      <a class="badge" href="/tags/network/" rel="tag">network</a>
+      <a class="badge" href="/blog/tags/network/" rel="tag">network</a>
     </li>
     <li>
-      <a class="badge" href="/tags/tcp/" rel="tag">tcp</a>
+      <a class="badge" href="/blog/tags/tcp/" rel="tag">tcp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/tcpdump/" rel="tag">tcpdump</a>
+      <a class="badge" href="/blog/tags/tcpdump/" rel="tag">tcpdump</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2018/transmission-control-protocol-2/" rel="prev">Previous post
+      <a href="/blog/posts/2018/transmission-control-protocol-2/" rel="prev">Previous post
         <br><span>TCP协议（RFC793）-2-</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2018/user-datagram-protocol/" rel="next">Next post
+      <a href="/blog/posts/2018/user-datagram-protocol/" rel="next">Next post
         <br><span>UDP协议（RFC768）</span>
       </a>
     </li>
@@ -226,7 +226,7 @@ aea7 b9c6      ack
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2018/internet-protocol-stack-tcpdump-analysis/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2018/internet-protocol-stack-tcpdump-analysis/",
         disqus_title="\u7f51\u7edc\u534f\u8bae\u7684\u6293\u5305\u5206\u6790",
         disqus_identifier="_cache/posts/2018/internet-protocol-stack-tcpdump-analysis.html",
         disqus_config = function () {
@@ -253,17 +253,17 @@ aea7 b9c6      ack
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -279,7 +279,7 @@ aea7 b9c6      ack
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

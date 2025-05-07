@@ -8,16 +8,16 @@
 <title>C++中delete关键字常见错误 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2019/cpp-delete-keyword-common-mistakes/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2019/bit-field-and-union-type/" title="位域与联合体的内存布局" type="text/html">
-<link rel="next" href="/posts/2019/library-linking-error-on-windows/" title="排查Windows平台动态库和静态库链接失败问题" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/cpp-delete-keyword-common-mistakes/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2019/bit-field-and-union-type/" title="位域与联合体的内存布局" type="text/html">
+<link rel="next" href="/blog/posts/2019/library-linking-error-on-windows/" title="排查Windows平台动态库和静态库链接失败问题" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="C++中delete关键字常见错误">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2019/cpp-delete-keyword-common-mistakes/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2019/cpp-delete-keyword-common-mistakes/">
 <meta property="og:description" content="C++中的delete关键字用于释放动态申请的内存，是使用频率非常高的关键字，本文将开发中常出现的错误加以总结，方便以后查阅。
 
 
@@ -43,17 +43,17 @@ pArray = nullptr;
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -74,15 +74,15 @@ C++中的delete关键字用于释放动态申请的内存，是使用频率非�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org238d3bb" class="outline-2">
-<h2 id="org238d3bb">释放 <code>new</code> 关键字申请的数组</h2>
-<div class="outline-text-2" id="text-org238d3bb">
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">pArray</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">int</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span><span class="w"></span>
+<div id="outline-container-orgf0729e3" class="outline-2">
+<h2 id="orgf0729e3">释放 <code>new</code> 关键字申请的数组</h2>
+<div class="outline-text-2" id="text-orgf0729e3">
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">pArray</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">int</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
 </pre></div>
 <p>
 如上代码用 <code>new</code> 动态申请了一个数组，若需要释放这个数组则写法如下。<br></p>
-<div class="highlight"><pre><span></span><span class="k">delete</span><span class="p">[]</span><span class="w"> </span><span class="n">pArray</span><span class="p">;</span><span class="w"></span>
-<span class="n">pArray</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">delete</span><span class="p">[]</span><span class="w"> </span><span class="n">pArray</span><span class="p">;</span>
+<span class="n">pArray</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span>
 </pre></div>
 <p>
 需要注意的是需要在 <code>delete</code> 后加上方括号。<br>
@@ -91,18 +91,18 @@ C++中的delete关键字用于释放动态申请的内存，是使用频率非�
 </div>
 
 
-<div id="outline-container-org4c8024a" class="outline-2">
-<h2 id="org4c8024a">使用 <code>delete</code> 关键字释放 <code>void*</code> 类型的指针</h2>
-<div class="outline-text-2" id="text-org4c8024a">
+<div id="outline-container-orga952d2e" class="outline-2">
+<h2 id="orga952d2e">使用 <code>delete</code> 关键字释放 <code>void*</code> 类型的指针</h2>
+<div class="outline-text-2" id="text-orga952d2e">
 <p>
 一般来讲， <code>delete</code> 在释放内存时会同时调用对象的析构函数。所以，使用 <code>delete</code> 释放 <code>void*</code> 指针时，是能够释放该指针所指内存的。但由于没有执行析构函数，所以有潜在的资源泄漏风险，并不推荐这种写法。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org5a615d6" class="outline-2">
-<h2 id="org5a615d6">参考资料</h2>
-<div class="outline-text-2" id="text-org5a615d6">
+<div id="outline-container-orgf60d491" class="outline-2">
+<h2 id="orgf60d491">参考资料</h2>
+<div class="outline-text-2" id="text-orgf60d491">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/941832/is-it-safe-to-delete-a-void-pointer">stackoverflow.com - is it safe to delete a void pointer</a><br>
@@ -114,19 +114,19 @@ C++中的delete关键字用于释放动态申请的内存，是使用频率非�
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/delete/" rel="tag">delete</a>
+      <a class="badge" href="/blog/tags/delete/" rel="tag">delete</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2019/bit-field-and-union-type/" rel="prev">Previous post
+      <a href="/blog/posts/2019/bit-field-and-union-type/" rel="prev">Previous post
         <br><span>位域与联合体的内存布局</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2019/library-linking-error-on-windows/" rel="next">Next post
+      <a href="/blog/posts/2019/library-linking-error-on-windows/" rel="next">Next post
         <br><span>排查Windows平台动态库和静态库链接失败问题</span>
       </a>
     </li>
@@ -134,7 +134,7 @@ C++中的delete关键字用于释放动态申请的内存，是使用频率非�
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2019/cpp-delete-keyword-common-mistakes/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2019/cpp-delete-keyword-common-mistakes/",
         disqus_title="C++\u4e2ddelete\u5173\u952e\u5b57\u5e38\u89c1\u9519\u8bef",
         disqus_identifier="_cache/posts/2019/cpp-delete-keyword-common-mistakes.html",
         disqus_config = function () {
@@ -161,17 +161,17 @@ C++中的delete关键字用于释放动态申请的内存，是使用频率非�
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -187,7 +187,7 @@ C++中的delete关键字用于释放动态申请的内存，是使用频率非�
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

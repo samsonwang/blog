@@ -8,16 +8,16 @@
 <title>静态成员变量初始化相关问题 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/static-member-initialization-and-private-member-function/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2018/non-blocking-socket-connect-tips/" title="客户端使用非阻塞socket进行connect的流程" type="text/html">
-<link rel="next" href="/posts/algorithm/algorithm-weekly-integer-to-roman/" title="每周算法：阿拉伯数字转换罗马数字" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/static-member-initialization-and-private-member-function/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2018/non-blocking-socket-connect-tips/" title="客户端使用非阻塞socket进行connect的流程" type="text/html">
+<link rel="next" href="/blog/posts/algorithm/algorithm-weekly-integer-to-roman/" title="每周算法：阿拉伯数字转换罗马数字" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="静态成员变量初始化相关问题">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/static-member-initialization-and-private-member-function/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2018/static-member-initialization-and-private-member-function/">
 <meta property="og:description" content="引言
 
 
@@ -39,17 +39,17 @@ private:
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -65,33 +65,33 @@ private:
       
     <time class="dt-published" datetime="2018-09-04T23:37:37+08:00" itemprop="datePublished">Sep 04, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org3b68723" class="outline-2">
-<h2 id="org3b68723">引言</h2>
-<div class="outline-text-2" id="text-org3b68723">
+    <div id="outline-container-orgfac4274" class="outline-2">
+<h2 id="orgfac4274">引言</h2>
+<div class="outline-text-2" id="text-orgfac4274">
 <p>
 这篇文章的起因是出于对于 <code>C++</code> 饿汉单例模式代码的一些疑问，查阅了一些资料。在仔细研究后，我发现在一些基础概念的理解还是存在偏差。<br>
 下面请看这样的一段代码，能看出其中有那些不太“正常”的语句么。<br></p>
 
-<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Singleton</span><span class="w"></span>
-<span class="p">{</span><span class="w"></span>
-<span class="k">public</span><span class="o">:</span><span class="w"></span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">getInstance</span><span class="p">();</span><span class="w"></span>
-<span class="k">private</span><span class="o">:</span><span class="w"></span>
-<span class="w">    </span><span class="n">Singleton</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
-<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">instance</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Singleton</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">getInstance</span><span class="p">();</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">    </span><span class="n">Singleton</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">instance</span><span class="p">;</span>
+<span class="p">};</span>
 
-<span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">Singleton</span><span class="o">::</span><span class="n">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Singleton</span><span class="p">();</span><span class="w"></span>
-<span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="nf">Singleton::getInstance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">instance</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="n">Singleton</span><span class="o">::</span><span class="n">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Singleton</span><span class="p">();</span>
+<span class="n">Singleton</span><span class="o">*</span><span class="w"> </span><span class="nf">Singleton::getInstance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">instance</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org589ea1c" class="outline-2">
-<h2 id="org589ea1c">私有静态成员的初始化</h2>
-<div class="outline-text-2" id="text-org589ea1c">
+<div id="outline-container-org9fd49ea" class="outline-2">
+<h2 id="org9fd49ea">私有静态成员的初始化</h2>
+<div class="outline-text-2" id="text-org9fd49ea">
 <p>
 上面的代码是饿汉单例模式的 <code>C++</code> 的实现，在没有查阅资料之前，我对其中私有静态成员变量的初始化存疑。主要有以下两点：<br></p>
 <ul class="org-ul">
@@ -115,13 +115,13 @@ The initializer expression in the definition of a static data member is in the s
 
 <p>
 <b>同样</b> ,在C++标准中给出了下面这样的示例代码：<br></p>
-<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">process</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">process</span><span class="o">*</span><span class="w"> </span><span class="n">run_chain</span><span class="p">;</span><span class="w"></span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">process</span><span class="o">*</span><span class="w"> </span><span class="n">running</span><span class="p">;</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">process</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">process</span><span class="o">*</span><span class="w"> </span><span class="n">run_chain</span><span class="p">;</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">process</span><span class="o">*</span><span class="w"> </span><span class="n">running</span><span class="p">;</span>
+<span class="p">};</span>
 
-<span class="n">process</span><span class="o">*</span><span class="w"> </span><span class="n">process</span><span class="o">::</span><span class="n">running</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_main</span><span class="p">();</span><span class="w"></span>
-<span class="n">process</span><span class="o">*</span><span class="w"> </span><span class="n">process</span><span class="o">::</span><span class="n">run_chain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">running</span><span class="p">;</span><span class="w"></span>
+<span class="n">process</span><span class="o">*</span><span class="w"> </span><span class="n">process</span><span class="o">::</span><span class="n">running</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_main</span><span class="p">();</span>
+<span class="n">process</span><span class="o">*</span><span class="w"> </span><span class="n">process</span><span class="o">::</span><span class="n">run_chain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">running</span><span class="p">;</span>
 </pre></div>
 
 <p>
@@ -135,9 +135,9 @@ The static data member <code>run_chain</code> of class process is defined in glo
 </div>
 </div>
 
-<div id="outline-container-orge67056f" class="outline-2">
-<h2 id="orge67056f">私有构造函数</h2>
-<div class="outline-text-2" id="text-orge67056f">
+<div id="outline-container-org66388aa" class="outline-2">
+<h2 id="org66388aa">私有构造函数</h2>
+<div class="outline-text-2" id="text-org66388aa">
 <p>
 在查阅资料时，我发现 Peter 的 <a href="https://stackoverflow.com/a/41361967">描述</a> 纠正了我对私有构造函数的一些看法。<br></p>
 <blockquote>
@@ -149,9 +149,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 </div>
 
-<div id="outline-container-orga296374" class="outline-2">
-<h2 id="orga296374">参考资料</h2>
-<div class="outline-text-2" id="text-orga296374">
+<div id="outline-container-orgc16b9b7" class="outline-2">
+<h2 id="orgc16b9b7">参考资料</h2>
+<div class="outline-text-2" id="text-orgc16b9b7">
 <ul class="org-ul">
 <li>
 <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">ISO C++11 standard</a><br>
@@ -178,19 +178,19 @@ The point of a <code>private</code> constructor is not preventing object constru
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/syntax/" rel="tag">syntax</a>
+      <a class="badge" href="/blog/tags/syntax/" rel="tag">syntax</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2018/non-blocking-socket-connect-tips/" rel="prev">Previous post
+      <a href="/blog/posts/2018/non-blocking-socket-connect-tips/" rel="prev">Previous post
         <br><span>客户端使用非阻塞socket进行connect的流程</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/algorithm/algorithm-weekly-integer-to-roman/" rel="next">Next post
+      <a href="/blog/posts/algorithm/algorithm-weekly-integer-to-roman/" rel="next">Next post
         <br><span>每周算法：阿拉伯数字转换罗马数字</span>
       </a>
     </li>
@@ -198,7 +198,7 @@ The point of a <code>private</code> constructor is not preventing object constru
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2018/static-member-initialization-and-private-member-function/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2018/static-member-initialization-and-private-member-function/",
         disqus_title="\u9759\u6001\u6210\u5458\u53d8\u91cf\u521d\u59cb\u5316\u76f8\u5173\u95ee\u9898",
         disqus_identifier="_cache/posts/2018/static-member-initialization-and-private-member-function.html",
         disqus_config = function () {
@@ -225,17 +225,17 @@ The point of a <code>private</code> constructor is not preventing object constru
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -251,7 +251,7 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

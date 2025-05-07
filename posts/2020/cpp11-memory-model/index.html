@@ -8,16 +8,16 @@
 <title>C++11中的内存顺序 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2020/cpp11-memory-model/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2020/self-defined-deleter-in-cpp-smart-pointer/" title="在C++智能指针中使用自定义的deleter" type="text/html">
-<link rel="next" href="/posts/2020/list-shared-memory-in-system/" title="查看操作系统中所有的共享内存" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2020/cpp11-memory-model/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2020/self-defined-deleter-in-cpp-smart-pointer/" title="在C++智能指针中使用自定义的deleter" type="text/html">
+<link rel="next" href="/blog/posts/2020/list-shared-memory-in-system/" title="查看操作系统中所有的共享内存" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="C++11中的内存顺序">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2020/cpp11-memory-model/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2020/cpp11-memory-model/">
 <meta property="og:description" content="在C++11中引入了内存顺序(memory order)这一概念，我查阅资料进行了一番研究，把认为有用的知识点整理记录下来，方便以后查阅。
 
 
@@ -43,17 +43,17 @@ memory_order_release">
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -74,9 +74,9 @@ memory_order_release">
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org631b4b4" class="outline-2">
-<h2 id="org631b4b4">C++11引入的几种内存顺序</h2>
-<div class="outline-text-2" id="text-org631b4b4">
+<div id="outline-container-org77f0f80" class="outline-2">
+<h2 id="org77f0f80">C++11引入的几种内存顺序</h2>
+<div class="outline-text-2" id="text-org77f0f80">
 <p>
 它们以枚举定义的方式被定义出来，有以下几种：<br></p>
 <ul class="org-ul">
@@ -105,9 +105,9 @@ memory_order_release">
 </div>
 
 
-<div id="outline-container-org644b7b0" class="outline-2">
-<h2 id="org644b7b0">松散顺序（relaxed ordering）</h2>
-<div class="outline-text-2" id="text-org644b7b0">
+<div id="outline-container-org380ed95" class="outline-2">
+<h2 id="org380ed95">松散顺序（relaxed ordering）</h2>
+<div class="outline-text-2" id="text-org380ed95">
 <p>
 使用 <code>memory_order_relaxed</code> 作为参数的原子化操作并不进行同步，它不强调对并发内存访问的顺序限制，它只保证原子性和修改顺序的一致性。<br></p>
 
@@ -127,9 +127,9 @@ memory_order_release">
 </div>
 
 
-<div id="outline-container-orgffb8410" class="outline-2">
-<h2 id="orgffb8410">释放-获得顺序（release-acquire ordering）</h2>
-<div class="outline-text-2" id="text-orgffb8410">
+<div id="outline-container-org6bc41c8" class="outline-2">
+<h2 id="org6bc41c8">释放-获得顺序（release-acquire ordering）</h2>
+<div class="outline-text-2" id="text-org6bc41c8">
 <p>
 当在线程A中进行原子化的存储（store）操作时使用 <code>memory_order_release</code> 作为参数，并且在线程B中进行原子化的加载（load）操作时使用 <code>memory_order_acquire</code> 作为参数，在线程A中所有写入内存的数据（包括非原子变量和松散的原子变量）在存储操作完成后，在线程B中执行完加载操作后能够获取到。<br></p>
 
@@ -142,9 +142,9 @@ memory_order_release">
 </div>
 
 
-<div id="outline-container-org55553d6" class="outline-2">
-<h2 id="org55553d6">释放-消耗顺序（release-consume ordering）</h2>
-<div class="outline-text-2" id="text-org55553d6">
+<div id="outline-container-org7b0cd28" class="outline-2">
+<h2 id="org7b0cd28">释放-消耗顺序（release-consume ordering）</h2>
+<div class="outline-text-2" id="text-org7b0cd28">
 <p>
 当在线程A中进行原子化的存储（store）操作时使用 <code>memory_order_release</code> 作为参数，并且在线程B中进行原子化的加载（load）操作时使用 <code>memory_order_consume</code> 作为参数，在线程A中所有写入内存的原子变量数据在存储操作完成后，在线程B中执行完加载操作后能够获取到。<br></p>
 
@@ -160,9 +160,9 @@ memory_order_release">
 </div>
 
 
-<div id="outline-container-org75e21ad" class="outline-2">
-<h2 id="org75e21ad">顺序一致性(sequentially-consistent ordering)</h2>
-<div class="outline-text-2" id="text-org75e21ad">
+<div id="outline-container-orgd713611" class="outline-2">
+<h2 id="orgd713611">顺序一致性(sequentially-consistent ordering)</h2>
+<div class="outline-text-2" id="text-orgd713611">
 <p>
 顺序一致性同时满足以下特点：<br></p>
 <ol class="org-ol">
@@ -175,13 +175,13 @@ memory_order_release">
 例如有T1和T2两个线程，在T1线程中执行A和B原子操作，在T2线程中执行C和D原子操作，如下图所示。<br></p>
 
 <p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-cpp11-memory-order-1.png" alt="nil"><br></p>
+<img src="/blog/assets/images/spinner.svg" data-src="/images/post-cpp11-memory-order-1.png" alt="nil"><br></p>
 
 <p>
 在顺序一致性条件下，允许出现前5种执行结果，不允许出现第6种执行结果。<br></p>
 
 <p>
-<img src="/assets/images/spinner.svg" data-src="/images/post-cpp11-memory-order-2.png" alt="nil"><br></p>
+<img src="/blog/assets/images/spinner.svg" data-src="/images/post-cpp11-memory-order-2.png" alt="nil"><br></p>
 
 <p>
 顺序一致性是最保守的，潜在的性能损耗也是最高的。<br></p>
@@ -189,9 +189,9 @@ memory_order_release">
 </div>
 
 
-<div id="outline-container-org2a25550" class="outline-2">
-<h2 id="org2a25550">参考资料</h2>
-<div class="outline-text-2" id="text-org2a25550">
+<div id="outline-container-orge68d207" class="outline-2">
+<h2 id="orge68d207">参考资料</h2>
+<div class="outline-text-2" id="text-orge68d207">
 <ul class="org-ul">
 <li>
 <a href="https://en.cppreference.com/w/cpp/atomic/memory_order">cppreference - memory order</a><br>
@@ -205,25 +205,25 @@ memory_order_release">
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/atomic/" rel="tag">atomic</a>
+      <a class="badge" href="/blog/tags/atomic/" rel="tag">atomic</a>
     </li>
     <li>
-      <a class="badge" href="/tags/cpp/" rel="tag">cpp</a>
+      <a class="badge" href="/blog/tags/cpp/" rel="tag">cpp</a>
     </li>
     <li>
-      <a class="badge" href="/tags/cpp11/" rel="tag">cpp11</a>
+      <a class="badge" href="/blog/tags/cpp11/" rel="tag">cpp11</a>
     </li>
     <li>
-      <a class="badge" href="/tags/memory-order/" rel="tag">memory order</a>
+      <a class="badge" href="/blog/tags/memory-order/" rel="tag">memory order</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2020/self-defined-deleter-in-cpp-smart-pointer/" rel="prev">Previous post
+      <a href="/blog/posts/2020/self-defined-deleter-in-cpp-smart-pointer/" rel="prev">Previous post
         <br><span>在C++智能指针中使用自定义的deleter</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2020/list-shared-memory-in-system/" rel="next">Next post
+      <a href="/blog/posts/2020/list-shared-memory-in-system/" rel="next">Next post
         <br><span>查看操作系统中所有的共享内存</span>
       </a>
     </li>
@@ -231,7 +231,7 @@ memory_order_release">
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2020/cpp11-memory-model/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2020/cpp11-memory-model/",
         disqus_title="C++11\u4e2d\u7684\u5185\u5b58\u987a\u5e8f",
         disqus_identifier="_cache/posts/2020/cpp11-memory-order.html",
         disqus_config = function () {
@@ -258,17 +258,17 @@ memory_order_release">
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -284,7 +284,7 @@ memory_order_release">
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

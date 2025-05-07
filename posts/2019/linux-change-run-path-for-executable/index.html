@@ -8,16 +8,16 @@
 <title>Linux中修改程序的run path | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2019/linux-change-run-path-for-executable/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2019/c-array-address-tips/" title="C语言中数组地址的特性" type="text/html">
-<link rel="next" href="/posts/2019/linux-troubleshooting-commands/" title="Linux 常用的排查故障指令" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/linux-change-run-path-for-executable/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2019/c-array-address-tips/" title="C语言中数组地址的特性" type="text/html">
+<link rel="next" href="/blog/posts/2019/linux-troubleshooting-commands/" title="Linux 常用的排查故障指令" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="Linux中修改程序的run path">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2019/linux-change-run-path-for-executable/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2019/linux-change-run-path-for-executable/">
 <meta property="og:description" content="对于动态库的加载，不同的操作系统有不同的搜索策略。在windows下，程序会优先加载同路径中的动态库，这是一个非常方便的特性。而在linux下，需要单独配置 LD_LIBRARY_PATH 以实现上述类似特性。曾经困扰我很长一段时间的就是linux平台的动态库加载问题，最常出现的问题是程序启动时找不到所需要的动态库。在得知修改run path可以调整程序搜索动态库的路径时，一切都迎刃而解了。
 
 
@@ -34,17 +34,17 @@
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -65,12 +65,12 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgafe08a0" class="outline-2">
-<h2 id="orgafe08a0">使用 <code>ldd</code> 查看动态库加载信息</h2>
-<div class="outline-text-2" id="text-orgafe08a0">
+<div id="outline-container-org83fc8d7" class="outline-2">
+<h2 id="org83fc8d7">使用 <code>ldd</code> 查看动态库加载信息</h2>
+<div class="outline-text-2" id="text-org83fc8d7">
 <p>
 可以使用 <code>ldd</code> 查看是否能够成功找到程序所需要的动态库。在搜索成功的情况下会将动态库的绝对地址显示出来。<br></p>
-<div class="highlight"><pre><span></span>ldd &lt;exec-file&gt;
+<div class="highlight"><pre><span></span>ldd<span class="w"> </span>&lt;exec-file&gt;
 </pre></div>
 
 <p>
@@ -79,34 +79,34 @@
 </div>
 
 
-<div id="outline-container-org0957ced" class="outline-2">
-<h2 id="org0957ced">使用 <code>chrpath</code> 修改可执行程序的run path信息</h2>
-<div class="outline-text-2" id="text-org0957ced">
+<div id="outline-container-org2947665" class="outline-2">
+<h2 id="org2947665">使用 <code>chrpath</code> 修改可执行程序的run path信息</h2>
+<div class="outline-text-2" id="text-org2947665">
 <p>
 linux程序的run path是ELF信息的一部分，保存了该程序在加载动态库时的搜索路径。chrpath是一个能够查看和修改run path的程序。我在包管理器中并没有搜索到这个软件包，最终通过编译源码的方式安装成功。<br></p>
 
 <p>
 查看run path信息<br></p>
-<div class="highlight"><pre><span></span>chrpath -l &lt;exec-file&gt;
+<div class="highlight"><pre><span></span>chrpath<span class="w"> </span>-l<span class="w"> </span>&lt;exec-file&gt;
 </pre></div>
 
 <p>
 修改run path信息<br></p>
-<div class="highlight"><pre><span></span>chrpath -r <span class="s1">'/target/path'</span> &lt;exec-file&gt;
+<div class="highlight"><pre><span></span>chrpath<span class="w"> </span>-r<span class="w"> </span><span class="s1">'/target/path'</span><span class="w"> </span>&lt;exec-file&gt;
 </pre></div>
 </div>
 </div>
 
 
-<div id="outline-container-org8ab4ef2" class="outline-2">
-<h2 id="org8ab4ef2">通过设置 <code>LD_LIBRARY_PATH</code> 增加动态库的查找路径</h2>
-<div class="outline-text-2" id="text-org8ab4ef2">
+<div id="outline-container-org9743dfb" class="outline-2">
+<h2 id="org9743dfb">通过设置 <code>LD_LIBRARY_PATH</code> 增加动态库的查找路径</h2>
+<div class="outline-text-2" id="text-org9743dfb">
 <p>
 <code>LD_LIBRARY_PATH</code> 提供了一种额外的动态库搜索路径，它是一个环境变量，这个设置是对终端生效的。<br></p>
 
 <p>
 可以在终端的配置文件中增加以下配置项，使程序在加载动态库搜索当前工作目录。<br></p>
-<div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>.:<span class="nv">$LD_LIBRARY_PATH</span>
+<div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>.:<span class="nv">$LD_LIBRARY_PATH</span>
 </pre></div>
 
 <p>
@@ -115,10 +115,10 @@ tips：需要注意的是，在linux下进行路径之间分隔符使用的是�
 </div>
 
 
-<div id="outline-container-org9e91e66" class="outline-2">
-<h2 id="org9e91e66">
+<div id="outline-container-org8b275bf" class="outline-2">
+<h2 id="org8b275bf">
 <code>rpath</code> 和 <code>LD_LIBRARY_PATH</code> 的比较</h2>
-<div class="outline-text-2" id="text-org9e91e66">
+<div class="outline-text-2" id="text-org8b275bf">
 <p>
 <code>rpath</code> 和 <code>LD_LIBRARY_PATH</code> 都能提供额外的动态库搜索路径，这里主要谈谈它们之间的区别。<br></p>
 
@@ -129,16 +129,16 @@ tips：需要注意的是，在linux下进行路径之间分隔符使用的是�
 <code>LD_LIBRARY_PATH</code> 是对终端生效的，影响的是所有由该终端启动的程序。可以通过脚本包裹的方式使其仅对脚本中的程序生效。以下是示例脚本：<br></p>
 <div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
 <span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/lib"</span>
-<span class="nb">export</span> LD_LIBRARY_PATH
+<span class="nb">export</span><span class="w"> </span>LD_LIBRARY_PATH
 ./exec_app
 </pre></div>
 </div>
 </div>
 
 
-<div id="outline-container-org81914b4" class="outline-2">
-<h2 id="org81914b4">参考资料</h2>
-<div class="outline-text-2" id="text-org81914b4">
+<div id="outline-container-orga0de4e3" class="outline-2">
+<h2 id="orga0de4e3">参考资料</h2>
+<div class="outline-text-2" id="text-orga0de4e3">
 <ul class="org-ul">
 <li>
 <a href="https://osdn.net/projects/sfnet_pisilinux/downloads/source/chrpath-0.16.tar.gz/">osdn.net - chrpath download</a><br>
@@ -153,34 +153,34 @@ tips：需要注意的是，在linux下进行路径之间分隔符使用的是�
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/chrpath/" rel="tag">chrpath</a>
+      <a class="badge" href="/blog/tags/chrpath/" rel="tag">chrpath</a>
     </li>
     <li>
-      <a class="badge" href="/tags/elf/" rel="tag">elf</a>
+      <a class="badge" href="/blog/tags/elf/" rel="tag">elf</a>
     </li>
     <li>
-      <a class="badge" href="/tags/ld_library_path/" rel="tag">LD_LIBRARY_PATH</a>
+      <a class="badge" href="/blog/tags/ld_library_path/" rel="tag">LD_LIBRARY_PATH</a>
     </li>
     <li>
-      <a class="badge" href="/tags/ldd/" rel="tag">ldd</a>
+      <a class="badge" href="/blog/tags/ldd/" rel="tag">ldd</a>
     </li>
     <li>
-      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+      <a class="badge" href="/blog/tags/linux/" rel="tag">linux</a>
     </li>
     <li>
-      <a class="badge" href="/tags/rpath/" rel="tag">rpath</a>
+      <a class="badge" href="/blog/tags/rpath/" rel="tag">rpath</a>
     </li>
     <li>
-      <a class="badge" href="/tags/run-path/" rel="tag">run path</a>
+      <a class="badge" href="/blog/tags/run-path/" rel="tag">run path</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2019/c-array-address-tips/" rel="prev">Previous post
+      <a href="/blog/posts/2019/c-array-address-tips/" rel="prev">Previous post
         <br><span>C语言中数组地址的特性</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2019/linux-troubleshooting-commands/" rel="next">Next post
+      <a href="/blog/posts/2019/linux-troubleshooting-commands/" rel="next">Next post
         <br><span>Linux 常用的排查故障指令</span>
       </a>
     </li>
@@ -188,7 +188,7 @@ tips：需要注意的是，在linux下进行路径之间分隔符使用的是�
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2019/linux-change-run-path-for-executable/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2019/linux-change-run-path-for-executable/",
         disqus_title="Linux\u4e2d\u4fee\u6539\u7a0b\u5e8f\u7684run path",
         disqus_identifier="_cache/posts/2019/linux-change-run-path-for-executable.html",
         disqus_config = function () {
@@ -215,17 +215,17 @@ tips：需要注意的是，在linux下进行路径之间分隔符使用的是�
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -241,7 +241,7 @@ tips：需要注意的是，在linux下进行路径之间分隔符使用的是�
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

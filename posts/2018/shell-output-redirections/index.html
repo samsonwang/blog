@@ -8,16 +8,16 @@
 <title>shell的输出重定向 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2018/shell-output-redirections/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2018/notes-on-libshmcache/" title="libshmcache源码阅读笔记" type="text/html">
-<link rel="next" href="/posts/2018/navigation-and-selection-effectively-in-emacs/" title="提高emacs中浏览和选择操作效率的技巧" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/shell-output-redirections/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2018/notes-on-libshmcache/" title="libshmcache源码阅读笔记" type="text/html">
+<link rel="next" href="/blog/posts/2018/navigation-and-selection-effectively-in-emacs/" title="提高emacs中浏览和选择操作效率的技巧" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="shell的输出重定向">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2018/shell-output-redirections/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2018/shell-output-redirections/">
 <meta property="og:description" content="引言
 
 
@@ -38,17 +38,17 @@
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -64,80 +64,80 @@
       
     <time class="dt-published" datetime="2018-07-26T10:02:41+08:00" itemprop="datePublished">Jul 26, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org0d3471f" class="outline-2">
-<h2 id="org0d3471f">引言</h2>
-<div class="outline-text-2" id="text-org0d3471f">
+    <div id="outline-container-org0607c04" class="outline-2">
+<h2 id="org0607c04">引言</h2>
+<div class="outline-text-2" id="text-org0607c04">
 <p>
 在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd9a1dee" class="outline-2">
-<h2 id="orgd9a1dee">使用尖括号完成重定向</h2>
-<div class="outline-text-2" id="text-orgd9a1dee">
+<div id="outline-container-org7b105cb" class="outline-2">
+<h2 id="org7b105cb">使用尖括号完成重定向</h2>
+<div class="outline-text-2" id="text-org7b105cb">
 <p>
 示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
-<div class="highlight"><pre><span></span>ls . &gt; ls-output.txt
+<div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span>&gt;<span class="w"> </span>ls-output.txt
 </pre></div>
 <p>
 可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
 </div>
 
-<div id="outline-container-org736c671" class="outline-3">
-<h3 id="org736c671">重定向 <code>stdout</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org736c671">
-<div class="highlight"><pre><span></span>ls . <span class="m">1</span>&gt; ls-output.txt
+<div id="outline-container-org0daa44c" class="outline-3">
+<h3 id="org0daa44c">重定向 <code>stdout</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org0daa44c">
+<div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">1</span>&gt;<span class="w"> </span>ls-output.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org19baad1" class="outline-3">
-<h3 id="org19baad1">重定向 <code>stderr</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org19baad1">
-<div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt; ls-error.txt
+<div id="outline-container-org32011e6" class="outline-3">
+<h3 id="org32011e6">重定向 <code>stderr</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org32011e6">
+<div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>ls-error.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org3827f42" class="outline-3">
-<h3 id="org3827f42">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
-<div class="outline-text-3" id="text-org3827f42">
-<div class="highlight"><pre><span></span>ls . <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> ls-output-and-error.txt
+<div id="outline-container-org2895814" class="outline-3">
+<h3 id="org2895814">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
+<div class="outline-text-3" id="text-org2895814">
+<div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span>ls-output-and-error.txt
 </pre></div>
 <p>
 以下命令具有相同的效果<br></p>
-<div class="highlight"><pre><span></span>ls . <span class="p">&amp;</span>&gt; ls-output-and-error.txt
+<div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>ls-output-and-error.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org1fc100f" class="outline-3">
-<h3 id="org1fc100f">将程序的输出丢掉</h3>
-<div class="outline-text-3" id="text-org1fc100f">
+<div id="outline-container-org38a8bea" class="outline-3">
+<h3 id="org38a8bea">将程序的输出丢掉</h3>
+<div class="outline-text-3" id="text-org38a8bea">
 <p>
 可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
-<div class="highlight"><pre><span></span>program &gt; /dev/null
+<div class="highlight"><pre><span></span>program<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org0c53379" class="outline-3">
-<h3 id="org0c53379">将输出追加到指定文件尾部</h3>
-<div class="outline-text-3" id="text-org0c53379">
+<div id="outline-container-org86c0744" class="outline-3">
+<h3 id="org86c0744">将输出追加到指定文件尾部</h3>
+<div class="outline-text-3" id="text-org86c0744">
 <p>
 使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
-<div class="highlight"><pre><span></span><span class="nb">echo</span> <span class="nb">test</span> &gt;&gt; file-output.txt
+<div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="nb">test</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>file-output.txt
 </pre></div>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org803f867" class="outline-2">
-<h2 id="org803f867">使用管道完成重定向</h2>
-<div class="outline-text-2" id="text-org803f867">
+<div id="outline-container-org651ae47" class="outline-2">
+<h2 id="org651ae47">使用管道完成重定向</h2>
+<div class="outline-text-2" id="text-org651ae47">
 <p>
 使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
-<div class="highlight"><pre><span></span>ls <span class="p">|</span> grep &lt;pattern&gt;
+<div class="highlight"><pre><span></span>ls<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>&lt;pattern&gt;
 </pre></div>
 </div>
 </div>
@@ -145,19 +145,19 @@
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/linux/" rel="tag">linux</a>
+      <a class="badge" href="/blog/tags/linux/" rel="tag">linux</a>
     </li>
     <li>
-      <a class="badge" href="/tags/shell/" rel="tag">shell</a>
+      <a class="badge" href="/blog/tags/shell/" rel="tag">shell</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2018/notes-on-libshmcache/" rel="prev">Previous post
+      <a href="/blog/posts/2018/notes-on-libshmcache/" rel="prev">Previous post
         <br><span>libshmcache源码阅读笔记</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2018/navigation-and-selection-effectively-in-emacs/" rel="next">Next post
+      <a href="/blog/posts/2018/navigation-and-selection-effectively-in-emacs/" rel="next">Next post
         <br><span>提高emacs中浏览和选择操作效率的技巧</span>
       </a>
     </li>
@@ -165,7 +165,7 @@
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2018/shell-output-redirections/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2018/shell-output-redirections/",
         disqus_title="shell\u7684\u8f93\u51fa\u91cd\u5b9a\u5411",
         disqus_identifier="_cache/posts/2018/shell-output-redirections.html",
         disqus_config = function () {
@@ -192,17 +192,17 @@
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -218,7 +218,7 @@
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());

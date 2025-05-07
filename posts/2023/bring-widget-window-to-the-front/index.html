@@ -8,16 +8,16 @@
 <title>将界面窗口置顶显示 | Hack Note</title>
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
-<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml">
-<link href="/assets/css/minima.min.css" rel="stylesheet" type="text/css">
-<link rel="canonical" href="https://blog.wangzhl.com/posts/2023/bring-widget-window-to-the-front/">
-<link rel="icon" href="/favicon.ico" sizes="64x64">
-<link rel="prev" href="/posts/2023/qt-connect-lambda/" title="Qt连接匿名函数的踩坑记录" type="text/html">
-<link rel="next" href="/posts/2023/tcp_error_research_note/" title="记录一次TCP异常分析" type="text/html">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2023/bring-widget-window-to-the-front/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2023/qt-connect-lambda/" title="Qt连接匿名函数的踩坑记录" type="text/html">
+<link rel="next" href="/blog/posts/2023/tcp_error_research_note/" title="记录一次TCP异常分析" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="将界面窗口置顶显示">
-<meta property="og:url" content="https://blog.wangzhl.com/posts/2023/bring-widget-window-to-the-front/">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2023/bring-widget-window-to-the-front/">
 <meta property="og:description" content="最近需要实现一个功能，在启动第二个程序实例时将主界面窗口置顶显示。界面程序是基于Qt开发的，在Windows操作系统上实现窗口置顶需要一些特殊的处理。
 
 
@@ -36,17 +36,17 @@
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
-      <a class="site-title" rel="author" href="/">Hack Note</a>
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
       <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
           <span class="menu-icon">
-            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/assets/svg/theme.svg#menu-icon"></use></svg></span>
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
         <div class="trigger">
           
-            <a class="page-link" href="/">Home</a>
-            <a class="page-link" href="/archive/">Archive</a>
-            <a class="page-link" href="/tags/">Tags</a>
-            <a class="page-link" href="/about/">About</a>
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
 
         </div>
       </nav>
@@ -67,80 +67,80 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org573f067" class="outline-2">
-<h2 id="org573f067">使用Qt库的方案</h2>
-<div class="outline-text-2" id="text-org573f067">
+<div id="outline-container-org7c60030" class="outline-2">
+<h2 id="org7c60030">使用Qt库的方案</h2>
+<div class="outline-text-2" id="text-org7c60030">
 <p>
 可以使用Qt库的 <code>QWidget::raise()</code> 这个接口来置顶窗口。但是在Windows系统上，将窗口置顶显示这个操作是受限制的，在后台运行的程序并不能随意将自己的窗口置于顶层。需要借助 <code>AllowSetForegroundWindow()</code> 接口将置顶窗口权限移交至后台程序，后台程序才允许将自己的窗口置于顶层。<br></p>
 
 <p>
 下面的例子采用了第三方库SingleApplication来实现实例之间的交互。<br></p>
 
-<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;QWidget&gt;</span><span class="cp"></span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;QWidget&gt;</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">"singleapplication.h"</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">"singleapplication.h"</span>
 
 <span class="cp">#ifdef Q_OS_WINDOWS</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;Windows.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;Windows.h&gt;</span>
 <span class="cp">#endif</span>
 
-<span class="kt">void</span><span class="w"> </span><span class="nf">raiseWidget</span><span class="p">(</span><span class="n">QWidget</span><span class="o">*</span><span class="w"> </span><span class="n">widget</span><span class="p">);</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">raiseWidget</span><span class="p">(</span><span class="n">QWidget</span><span class="o">*</span><span class="w"> </span><span class="n">widget</span><span class="p">);</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
 
 <span class="cp">#ifdef Q_OS_WINDOWS</span>
-<span class="w">    </span><span class="n">SingleApplication</span><span class="w"> </span><span class="n">app</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">SingleApplication</span><span class="w"> </span><span class="n">app</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">isSecondary</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">isSecondary</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
 
-<span class="w">	</span><span class="n">AllowSetForegroundWindow</span><span class="p">(</span><span class="w"> </span><span class="n">DWORD</span><span class="p">(</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">primaryPid</span><span class="p">()</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="n">AllowSetForegroundWindow</span><span class="p">(</span><span class="w"> </span><span class="n">DWORD</span><span class="p">(</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">primaryPid</span><span class="p">()</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
 
-<span class="w">	</span><span class="n">app</span><span class="p">.</span><span class="n">sendMessage</span><span class="p">(</span><span class="s">"RAISE_WIDGET"</span><span class="p">);</span><span class="w"></span>
+<span class="w">	</span><span class="n">app</span><span class="p">.</span><span class="n">sendMessage</span><span class="p">(</span><span class="s">"RAISE_WIDGET"</span><span class="p">);</span>
 
-<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="cp">#else</span>
-<span class="w">    </span><span class="n">SingleApplication</span><span class="w"> </span><span class="n">app</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">SingleApplication</span><span class="w"> </span><span class="n">app</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span>
 <span class="cp">#endif</span>
 
-<span class="w">    </span><span class="n">QWidget</span><span class="o">*</span><span class="w"> </span><span class="n">widget</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">QWidget</span><span class="o">*</span><span class="w"> </span><span class="n">widget</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">;</span>
 
 <span class="cp">#ifdef Q_OS_WINDOWS</span>
-<span class="w">    </span><span class="n">QObject</span><span class="o">::</span><span class="n">connect</span><span class="p">(</span><span class="o">&amp;</span><span class="n">app</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">SingleApplication</span><span class="o">::</span><span class="n">receivedMessage</span><span class="p">,</span><span class="w"></span>
-<span class="w">		     </span><span class="n">widget</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">widget</span><span class="p">]</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">raiseWidget</span><span class="p">(</span><span class="n">widget</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">QObject</span><span class="o">::</span><span class="n">connect</span><span class="p">(</span><span class="o">&amp;</span><span class="n">app</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">SingleApplication</span><span class="o">::</span><span class="n">receivedMessage</span><span class="p">,</span>
+<span class="w">		     </span><span class="n">widget</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">widget</span><span class="p">]</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">raiseWidget</span><span class="p">(</span><span class="n">widget</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">);</span>
 <span class="cp">#else</span>
-<span class="w">    </span><span class="n">QObject</span><span class="o">::</span><span class="n">connect</span><span class="p">(</span><span class="o">&amp;</span><span class="n">app</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">SingleApplication</span><span class="o">::</span><span class="n">instanceStarted</span><span class="p">,</span><span class="w"></span>
-<span class="w">		     </span><span class="n">widget</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">widget</span><span class="p">]</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">raiseWidget</span><span class="p">(</span><span class="n">widget</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">QObject</span><span class="o">::</span><span class="n">connect</span><span class="p">(</span><span class="o">&amp;</span><span class="n">app</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">SingleApplication</span><span class="o">::</span><span class="n">instanceStarted</span><span class="p">,</span>
+<span class="w">		     </span><span class="n">widget</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">widget</span><span class="p">]</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">raiseWidget</span><span class="p">(</span><span class="n">widget</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">);</span>
 <span class="cp">#endif</span>
 
-<span class="w">    </span><span class="n">widget</span><span class="o">-&gt;</span><span class="n">show</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">widget</span><span class="o">-&gt;</span><span class="n">show</span><span class="p">();</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">exec</span><span class="p">();</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">exec</span><span class="p">();</span>
+<span class="p">}</span>
 
-<span class="kt">void</span><span class="w"> </span><span class="nf">raiseWidget</span><span class="p">(</span><span class="n">QWidget</span><span class="o">*</span><span class="w"> </span><span class="n">widget</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">raiseWidget</span><span class="p">(</span><span class="n">QWidget</span><span class="o">*</span><span class="w"> </span><span class="n">widget</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="cp">#ifdef Q_OS_WINDOWS</span>
-<span class="w">    </span><span class="n">HWND</span><span class="w"> </span><span class="n">hwnd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">HWND</span><span class="p">)</span><span class="n">widget</span><span class="o">-&gt;</span><span class="n">winId</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">HWND</span><span class="w"> </span><span class="n">hwnd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">HWND</span><span class="p">)</span><span class="n">widget</span><span class="o">-&gt;</span><span class="n">winId</span><span class="p">();</span>
 
 <span class="w">    </span><span class="c1">// check if widget is minimized to Windows task bar</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">::</span><span class="n">IsIconic</span><span class="p">(</span><span class="n">hwnd</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">	</span><span class="o">::</span><span class="n">ShowWindow</span><span class="p">(</span><span class="n">hwnd</span><span class="p">,</span><span class="w"> </span><span class="n">SW_RESTORE</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">::</span><span class="n">IsIconic</span><span class="p">(</span><span class="n">hwnd</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="o">::</span><span class="n">ShowWindow</span><span class="p">(</span><span class="n">hwnd</span><span class="p">,</span><span class="w"> </span><span class="n">SW_RESTORE</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="o">::</span><span class="n">SetForegroundWindow</span><span class="p">(</span><span class="n">hwnd</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="o">::</span><span class="n">SetForegroundWindow</span><span class="p">(</span><span class="n">hwnd</span><span class="p">);</span>
 <span class="cp">#else</span>
-<span class="w">    </span><span class="n">widget</span><span class="o">-&gt;</span><span class="n">show</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="n">widget</span><span class="o">-&gt;</span><span class="n">raise</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="n">widget</span><span class="o">-&gt;</span><span class="n">activateWindow</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">widget</span><span class="o">-&gt;</span><span class="n">show</span><span class="p">();</span>
+<span class="w">    </span><span class="n">widget</span><span class="o">-&gt;</span><span class="n">raise</span><span class="p">();</span>
+<span class="w">    </span><span class="n">widget</span><span class="o">-&gt;</span><span class="n">activateWindow</span><span class="p">();</span>
 <span class="cp">#endif</span>
-<span class="p">}</span><span class="w"></span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgb8792fa" class="outline-2">
-<h2 id="orgb8792fa">使用Win32接口的方案</h2>
-<div class="outline-text-2" id="text-orgb8792fa">
+<div id="outline-container-orge3b25f0" class="outline-2">
+<h2 id="orge3b25f0">使用Win32接口的方案</h2>
+<div class="outline-text-2" id="text-orge3b25f0">
 <p>
 可以使用Win32接口 <code>FindWindow</code> 找到窗口对应的句柄，通过窗口句柄将界面带到前面。这个窗口句柄允许是非本进程的。<br></p>
 
@@ -149,9 +149,9 @@
 </div>
 </div>
 
-<div id="outline-container-org262d2d0" class="outline-2">
-<h2 id="org262d2d0">参考资料</h2>
-<div class="outline-text-2" id="text-org262d2d0">
+<div id="outline-container-org575bba8" class="outline-2">
+<h2 id="org575bba8">参考资料</h2>
+<div class="outline-text-2" id="text-org575bba8">
 <ul class="org-ul">
 <li>
 <a href="https://github.com/itay-grudev/SingleApplication">github - qt SingleApplication</a><br>
@@ -171,22 +171,22 @@
   
   <ul class="tags-list vertical-center">
 <li>
-      <a class="badge" href="/tags/c%2B%2B/" rel="tag">c++</a>
+      <a class="badge" href="/blog/tags/c%2B%2B/" rel="tag">c++</a>
     </li>
     <li>
-      <a class="badge" href="/tags/qt/" rel="tag">qt</a>
+      <a class="badge" href="/blog/tags/qt/" rel="tag">qt</a>
     </li>
     <li>
-      <a class="badge" href="/tags/windows/" rel="tag">windows</a>
+      <a class="badge" href="/blog/tags/windows/" rel="tag">windows</a>
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/posts/2023/qt-connect-lambda/" rel="prev">Previous post
+      <a href="/blog/posts/2023/qt-connect-lambda/" rel="prev">Previous post
         <br><span>Qt连接匿名函数的踩坑记录</span>
       </a>
     </li>
     <li class="next">
-      <a href="/posts/2023/tcp_error_research_note/" rel="next">Next post
+      <a href="/blog/posts/2023/tcp_error_research_note/" rel="next">Next post
         <br><span>记录一次TCP异常分析</span>
       </a>
     </li>
@@ -194,7 +194,7 @@
 <section class="comments hidden-print"><div id="disqus_thread"></div>
         <script>
         var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://blog.wangzhl.com/posts/2023/bring-widget-window-to-the-front/",
+            disqus_url="https://samsonwang.github.io/blog/posts/2023/bring-widget-window-to-the-front/",
         disqus_title="\u5c06\u754c\u9762\u7a97\u53e3\u7f6e\u9876\u663e\u793a",
         disqus_identifier="_cache/posts/2023/bring-widget-window-to-the-front.html",
         disqus_config = function () {
@@ -221,17 +221,17 @@
 
         <div class="footer-col">
           <div class="p-name">Samson Wang</div>
-          <div class="copyright">Copyright 2024, all rights reserved.</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
           <div class="social-links">
             <ul class="social-media-list">
-<li><a rel="me" href="/rss.xml">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
               <li><a rel="nofollow" href="https://github.com/samsonwang">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#github"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
               <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
-                <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
               <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
-                 <svg class="svg-icon grey"><use href="/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
             </ul>
 </div>
 
@@ -247,7 +247,7 @@
 </div>
 
 
-      <script src="/assets/js/lazyload.min.js"></script><script src="/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
