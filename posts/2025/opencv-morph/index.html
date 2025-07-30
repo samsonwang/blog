@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>opencv中的图像形态学处理 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2025/opencv-morph/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2025/opencv-image-filters/" title="opencv的中值滤波和双边滤波" type="text/html">
+<link rel="next" href="/blog/posts/2025/linux-driver-dev-tips/" title="linux 驱动开发笔记" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="opencv中的图像形态学处理">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2025/opencv-morph/">
+<meta property="og:description" content="什么是图像形态学？这里的图像形态学指的是数学上的图像形态学。
+
+
+
+
+
+本节的腐蚀和膨胀处理的都是二值化之后的图像，所以也可以称之为二值腐蚀和二值膨胀，与灰度腐蚀和灰度膨胀对应。
+腐蚀和膨胀都是针对白色部分而言的（在二值图像中白色为255）。
+
+
+
+腐蚀（erosion）
+
+
+腐蚀是求局部最小值的过程，图像处理后的效果为白色减少、黑色增多。
+
+
+
+适用的场景：
+
+
+消除小的噪声点
+断开相邻的物体
+">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2025-07-17T09:10:02+08:00">
+<meta property="article:tag" content="image-morph">
+<meta property="article:tag" content="opencv">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">opencv中的图像形态学处理</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2025-07-17T09:10:02+08:00" itemprop="datePublished">Jul 17, 2025</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+什么是图像形态学？这里的图像形态学指的是数学上的图像形态学。<br></p>
+
+<!-- TEASER_END -->
+
+<p>
+本节的腐蚀和膨胀处理的都是二值化之后的图像，所以也可以称之为二值腐蚀和二值膨胀，与灰度腐蚀和灰度膨胀对应。<br>
+腐蚀和膨胀都是针对白色部分而言的（在二值图像中白色为255）。<br></p>
+
+<div id="outline-container-org860228b" class="outline-2">
+<h2 id="org860228b">腐蚀（erosion）</h2>
+<div class="outline-text-2" id="text-org860228b">
+<p>
+腐蚀是求局部最小值的过程，图像处理后的效果为白色减少、黑色增多。<br></p>
+
+<p>
+适用的场景：<br></p>
+<ol class="org-ol">
+<li>消除小的噪声点<br>
+</li>
+<li>断开相邻的物体<br>
+</li>
+<li>使物体整体缩小<br>
+</li>
+</ol>
+</div>
+</div>
+
+
+<div id="outline-container-org4a309e6" class="outline-2">
+<h2 id="org4a309e6">膨胀（dilation）</h2>
+<div class="outline-text-2" id="text-org4a309e6">
+<p>
+膨胀是求局部最大值的过程，图像处理后的效果为白色增多、黑色减少。<br></p>
+
+<p>
+适用的场景：<br></p>
+<ol class="org-ol">
+<li>填补物体中的空洞<br>
+</li>
+<li>连接相邻的物体<br>
+</li>
+<li>使物体整体扩大<br>
+</li>
+</ol>
+</div>
+</div>
+
+
+<div id="outline-container-org1fc6c4f" class="outline-2">
+<h2 id="org1fc6c4f">结构元素（核）的影响</h2>
+<div class="outline-text-2" id="text-org1fc6c4f">
+<p>
+结构元素的形状和大小会显著影响形态学操作的结果：<br>
+目前 opencv 有四种可选的核：矩形，椭圆形，十字形，菱形。<br>
+这些核实际上就是不同内容的二维矩阵。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org8f3fc6b" class="outline-2">
+<h2 id="org8f3fc6b">腐蚀和膨胀的测试代码</h2>
+<div class="outline-text-2" id="text-org8f3fc6b">
+<p>
+下面是一段测试程序，用于演示腐蚀和膨胀的效果、不同核的处理效果。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span> <span class="k">as</span> <span class="nn">cv</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="n">img</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s1">'../photos/2.bmp'</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">img</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'image is invalid'</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'img size:'</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span>
+
+<span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">500</span><span class="p">,</span> <span class="mi">300</span><span class="p">:</span><span class="mi">600</span><span class="p">]</span>
+<span class="n">cv</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="s1">'../photos/2_1.bmp'</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
+
+<span class="n">_</span><span class="p">,</span> <span class="n">binary</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="p">)</span>
+
+<span class="n">k_size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">k_size</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'k_ones'</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
+
+<span class="c1"># erode result</span>
+<span class="n">erosion</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">erode</span><span class="p">(</span><span class="n">binary</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
+
+<span class="c1"># dialate result</span>
+<span class="n">dilation</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">dilate</span><span class="p">(</span><span class="n">binary</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
+
+<span class="c1"># 不同形状的核</span>
+<span class="n">rect_kernel</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">getStructuringElement</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">MORPH_RECT</span><span class="p">,</span> <span class="n">k_size</span><span class="p">)</span>  <span class="c1"># 矩形</span>
+<span class="n">ellipse_kernel</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">getStructuringElement</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">MORPH_ELLIPSE</span><span class="p">,</span> <span class="n">k_size</span><span class="p">)</span>  <span class="c1"># 椭圆形</span>
+<span class="n">cross_kernel</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">getStructuringElement</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">MORPH_CROSS</span><span class="p">,</span> <span class="n">k_size</span><span class="p">)</span>  <span class="c1"># 十字形</span>
+<span class="n">diamond_kernel</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">getStructuringElement</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">MORPH_DIAMOND</span><span class="p">,</span> <span class="n">k_size</span><span class="p">)</span>  <span class="c1"># 菱形</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">'rect kernel'</span><span class="p">,</span> <span class="n">rect_kernel</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'ellipse kernel'</span><span class="p">,</span> <span class="n">ellipse_kernel</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'cross kernel'</span><span class="p">,</span> <span class="n">cross_kernel</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'diamond kernel'</span><span class="p">,</span> <span class="n">diamond_kernel</span><span class="p">)</span>
+
+<span class="c1"># 应用不同核的腐蚀</span>
+<span class="n">erosion_rect</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">erode</span><span class="p">(</span><span class="n">binary</span><span class="p">,</span> <span class="n">rect_kernel</span><span class="p">)</span>
+<span class="n">erosion_ellipse</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">erode</span><span class="p">(</span><span class="n">binary</span><span class="p">,</span> <span class="n">ellipse_kernel</span><span class="p">)</span>
+<span class="n">erosion_cross</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">erode</span><span class="p">(</span><span class="n">binary</span><span class="p">,</span> <span class="n">cross_kernel</span><span class="p">)</span>
+<span class="n">erosion_diamond</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">erode</span><span class="p">(</span><span class="n">binary</span><span class="p">,</span> <span class="n">diamond_kernel</span><span class="p">)</span>
+
+<span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">img</span><span class="p">,</span> <span class="n">binary</span><span class="p">,</span> <span class="n">erosion</span><span class="p">,</span> <span class="n">dilation</span><span class="p">,</span>
+	  <span class="n">erosion_rect</span><span class="p">,</span> <span class="n">erosion_ellipse</span><span class="p">,</span> <span class="n">erosion_cross</span><span class="p">,</span> <span class="n">erosion_diamond</span><span class="p">]</span>
+<span class="n">titles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'original'</span><span class="p">,</span> <span class="s1">'binary'</span><span class="p">,</span> <span class="s1">'erosion'</span><span class="p">,</span> <span class="s1">'dilation'</span><span class="p">,</span>
+	  <span class="s1">'erosion rect'</span><span class="p">,</span> <span class="s1">'erosion ellipse'</span><span class="p">,</span> <span class="s1">'erosion cross'</span><span class="p">,</span> <span class="s1">'erosion diamond'</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># plt.imshow(binary, 'gray', vmin=0, vmax=255)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">'gray'</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">titles</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([])</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">'plot.png'</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org53500c2" class="outline-2">
+<h2 id="org53500c2">开运算（opening）</h2>
+<div class="outline-text-2" id="text-org53500c2">
+<p>
+线腐蚀后膨胀，用于消除小物体和毛刺<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org1fb06ea" class="outline-2">
+<h2 id="org1fb06ea">闭运算（closing）</h2>
+<div class="outline-text-2" id="text-org1fb06ea">
+<p>
+先膨胀后腐蚀，用于填充小孔和连接断裂<br></p>
+
+
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/blog/tags/image-morph/" rel="tag">image-morph</a>
+    </li>
+    <li>
+      <a class="badge" href="/blog/tags/opencv/" rel="tag">opencv</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/blog/posts/2025/opencv-image-filters/" rel="prev">Previous post
+        <br><span>opencv的中值滤波和双边滤波</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/blog/posts/2025/linux-driver-dev-tips/" rel="next">Next post
+        <br><span>linux 驱动开发笔记</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://samsonwang.github.io/blog/posts/2025/opencv-morph/",
+        disqus_title="opencv\u4e2d\u7684\u56fe\u50cf\u5f62\u6001\u5b66\u5904\u7406",
+        disqus_identifier="_cache/posts/2025/opencv-morph.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2025, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

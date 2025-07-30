@@ -50,23 +50,540 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Sep 19, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2018/breadth-first-search/">广度优先搜索</a>
+    </h3>
+
+    <div id="outline-container-orgba4fcef" class="outline-2">
+<h2 id="orgba4fcef">引言</h2>
+<div class="outline-text-2" id="text-orgba4fcef">
+<p>
+在求解 <a href="/blog/posts/algorithm-weekly-letter-combinations-of-a-phone-number/" class="post-url">leetcode 17</a> 时，我遇到了BFS（广度优先搜索）这个概念。在深入了解后发现，BFS是图（graph）的一个知识点，我对这一知识点进行展开学习，并将找到的资料汇总起来。本文主要整理了图和广度优先搜索的相关知识点。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org1156f4b" class="outline-2">
+<h2 id="org1156f4b">图的存储方式</h2>
+<div class="outline-text-2" id="text-org1156f4b">
+<p>
+研究图就需要使用计算机语言对其进行描述。图的存储结构除了要存储图中各个顶点的本身的信息外，同时还要存储顶点与顶点之间的所有关系（边的信息）。因此，图的结构比较复杂，很难以数据元素在存储区中的物理位置来表示元素之间的关系，但也正是由于其任意的特性，故物理表示方法很多。常用的图的存储结构有邻接矩阵、邻接表、十字链表和邻接多重表。<br></p>
+</div>
+
+<div id="outline-container-orgccd0d4b" class="outline-3">
+<h3 id="orgccd0d4b">相邻矩阵（adjacency martix）</h3>
+<div class="outline-text-3" id="text-orgccd0d4b">
+<p>
+对于一个具有 <code>n</code> 个顶点的图，可以使用 <code>n*n</code> 的矩阵（二维数组）来表示它们间的邻接关系。下图中，矩阵 <code>A(i，j)=1</code> 表示图中存在一条边 <code>(Vi，Vj)</code> ，而 <code>A(i，j)=0</code> 表示图中不存在边 <code>(Vi，Vj)</code> 。实际编程时，当图为不带权图时，可以在二维数组中存放bool值， <code>A(i，j)=true</code> 表示存在边 <code>(Vi，Vj)</code> ， <code>A(i，j)=false</code> 表示不存在边 <code>(Vi，Vj)</code> ；当图带权值时，则可以直接在二维数组中存放权值， <code>A(i，j)=null</code> 表示不存在边 <code>(Vi，Vj)</code> 。<br></p>
+
+<p>
+<img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-breadth-first-search-1.jpg" alt="图的相邻矩阵表示方法"><br></p>
+
+<p>
+左图所示的是无向图的邻接矩阵表示法，可以观察到，矩阵延对角线对称，即 <code>A(i，j)=A(j，i)</code> 。无向图邻接矩阵的第 <code>i</code> 行或第 <code>i</code> 列非零元素的个数其实就是第 <code>i</code> 个顶点的度。这表示无向图邻接矩阵存在一定的数据冗余。<br></p>
+
+<p>
+右图所示的是有向图邻接矩阵表示法，矩阵并不延对角线对称， <code>A(i，j)=1</code> 表示顶点 <code>Vi</code> 邻接到顶点 <code>Vj</code> ； <code>A(j，i)=1</code> 则表示顶点 <code>Vi</code> 邻接自顶点 <code>Vj</code> 。两者并不象无向图邻接矩阵那样表示相同的意思。有向图邻接矩阵的第 <code>i</code> 行非零元素的个数其实就是第 <code>i</code> 个顶点的出度，而第 <code>i</code> 列非零元素的个数是第 <code>i</code> 个顶点的入度，即第 <code>i</code> 个顶点的度是第 <code>i</code> 行和第 <code>i</code> 列非零元素个数之和。<br></p>
+
+<p>
+由于存在 <code>n</code> 个顶点的图需要 <code>n^2</code> 个数组元素进行存储，当图为稀疏图时，使用邻接矩阵存储方法将出现大量零元素，照成极大地空间浪费，这时应该使用邻接表表示法存储图中的数据。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org912f937" class="outline-3">
+<h3 id="org912f937">邻接表（adjacency list）</h3>
+<div class="outline-text-3" id="text-org912f937">
+<p>
+邻接表（adjacency list）是一种常用的表示图的数据结构。邻接表是许多链表的集合，每个链表描述了一个顶点（ <code>vectex</code> ）的相邻元素（ <code>Neighbor</code> ）。更形象地讲，邻接表是一个二维容器，第一维描述某个点，第二维描述这个点所对应的边集们。<br>
+图的邻接矩阵存储方法跟树的孩子链表示法相类似，是一种顺序分配和链式分配相结合的存储结构。邻接表由表头结点和表结点两部分组成，其中图中每个顶点均对应一个存储在数组中的表头结点。如这个表头结点所对应的顶点存在相邻顶点，则把相邻顶点依次存放于表头结点所指向的单向链表中。如下图所示，表结点存放的是邻接顶点在数组中的索引。对于无向图来说，使用邻接表进行存储也会出现数据冗余，表头结点 <code>A</code> 所指链表中存在一个指向 <code>C</code> 的表结点的同时，表头结点 <code>C</code> 所指链表也会存在一个指向 <code>A</code> 的表结点。<br><img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-breadth-first-search-2.jpg" alt="图的相邻表表示方法"><br></p>
+
+<p>
+有向图的邻接表有出边表和入边表（又称逆邻接表）之分。出边表的表结点存放的是从表头结点出发的有向边所指的尾顶点；入边表的表结点存放的则是指向表头结点的某个头顶点。如下图所示，图(b)和(c)分别为有向图(a)的出边表和入边表。<br><img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-breadth-first-search-3.jpg" alt="有向图的相邻表表示方法"><br></p>
+
+<p>
+以上所讨论的邻接表所表示的都是不带权的图，如果要表示带权图，可以在表结点中增加一个存放权的字段，其效果如下图所示。<br><img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-breadth-first-search-4.jpg" alt="加权图的相邻表表示方法"><br>
+观察上图可以发现，当删除存储表头结点的数组中的某一元素，有可能使部分表头结点索引号的改变，从而导致大面积修改表结点的情况发生。可以在表结点中直接存放指向表头结点的指针以解决这个问题（在链表中存放类实例即是存放指针，但必须要保证表头结点是类而不是结构体）。在实际创建邻接表时，甚至可以使用链表代替数组存放表头结点或使用顺序表存代替链表存放表结点。<br></p>
+
+<p>
+本节所有的图片摘自 <a href="https://www.cnblogs.com/abatei/archive/2008/06/06/1215114.html">cnblogs.com - abatei</a><br></p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org857a475" class="outline-2">
+<h2 id="org857a475">图的遍历</h2>
+<div class="outline-text-2" id="text-org857a475">
+<p>
+和树的遍历类似，在此，我们希望从图中某一顶点出发访遍图中其余顶点，且使每一个顶点仅被访问一次，这一过程就叫做图的遍历(traversing graph)。如果只访问图的顶点而不关注边的信息，那么图的遍历十分简单，使用一个 <code>foreach</code> 语句遍历存放顶点信息的数组即可。但如果为了实现特定算法，就需要根据边的信息按照一定顺序进行遍历。图的遍历算法是求解图的连通性问题、拓扑排序和求关键路径等算法的基础。<br></p>
+
+<p>
+图的遍历要比树的遍历复杂得多，由于图的任一顶点都可能和其余顶点相邻接，故在访问了某顶点之后，可能顺着某条边又访问到了已访问过的顶点，因此，在图的遍历过程中，必须记下每个访问过的顶点，以免同一个顶点被访问多次。为此给顶点附设访问标志 <code>visited</code> ，其初值为 <code>false</code> ，一旦某个顶点被访问，则其 <code>visited</code> 标志置为 <code>true</code> 。<br></p>
+
+<p>
+图的遍历方法有两种：一种是深度优先搜索遍历（depth first search 简称DFS），另一种是广度优先搜索遍历（breadth first search 简称BFS）。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org18fa9d9" class="outline-2">
+<h2 id="org18fa9d9">广度优先搜索（breadth first search）</h2>
+<div class="outline-text-2" id="text-org18fa9d9">
+<p>
+图的广度优先搜索遍历算法是一个分层遍历的过程，和二叉树的广度优先搜索遍历类同。它从图的某一顶点 <code>Vi</code> 出发，访问此顶点后，依次访问 <code>Vi</code> 的各个未曾访问过的邻接点，然后分别从这些邻接点出发，直至图中所有已有已被访问的顶点的邻接点都被访问到。对于无向连通图，若顶点 <code>Vi</code> 为初始访问的顶点，则广度优先搜索遍历顺序如下所示。<br><img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-breadth-first-search-5.jpg" alt="图的广度优先搜索遍历"><br></p>
+
+<p>
+广度优先搜索的伪代码如下：<br></p>
+<pre class="example">
+BFS (G, s)  // Where G is the graph and s is the source node
+  let Q be queue.
+  Q.enqueue( s )  // Inserting s in queue until all its neighbour vertices are marked.
+
+  mark s as visited.
+
+  while ( Q is not empty )
+    // Removing that vertex from queue, whose neighbour will be visited now
+    v  =  Q.dequeue( )
+
+    // processing all the neighbours of v
+    for all neighbours w of v in Graph G
+      if w is not visited
+        Q.enqueue( w )  // Stores w in Q to further visit its neighbour
+        mark w as visited.
+</pre>
+
+<p>
+<b>时间复杂度</b><br>
+BFS的时间复杂度为 <code>O(V+E)</code> ，其中 <code>V</code> 是节点的数量， <code>E</code> 是边的数量。<br></p>
+
+<p>
+<b>BFS的应用场景</b><br></p>
+<ul class="org-ul">
+<li>最短路径问题<br>
+</li>
+<li>P2P网络，网络广播<br>
+</li>
+<li>GPS导航系统<br>
+</li>
+<li>搜索引擎的网络爬虫<br>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-org268a3c3" class="outline-2">
+<h2 id="org268a3c3">参考资料</h2>
+<div class="outline-text-2" id="text-org268a3c3">
+<ul class="org-ul">
+<li>
+<a href="https://www.hackerearth.com/zh/practice/algorithms/graphs/breadth-first-search/tutorial/">hackerearth.com - breath first search tutorial</a><br>
+</li>
+<li>
+<a href="http://www.cnblogs.com/abatei/archive/2010/02/25/1215114.html">cnblogs - 图的遍历</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Adjacency_matrix">wikipedia - adjacency matrix</a><br>
+</li>
+<li>
+<a href="https://en.wikipedia.org/wiki/Adjacency_list">wikipedia - adjacency list</a><br>
+</li>
+<li>
+<a href="https://baike.baidu.com/item/%E9%82%BB%E6%8E%A5%E8%A1%A8">百度百科 - 邻接表</a><br>
+</li>
+<li>
+<a href="https://www.geeksforgeeks.org/applications-of-breadth-first-traversal/">geeksforgeeks - application of BFS</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Sep 18, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/algorithm/algorithm-weekly-letter-combinations-of-a-phone-number/">每周算法：拨号键盘上的字符组合</a>
+    </h3>
+
+    <div id="outline-container-org7f05d26" class="outline-2">
+<h2 id="org7f05d26">Description</h2>
+<div class="outline-text-2" id="text-org7f05d26">
+<p>
+Given a string containing digits from <code>2-9</code> inclusive, return all possible letter combinations that the number could represent.<br></p>
+
+<p>
+A mapping of digit to letters (just like on the telephone buttons) is given below. Note that 1 does not map to any letters.<br></p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<colgroup>
+<col class="org-left">
+<col class="org-left">
+<col class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">1</td>
+<td class="org-left">2abc</td>
+<td class="org-left">3def</td>
+</tr>
+<tr>
+<td class="org-left">4ghi</td>
+<td class="org-left">5jkl</td>
+<td class="org-left">6mno</td>
+</tr>
+<tr>
+<td class="org-left">7pqrs</td>
+<td class="org-left">8tuv</td>
+<td class="org-left">9wxyz</td>
+</tr>
+</tbody>
+</table>
+<p>
+<b>Example:</b><br></p>
+<pre class="example">
+Input: "23"
+Output: ["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"].
+</pre>
+
+<p>
+<b>Note:</b><br>
+Although the above answer is in lexicographical order, your answer could be in any order you want.<br></p>
+
+<p>
+来源：<a href="https://leetcode.com/problems/letter-combinations-of-a-phone-number/description/">leetcode 17 letter combinations of a phone number</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org602eab7" class="outline-2">
+<h2 id="org602eab7">Solution</h2>
+<div class="outline-text-2" id="text-org602eab7">
+</div>
+<div id="outline-container-org765f270" class="outline-3">
+<h3 id="org765f270">Approach 1</h3>
+<div class="outline-text-3" id="text-org765f270">
+<p>
+借助加法计算进位的思想，下面是我的解法。我首次提交时并没有注意输入字符串为空的情况，对于输入参数的检查还是太容易忽略了。<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">letterCombinations</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">digits</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">digits</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">letters</span><span class="w"> </span><span class="p">{</span><span class="s">""</span><span class="p">,</span><span class="w">  </span><span class="s">""</span><span class="p">,</span><span class="w"> </span><span class="s">"abc"</span><span class="p">,</span><span class="w"> </span><span class="s">"def"</span><span class="p">,</span><span class="w"> </span><span class="s">"ghi"</span><span class="p">,</span>
+<span class="w">	    </span><span class="s">"jkl"</span><span class="p">,</span><span class="w"> </span><span class="s">"mno"</span><span class="p">,</span><span class="w"> </span><span class="s">"pqrs"</span><span class="p">,</span><span class="w"> </span><span class="s">"tuv"</span><span class="p">,</span><span class="w"> </span><span class="s">"wxyz"</span><span class="p">};</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">carry</span><span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nums</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">digits</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">'0'</span><span class="p">;</span>
+<span class="w">	</span><span class="n">nums</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">do</span><span class="p">{</span>
+<span class="w">	</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">;</span>
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">carry</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	    </span><span class="n">str</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">letters</span><span class="p">[</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="w"> </span><span class="p">[</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]];</span>
+<span class="w">	</span><span class="p">}</span>
+<span class="w">	</span><span class="n">ans</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">str</span><span class="p">);</span>
+
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="n">carry</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="o">--</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	    </span><span class="kt">int</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">	    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">letters</span><span class="p">[</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]].</span><span class="n">size</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">		</span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">	    </span><span class="p">}</span>
+<span class="w">	    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d</span><span class="p">;</span>
+<span class="w">		</span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">		</span><span class="k">break</span><span class="p">;</span>
+<span class="w">	    </span><span class="p">}</span>
+<span class="w">	</span><span class="p">}</span>
+
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	    </span><span class="k">break</span><span class="p">;</span>
+<span class="w">	</span><span class="p">}</span>
+
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+我在想的是这个算法的时间复杂度是多少，感觉它的时间复杂度应该是O(n<sup>2</sup>)。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org1a928c5" class="outline-3">
+<h3 id="org1a928c5">Approach 2 recursive</h3>
+<div class="outline-text-3" id="text-org1a928c5">
+<p>
+使用递归完成字符串的拼接，在每次递归，都会增加一个字符。终止递归的条件是字符串长度达到输入参数的长度。递归方法符合生活中的使用场景，还是比较容易理解的。<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">mMap</span><span class="p">[</span><span class="mi">8</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="p">{</span><span class="sc">'a'</span><span class="p">,</span><span class="w"> </span><span class="sc">'b'</span><span class="p">,</span><span class="w"> </span><span class="sc">'c'</span><span class="p">,</span><span class="w"> </span><span class="sc">'#'</span><span class="p">},</span>
+<span class="w">	</span><span class="p">{</span><span class="sc">'d'</span><span class="p">,</span><span class="w"> </span><span class="sc">'e'</span><span class="p">,</span><span class="w"> </span><span class="sc">'f'</span><span class="p">,</span><span class="w"> </span><span class="sc">'#'</span><span class="p">},</span>
+<span class="w">	</span><span class="p">{</span><span class="sc">'g'</span><span class="p">,</span><span class="w"> </span><span class="sc">'h'</span><span class="p">,</span><span class="w"> </span><span class="sc">'i'</span><span class="p">,</span><span class="w"> </span><span class="sc">'#'</span><span class="p">},</span>
+<span class="w">	</span><span class="p">{</span><span class="sc">'j'</span><span class="p">,</span><span class="w"> </span><span class="sc">'k'</span><span class="p">,</span><span class="w"> </span><span class="sc">'l'</span><span class="p">,</span><span class="w"> </span><span class="sc">'#'</span><span class="p">},</span>
+<span class="w">	</span><span class="p">{</span><span class="sc">'m'</span><span class="p">,</span><span class="w"> </span><span class="sc">'n'</span><span class="p">,</span><span class="w"> </span><span class="sc">'o'</span><span class="p">,</span><span class="w"> </span><span class="sc">'#'</span><span class="p">},</span>
+<span class="w">	</span><span class="p">{</span><span class="sc">'p'</span><span class="p">,</span><span class="w"> </span><span class="sc">'q'</span><span class="p">,</span><span class="w"> </span><span class="sc">'r'</span><span class="p">,</span><span class="w"> </span><span class="sc">'s'</span><span class="p">},</span>
+<span class="w">	</span><span class="p">{</span><span class="sc">'t'</span><span class="p">,</span><span class="w"> </span><span class="sc">'u'</span><span class="p">,</span><span class="w"> </span><span class="sc">'v'</span><span class="p">,</span><span class="w"> </span><span class="sc">'#'</span><span class="p">},</span>
+<span class="w">	</span><span class="p">{</span><span class="sc">'w'</span><span class="p">,</span><span class="w"> </span><span class="sc">'x'</span><span class="p">,</span><span class="w"> </span><span class="sc">'y'</span><span class="p">,</span><span class="w"> </span><span class="sc">'z'</span><span class="p">},</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">letterCombinations</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">digits</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+<span class="w">	</span><span class="n">backTrack</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="s">""</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">backTrack</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="n">combination</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">index</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">digits</span><span class="p">.</span><span class="n">length</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">combination</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		</span><span class="k">return</span><span class="p">;</span>
+<span class="w">	    </span><span class="p">}</span>
+<span class="w">	    </span><span class="n">result</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">combination</span><span class="p">);</span>
+<span class="w">	    </span><span class="k">return</span><span class="p">;</span>
+<span class="w">	</span><span class="p">}</span>
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">mMap</span><span class="p">[</span><span class="n">digits</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">'2'</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'#'</span><span class="p">)</span>
+<span class="w">		</span><span class="k">continue</span><span class="p">;</span>
+
+<span class="w">	    </span><span class="n">combination</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">	    </span><span class="n">backTrack</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">combination</span><span class="p">,</span><span class="w"> </span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">	    </span><span class="c1">// 这里为什么要删去最后一个呢？</span>
+<span class="w">	    </span><span class="c1">// 因为之前在尾部追加了一个c</span>
+<span class="w">	    </span><span class="n">combination</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">combination</span><span class="p">.</span><span class="n">end</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">	</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+<del>如何评估递归算法的时间复杂度和空间复杂度呢？</del><br></p>
+</div>
+</div>
+
+<div id="outline-container-orgbe42579" class="outline-3">
+<h3 id="orgbe42579">Approach 3 BFS</h3>
+<div class="outline-text-3" id="text-orgbe42579">
+<p>
+宽度优先搜索，breadth-first search（BFS）,是一种对树（tree）或图（graph）的遍历算法，下面就是这种算法的解法，代码使用java编写。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kd">public</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">letterCombinations</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">digits</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">digits</span><span class="p">.</span><span class="na">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="p">{</span><span class="s">"0"</span><span class="p">,</span><span class="w"> </span><span class="s">"1"</span><span class="p">,</span><span class="w"> </span><span class="s">"abc"</span><span class="p">,</span><span class="w"> </span><span class="s">"def"</span><span class="p">,</span>
+<span class="w">				     </span><span class="s">"ghi"</span><span class="p">,</span><span class="w"> </span><span class="s">"jkl"</span><span class="p">,</span><span class="w"> </span><span class="s">"mno"</span><span class="p">,</span><span class="w"> </span><span class="s">"pqrs"</span><span class="p">,</span><span class="w"> </span><span class="s">"tuv"</span><span class="p">,</span><span class="w"> </span><span class="s">"wxyz"</span><span class="p">};</span>
+
+<span class="w">    </span><span class="n">ans</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">""</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">digits</span><span class="p">.</span><span class="na">length</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Character</span><span class="p">.</span><span class="na">getNumericValue</span><span class="p">(</span><span class="n">digits</span><span class="p">.</span><span class="na">charAt</span><span class="p">(</span><span class="n">i</span><span class="p">));</span>
+
+<span class="w">	</span><span class="k">while</span><span class="p">(</span><span class="n">ans</span><span class="p">.</span><span class="na">peek</span><span class="p">().</span><span class="na">length</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	    </span><span class="n">String</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ans</span><span class="p">.</span><span class="na">remove</span><span class="p">();</span><span class="w"> </span><span class="c1">// remove是从头部删去一个元素</span>
+<span class="w">	    </span><span class="k">for</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">mapping</span><span class="o">[</span><span class="n">x</span><span class="o">]</span><span class="p">.</span><span class="na">toCharArray</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		</span><span class="n">ans</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="n">s</span><span class="p">);</span><span class="w"> </span><span class="c1">// add是向尾部添加一个元素</span>
+<span class="w">	    </span><span class="p">}</span>
+<span class="w">	</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+下面是另外一种使用BFS算法实现的解法<br></p>
+<div class="highlight"><pre><span></span><span class="kd">public</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">letterCombinations</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">digits</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">LinkedList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n">digits</span><span class="p">.</span><span class="na">isEmpty</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="p">{</span><span class="s">"0"</span><span class="p">,</span><span class="w"> </span><span class="s">"1"</span><span class="p">,</span><span class="w"> </span><span class="s">"abc"</span><span class="p">,</span><span class="w"> </span><span class="s">"def"</span><span class="p">,</span>
+<span class="w">				     </span><span class="s">"ghi"</span><span class="p">,</span><span class="w"> </span><span class="s">"jkl"</span><span class="p">,</span><span class="w"> </span><span class="s">"mno"</span><span class="p">,</span><span class="w"> </span><span class="s">"pqrs"</span><span class="p">,</span><span class="w"> </span><span class="s">"tuv"</span><span class="p">,</span><span class="w"> </span><span class="s">"wxyz"</span><span class="p">};</span>
+<span class="w">    </span><span class="n">ans</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">""</span><span class="p">);</span>
+<span class="w">    </span><span class="k">while</span><span class="p">(</span><span class="n">ans</span><span class="p">.</span><span class="na">peek</span><span class="p">().</span><span class="na">length</span><span class="p">()</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">digits</span><span class="p">.</span><span class="na">length</span><span class="p">()){</span>
+<span class="w">	</span><span class="n">String</span><span class="w"> </span><span class="n">remove</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ans</span><span class="p">.</span><span class="na">remove</span><span class="p">();</span>
+<span class="w">	</span><span class="n">String</span><span class="w"> </span><span class="n">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mapping</span><span class="o">[</span><span class="n">digits</span><span class="p">.</span><span class="na">charAt</span><span class="p">(</span><span class="n">remove</span><span class="p">.</span><span class="na">length</span><span class="p">())</span><span class="o">-</span><span class="sc">'0'</span><span class="o">]</span><span class="p">;</span>
+<span class="w">	</span><span class="k">for</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="p">:</span><span class="w"> </span><span class="n">map</span><span class="p">.</span><span class="na">toCharArray</span><span class="p">()){</span>
+<span class="w">	    </span><span class="n">ans</span><span class="p">.</span><span class="na">addLast</span><span class="p">(</span><span class="n">remove</span><span class="o">+</span><span class="n">c</span><span class="p">);</span>
+<span class="w">	</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org348c3e3" class="outline-2">
+<h2 id="org348c3e3">Reference</h2>
+<div class="outline-text-2" id="text-org348c3e3">
+<ul class="org-ul">
+<li>
+<a href="https://en.wikipedia.org/wiki/Breadth-first_search">wikipedia - breadth-first search</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Sep 16, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/algorithm/algorithm-weekly-three-sum-closest/">每周算法：最接近的三数之和</a>
+    </h3>
+
+    <div id="outline-container-org717959f" class="outline-2">
+<h2 id="org717959f">Description</h2>
+<div class="outline-text-2" id="text-org717959f">
+<p>
+Given an array nums of n integers and an integer target, find three integers in nums such that the sum is closest to target. Return the sum of the three integers. You may assume that each input would have exactly one solution.<br></p>
+
+<p>
+<b>Example:</b><br></p>
+<pre class="example">
+Given array nums = [-1, 2, 1, -4], and target = 1.
+The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
+</pre>
+
+<p>
+来源：<a href="https://leetcode.com/problems/3sum-closest/description/">leetcode 16 3um closest</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-orge145f29" class="outline-2">
+<h2 id="orge145f29">Solution</h2>
+<div class="outline-text-2" id="text-orge145f29">
+</div>
+<div id="outline-container-org93c9c7d" class="outline-3">
+<h3 id="org93c9c7d">Approach 1</h3>
+<div class="outline-text-3" id="text-org93c9c7d">
+<p>
+这道题与之前的“3Sum”十分类似，做起来思路是非常相似的，最容易想到的就是暴力解法，穷举出所有的组合，进而找出最接近的。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">threeSumClosest</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">target</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">abs</span><span class="p">(</span><span class="n">target</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ans</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// 穷举出所有的组合，与target比较，找到最接近的</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="o">=</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">k</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		</span><span class="kt">int</span><span class="w"> </span><span class="n">sum_t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">k</span><span class="p">];</span>
+<span class="w">		</span><span class="kt">int</span><span class="w"> </span><span class="n">diff_t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">abs</span><span class="p">(</span><span class="n">target</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">sum_t</span><span class="p">);</span>
+
+<span class="w">		</span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">diff_t</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">diff</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="p">(</span><span class="n">diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">diff_t</span><span class="p">,</span><span class="w"> </span><span class="n">sum_t</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+
+<span class="w">		</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ans</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">target</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		    </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="w">		</span><span class="p">}</span>
+<span class="w">	    </span><span class="p">}</span>
+<span class="w">	</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org0a727de" class="outline-3">
+<h3 id="org0a727de">Approach 2</h3>
+<div class="outline-text-3" id="text-org0a727de">
+<p>
+套用之前“3Sum”的O(n<sup>2</sup>)解法，下面的解法也是很容易想到的。<br></p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">threeSumClosest</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">target</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">sort</span><span class="p">(</span><span class="n">nums</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">nums</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">abs</span><span class="p">(</span><span class="n">target</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ans</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">front</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+
+<span class="w">	</span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">front</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">end</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	    </span><span class="kt">int</span><span class="w"> </span><span class="n">n2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">front</span><span class="p">];</span>
+<span class="w">	    </span><span class="kt">int</span><span class="w"> </span><span class="n">n3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nums</span><span class="p">[</span><span class="n">end</span><span class="p">];</span>
+<span class="w">	    </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n3</span><span class="p">;</span>
+<span class="w">	    </span><span class="kt">int</span><span class="w"> </span><span class="n">diff_t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">abs</span><span class="p">(</span><span class="n">target</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+
+<span class="w">	    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">diff</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">diff_t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		</span><span class="n">ans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+<span class="w">		</span><span class="n">diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">diff_t</span><span class="p">;</span>
+<span class="w">	    </span><span class="p">}</span>
+
+<span class="w">	    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">target</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+<span class="w">	    </span><span class="p">}</span>
+<span class="w">	    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">target</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		</span><span class="o">--</span><span class="n">end</span><span class="p">;</span>
+<span class="w">	    </span><span class="p">}</span>
+<span class="w">	    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		</span><span class="o">++</span><span class="n">front</span><span class="p">;</span>
+<span class="w">	    </span><span class="p">}</span>
+<span class="w">	</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org91dbdd9" class="outline-2">
+<h2 id="org91dbdd9">Reference</h2>
+<div class="outline-text-2" id="text-org91dbdd9">
+<ul class="org-ul">
+<li>
+<a href="https://leetcode.com/problems/3sum/description/">leetcode 3 Sum</a><br>
+</li>
+<li>
+<a href="/blog/posts/algorithm-weekly-three-sum/" class="post-url">my old post - 3 Sum</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Sep 16, 2018</span>
     <h3>
       <a class="post-link" href="/blog/posts/2018/using-regexp-in-linux-shell/">在shell中使用正则表达式</a>
     </h3>
 
-    <div id="outline-container-org9cfa5fa" class="outline-2">
-<h2 id="org9cfa5fa">引言</h2>
-<div class="outline-text-2" id="text-org9cfa5fa">
+    <div id="outline-container-orgc18637c" class="outline-2">
+<h2 id="orgc18637c">引言</h2>
+<div class="outline-text-2" id="text-orgc18637c">
 <p>
 本篇文章主要是针对shell中的 <code>grep</code> 和 <code>egrep</code> 的讲解，对于正则表达式的规则本身并没有太多的内容。在阅读本篇文章之前，读者应该对正则表达式有个大致的了解。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org7e6ce86" class="outline-2">
-<h2 id="org7e6ce86">
+<div id="outline-container-org2dfa488" class="outline-2">
+<h2 id="org2dfa488">
 <code>grep</code> 命令</h2>
-<div class="outline-text-2" id="text-org7e6ce86">
+<div class="outline-text-2" id="text-org2dfa488">
 <p>
 <code>grep</code> 命令是linux终端中最常用的命令之一，它的全称是“global regular expression print”，从字面上理解， <code>grep</code> 可以用来进行正则表达式匹配。<br></p>
 
@@ -113,10 +630,10 @@
 </div>
 </div>
 
-<div id="outline-container-org4a08356" class="outline-2">
-<h2 id="org4a08356">
+<div id="outline-container-orgc5c6abd" class="outline-2">
+<h2 id="orgc5c6abd">
 <code>egrep</code> 命令</h2>
-<div class="outline-text-2" id="text-org4a08356">
+<div class="outline-text-2" id="text-orgc5c6abd">
 <p>
 <code>egrep</code> 的含义为“extended grep”，相对于 <code>grep</code> 有更多的正则表达式特性。同样，可以在使用 <code>grep</code> 时增加 <code>-E</code> 参数获得相同的效果。<br></p>
 
@@ -146,9 +663,9 @@ egrep<span class="w"> </span><span class="s2">"(grouping)"</span><span class="w"
 </div>
 
 
-<div id="outline-container-org95d4331" class="outline-2">
-<h2 id="org95d4331">参考资料</h2>
-<div class="outline-text-2" id="text-org95d4331">
+<div id="outline-container-org338566d" class="outline-2">
+<h2 id="org338566d">参考资料</h2>
+<div class="outline-text-2" id="text-org338566d">
 <ul class="org-ul">
 <li>
 <a href="https://www.digitalocean.com/community/tutorials/using-grep-regular-expressions-to-search-for-text-patterns-in-linux">digital ocean - grep tutorial</a><br>
@@ -169,9 +686,9 @@ egrep<span class="w"> </span><span class="s2">"(grouping)"</span><span class="w"
       <a class="post-link" href="/blog/posts/2018/compares-between-thread-and-process/">线程与进程的比较</a>
     </h3>
 
-    <div id="outline-container-org3483fde" class="outline-2">
-<h2 id="org3483fde">进程与线程之间有什么区别</h2>
-<div class="outline-text-2" id="text-org3483fde">
+    <div id="outline-container-org0e938c4" class="outline-2">
+<h2 id="org0e938c4">进程与线程之间有什么区别</h2>
+<div class="outline-text-2" id="text-org0e938c4">
 <p>
 进程（process）是指在系统中正在运行的一个应用程序，是系统资源分配的基本单位，在内存中有其完备的数据空间和代码空间，拥有完整的虚拟空间地址。一个进程所拥有的数据和变量只属于它自己。<br></p>
 
@@ -182,9 +699,9 @@ egrep<span class="w"> </span><span class="s2">"(grouping)"</span><span class="w"
 进程和线程都具有就绪、阻塞和运行三种基本状态。<br></p>
 </div>
 
-<div id="outline-container-org4a82d41" class="outline-3">
-<h3 id="org4a82d41">联系</h3>
-<div class="outline-text-3" id="text-org4a82d41">
+<div id="outline-container-org0fb199d" class="outline-3">
+<h3 id="org0fb199d">联系</h3>
+<div class="outline-text-3" id="text-org0fb199d">
 <ul class="org-ul">
 <li>一个进程至少拥有一个线程(主线程)，也可以拥有多个线程<br>
 </li>
@@ -198,18 +715,18 @@ egrep<span class="w"> </span><span class="s2">"(grouping)"</span><span class="w"
 </div>
 </div>
 
-<div id="outline-container-org8dd53f0" class="outline-3">
-<h3 id="org8dd53f0">区别</h3>
-<div class="outline-text-3" id="text-org8dd53f0">
+<div id="outline-container-org9f4d2a6" class="outline-3">
+<h3 id="org9f4d2a6">区别</h3>
+<div class="outline-text-3" id="text-org9f4d2a6">
 <p>
 系统开销：在创建或撤消进程时，由于系统都要为之分配和回收资源，导致系统的开销明显大于创建或撤消线程时的开销<br>
 资源管理：进程有独立的地址空间，一个进程崩溃后，在保护模式下不会对其它进程产生影响，而线程只是一个进程中的不同执行路径。线程有自己的堆栈和局部变量，但线程之间没有单独的地址空间，一个线程死掉就等于整个进程死掉，所以多进程的程序要比多线程的程序健壮，但在进程切换时，耗费资源较大，效率要差一些。但对于一些要求同时进行并且又要共享某些变量的并发操作，只能用线程，不能用进程。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org260e253" class="outline-3">
-<h3 id="org260e253">通信方式</h3>
-<div class="outline-text-3" id="text-org260e253">
+<div id="outline-container-orge87b818" class="outline-3">
+<h3 id="orge87b818">通信方式</h3>
+<div class="outline-text-3" id="text-orge87b818">
 <p>
 进程间通信主要包括管道、系统IPC(包括消息队列，信号量，共享存储)、SOCKET，具体说明参考linux进程间通信方式。进程间通信其实是指分属于不同进程的线程之间的通讯，所以进程间的通信方法同样适用于线程间的通信。但对于同一进程的不同线程来说，使用全局变量进行通信效率会更高。<br></p>
 </div>
@@ -217,9 +734,9 @@ egrep<span class="w"> </span><span class="s2">"(grouping)"</span><span class="w"
 </div>
 
 
-<div id="outline-container-org62ce3e1" class="outline-2">
-<h2 id="org62ce3e1">什么情况下适合使用线程</h2>
-<div class="outline-text-2" id="text-org62ce3e1">
+<div id="outline-container-org76acb09" class="outline-2">
+<h2 id="org76acb09">什么情况下适合使用线程</h2>
+<div class="outline-text-2" id="text-org76acb09">
 <p>
 线程相对于进程的优势：<br></p>
 <ul class="org-ul">
@@ -244,9 +761,9 @@ egrep<span class="w"> </span><span class="s2">"(grouping)"</span><span class="w"
 </div>
 
 
-<div id="outline-container-org2215db2" class="outline-2">
-<h2 id="org2215db2">什么情况下适合使用进程</h2>
-<div class="outline-text-2" id="text-org2215db2">
+<div id="outline-container-org23f3605" class="outline-2">
+<h2 id="org23f3605">什么情况下适合使用进程</h2>
+<div class="outline-text-2" id="text-org23f3605">
 <p>
 进程相对于线程的优势：<br></p>
 <ul class="org-ul">
@@ -263,9 +780,9 @@ egrep<span class="w"> </span><span class="s2">"(grouping)"</span><span class="w"
 </div>
 
 
-<div id="outline-container-orgc441f0b" class="outline-2">
-<h2 id="orgc441f0b">参考资料</h2>
-<div class="outline-text-2" id="text-orgc441f0b">
+<div id="outline-container-org79066b1" class="outline-2">
+<h2 id="org79066b1">参考资料</h2>
+<div class="outline-text-2" id="text-org79066b1">
 <ul class="org-ul">
 <li>
 <a href="https://www.backblaze.com/blog/whats-the-diff-programs-processes-and-threads/">backblaze.com - difference between process and thread</a><br>
@@ -297,9 +814,9 @@ egrep<span class="w"> </span><span class="s2">"(grouping)"</span><span class="w"
       <a class="post-link" href="/blog/posts/algorithm/algorithm-weekly-three-sum/">每周算法：三数之和</a>
     </h3>
 
-    <div id="outline-container-org265b766" class="outline-2">
-<h2 id="org265b766">Description</h2>
-<div class="outline-text-2" id="text-org265b766">
+    <div id="outline-container-orgbca4714" class="outline-2">
+<h2 id="orgbca4714">Description</h2>
+<div class="outline-text-2" id="text-orgbca4714">
 <p>
 Given an array nums of n integers, are there elements a, b, c in nums such that a + b + c = 0? Find all unique triplets in the array which gives the sum of zero.<br></p>
 
@@ -324,13 +841,13 @@ A solution set is:
 </div>
 </div>
 
-<div id="outline-container-org2879c54" class="outline-2">
-<h2 id="org2879c54">Solution</h2>
-<div class="outline-text-2" id="text-org2879c54">
+<div id="outline-container-org90a8b4c" class="outline-2">
+<h2 id="org90a8b4c">Solution</h2>
+<div class="outline-text-2" id="text-org90a8b4c">
 </div>
-<div id="outline-container-orgc1ca739" class="outline-3">
-<h3 id="orgc1ca739">Approach 1</h3>
-<div class="outline-text-3" id="text-orgc1ca739">
+<div id="outline-container-orgbc1c092" class="outline-3">
+<h3 id="orgbc1c092">Approach 1</h3>
+<div class="outline-text-3" id="text-orgbc1c092">
 <p>
 这道题有点难度，第一时间没有什么思路。我想到的主要问题是如何保证返回结果中不包含重复的一组数。如果使用暴力解法，将所有满足条件的组合取到后进行重复性清洗，应该是一种可行的解法，只是这样做时间复杂度有点高。<br></p>
 
@@ -395,9 +912,9 @@ A solution set is:
 </div>
 </div>
 
-<div id="outline-container-org8d8d74c" class="outline-3">
-<h3 id="org8d8d74c">Approach 2</h3>
-<div class="outline-text-3" id="text-org8d8d74c">
+<div id="outline-container-orgf974be7" class="outline-3">
+<h3 id="orgf974be7">Approach 2</h3>
+<div class="outline-text-3" id="text-orgf974be7">
 <p>
 我认为这到题的主要难点啊主要是在去除重复的问题上。下面的解法来自 <a href="https://leetcode.com/problems/3sum/discuss/7402/Share-my-AC-C++-solution-around-50ms-O(N*N)-with-explanation-and-comments">leetcode</a> ，在处理重复性问题时，在匹配答案时将重复的数字跳过，这样就不用在后续的结果中进行剔除重复元素的步骤了。<br></p>
 
@@ -450,9 +967,9 @@ A solution set is:
 </div>
 
 
-<div id="outline-container-org0ef53d7" class="outline-2">
-<h2 id="org0ef53d7">Reference</h2>
-<div class="outline-text-2" id="text-org0ef53d7">
+<div id="outline-container-org6ebf207" class="outline-2">
+<h2 id="org6ebf207">Reference</h2>
+<div class="outline-text-2" id="text-org6ebf207">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/3sum/discuss/7402/Share-my-AC-C++-solution-around-50ms-O(N*N)-with-explanation-and-comments">leetcode.com discuss</a><br>
@@ -470,9 +987,9 @@ A solution set is:
       <a class="post-link" href="/blog/posts/algorithm/algorithm-weekly-roman-to-integer/">每周算法：罗马数字转阿拉伯数字</a>
     </h3>
 
-    <div id="outline-container-org2d29348" class="outline-2">
-<h2 id="org2d29348">Description</h2>
-<div class="outline-text-2" id="text-org2d29348">
+    <div id="outline-container-org08d74f3" class="outline-2">
+<h2 id="org08d74f3">Description</h2>
+<div class="outline-text-2" id="text-org08d74f3">
 <p>
 Roman numerals are represented by seven different symbols: I, V, X, L, C, D and M.<br></p>
 
@@ -539,13 +1056,13 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgdc95c32" class="outline-2">
-<h2 id="orgdc95c32">Solution</h2>
-<div class="outline-text-2" id="text-orgdc95c32">
+<div id="outline-container-orge1f4a34" class="outline-2">
+<h2 id="orge1f4a34">Solution</h2>
+<div class="outline-text-2" id="text-orge1f4a34">
 </div>
-<div id="outline-container-orgad7115f" class="outline-3">
-<h3 id="orgad7115f">Approach 1</h3>
-<div class="outline-text-3" id="text-orgad7115f">
+<div id="outline-container-org45d6ef9" class="outline-3">
+<h3 id="org45d6ef9">Approach 1</h3>
+<div class="outline-text-3" id="text-org45d6ef9">
 <p>
 这道题不是很难，很容易就能想到解法，需要注意好边界条件问题，下面就是我的解法。<br></p>
 <div class="highlight"><pre><span></span><span class="n">pint</span><span class="w"> </span><span class="nf">romanToInt</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -679,9 +1196,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-org1423f58" class="outline-3">
-<h3 id="org1423f58">Approach 2</h3>
-<div class="outline-text-3" id="text-org1423f58">
+<div id="outline-container-org45fdeb3" class="outline-3">
+<h3 id="org45fdeb3">Approach 2</h3>
+<div class="outline-text-3" id="text-org45fdeb3">
 <p>
 这个解法是leetcode上最快的解法之一，只使用一个循环就完成了计算，代码整体上很简洁，也比较好理解。只需要针对6种特殊情况做特殊处理就好。<br></p>
 
@@ -745,9 +1262,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgb9fb4f8" class="outline-3">
-<h3 id="orgb9fb4f8">Approach 3</h3>
-<div class="outline-text-3" id="text-orgb9fb4f8">
+<div id="outline-container-org1f93580" class="outline-3">
+<h3 id="org1f93580">Approach 3</h3>
+<div class="outline-text-3" id="text-org1f93580">
 <p>
 下面这个是我在看该问题的discuss板块的时候发现的。不得不说，结题思路实在新奇，这点是值得学习的。不过我比较担心它的时间复杂度。该方法使用Java编写。<br></p>
 <div class="highlight"><pre><span></span><span class="kd">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">romanToInt</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -788,9 +1305,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
       <a class="post-link" href="/blog/posts/algorithm/algorithm-weekly-integer-to-roman/">每周算法：阿拉伯数字转换罗马数字</a>
     </h3>
 
-    <div id="outline-container-orga42260f" class="outline-2">
-<h2 id="orga42260f">Description</h2>
-<div class="outline-text-2" id="text-orga42260f">
+    <div id="outline-container-orgf0c5bdb" class="outline-2">
+<h2 id="orgf0c5bdb">Description</h2>
+<div class="outline-text-2" id="text-orgf0c5bdb">
 <p>
 Roman numerals are represented by seven different symbols: <code>I</code> , <code>V</code> , <code>X</code> , <code>L</code> , <code>C</code> , <code>D</code> and <code>M</code>.<br></p>
 <pre class="example">
@@ -866,13 +1383,13 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orge821c3e" class="outline-2">
-<h2 id="orge821c3e">Solution</h2>
-<div class="outline-text-2" id="text-orge821c3e">
+<div id="outline-container-org439df5d" class="outline-2">
+<h2 id="org439df5d">Solution</h2>
+<div class="outline-text-2" id="text-org439df5d">
 </div>
-<div id="outline-container-orgb003937" class="outline-3">
-<h3 id="orgb003937">Approach 1</h3>
-<div class="outline-text-3" id="text-orgb003937">
+<div id="outline-container-org775692b" class="outline-3">
+<h3 id="org775692b">Approach 1</h3>
+<div class="outline-text-3" id="text-org775692b">
 <p>
 这道题并不难，方法也很容易想到，这道题被归为 <code>medium</code> 难度反而让我感到有些奇怪，下面的代码就是我的解法。<br></p>
 <div class="highlight"><pre><span></span><span class="n">string</span><span class="w"> </span><span class="nf">intToRoman</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">num</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -993,9 +1510,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgc442d1c" class="outline-3">
-<h3 id="orgc442d1c">Approach 2</h3>
-<div class="outline-text-3" id="text-orgc442d1c">
+<div id="outline-container-org021ba87" class="outline-3">
+<h3 id="org021ba87">Approach 2</h3>
+<div class="outline-text-3" id="text-org021ba87">
 <p>
 下面代码是从leetcode上找的，这样的打表法，看起来至少从形式上会更加美观，而且也非常好理解。<br></p>
 <div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
@@ -1022,9 +1539,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-org52af14f" class="outline-3">
-<h3 id="org52af14f">Approach 3</h3>
-<div class="outline-text-3" id="text-org52af14f">
+<div id="outline-container-org9d05469" class="outline-3">
+<h3 id="org9d05469">Approach 3</h3>
+<div class="outline-text-3" id="text-org9d05469">
 <p>
 下面这段代码也是leetcode上的答案，这个答案的通用性要好一些，最起码找到了规律，这有助于算法的后续拓展。<br></p>
 <div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
@@ -1076,9 +1593,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
       <a class="post-link" href="/blog/posts/2018/static-member-initialization-and-private-member-function/">静态成员变量初始化相关问题</a>
     </h3>
 
-    <div id="outline-container-org7966a3b" class="outline-2">
-<h2 id="org7966a3b">引言</h2>
-<div class="outline-text-2" id="text-org7966a3b">
+    <div id="outline-container-org8c57469" class="outline-2">
+<h2 id="org8c57469">引言</h2>
+<div class="outline-text-2" id="text-org8c57469">
 <p>
 这篇文章的起因是出于对于 <code>C++</code> 饿汉单例模式代码的一些疑问，查阅了一些资料。在仔细研究后，我发现在一些基础概念的理解还是存在偏差。<br>
 下面请看这样的一段代码，能看出其中有那些不太“正常”的语句么。<br></p>
@@ -1100,9 +1617,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgf7bddb0" class="outline-2">
-<h2 id="orgf7bddb0">私有静态成员的初始化</h2>
-<div class="outline-text-2" id="text-orgf7bddb0">
+<div id="outline-container-org8a2cccf" class="outline-2">
+<h2 id="org8a2cccf">私有静态成员的初始化</h2>
+<div class="outline-text-2" id="text-org8a2cccf">
 <p>
 上面的代码是饿汉单例模式的 <code>C++</code> 的实现，在没有查阅资料之前，我对其中私有静态成员变量的初始化存疑。主要有以下两点：<br></p>
 <ul class="org-ul">
@@ -1146,9 +1663,9 @@ The static data member <code>run_chain</code> of class process is defined in glo
 </div>
 </div>
 
-<div id="outline-container-orgc1b41fc" class="outline-2">
-<h2 id="orgc1b41fc">私有构造函数</h2>
-<div class="outline-text-2" id="text-orgc1b41fc">
+<div id="outline-container-org7bbfaa3" class="outline-2">
+<h2 id="org7bbfaa3">私有构造函数</h2>
+<div class="outline-text-2" id="text-org7bbfaa3">
 <p>
 在查阅资料时，我发现 Peter 的 <a href="https://stackoverflow.com/a/41361967">描述</a> 纠正了我对私有构造函数的一些看法。<br></p>
 <blockquote>
@@ -1160,9 +1677,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 </div>
 
-<div id="outline-container-org5963cc7" class="outline-2">
-<h2 id="org5963cc7">参考资料</h2>
-<div class="outline-text-2" id="text-org5963cc7">
+<div id="outline-container-org3f1897f" class="outline-2">
+<h2 id="org3f1897f">参考资料</h2>
+<div class="outline-text-2" id="text-org3f1897f">
 <ul class="org-ul">
 <li>
 <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">ISO C++11 standard</a><br>
@@ -1195,17 +1712,17 @@ The point of a <code>private</code> constructor is not preventing object constru
       <a class="post-link" href="/blog/posts/2018/non-blocking-socket-connect-tips/">客户端使用非阻塞socket进行connect的流程</a>
     </h3>
 
-    <div id="outline-container-org875fa57" class="outline-2">
-<h2 id="org875fa57">问题</h2>
-<div class="outline-text-2" id="text-org875fa57">
+    <div id="outline-container-org101d8d2" class="outline-2">
+<h2 id="org101d8d2">问题</h2>
+<div class="outline-text-2" id="text-org101d8d2">
 <p>
 使用非阻塞（ <code>non-blocking</code> ） socket尝试与服务端建立连接（ <code>connect</code> ）时，由于是io非阻塞的，所以 <code>connect</code> 函数会立即返回，那么如何判断client与server连接成功了呢？<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf13b6ad" class="outline-2">
-<h2 id="orgf13b6ad">解答</h2>
-<div class="outline-text-2" id="text-orgf13b6ad">
+<div id="outline-container-orgc50332f" class="outline-2">
+<h2 id="orgc50332f">解答</h2>
+<div class="outline-text-2" id="text-orgc50332f">
 <p>
 客户端建立连接的示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">connect</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
@@ -1255,9 +1772,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 </div>
 
-<div id="outline-container-org00dab8e" class="outline-2">
-<h2 id="org00dab8e">参考资料</h2>
-<div class="outline-text-2" id="text-org00dab8e">
+<div id="outline-container-org9371a40" class="outline-2">
+<h2 id="org9371a40">参考资料</h2>
+<div class="outline-text-2" id="text-org9371a40">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/10187347/async-connect-and-disconnect-with-epoll-linux/10194883#10194883">stackoverflow.com</a><br>
@@ -1275,9 +1792,9 @@ The point of a <code>private</code> constructor is not preventing object constru
       <a class="post-link" href="/blog/posts/algorithm/algorithm-weekly-container-with-most-water/">每周算法：最大容器</a>
     </h3>
 
-    <div id="outline-container-org2fac84f" class="outline-2">
-<h2 id="org2fac84f">Description</h2>
-<div class="outline-text-2" id="text-org2fac84f">
+    <div id="outline-container-org6af9e90" class="outline-2">
+<h2 id="org6af9e90">Description</h2>
+<div class="outline-text-2" id="text-org6af9e90">
 <p>
 Given n non-negative integers a1, a2, …, an , where each represents a point at coordinate (i, ai). n vertical lines are drawn such that the two endpoints of line i is at (i, ai) and (i, 0). Find two lines, which together with x-axis forms a container, such that the container contains the most water.<br></p>
 
@@ -1294,13 +1811,13 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-org6c03877" class="outline-2">
-<h2 id="org6c03877">Solution</h2>
-<div class="outline-text-2" id="text-org6c03877">
+<div id="outline-container-orgcb4b409" class="outline-2">
+<h2 id="orgcb4b409">Solution</h2>
+<div class="outline-text-2" id="text-orgcb4b409">
 </div>
-<div id="outline-container-org618d244" class="outline-3">
-<h3 id="org618d244">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org618d244">
+<div id="outline-container-org0b1b4fb" class="outline-3">
+<h3 id="org0b1b4fb">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org0b1b4fb">
 <p>
 暴力解法是最容易想到的解法了，然而暴力解法肯定不是本题的意图。<br></p>
 
@@ -1326,9 +1843,9 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-org35460aa" class="outline-3">
-<h3 id="org35460aa">Approach 2</h3>
-<div class="outline-text-3" id="text-org35460aa">
+<div id="outline-container-org58daa25" class="outline-3">
+<h3 id="org58daa25">Approach 2</h3>
+<div class="outline-text-3" id="text-org58daa25">
 <p>
 我在leetcode上看到这样一种解法，这种解法从逻辑和形式上看上不复杂，但是我的疑问在是否有严密的数学推导和论证。<br></p>
 
@@ -1371,9 +1888,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 </div>
 </div>
 
-<div id="outline-container-orgbfe3696" class="outline-2">
-<h2 id="orgbfe3696">Reference</h2>
-<div class="outline-text-2" id="text-orgbfe3696">
+<div id="outline-container-org496c0ea" class="outline-2">
+<h2 id="org496c0ea">Reference</h2>
+<div class="outline-text-2" id="text-org496c0ea">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/container-with-most-water/solution/">leetcode problem solution</a><br>
@@ -1397,9 +1914,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
       <a class="post-link" href="/blog/posts/2018/why-front-end-libraries/">为什么要使用各种前端框架</a>
     </h3>
 
-    <div id="outline-container-orgf2a5415" class="outline-2">
-<h2 id="orgf2a5415">引言</h2>
-<div class="outline-text-2" id="text-orgf2a5415">
+    <div id="outline-container-orgd0dfb8c" class="outline-2">
+<h2 id="orgd0dfb8c">引言</h2>
+<div class="outline-text-2" id="text-orgd0dfb8c">
 <p>
 在学习前端的过程中，我开始接触到许多开发框架或开发工具，这些工具让我开始眼花缭乱。使用常规的html/css/js就已经能够开发出这种网页了，所以我问自己，为什么要学习这些框架或工具，这些库是用来解决什么问题的。想明白这个问题，我学习的目的就更加明确，在遇到一些开发情景时，也能够快速准确地挑选出应该使用的框架。<br></p>
 
@@ -1408,9 +1925,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 </div>
 </div>
 
-<div id="outline-container-org910a81b" class="outline-2">
-<h2 id="org910a81b">为什么要使用jQuery</h2>
-<div class="outline-text-2" id="text-org910a81b">
+<div id="outline-container-orgd0d44cc" class="outline-2">
+<h2 id="orgd0d44cc">为什么要使用jQuery</h2>
+<div class="outline-text-2" id="text-orgd0d44cc">
 <p>
 jQuery是一个轻量级js库，它有如下特性：<br></p>
 <ul class="org-ul">
@@ -1430,9 +1947,9 @@ jQuery是一个轻量级js库，它有如下特性：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org2204005" class="outline-2">
-<h2 id="org2204005">为什么要使用SASS</h2>
-<div class="outline-text-2" id="text-org2204005">
+<div id="outline-container-org39af9fb" class="outline-2">
+<h2 id="org39af9fb">为什么要使用SASS</h2>
+<div class="outline-text-2" id="text-org39af9fb">
 <p>
 SASS是一种CSS预编译格式，它最终会编译成CSS。<br>
 SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操作，函数操作，样式模板（mixin）等强大的特性。它能够让开发人员更方便地编写CSS。SASS支持 <code>import</code> 关键字，这样就能够很方便地对样式进行模块化设计。<br></p>
@@ -1445,9 +1962,9 @@ SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操�
 </div>
 </div>
 
-<div id="outline-container-org5f01ba7" class="outline-2">
-<h2 id="org5f01ba7">为什么要使用Bootstrap</h2>
-<div class="outline-text-2" id="text-org5f01ba7">
+<div id="outline-container-org3218b3c" class="outline-2">
+<h2 id="org3218b3c">为什么要使用Bootstrap</h2>
+<div class="outline-text-2" id="text-org3218b3c">
 <p>
 Bootstrap是一个用于快速开发网页的前端框架。以我目前的理解来看，它更像是一个网页样式框架。<br></p>
 <ul class="org-ul">
@@ -1463,9 +1980,9 @@ Bootstrap是一个用于快速开发网页的前端框架。以我目前的理�
 </div>
 </div>
 
-<div id="outline-container-orgdec8517" class="outline-2">
-<h2 id="orgdec8517">为什么要使用React</h2>
-<div class="outline-text-2" id="text-orgdec8517">
+<div id="outline-container-orgb72574a" class="outline-2">
+<h2 id="orgb72574a">为什么要使用React</h2>
+<div class="outline-text-2" id="text-orgb72574a">
 <p>
 DOM操作对性能的影响很大，频繁的DOM操作会使网页渲染的速度变慢，React主要解决了这个问题。<br>
 React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新渲染。<br></p>
@@ -1505,9 +2022,9 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 </div>
 
 
-<div id="outline-container-orge44b510" class="outline-2">
-<h2 id="orge44b510">参考资料</h2>
-<div class="outline-text-2" id="text-orge44b510">
+<div id="outline-container-org759932b" class="outline-2">
+<h2 id="org759932b">参考资料</h2>
+<div class="outline-text-2" id="text-org759932b">
 <ol class="org-ol">
 <li>
 <a href="https://www.w3schools.com/jquery/jquery_intro.asp">w3schools jQuery intro</a><br>
@@ -1525,718 +2042,6 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 <a href="https://scotch.io/@anitashah/what-problems-does-reactjs-solve-when-must-you-select-reactjs">what problems does reactjs solve</a><br>
 </li>
 </ol>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Aug 26, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/javascript-object-oriented-programming/">javscript中的OOP特性</a>
-    </h3>
-
-    <div id="outline-container-org9d9076b" class="outline-2">
-<h2 id="org9d9076b">
-<span class="section-number-2">1</span> 引言</h2>
-<div class="outline-text-2" id="text-1">
-<p>
-js也是具有OOP（object oriented programming）特性的，OOP在构建一些大型应用程序还是有一套成熟理论的。作为C++的使用者在学习js中的OOP特性的过程中，能够较快地理解其中的各种术语和概念，也能比较两种语言的异同，深化知识理解。通过js的OOP特性的学习也让我开始从语言层面考虑程序设计问题。<br>
-本篇文章主要介绍了js中的一些OOP特性，并且比较了js与C++的语言特性。如果你能熟练掌握C++的OOP特性，本文能帮助你快速地对js中的OOP特性建立整体的认识。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org481507e" class="outline-2">
-<h2 id="org481507e">
-<span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
-<div class="outline-text-2" id="text-2">
-</div>
-<div id="outline-container-org5e7c94f" class="outline-3">
-<h3 id="org5e7c94f">
-<span class="section-number-3">2.1</span> 创建对象（object）</h3>
-<div class="outline-text-3" id="text-2-1">
-<p>
-js中创建object的代码，示例如下：<br></p>
-<div class="highlight"><pre><span></span>let duck = {
-  name: "Aflac",
-  numLegs: 2,
-  sayName: function() {
-    return "The name of this duck is " + this.name + ".";
-  }
-};
-</pre></div>
-<p>
-js直接通过 <code>{}</code> 就可以创建出对象示例来，不需要对该对象（object）的类（class）进行声明。这点和C++不是很相同，C++需要先声明一个class再创建object。<br>
-这个object有两个成员变量和一个成员函数，需要注意的是这两个成员变量都是公有（public）的，他们是可以直接用 <code>.</code> 符号访问的。<br>
-js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关键字用于表示当前实例。<br></p>
-</div>
-</div>
-
-<div id="outline-container-orgc2e9b56" class="outline-3">
-<h3 id="orgc2e9b56">
-<span class="section-number-3">2.2</span> 类（class）的声明</h3>
-<div class="outline-text-3" id="text-2-2">
-<p>
-js中声明一个类的操作实际上就是声明一个构造函数。<br></p>
-<div class="highlight"><pre><span></span>let Bird = function(name, color) {
-  this.name = name;
-  this.color = color;
-  this.numLegs = 2;
-}
-
-let crow = new Bird("Alexis", "black");
-
-crow instanceof Bird; // =&gt; true
-</pre></div>
-<p>
-上面的代码声明了Bird类，在js中通常类的名字都是由首字母大写的单词表示的。类的构造函数也能接受参数用于对实例的初始化，这点与C++非常相似，使用 <code>new</code> 关键字就能够创建该类的实例。<br>
-使用 <code>instanceof</code> 关键字用于检查对象是否属于某个类，也可通过验证 <code>constructor</code> 属性来判断一个对象是否属于一个类 <code>crow.constructor == Bird</code> 。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org2603b88" class="outline-3">
-<h3 id="org2603b88">
-<span class="section-number-3">2.3</span> 类的共有成员</h3>
-<div class="outline-text-3" id="text-2-3">
-<p>
-js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还不太合适）能够实现C++中静态成员变量和静态成员函数的特性。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype.numLegs = 2;
-</pre></div>
-<p>
-上面的代码就给Bird类增加了一个静态成员变量。这个 <code>prototype</code> 可以是一个对象，这样类的共有成员就能方便地承载更多的属性了，示例代码如下。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype = {
-  constructor: Bird,
-  numLegs: 2,
-  eat: function() {
-    console.log("nom nom nom");
-  },
-  describe: function() {
-    console.log("My name is " + this.name);
-  }
-};
-</pre></div>
-<p>
-需要注意的是需要设置好 <code>constructor</code> 属性，这样是为了保证代码逻辑的一致性。<br>
-对象会获得类的 <code>prototype</code> 属性，可以通过 <code>isPrototypeof</code> 方法来验证。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype.isPrototypeOf(duck);
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgdb1175f" class="outline-3">
-<h3 id="orgdb1175f">
-<span class="section-number-3">2.4</span> 类的私有成员</h3>
-<div class="outline-text-3" id="text-2-4">
-<p>
-js与C++一样，也可以有私有成员变量，代码如下所示。 <code>hatchedEgg</code> 就相当与是Bird的私有成员变量，并且提供了修改这个成员变量的方法 <code>getHatchedEggCount</code> 。<br></p>
-<div class="highlight"><pre><span></span>function Bird() {
-  let hatchedEgg = 10; // private property
-
-  this.getHatchedEggCount = function() {
-    // publicly available method that a bird object can use
-    return hatchedEgg;
-  };
-}
-let ducky = new Bird();
-ducky.getHatchedEggCount(); // returns 10
-</pre></div>
-<p>
-这种形式在js中被称作闭包（closure），函数能够访问到与他处在同一个作用域（context）中的变量。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org53f5c83" class="outline-3">
-<h3 id="org53f5c83">
-<span class="section-number-3">2.5</span> 类的继承和派生</h3>
-<div class="outline-text-3" id="text-2-5">
-<p>
-js中的派生主要通过 <code>prototype</code> 体现，下面的代码表示Bird派生自Object。同样，需要注意将 <code>constructor</code> 属性设置好。<br></p>
-<div class="highlight"><pre><span></span>Bird.prototype = Object.create(Animal.prototype);
-Bird.prototype.constructor = Bird;
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgacd6bc4" class="outline-3">
-<h3 id="orgacd6bc4">
-<span class="section-number-3">2.6</span> 类的覆盖</h3>
-<div class="outline-text-3" id="text-2-6">
-<p>
-js中可以重写基类中的方法，代码如下所示，这点与C++中的 <code>override</code> 相同。<br></p>
-<div class="highlight"><pre><span></span>function Animal() { }
-Animal.prototype.eat = function() {
-  return "nom nom nom";
-};
-function Bird() { }
-
-// Inherit all methods from Animal
-Bird.prototype = Object.create(Animal.prototype);
-
-// Bird.eat() overrides Animal.eat()
-Bird.prototype.eat = function() {
-  return "peck peck peck";
-};
-
-Bird.prototype.fly = function() {
-  console.log("I'm flying!");
-};
-</pre></div>
-<p>
-通样也在派生之后也可以通过修改派生类的 <code>prototype</code> 以达到特化派生类的作用，上面的 <code>fly</code> 方法就是在Bird完成派生之后新增的方法。现在Bird有两个方法，它们分别是 <code>eat</code> 和 <code>fly</code> 。<br></p>
-</div>
-</div>
-</div>
-
-
-<div id="outline-container-orgebf6ef4" class="outline-2">
-<h2 id="orgebf6ef4">
-<span class="section-number-2">3</span> 参考资料</h2>
-<div class="outline-text-2" id="text-3">
-<ul class="org-ul">
-<li>
-<a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/object-oriented-programming/">FCC javascript oop tutorial</a><br>
-</li>
-</ul>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Aug 23, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/javascript-regexp-cheatsheet/">js正则表达式备忘</a>
-    </h3>
-
-    <div id="outline-container-org11768ab" class="outline-2">
-<h2 id="org11768ab">引言</h2>
-<div class="outline-text-2" id="text-org11768ab">
-<p>
-近在FreeCodeCamp(FCC)学习前端的课程，其中有一节就是讲的 <code>regexp</code> ，也就是正则表达式。我之前零星地了解过一些正则表达式的相关知识，但不足以对正则表达式得出一个完整的认识。FCC的教程循序渐进，由简到繁，在教学中结合练习，非常适合初学者的学习过程。如何你的英文能够达到阅读技术类文献的水平，又正好想学习一下正则表达式，我推荐你试一下FCC的正则表达式教程，花3~4个小时就能够对正则表达式有个完整的理解。<br></p>
-
-<p>
-教程使用的编程语言是javascript，需要注意的是不同语言之间的正则表达式在某些细节上还是略有区别的。<br></p>
-
-<p>
-本篇文章主要是对学习过程中的知识点进行总结，方便以后进行查阅。<br></p>
-</div>
-</div>
-
-
-<div id="outline-container-orgfce8980" class="outline-2">
-<h2 id="orgfce8980">要点总结（js版）</h2>
-<div class="outline-text-2" id="text-orgfce8980">
-<p>
-FCC的教程使用javascript作为开发语言，本节所有的代码都是js代码。<br></p>
-
-<p>
-js中内置了正则表达式模块，下面是正则表达式在js中的使用示例<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">myString</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Hello World"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">myRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/Hello/</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">myRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">myString</span><span class="p">);</span>
-</pre></div>
-
-<p>
-使用 <code>|</code> 进行or匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">regex2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/cat|bird/</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用 <code>i</code> 标识符在匹配时忽略大小写<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">regex3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/case/i</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用正则表达式进行字符串过滤，使用 <code>match</code> 方法<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">extractStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Extract the word 'coding' from this string."</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">codingRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/coding/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">extractStr</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">codingRegex</span><span class="p">);</span><span class="w"> </span><span class="c1">// Change this line</span>
-</pre></div>
-
-
-<p>
-使用 <code>g</code> 进行返回满足规则的多次结果， <code>g</code> 为global的缩写<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">twinkleStar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Twinkle, twinkle, little star"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">starRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/twinkle/gi</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">twinkleStar</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-</pre></div>
-
-
-<p>
-使用 <code>.</code> 匹配所有的字符，使用 <code>[]</code> 匹配指定的字符<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">quoteSample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Beware of bugs in the above code; I have only proved it correct, not tried it."</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">vowelRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/[aeiou]/gi</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">quoteSample</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">vowelRegex</span><span class="p">);</span><span class="w"> </span><span class="c1">// Change this line</span>
-</pre></div>
-
-<p>
-在 <code>[]</code> 中可以使用 <code>-</code> 代表一个范围<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">quoteSample2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"The quick brown fox jumps over the lazy dog."</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">alphabetRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/[a-z]/gi</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">quoteSample2</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">alphabetRegex</span><span class="p">);</span><span class="w"> </span><span class="c1">// Change this line</span>
-</pre></div>
-
-
-<p>
-这个范围还可以是多个，并且允许包含数字<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">quoteSample3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Blueberry 3.141592653s are delicious."</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">myRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/[h-s2-6]/gi</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">quoteSample3</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">myRegex</span><span class="p">);</span><span class="w"> </span><span class="c1">// Change this line</span>
-</pre></div>
-
-
-<p>
-使用 <code>^</code> 符号能够匹配不包含某些字符<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">quoteSample4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"3 blind mice."</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">myRegex2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/[^0-9aeiou]/gi</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w">  </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">quoteSample4</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">myRegex2</span><span class="p">);</span><span class="w"> </span><span class="c1">// Change this line</span>
-</pre></div>
-
-
-<p>
-使用 <code>+</code> 对出现连续出现的字符进行匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">difficultSpelling</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Mississippi"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w">  </span><span class="nx">myRegex3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/s+/g</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">difficultSpelling</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">myRegex3</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>*</code> 星号匹配可能没有出现的次数（出现次数为 0~n 次）<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">chewieQuote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Aaaaaaaaaaaaaaaarrrgh!"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">chewieRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/Aa*/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">chewieQuote</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">chewieRegex</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>?</code> 进行较短匹配 （lazy match, 与greedy match 对应）<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"&lt;h1&gt;Winter is coming&lt;/h1&gt;"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">myRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/&lt;.*?&gt;/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">text</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">myRegex</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>^</code> 对出现在字符串开始位置进行匹配<br>
-注意上边也用到这个符号表示取反，是在 <code>[]</code> 中表示取反<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">rickyAndCal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Cal and Ricky both like racing."</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">calRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/^Cal/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">calRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">rickyAndCal</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>$</code> 对出现在字符串结束位置进行匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">caboose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"The last car on a train is the caboose"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">lastRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/caboose$/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lastRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">caboose</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>\w</code> 代替 <code>[A-Za-z0-9_]</code> ，包含所有的数字、字母和下划线<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">quoteSample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"The five boxing wizards jump quickly."</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">alphabetRegexV2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/\w/g</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">quoteSample</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">alphabetRegexV2</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用 <code>\W</code> 代替 <code>[^A-Za-z0-9_]</code> ，相当于上边的逆向匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">quoteSample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"The five boxing wizards jump quickly."</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">nonAlphabetRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/\W/g</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">quoteSample</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">nonAlphabetRegex</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用 <code>\d</code> 代替 <code>[0-9]</code> ，所有数字匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">numString</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Your sandwich will be $5.00"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">numRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/\d/g</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">numString</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">numRegex</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用 <code>\D</code> 代替 <code>[^0-9]</code> ，所有非数字匹配<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">numString</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Your sandwich will be $5.00"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">noNumRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/\D/g</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">numString</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">noNumRegex</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-</pre></div>
-
-
-<p>
-使用 <code>\s</code> 代替 <code>[ \r\t\f\n\v]</code> ，与空格和换行相关<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">sample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Whitespace is important in separating words"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">countWhiteSpace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/\s/g</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sample</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">countWhiteSpace</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>\S=，代替 =[^ \r\t\f\n\v]</code> ，不包含空格和换行<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">sample</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Whitespace is important in separating words"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">countNonWhiteSpace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/\S/g</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sample</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">countNonWhiteSpace</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>{min, max}</code> 对字符出现的次数进行限定<br>
-回想起使用 <code>+</code> 限制次数为 <code>{0,}</code> ，使用 <code>-</code> 限制次数为 <code>{1,}</code><br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">ohStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Ohhh no"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">ohRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/Oh{3,6} no/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ohRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">ohStr</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-仅限制出现次数的下限 <code>{min,}</code><br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">haStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Hazzzzah"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">haRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/Haz{4,}ah/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">haRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">haStr</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-指定出现的次数 <code>{count}</code><br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">timStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Timmmmber"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">timRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/Tim{4}ber/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">timRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">timStr</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-使用 <code>?</code> 匹配可能出现的字母<br>
-问号用于声明lazy match，如何判断是lazy match还是匹配可能出现的东西呢<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">favWord</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"favorite"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">favRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/favou?rite/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">favRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">favWord</span><span class="p">);</span>
-</pre></div>
-
-
-
-<p>
-lookahead 的概念， <code>(?=...)</code> 与 <code>(?!...)</code><br></p>
-
-<p>
-下面的正则表达式用于检查密码，由3~6个字母和至少1个数字组成<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"abc123"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">checkPass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/(?=\w{3,6})(?=\D*\d)/</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">checkPass</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">password</span><span class="p">);</span><span class="w"> </span><span class="c1">// Returns true</span>
-</pre></div>
-
-<p>
-下面的正则表达式用于检查密码，有5个以上的字符和至少2个数字组成<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">sampleWord</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"astronaut"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">pwRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/(?=\w{5,})(?=\D*\d{2,})/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">pwRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">sampleWord</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-截取字符串中的重复部分，使用括号 () 对内容进行补充，是用 \1 表示第一个捕捉到的字符<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">repeatNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"42 42 42"</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">reRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/^(\d*)\s\1\s\1$/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">reRegex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">repeatNum</span><span class="p">);</span>
-</pre></div>
-
-
-<p>
-通过截取字符串，可以对截取的字符串进行修改或替换操作，需要使用 <code>replace</code> 方法<br></p>
-<div class="highlight"><pre><span></span><span class="s2">"Code Camp"</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/(\w+)\s(\w+)/</span><span class="p">,</span><span class="w"> </span><span class="s1">'$2 $1'</span><span class="p">);</span><span class="w"> </span><span class="c1">// Returns "Camp Code"</span>
-</pre></div>
-
-<p>
-下面的正则表达式就是用于将 <code>good</code> 替换为 <code>okey-dokey</code><br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">huhText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"This sandwich is good."</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">fixRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/good/</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">replaceText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"okey-dokey"</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">huhText</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">fixRegex</span><span class="p">,</span><span class="w"> </span><span class="nx">replaceText</span><span class="p">);</span>
-</pre></div>
-
-<p>
-使用正则表达式实现类似 <code>.trim()</code> 的功能<br></p>
-<div class="highlight"><pre><span></span><span class="kd">let</span><span class="w"> </span><span class="nx">hello</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"   Hello, World!  "</span><span class="p">;</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">wsRegex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sr">/^\s+|\s+$/g</span><span class="p">;</span><span class="w"> </span><span class="c1">// Change this line</span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">hello</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">wsRegex</span><span class="p">,</span><span class="w"> </span><span class="s1">''</span><span class="p">);</span><span class="w"> </span><span class="c1">// Change this line</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-orga5f7f12" class="outline-2">
-<h2 id="orga5f7f12">elisp和python中的正则表达式</h2>
-<div class="outline-text-2" id="text-orga5f7f12">
-<p>
-在emacs中内置了 <code>string-match</code> 函数进行正则表达式匹配，其函数原型为 <code>(string-match REGEXP STRING &amp;optional START)</code> ，下面就是在emacs中使用regexp的示例。<br></p>
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">str-regexp</span><span class="w"> </span><span class="s">"</span><span class="se">\.</span><span class="s">[h|cpp]$"</span><span class="p">)</span>
-<span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">str-sample-1</span><span class="w"> </span><span class="s">"sample1.h"</span><span class="p">)</span>
-<span class="p">(</span><span class="nf">string-match</span><span class="w"> </span><span class="nv">str-regexp</span><span class="w"> </span><span class="nv">str-sample-1</span><span class="p">)</span>
-</pre></div>
-
-<p>
-python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就是在python中的regexp示例。<br></p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
-<span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"Cookie"</span>
-<span class="n">sequence</span> <span class="o">=</span> <span class="s2">"Cookie"</span>
-<span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">sequence</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Match!"</span><span class="p">)</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Not a match!"</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-org0312523" class="outline-2">
-<h2 id="org0312523">参考资料</h2>
-<div class="outline-text-2" id="text-org0312523">
-<ul class="org-ul">
-<li>
-<a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/regular-expressions">FCC regular-expression tutorial</a><br>
-</li>
-<li>
-<a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Simple-Match-Data.html">emacs string-match manual</a><br>
-</li>
-<li>
-<a href="https://docs.python.org/3/library/re.html">python re module</a><br>
-</li>
-</ul>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Aug 20, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/algorithm/algorithm-weekly-string-to-integer/">每周算法：字符串转整数</a>
-    </h3>
-
-    <div id="outline-container-org15f6515" class="outline-2">
-<h2 id="org15f6515">Description</h2>
-<div class="outline-text-2" id="text-org15f6515">
-<p>
-Implement <code>atoi</code> which converts a string to an integer.<br></p>
-
-<p>
-The function first discards as many whitespace characters as necessary until the first non-whitespace character is found. Then, starting from this character, takes an optional initial plus or minus sign followed by as many numerical digits as possible, and interprets them as a numerical value.<br></p>
-
-<p>
-The string can contain additional characters after those that form the integral number, which are ignored and have no effect on the behavior of this function.<br></p>
-
-<p>
-If the first sequence of non-whitespace characters in str is not a valid integral number, or if no such sequence exists because either str is empty or it contains only whitespace characters, no conversion is performed.<br></p>
-
-<p>
-If no valid conversion could be performed, a zero value is returned.<br></p>
-
-<p>
-<b>Note:</b><br>
-Only the space character ' ' is considered as whitespace character.<br>
-Assume we are dealing with an environment which could only store integers within the 32-bit signed integer range: [−2<sup>31</sup>,  2<sup>31</sup> − 1]. If the numerical value is out of the range of representable values, <code>INT_MAX</code> (2<sup>31</sup> − 1) or <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
-
-<p>
-<b>Example 1:</b><br>
-Input: "42"<br>
-Output: 42<br></p>
-
-<p>
-<b>Example 2:</b><br>
-Input: "   -42"<br>
-Output: -42<br>
-Explanation: The first non-whitespace character is '-', which is the minus sign.<br>
-Then take as many numerical digits as possible, which gets 42.<br></p>
-
-<p>
-<b>Example 3:</b><br>
-Input: "4193 with words"<br>
-Output: 4193<br>
-Explanation: Conversion stops at digit '3' as the next character is not a numerical digit.<br></p>
-
-<p>
-<b>Example 4:</b><br>
-Input: "words and 987"<br>
-Output: 0<br>
-Explanation: The first non-whitespace character is 'w', which is not a numerical<br>
-digit or a +/- sign. Therefore no valid conversion could be performed.<br></p>
-
-<p>
-<b>Example 5:</b><br>
-Input: "-91283472332"<br>
-Output: -2147483648<br>
-Explanation: The number "-91283472332" is out of the range of a 32-bit signed integer.<br>
-Thefore <code>INT_MIN</code> (−2<sup>31</sup>) is returned.<br></p>
-
-<p>
-来源 <a href="https://leetcode.com/problems/string-to-integer-atoi/description/">leetcode 8 string to integer</a><br></p>
-</div>
-</div>
-
-<div id="outline-container-orgee99fb6" class="outline-2">
-<h2 id="orgee99fb6">Solution</h2>
-<div class="outline-text-2" id="text-orgee99fb6">
-</div>
-<div id="outline-container-org3bf7b11" class="outline-3">
-<h3 id="org3bf7b11">Approach 1</h3>
-<div class="outline-text-3" id="text-org3bf7b11">
-<p>
-这道题并不难，思路也比较容易想出来，下面就是我想到的解法。<br>
-可能需要注意的问题是：<br></p>
-<ol class="org-ol">
-<li>字符到数字的转换，这个涉及到ascii码表的记忆，如果记不住了可以直接使用'0' 'a' 'A'<br>
-</li>
-<li>对于溢出的判断，我一开始只想到了使用 <code>int temp=num*10; if (temp/10!=num)</code> 进行判断，实际上却忽略了 <code>2147483648（0x80000000）</code> 的边界情况，这个是需要特别注意的。<br>
-</li>
-</ol>
-<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">parseChar</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">'0'</span><span class="p">;</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">num</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">9</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">num</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">myAtoi</span><span class="w"> </span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">isNegative</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">isOverflow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">// 从前向后进行转换</span>
-<span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">// 去除多余的空格</span>
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">' '</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	</span><span class="o">++</span><span class="n">pos</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// 首先判断是否有符号位</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'-'</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	    </span><span class="n">isNegative</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">	    </span><span class="o">++</span><span class="n">pos</span><span class="p">;</span>
-<span class="w">	</span><span class="p">}</span>
-<span class="w">	</span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'+'</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	    </span><span class="o">++</span><span class="n">pos</span><span class="p">;</span>
-<span class="w">	</span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// 是否以数字进行开头</span>
-<span class="w">    </span><span class="c1">// 从左向右读取数字，每次读取需要判断是否溢出</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">pos</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parseChar</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">pos</span><span class="p">]);</span>
-<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">digit</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	    </span><span class="c1">// 负数说明该位不是数字了</span>
-<span class="w">	    </span><span class="k">break</span><span class="p">;</span>
-<span class="w">	</span><span class="p">}</span>
-
-<span class="w">	</span><span class="c1">// 如何判断是否溢出</span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">num</span><span class="o">*</span><span class="mi">10</span><span class="p">;</span>
-<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">temp</span><span class="o">/</span><span class="mi">10</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">num</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	    </span><span class="n">isOverflow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">	    </span><span class="k">break</span><span class="p">;</span>
-<span class="w">	</span><span class="p">}</span>
-
-<span class="w">	</span><span class="n">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">digit</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1">// 如果num变成负数，也是溢出了，相当于对最后一位检查溢出</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isOverflow</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="n">isNegative</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">INT_MIN</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">isNegative</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">-</span><span class="n">num</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">num</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgb943f9b" class="outline-3">
-<h3 id="orgb943f9b">Approach 2</h3>
-<div class="outline-text-3" id="text-orgb943f9b">
-<p>
-下面这段代码目前是leetcode上运行速度最快的solution sample，仅仅耗时了4ms。作者使用了很多让程序跑得更快的方法，其中的技巧值得我学习。<br></p>
-<div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">fast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	</span><span class="n">ios_base</span><span class="o">::</span><span class="n">sync_with_stdio</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-<span class="w">    </span><span class="n">cin</span><span class="p">.</span><span class="n">tie</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-<span class="w">    </span><span class="n">cout</span><span class="p">.</span><span class="n">tie</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}();</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">myAtoi</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">base</span><span class="o">=</span><span class="mi">10</span><span class="p">;</span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
-<span class="w">	</span><span class="kt">bool</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">sign</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">	</span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">	    </span><span class="k">if</span><span class="p">(</span><span class="n">isalpha</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
-<span class="w">	    </span><span class="p">}</span>
-<span class="w">	    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="sc">' '</span><span class="o">&amp;&amp;</span><span class="n">flag</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">		</span><span class="k">continue</span><span class="p">;</span>
-<span class="w">	    </span><span class="p">}</span>
-<span class="w">	    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;=</span><span class="sc">'0'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;=</span><span class="sc">'9'</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">		</span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="o">*</span><span class="n">sum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">sign</span><span class="o">*</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">'0'</span><span class="p">);</span>
-<span class="w">		</span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">	    </span><span class="p">}</span>
-<span class="w">	    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'-'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="n">flag</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">		</span><span class="n">sign</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">		</span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">	    </span><span class="p">}</span>
-<span class="w">	    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'+'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">flag</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">		</span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">	    </span><span class="p">}</span>
-<span class="w">	    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
-<span class="w">	    </span><span class="p">}</span>
-
-<span class="w">	    </span><span class="k">if</span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">;</span>
-<span class="w">	    </span><span class="p">}</span>
-<span class="w">	    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">INT_MIN</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">		</span><span class="k">return</span><span class="w"> </span><span class="n">INT_MIN</span><span class="p">;</span>
-<span class="w">	    </span><span class="p">}</span>
-<span class="w">	    </span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
-<span class="w">	</span><span class="p">}</span>
-<span class="w">    </span><span class="p">};</span>
-</pre></div>
-
-<ul class="org-ul">
-<li>C++标准库中提供了判断是否是数字的接口 <code>isdigit</code> 和判断是否是字母的接口 <code>isalpha</code> 。<br>
-</li>
-
-<li>使用以下代码能加速代码的运行速度，这段代码会停止C++和C输入输出流的同步，并且解除 <code>cin</code> 和 <code>cout</code> 的捆绑，<a href="https://stackoverflow.com/questions/31162367/significance-of-ios-basesync-with-stdiofalse-cin-tienull">这里</a> 有更详细的解释。效果很明显，将其添加到我的代码中，将我的代码的运行时间从20ms提升至8ms。<br>
-</li>
-</ul>
-<div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">fast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">ios_base</span><span class="o">::</span><span class="n">sync_with_stdio</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-<span class="w">  </span><span class="n">cin</span><span class="p">.</span><span class="n">tie</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-<span class="w">  </span><span class="n">cout</span><span class="p">.</span><span class="n">tie</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}();</span>
-</pre></div>
-</div>
-</div>
-</div>
-
-<div id="outline-container-orgfa4d304" class="outline-2">
-<h2 id="orgfa4d304">Reference</h2>
-<div class="outline-text-2" id="text-orgfa4d304">
-<ul class="org-ul">
-<li>
-<a href="https://stackoverflow.com/questions/31162367/significance-of-ios-basesync-with-stdiofalse-cin-tienull">stackoverflow.com sync with stdio</a><br>
-</li>
-</ul>
 </div>
 </div>
 

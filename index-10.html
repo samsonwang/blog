@@ -50,13 +50,281 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Jul 11, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2018/cpp-bit-field/">C/C++中的位域</a>
+    </h3>
+
+    <div id="outline-container-orgb902d21" class="outline-2">
+<h2 id="orgb902d21">什么是位域</h2>
+<div class="outline-text-2" id="text-orgb902d21">
+<p>
+<a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">维基百科</a> 给出了以下解释<br></p>
+<blockquote>
+<p>
+位域（或称“位段”，bit field）为一种数据结构，可以把数据以位的形式紧凑的储存，并允许程序员对此结构的位进行操作。<br></p>
+</blockquote>
+
+<p>
+<a href="https://en.cppreference.com/w/cpp/language/bit_field">cppreference</a> 给出了以下定义<br></p>
+<blockquote>
+<p>
+Declares a class data member with explicit size, in bits. Adjacent bit field members may be packed to share and straddle the individual bytes.<br></p>
+</blockquote>
+
+<p>
+这种数据结构的好处：<br></p>
+<ul class="org-ul">
+<li>可以使数据单元节省储存空间，当程序需要成千上万个数据单元时，这种方法就显得尤为重要。<br>
+</li>
+<li>位段可以很方便的访问一个整数值的部分内容从而可以简化程序源代码。<br>
+</li>
+</ul>
+<p>
+而位域这种数据结构的缺点在于，其内存分配与内存对齐的实现方式依赖于具体的机器和系统，在不同的平台可能有不同的结果，这导致了位域在本质上是不可移植的。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org9217824" class="outline-2">
+<h2 id="org9217824">位域的语法</h2>
+<div class="outline-text-2" id="text-org9217824">
+<p>
+下面就是位域的语法格式。<br></p>
+<div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">size</span>
+</pre></div>
+
+<p>
+<b>注意</b> ：<br></p>
+<ul class="org-ul">
+<li>
+<code>size</code> 的大小不能超过 <code>identifier</code> 所包含最大比特位个数。<br>
+</li>
+<li>
+<code>identifier</code> 为空时表示对应的 <code>size</code> 个数的比特位不使用<br>
+</li>
+<li>
+<code>size</code> 为0时表示根据前类型强制补齐<br>
+</li>
+</ul>
+<p>
+以下为代码示例。<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">S1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// will usually occupy 2 bytes:</span>
+<span class="w">    </span><span class="c1">// 3 bits: value of b1</span>
+<span class="w">    </span><span class="c1">// 2 bits: unused</span>
+<span class="w">    </span><span class="c1">// 6 bits: value of b2</span>
+<span class="w">    </span><span class="c1">// 2 bits: value of b3</span>
+<span class="w">    </span><span class="c1">// 3 bits: unused</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">b2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="n">b3</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">S2</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// will usually occupy 2 bytes:</span>
+<span class="w">    </span><span class="c1">// 3 bits: value of b1</span>
+<span class="w">    </span><span class="c1">// 5 bits: unused</span>
+<span class="w">    </span><span class="c1">// 6 bits: value of b2</span>
+<span class="w">    </span><span class="c1">// 2 bits: value of b3</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">:</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">// start a new byte</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">6</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">b3</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+
+
+<div id="outline-container-orgb7d07c7" class="outline-3">
+<h3 id="orgb7d07c7">在 <code>size</code> 取0时如何理解</h3>
+<div class="outline-text-3" id="text-orgb7d07c7">
+<p>
+对于 <code>size</code> 取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。<br>
+如下所示，定义了如下几种情况。<br></p>
+
+<p>
+<b>case1</b><br></p>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">	</span><span class="nl">int</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+对联合体中的结构体位段进行赋值，并将联合体中的内容打印出来。<br></p>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="n">u1</span><span class="p">;</span>
+<span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="n">u1</span><span class="p">.</span><span class="n">st</span><span class="p">.</span><span class="n">nn2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"union u1.n1=0x%08x sizeof(un1)=%zu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">u1</span><span class="p">.</span><span class="n">n1</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">));</span>
+</pre></div>
+
+<p>
+输出结果为<br></p>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000001</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">8</span>
+</pre></div>
+
+<p>
+<b>case2</b><br></p>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">	</span><span class="nl">char</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+输出结果为<br></p>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
+</pre></div>
+
+<p>
+<b>case3</b><br></p>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">	</span><span class="nl">short</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+输出结果为<br></p>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00010001</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
+</pre></div>
+
+
+<p>
+<b>case4</b><br></p>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span>
+<span class="w">	</span><span class="nl">char</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">	</span><span class="kt">int</span><span class="w"> </span><span class="n">nn2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">16</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">st</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+
+<p>
+输出结果为<br></p>
+<div class="highlight"><pre><span></span><span class="k">union</span><span class="w"> </span><span class="nc">un1</span><span class="p">.</span><span class="n">n1</span><span class="o">=</span><span class="mh">0x00000101</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">un1</span><span class="p">)</span><span class="o">=</span><span class="mi">4</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org8d8b939" class="outline-3">
+<h3 id="org8d8b939">
+<code>struct</code> 与 <code>class</code> 关键字</h3>
+<div class="outline-text-3" id="text-org8d8b939">
+<p>
+多数例子都是以 <code>struct</code> 作为位域的组织标识，在C++中能否使用 <code>class</code> 作为位域的标识符呢？<br>
+经过测试，是可以使用 <code>class</code> 关键字的，但是需要注意 <code>class</code> 的默认访问控制属性为 <code>private</code> 。<br></p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgd616af4" class="outline-2">
+<h2 id="orgd616af4">位域的常见应用场景</h2>
+<div class="outline-text-2" id="text-orgd616af4">
+<p>
+为什么要使用位域？位域适合那些情况？<br></p>
+
+<p>
+位域的主要使用目的是节省对象的内存使用。在存放一些比较小的数据时，使用位域能够使字节中的每个比特位合理地利用起来，避免内存浪费。<br></p>
+
+<p>
+比较典型的应用是描述硬件寄存器。如果有32个一组的寄存器，每个寄存器代表一个比特位，就可以使用位域表示这组寄存器。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgee43732" class="outline-2">
+<h2 id="orgee43732">C++中的位操作接口</h2>
+<div class="outline-text-2" id="text-orgee43732">
+<p>
+C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接口提供了指定比特位数据的操作接口。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org7923e94" class="outline-2">
+<h2 id="org7923e94">参考资料</h2>
+<div class="outline-text-2" id="text-org7923e94">
+<ul class="org-ul">
+<li>
+<a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">wikipedia - bit field</a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/language/bit_field">cppreference - bit field</a><br>
+</li>
+<li>
+<a href="https://msdn.microsoft.com/zh-cn/library/ewwyfdbe.aspx">microsoft msdn - C++ bit fileds</a><br>
+</li>
+<li>
+<a href="https://stackoverflow.com/questions/24933242/when-to-use-bit-fields-in-c">stackoverflow - how to use bit field</a><br>
+</li>
+<li>
+<a href="https://en.cppreference.com/w/cpp/utility/bitset">cppreference - <code>std::bitset</code></a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Jul 02, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2018/gcc-built-in-functions-for-atomic-memory-access/">GCC的内存原子化操作函数接口</a>
+    </h3>
+
+    <div id="outline-container-orgab782ea" class="outline-2">
+<h2 id="orgab782ea">
+<span class="section-number-2">1</span> 原子化操作</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+在并发编程中，一个操作或一组操作是原子操作、可线性化操作、不可分操作或不可中断操作（atomic, linearizable, indivisible, uniterruptible），表示该操作执行时不可被中断的。操作的原子性能够保证操作在执行时免受中断、信号、并发进程线程的影响。另外，原子操作大多只有两种结果，要么成功并改变系统中对应的状态，要么没有相关效果。<br></p>
+
+</div>
+</div>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Jun 29, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2018/gdb-display-contents-of-memory-address/">在gdb中查看指定内存地址的内容</a>
+    </h3>
+
+    <p>
+调试 C/C++ 程序时，需要打印指定内存地址的内容。我最近调试程序中的序列化模块时，需要将类对象按照指定的格式转化为二进制流，为了验证转化结果，在调试时就需要将指定内存地址中的内容打印出来。<br></p>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Jun 26, 2018</span>
     <h3>
       <a class="post-link" href="/blog/posts/2018/asynchronous-synchronous-and-blocking-unblocking/">同步和异步、阻塞和非阻塞</a>
     </h3>
 
-    <div id="outline-container-org4c0af02" class="outline-2">
-<h2 id="org4c0af02">
+    <div id="outline-container-org4e063f5" class="outline-2">
+<h2 id="org4e063f5">
 <span class="section-number-2">1</span> 同步和异步</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -72,8 +340,8 @@
 异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
 </div>
 
-<div id="outline-container-org7b5acd0" class="outline-3">
-<h3 id="org7b5acd0">
+<div id="outline-container-org121c6e5" class="outline-3">
+<h3 id="org121c6e5">
 <span class="section-number-3">1.1</span> POSIX AIO</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -105,8 +373,8 @@
 </div>
 </div>
 
-<div id="outline-container-org14231de" class="outline-3">
-<h3 id="org14231de">
+<div id="outline-container-org905bfd8" class="outline-3">
+<h3 id="org905bfd8">
 <span class="section-number-3">1.2</span> Linux AIO</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -145,8 +413,8 @@
 </div>
 </div>
 
-<div id="outline-container-org0328528" class="outline-3">
-<h3 id="org0328528">
+<div id="outline-container-org91b4f61" class="outline-3">
+<h3 id="org91b4f61">
 <span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -176,8 +444,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 </div>
 
-<div id="outline-container-orgb4c40d5" class="outline-2">
-<h2 id="orgb4c40d5">
+<div id="outline-container-org61daeba" class="outline-2">
+<h2 id="org61daeba">
 <span class="section-number-2">2</span> 阻塞和非阻塞</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -188,8 +456,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org77ce086" class="outline-2">
-<h2 id="org77ce086">
+<div id="outline-container-org10ef872" class="outline-2">
+<h2 id="org10ef872">
 <span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -199,8 +467,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org69a4d77" class="outline-2">
-<h2 id="org69a4d77">
+<div id="outline-container-org69387bc" class="outline-2">
+<h2 id="org69387bc">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
@@ -229,9 +497,9 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
     <p>
 查看Linux系统相关信息有助于排查和解决软件和硬件的兼容性问题。系统信息包括硬件信息和软件信息，硬件信息主要有CPU信息、内存信息、PCI信息、USB信息、硬盘信息等等。软件信息主要有系统版本、分区使用状态等等。本文主要介绍了获取当前Linux系统信息的命令。<br></p>
 
-<div id="outline-container-org437db55" class="outline-2">
-<h2 id="org437db55">查看系统相关信息</h2>
-<div class="outline-text-2" id="text-org437db55">
+<div id="outline-container-orgc702212" class="outline-2">
+<h2 id="orgc702212">查看系统相关信息</h2>
+<div class="outline-text-2" id="text-orgc702212">
 <p>
 <code>uname</code> 指令提供了查询系统信息的功能，使用该命令能够快速获取操作系统信息概览。<br></p>
 
@@ -270,25 +538,25 @@ hostnamectl
 </div>
 </div>
 
-<div id="outline-container-orgb84bc2c" class="outline-2">
-<h2 id="orgb84bc2c">查看CPU相关信息</h2>
-<div class="outline-text-2" id="text-orgb84bc2c">
+<div id="outline-container-orgc1496fb" class="outline-2">
+<h2 id="orgc1496fb">查看CPU相关信息</h2>
+<div class="outline-text-2" id="text-orgc1496fb">
 <p>
 <code>lscpu</code> 指令能够查看当前系统中CPU的详细信息，包括型号、主频、构架、大小端等信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf759a86" class="outline-2">
-<h2 id="orgf759a86">查看硬盘相关信息</h2>
-<div class="outline-text-2" id="text-orgf759a86">
+<div id="outline-container-org4841079" class="outline-2">
+<h2 id="org4841079">查看硬盘相关信息</h2>
+<div class="outline-text-2" id="text-org4841079">
 <p>
 <code>lsblk</code> 指令能够查看块设备（block device）的详细信息，块设备主要指系统中的存储设备如硬盘和闪存。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf7e470b" class="outline-2">
-<h2 id="orgf7e470b">查看PCI设备的相关信息</h2>
-<div class="outline-text-2" id="text-orgf7e470b">
+<div id="outline-container-org1fd72c5" class="outline-2">
+<h2 id="org1fd72c5">查看PCI设备的相关信息</h2>
+<div class="outline-text-2" id="text-org1fd72c5">
 <p>
 <code>lspci</code> 指令能够查看PCI设备的信息，PCI设备包括USB、显卡、串口、网卡等其他外围设备。<br></p>
 
@@ -305,17 +573,17 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-orgbc4a092" class="outline-2">
-<h2 id="orgbc4a092">查看USB设备的相关信息</h2>
-<div class="outline-text-2" id="text-orgbc4a092">
+<div id="outline-container-orgef30fa8" class="outline-2">
+<h2 id="orgef30fa8">查看USB设备的相关信息</h2>
+<div class="outline-text-2" id="text-orgef30fa8">
 <p>
 <code>lsusb</code> 指令能够查看USBS设备的信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4a029fe" class="outline-2">
-<h2 id="org4a029fe">查看文件系统相关信息</h2>
-<div class="outline-text-2" id="text-org4a029fe">
+<div id="outline-container-orgbac5096" class="outline-2">
+<h2 id="orgbac5096">查看文件系统相关信息</h2>
+<div class="outline-text-2" id="text-orgbac5096">
 <p>
 <code>fdisk</code> 命令能够查看和操作linux系统的分区表。<br></p>
 
@@ -334,9 +602,9 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-orgf4f4214" class="outline-2">
-<h2 id="orgf4f4214">参考资料</h2>
-<div class="outline-text-2" id="text-orgf4f4214">
+<div id="outline-container-orgac8c69b" class="outline-2">
+<h2 id="orgac8c69b">参考资料</h2>
+<div class="outline-text-2" id="text-orgac8c69b">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/commands-to-collect-system-and-hardware-information-in-linux/">tecmint.com</a><br>
@@ -360,15 +628,15 @@ lspci -vv
     <p>
 linux的top命令能够动态显示当前系统的运行状态。它能够显示操作系统的汇总信息和当前系统上的正在运行的进程列表。<br></p>
 
-<div id="outline-container-orgabe78e4" class="outline-2">
-<h2 id="orgabe78e4">统计信息说明</h2>
-<div class="outline-text-2" id="text-orgabe78e4">
+<div id="outline-container-orgc2c5e85" class="outline-2">
+<h2 id="orgc2c5e85">统计信息说明</h2>
+<div class="outline-text-2" id="text-orgc2c5e85">
 <p>
 (可以通过配置文件修改通计信息区的显示格式，下文所描述的都是在默认配置下的显示内容)<br></p>
 </div>
-<div id="outline-container-org3b5f763" class="outline-3">
-<h3 id="org3b5f763">第1行</h3>
-<div class="outline-text-3" id="text-org3b5f763">
+<div id="outline-container-orgdb5bd1f" class="outline-3">
+<h3 id="orgdb5bd1f">第1行</h3>
+<div class="outline-text-3" id="text-orgdb5bd1f">
 <ul class="org-ul">
 <li>当前系统时间<br>
 </li>
@@ -383,9 +651,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 这一行信息也可以通过 <code>uptime</code> 和 <code>w</code> 指令获得<br></p>
 </div>
 </div>
-<div id="outline-container-org0498a99" class="outline-3">
-<h3 id="org0498a99">第2行</h3>
-<div class="outline-text-3" id="text-org0498a99">
+<div id="outline-container-orga03532c" class="outline-3">
+<h3 id="orga03532c">第2行</h3>
+<div class="outline-text-3" id="text-orga03532c">
 <ul class="org-ul">
 <li>总进程数<br>
 </li>
@@ -400,9 +668,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </ul>
 </div>
 </div>
-<div id="outline-container-org629aaa3" class="outline-3">
-<h3 id="org629aaa3">第3行</h3>
-<div class="outline-text-3" id="text-org629aaa3">
+<div id="outline-container-orgae0bda4" class="outline-3">
+<h3 id="orgae0bda4">第3行</h3>
+<div class="outline-text-3" id="text-orgae0bda4">
 <ul class="org-ul">
 <li>us 用户空间占用CPU百分比<br>
 </li>
@@ -424,9 +692,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org9056d55" class="outline-3">
-<h3 id="org9056d55">第4行</h3>
-<div class="outline-text-3" id="text-org9056d55">
+<div id="outline-container-org4148c61" class="outline-3">
+<h3 id="org4148c61">第4行</h3>
+<div class="outline-text-3" id="text-org4148c61">
 <ul class="org-ul">
 <li>物理内存总量<br>
 </li>
@@ -440,9 +708,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org2a8f4b2" class="outline-3">
-<h3 id="org2a8f4b2">第5行</h3>
-<div class="outline-text-3" id="text-org2a8f4b2">
+<div id="outline-container-orgdc04f00" class="outline-3">
+<h3 id="orgdc04f00">第5行</h3>
+<div class="outline-text-3" id="text-orgdc04f00">
 <ul class="org-ul">
 <li>交换区总量<br>
 </li>
@@ -457,9 +725,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org282c14c" class="outline-2">
-<h2 id="org282c14c">进程信息</h2>
-<div class="outline-text-2" id="text-org282c14c">
+<div id="outline-container-org7ed8c9b" class="outline-2">
+<h2 id="org7ed8c9b">进程信息</h2>
+<div class="outline-text-2" id="text-org7ed8c9b">
 <p>
 在top命令中按f按可以查看显示的列信息，按对应字母来开启/关闭列，大写字母表示开启，小写字母表示关闭。带*号的是默认列。<br></p>
 
@@ -494,9 +762,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-org77bd570" class="outline-2">
-<h2 id="org77bd570">参考资料</h2>
-<div class="outline-text-2" id="text-org77bd570">
+<div id="outline-container-org3a36c13" class="outline-2">
+<h2 id="org3a36c13">参考资料</h2>
+<div class="outline-text-2" id="text-org3a36c13">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/12-top-command-examples-in-linux/">tecmint.com</a><br>
@@ -532,9 +800,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
     <p>
 由于C++是兼容C的，所以使用C++进行文件操作时，会发现有两套库函数可以使用，它们分别是C风格的和C++风格的。<br></p>
 
-<div id="outline-container-orgb0d99e5" class="outline-2">
-<h2 id="orgb0d99e5">C风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-orgb0d99e5">
+<div id="outline-container-org2114e98" class="outline-2">
+<h2 id="org2114e98">C风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-org2114e98">
 <p>
 <b>打开文件，关闭文件</b><br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
@@ -563,9 +831,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-orgccee370" class="outline-2">
-<h2 id="orgccee370">C++风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-orgccee370">
+<div id="outline-container-orgf0761e4" class="outline-2">
+<h2 id="orgf0761e4">C++风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-orgf0761e4">
 <p>
 C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件实际上就会对应一个 <code>fstream</code> 对象，一下函数都是 <code>fstream</code> 的成员函数。<br>
 文件打开和关闭<br></p>
@@ -583,9 +851,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 </div>
 
 
-<div id="outline-container-orgff7712b" class="outline-2">
-<h2 id="orgff7712b">题外话</h2>
-<div class="outline-text-2" id="text-orgff7712b">
+<div id="outline-container-orgc1f96fd" class="outline-2">
+<h2 id="orgc1f96fd">题外话</h2>
+<div class="outline-text-2" id="text-orgc1f96fd">
 <p>
 在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。<br></p>
 </div>
@@ -600,9 +868,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
       <a class="post-link" href="/blog/posts/2018/endianness-and-union-type/">字节序与union类型</a>
     </h3>
 
-    <div id="outline-container-org09c0bfa" class="outline-2">
-<h2 id="org09c0bfa">字节序是什么</h2>
-<div class="outline-text-2" id="text-org09c0bfa">
+    <div id="outline-container-orga9ff9d0" class="outline-2">
+<h2 id="orga9ff9d0">字节序是什么</h2>
+<div class="outline-text-2" id="text-orga9ff9d0">
 <p>
 字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。字节序分为大端字节序和小端字节序，两种字节序不能混用。<br></p>
 
@@ -628,9 +896,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 
 
 
-<div id="outline-container-org95f8300" class="outline-2">
-<h2 id="org95f8300">提供字节序转换功能的函数接口</h2>
-<div class="outline-text-2" id="text-org95f8300">
+<div id="outline-container-orgc6ddd7c" class="outline-2">
+<h2 id="orgc6ddd7c">提供字节序转换功能的函数接口</h2>
+<div class="outline-text-2" id="text-orgc6ddd7c">
 <p>
 在网络通信接口中提供了转换主机字节序和网络字节序之间的函数接口，如下所示。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">htonl</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">hostlong</span><span class="p">);</span>
@@ -716,9 +984,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 
 
 
-<div id="outline-container-orga884897" class="outline-2">
-<h2 id="orga884897">查看当前系统的字节序</h2>
-<div class="outline-text-2" id="text-orga884897">
+<div id="outline-container-org257d80b" class="outline-2">
+<h2 id="org257d80b">查看当前系统的字节序</h2>
+<div class="outline-text-2" id="text-org257d80b">
 <p>
 通过 <code>lscpu</code> 命令，能得到cpu的大端和小端信息。<br></p>
 <div class="highlight"><pre><span></span>lscpu<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>endian
@@ -767,9 +1035,9 @@ hexdump<span class="w"> </span>-n<span class="w"> </span><span class="m">6</span
 </div>
 
 
-<div id="outline-container-orgf8184d2" class="outline-2">
-<h2 id="orgf8184d2">参考资料</h2>
-<div class="outline-text-2" id="text-orgf8184d2">
+<div id="outline-container-org0116413" class="outline-2">
+<h2 id="org0116413">参考资料</h2>
+<div class="outline-text-2" id="text-org0116413">
 <ul class="org-ul">
 <li>
 <a href="https://en.wikipedia.org/wiki/Endianness">wikipedia.com - endianness</a><br>
@@ -817,9 +1085,9 @@ Python内置了日志模块，在默认情况下输出的日志是不带文件�
       <a class="post-link" href="/blog/posts/2018/linux-command-examples-xargs/">Linux常用命令行指令 - xargs</a>
     </h3>
 
-    <div id="outline-container-org25e010d" class="outline-2">
-<h2 id="org25e010d">基础用法</h2>
-<div class="outline-text-2" id="text-org25e010d">
+    <div id="outline-container-org99bfb9e" class="outline-2">
+<h2 id="org99bfb9e">基础用法</h2>
+<div class="outline-text-2" id="text-org99bfb9e">
 <p>
 <code>xargs</code> 指令默认情况下从 <code>stdin</code> 中读取信息，按照空格分或换行区分开，并且执行输入的命令（默认的命令是 <code>/bin/echo</code> ）。命令可以通过 <code>xargs</code> 的参数指定执行一次或多次，命令的执行参数为自身初始参数追加上由 <code>stdin</code> 读到的内容，命令在执行时会忽略空行。<br></p>
 
@@ -840,10 +1108,10 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orgb5597d4" class="outline-2">
-<h2 id="orgb5597d4">
+<div id="outline-container-org1a064cb" class="outline-2">
+<h2 id="org1a064cb">
 <code>xargs</code> 与 <code>find</code> 组合使用</h2>
-<div class="outline-text-2" id="text-orgb5597d4">
+<div class="outline-text-2" id="text-org1a064cb">
 <p>
 常见的使用方法是使用 <code>find</code> 指令找到指定的文件，组合以 <code>xargs</code> 指令实现对指定文件的操作。<br></p>
 <div class="highlight"><pre><span></span>find . -name "demo_" | xargs file -i
@@ -855,10 +1123,10 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org58c56e9" class="outline-2">
-<h2 id="org58c56e9">
+<div id="outline-container-org2f92159" class="outline-2">
+<h2 id="org2f92159">
 <code>xargs</code> 与 <code>grep</code> 组合使用</h2>
-<div class="outline-text-2" id="text-org58c56e9">
+<div class="outline-text-2" id="text-org2f92159">
 <p>
 常用命令如下，能够实现对指定规则文件的搜索匹配。<br></p>
 <div class="highlight"><pre><span></span>find . -name "*.log" | xargs grep error
@@ -866,9 +1134,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org8864572" class="outline-2">
-<h2 id="org8864572">使用 <code>-n</code> 参数让 <code>xargs</code> 的命令重复执行</h2>
-<div class="outline-text-2" id="text-org8864572">
+<div id="outline-container-org0f219fc" class="outline-2">
+<h2 id="org0f219fc">使用 <code>-n</code> 参数让 <code>xargs</code> 的命令重复执行</h2>
+<div class="outline-text-2" id="text-org0f219fc">
 <p>
 如果想用 <code>find</code> 指令完成多个匹配规则的搜索，则可以使用 <code>-n</code> 参数将 <code>xargs</code> 的内容分割成多个。<br>
 下面的命令会执行3次 <code>find</code> 命令， <code>xargs</code> 会将接收的到的内容按照单词数为“1”分割，分3次传送给 <code>find</code> 指令。<br></p>
@@ -877,9 +1145,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orgcb31103" class="outline-2">
-<h2 id="orgcb31103">使用 <code>-t</code> 参数让 <code>xargs</code> 打印将要执行的命令</h2>
-<div class="outline-text-2" id="text-orgcb31103">
+<div id="outline-container-org08d8412" class="outline-2">
+<h2 id="org08d8412">使用 <code>-t</code> 参数让 <code>xargs</code> 打印将要执行的命令</h2>
+<div class="outline-text-2" id="text-org08d8412">
 <p>
 让 <code>xargs</code> 将指令的命令打印出来主要是方便查看命令执行情况，也方便在出现错误时进行调试。<br></p>
 <div class="highlight"><pre><span></span>find . -name *.log | xargs -t rm -f
@@ -887,9 +1155,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orgf56e376" class="outline-2">
-<h2 id="orgf56e376">使用 <code>-p</code> 参数让 <code>xargs</code> 在执行命令前询问用户</h2>
-<div class="outline-text-2" id="text-orgf56e376">
+<div id="outline-container-org83584b1" class="outline-2">
+<h2 id="org83584b1">使用 <code>-p</code> 参数让 <code>xargs</code> 在执行命令前询问用户</h2>
+<div class="outline-text-2" id="text-org83584b1">
 <p>
 增加 <code>-p</code> 参数后， <code>xargs</code> 在每次执行命令前会将指令打印出来并询问用户，只有用户输入 “y” 时才会真正执行该条命令。<br></p>
 <div class="highlight"><pre><span></span>echo "*.c" "*.cpp" "*.h" | xargs -n 1 -p find . -name
@@ -897,9 +1165,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-org9dc00b2" class="outline-2">
-<h2 id="org9dc00b2">使用 <code>-I</code> 参数让 <code>xargs</code> 进行参数替换</h2>
-<div class="outline-text-2" id="text-org9dc00b2">
+<div id="outline-container-orgfa3abba" class="outline-2">
+<h2 id="orgfa3abba">使用 <code>-I</code> 参数让 <code>xargs</code> 进行参数替换</h2>
+<div class="outline-text-2" id="text-orgfa3abba">
 <p>
 <code>xargs</code> 默认会将读取到的内容追加在指令命令后面作为参数，使用 <code>-I</code> 参数能够控制命令参数的组合方式。<br>
 以下命令会将当前目录中的可执行文件移动到bin文件夹下。<br></p>
@@ -908,9 +1176,9 @@ a b c d
 </div>
 </div>
 
-<div id="outline-container-orgdc29fae" class="outline-2">
-<h2 id="orgdc29fae">参考资料</h2>
-<div class="outline-text-2" id="text-orgdc29fae">
+<div id="outline-container-org33e40c4" class="outline-2">
+<h2 id="org33e40c4">参考资料</h2>
+<div class="outline-text-2" id="text-org33e40c4">
 <ol class="org-ol">
 <li>
 <a href="http://man7.org/linux/man-pages/man1/xargs.1.html">http://man7.org/linux/man-pages/man1/xargs.1.html</a><br>
@@ -941,9 +1209,9 @@ a b c d
 Q：每个进程都有自己的地址空间和独立的用户空间，那么进程间是如何通信的呢？<br>
 A：内核，也就是操作系统的心脏，它能够访问整个操作系统的内存。我们可以要求内核分配一块用于进程间交互的空间。<br></p>
 
-<div id="outline-container-org6df32a2" class="outline-2">
-<h2 id="org6df32a2">几种进程间通信的方法</h2>
-<div class="outline-text-2" id="text-org6df32a2">
+<div id="outline-container-orge91162d" class="outline-2">
+<h2 id="orge91162d">几种进程间通信的方法</h2>
+<div class="outline-text-2" id="text-orge91162d">
 <p>
 进程间通信的方法有很多，有些支持同机器上进程的信息交互，有些支持跨机器的进程交互。<br></p>
 <ul class="org-ul">
@@ -963,9 +1231,9 @@ A：内核，也就是操作系统的心脏，它能够访问整个操作系统�
 </div>
 </div>
 
-<div id="outline-container-org97375a9" class="outline-2">
-<h2 id="org97375a9">常用ipcs指令</h2>
-<div class="outline-text-2" id="text-org97375a9">
+<div id="outline-container-org7a0169a" class="outline-2">
+<h2 id="org7a0169a">常用ipcs指令</h2>
+<div class="outline-text-2" id="text-org7a0169a">
 <p>
 <b>列出所有的IPC设备</b><br></p>
 <div class="highlight"><pre><span></span>ipcs -a
@@ -1017,202 +1285,6 @@ A：内核，也就是操作系统的心脏，它能够访问整个操作系统�
 </pre></div>
 </div>
 </div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Apr 20, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/debug-with-gdb-on-multi-thread-programs/">使用gdb调试多线程程序</a>
-    </h3>
-
-    <div id="outline-container-org22a620e" class="outline-2">
-<h2 id="org22a620e">查看当前线程信息</h2>
-<div class="outline-text-2" id="text-org22a620e">
-<p>
-<b>将进程中的各个线程信息显示出来</b><br></p>
-<div class="highlight"><pre><span></span>(gdb) info threads
-</pre></div>
-
-<p>
-<b>切换到指定进程</b><br></p>
-<div class="highlight"><pre><span></span>(gdb) thread tid
-</pre></div>
-
-<p>
-<b>向指定的线程发送自定的指令</b><br></p>
-<div class="highlight"><pre><span></span>(gdb) thread apply tid/all args
-</pre></div>
-<p>
-常用的指定是查看所有线程的调用堆栈 <code>thread apply all bt</code> ，这个指令与 <code>pstack</code> 命令有些相似。<br></p>
-
-<p>
-<b>gdb默认会自动捕捉新产生线程</b><br>
-会在产生一个新的线程时会显示出LWP的字样提示用户，LWP = light weight process<br>
-可以设置gdb是否提示线程相关的事件<br></p>
-<div class="highlight"><pre><span></span>(gdb) set print thread-events on/off
-(gdb) show print thread-events
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orgcb053ed" class="outline-2">
-<h2 id="orgcb053ed">为指定的线程设置断点</h2>
-<div class="outline-text-2" id="text-orgcb053ed">
-<p>
-含有多线程的程序，可以为单独的线程设置断点<br></p>
-<div class="highlight"><pre><span></span>(gdb) break linespec thread tid
-</pre></div>
-
-<p>
-任何时候当你的程序在GDB模式下停止的时候，包括当前调试线程的所有线程都会停下来，不会对继续对当前进程造成更改。这时你可以在线程间进行切换，查看整个进程的执行状况。<br></p>
-<blockquote>
-<p>
-Whenever your program stops under GDB for any reason, all threads of execution stop, not just the current thread. This allows you to examine the overall state of the program, including switching between threads, without worrying that things may change underfoot.<br></p>
-</blockquote>
-</div>
-</div>
-
-<div id="outline-container-org0c9b465" class="outline-2">
-<h2 id="org0c9b465">防止gdb自动切换线程</h2>
-<div class="outline-text-2" id="text-org0c9b465">
-<p>
-在调试gdb程序时，在单步执行时，会出现线程间跳转切换，这样对跟踪代码执行状态十分不方便。<br>
-可以通过设置 <code>scheduler-locking</code> 让gdb在所调试的线程中运行，防止线程的自动切换。<br></p>
-<div class="highlight"><pre><span></span>(gdb) set scheduler-locking step
-</pre></div>
-<p>
-可以执行以下命令查看当前 <code>scheduler-locking</code> 的设置<br></p>
-<div class="highlight"><pre><span></span>(gdb) show scheduler-locking
-</pre></div>
-<p>
-<code>scheduler-locking</code> 有三种模式<br></p>
-<ol class="org-ol">
-<li>
-<code>off</code> 任何线程在任何时候都能执行<br>
-</li>
-<li>
-<code>on</code> 只有当前线程能够执行<br>
-</li>
-<li>
-<code>step</code> 为单步执行优化的模式，比较适合一般的调试<br>
-</li>
-</ol>
-<blockquote>
-<p>
-Set the scheduler locking mode. If it is off, then there is no locking and any thread may run at any time. If on, then only the current thread may run when the inferior is resumed. The step mode optimizes for single-stepping. It stops other threads from "seizing the prompt" by preempting the current thread while you are stepping. Other threads will only rarely (or never) get a chance to run when you step. They are more likely to run when you `next' over a function call, and they are completely free to run when you use commands like `continue', `until', or `finish'. However, unless another thread hits a breakpoint during its timeslice, they will never steal the GDB prompt away from the thread that you are debugging.<br></p>
-</blockquote>
-</div>
-</div>
-
-
-<div id="outline-container-org250a460" class="outline-2">
-<h2 id="org250a460">参考资料</h2>
-<div class="outline-text-2" id="text-org250a460">
-<ol class="org-ol">
-<li>
-<a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_39.html">gnu manual 1</a><br>
-</li>
-<li>
-<a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_24.html">gun manual 2</a><br>
-</li>
-<li>
-<a href="https://sourceware.org/gdb/onlinedocs/gdb/Threads.html">sourceware gdb onlinedocs</a><br>
-</li>
-<li>
-<a href="http://www.drdobbs.com/cpp/multithreaded-debugging-techniques/199200938?pgno=1">drdobbs.com</a><br>
-</li>
-</ol>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Apr 19, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/gdb-ignore-received-signal/">在gdb调试时忽略系统信号（signal）</a>
-    </h3>
-
-    <p>
-在gdb调试程序时，默认情况下gdb在收到信号时会中断程序的运行，并将收到的信号显示出来。这时，可以选择输入 <code>c</code> (continue)让程序继续运行。如果程序会重复收到这信号，会非常影响调试效率。可以通过配置忽略指定的系统信号。<br></p>
-
-<p>
-查看当前系统信号的处理信息的指令如下。<br></p>
-<div class="highlight"><pre><span></span>(gdb) info signal
-</pre></div>
-
-<p>
-以调试网络程序为例，进程会经常收到 <code>SIGPIPE</code> 消息，对于网络进程的 <code>SIGPIPE</code> 消息在程序中会由自身处理，可以使用以下指令让gdb不再提示 <code>SIGPIPE</code> 信号。<br></p>
-<div class="highlight"><pre><span></span>(gdb) handle SIGPIPE nostop noprint
-</pre></div>
-<p>
-其中， <code>nostop</code> 表示在收到信号时不再中断程序的运行， <code>noprint</code> 表示在收到信号时不再将收到的信号打印到gdb调试界面，这两个参数可以分开使用。<br></p>
-
-<p>
-参考资料： <a href="ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_38.html">gnu gdb manual</a><br></p>
-
-<p>
-（全文完）<br></p>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Apr 18, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/cpp11-range-based-for-loop/">C++11新特性：基于范围的for循环</a>
-    </h3>
-
-    <p>
-<b>在C++11中，介绍了一种新的for循环写法，基于范围的for循环。</b><br>
-与旧的for循环类似，也是用来对遍历容器中的所有元素，新的写法更加简洁方便。可以使用auto自动适配容器中的内容。为了遍历容器时提高效率，在访问容器内部时可以声明为元素的引用，进而避免不必要的对象拷贝。示例代码如下（代码节选自 <a href="http://en.cppreference.com/w/cpp/language/range-for">cppreferance</a>）<br></p>
-<div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">};</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="o">&amp;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="c1">// access by const reference</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">' '</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">;</span>
-
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="c1">// access by value, the type of i is int</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">' '</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">;</span>
-
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">})</span><span class="w"> </span><span class="c1">// the initializer may be a braced-init-list</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">' '</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">};</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="c1">// the initializer may be an array</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">' '</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">;</span>
-
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">a</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">' '</span><span class="p">;</span><span class="w"> </span><span class="c1">// the loop variable need not be used</span>
-<span class="p">}</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">;</span>
-</pre></div>
-
-<p>
-<b>注意 <code>std::map</code> 的范围for循环遍历的写法</b><br><code>std::map</code> 中存放的是 <code>key-value pair</code> 键值对，所以在遍历的时候每次拿到的是一个 <code>pair</code> ，在访问其中的元素时，需要注意书写方法。示例代码如下。<br></p>
-<div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mapDemo</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">kvp</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">mapDemo</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">kvp</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">" - "</span><span class="p">;</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">kvp</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
 
   </li>
 
