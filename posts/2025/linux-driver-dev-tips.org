@@ -11,17 +11,22 @@
 #+END_COMMENT
 #+OPTIONS: num:nil
 
-#+TITLE: linux 驱动开发笔记
+#+TITLE: Linux 驱动开发笔记
 
-最近在移植PCIe卡驱动到linux系统上，下面是移植过程中查阅资料的记录。
+最近在移植PCIe卡驱动到 Linux 系统上，下面是移植过程中查阅资料的记录。
 
 {{{TEASER_END}}}
 
-1. 驱动程序的形式，编译好之后的的文件名为 =*.ko= 。
+** 驱动程序的形式
+编译好之后的的文件名为 =*.ko= 。
 
-2. 安装驱动程序使用 =insmod= 命令；查看已经安装的驱动使用 =lsmod= 命令；卸载驱动程序使用 =rmmod= 命令。
 
-3. 在驱动中输出调试信息使用 =printk= 接口。查看驱动的调试信息使用 =dmesg= 命令。
+** 安装卸载驱动程序
+安装驱动程序使用 =insmod= 命令；查看已经安装的驱动使用 =lsmod= 命令；卸载驱动程序使用 =rmmod= 命令。
+
+
+** 调试驱动程序
+在驱动中输出调试信息使用 =printk= 接口。查看驱动的调试信息使用 =dmesg= 命令。
 
 =printk= 支持信息等级，使用下面的指令可以把所有的调试信息都输出出来。
 
@@ -37,13 +42,15 @@ echo 'module usbcore +p' > /sys/kernel/debug/dynamic_debug/control
 
 [[https://www.kernel.org/doc/html/next/core-api/printk-basics.html][printk manual]]
 
-4. 查看指定的PCI设备
+
+** 查看指定的PCI设备
 使用 lspci 能够查看系统中所有的PCI设备，在开发驱动时会指定查看某个硬件id设备的详细信息，可以使用如下的命令。
 #+BEGIN_SRC shell
 lspci -d<vendor>:<device> -vvv
 #+END_SRC
 
-5. 内核态与用户态的交互有哪些解决方案
+
+** 内核态与用户态的交互有哪些解决方案
 a. 系统调用（同步）：
    设备文件使用 =read()= / =poll()= / =select()=
    设备专用的指令 =ioctl=
@@ -70,7 +77,8 @@ f. uevent（设备变化相关）：
 我尝试过的 eventfd 方案记录：
 用户态程序调用 =ioctl= 将创建好的 eventfd 文件描述符传递到内核态的驱动程序中。驱动程序调用 =eventfd_ctx_fdget= 函数将用户态的文件描述符转换为内核态的 =eventfd_ctx*= 指针，调用 =eventfd_signal= 触发eventfd通知（这样用户态程序就能通过eventfd文件），在使用结束后调用 =eventfd_ctx_fdput= 函数释放占用的资源。
 
-6. 分两步处理的中断
+
+** 分两步处理的中断响应
 与Windows系统的驱动程序处理中断的思路类似，先在中断处理函数中记录收到的中断信息（避免长时间阻塞中断），再在后续的流程中处理后续的中断信息。
 在Linux系统中，创建了一个 =kthread= 来处理收到的中断信息，类似于用户态中的线程。通过 =struct completion= 实现中断处理函数唤醒中断处理线程。
 
@@ -96,6 +104,38 @@ unsigned long wait_for_completion_timeout(
 // jiffies时间转毫秒（等待条件变量的时候需要提供jiffy时间）
 unsigned long msecs_to_jiffies(const unsigned int msecs);
 #+END_SRC
+
+
+** 内核模块中的C语言标准
+在编写 Linux 内核模块时，并不能完全使用C99标准，因为 Linux 内核并不完全遵循C99。
+Linux 内核使用的是 GNU C(GCC) 的一个子集，支持部分C99特性。
+
+支持的特性：
+1. 变量声明在语句中间，从内核 4.x 起就已允许，但是在有些版本的编译器会有编译警告。
+2. =//= 单行注释，GCC 支持。C89标准中仅支持 =/**/= 格式的注释
+3. =struct= 初始化时的点号语法，即： =.field = value=
+4. =inline= 关键字，但建议用 =static inline=
+5. =for= 循环中定义变量，如： =for (int i = 0; i < 10; i++)= 
+
+不支持或禁用的C99特性：
+1. =float= =double= 浮点运算
+2. 不建议使用 =stdint.h= 头文件，使用内核定义的 =linux/types.h= 头文件
+3. 用户空间的标准库函数
+
+对于内核模块编码风格，有专门的指导文档 *Linux kernel coding style* 。
+
+
+** Process Context 和 Interrupt Context
+在内核开发中有两个重要的概念：程序上下文、中断上下文。
+
+程序上下文（process context）针对的是用户空间程序发起的执行流程。例如：系统调用，内核线程。支持休眠、阻塞、调用会休眠的函数。
+能够访问用户空间的内存（通过 =copy_from_user()= 函数）。
+
+中断上下文（interrupt context）针对的是硬件中断发起的执行流程。例如：GPIO引脚的电压变化，定时器超时。在中断上下文中不能调用会休眠（sleep）的函数；需要快速执行，以免阻塞其他硬件中断。
+
+在我开发PCIe卡的驱动时，需要通过用户空间的 =write()= 函数向PCIe卡写入数据，在内核空间中会由驱动程序将该数据拷贝至内核空间。在驱动程序中不能保存传入的 =const char __user *buf= 地址，然后在内核的中断处理线程（ =kthread= ）中使用。
+因为它是用户进程的虚拟地址，在 =write()= 调用时，这个地址只对当前进程的上下文有效，内核线程不在用户金册灰姑娘上下文中运行，无法安全访问用户空间内存。
+用户空间指针的声明周期非常短，用户在执行完 =write()= 返回后可能会修改这个缓冲区的数据、释放或重用这个内存。此时内核中保存的 =__user= 指针就变成了悬空指针，会导致内核崩溃，非法访问（page fault），安全漏洞（信息泄露或攻击入口）。
 
 
 （全文完）
