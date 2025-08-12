@@ -1,7 +1,8 @@
 #+BEGIN_COMMENT
-.. title: linux 驱动开发笔记
+.. title: Linux 驱动开发笔记
 .. slug: linux-driver-dev-tips
 .. date: 2025-07-22 15:23:24 UTC+08:00
+.. updated: 2025-08-06 15:06:24 UTC+08:00
 .. tags: linux, pcie, driver
 .. category: linux
 .. link:
@@ -19,6 +20,19 @@
 
 ** 驱动程序的形式
 编译好之后的的文件名为 =*.ko= 。
+
+驱动程序的版本，在代码中增加版本号和驱动描述信息示例
+#+BEGIN_SRC c
+MODULE_VERSION("1.0.0");
+MODULE_DESCRIPTION("pcie device driver");
+#+END_SRC
+使用 =modinfo= 指令能够查看驱动的信息，其中会包含驱动的描述信息、版本信息。
+
+驱动程序的存放目录为 =/lib/modules/$(uname -r)/kernel/=
+使用下面的命令列出驱动文件的路径
+#+BEGIN_SRC shell
+find /lib/modules/$(uname -r) -name "*.ko*"
+#+END_SRC
 
 
 ** 安装卸载驱动程序
@@ -51,24 +65,24 @@ lspci -d<vendor>:<device> -vvv
 
 
 ** 内核态与用户态的交互有哪些解决方案
-a. 系统调用（同步）：
+- a. 系统调用（同步）：
    设备文件使用 =read()= / =poll()= / =select()=
    设备专用的指令 =ioctl=
    用户态查询变化 =sysfs= / =procfs=
-b. 信号signal（异步）：
+- b. 信号signal（异步）：
    内核态可以向指定的用户态进程发送信号
    优点：触发迅速
    缺点：能够携带的信息有限，用户态在处理信号时稍复杂（考虑与既有线程的的并发问题）
-c. netlink socket：
+- c. netlink socket：
    优点：支持双向信息传递
    缺点：使用复杂
-d. eventfd：
+- d. eventfd：
    优点：轻量级，支持与 =poll= / =select= 一起使用
    缺点：信息结果只能为计数器数值（每次写入是加法操作，每次读取是获取当前值并清零）
-e. sysfs 通知：
+- e. sysfs 通知：
    优点：基于文件系统，使用标准接口
    缺点：需要轮询
-f. uevent（设备变化相关）：
+- f. uevent（设备变化相关）：
    优点：标准的设备通知机制
    缺点：主要用于设备变化
 
@@ -85,7 +99,8 @@ f. uevent（设备变化相关）：
 用到的内核态函数接口如下：
 #+BEGIN_SRC c
 // 创建线程
-struct task_struct *kthread_run(int (*threadfn)(void *data), void *data, const char namefmt[], ...);
+struct task_struct *kthread_run(int (*threadfn)(void *data),
+                                void *data, const char namefmt[], ...);
 // 停止线程
 int kthread_stop(struct task_struct *k);
 // 在线程循环中检查是否需要停止
@@ -139,5 +154,6 @@ Linux 内核使用的是 GNU C(GCC) 的一个子集，支持部分C99特性。
 
 
 （全文完）
+
 
 
