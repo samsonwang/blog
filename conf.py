@@ -1346,7 +1346,7 @@ FILE_METADATA_UNSLUGIFY_TITLES = True
 # Put in global_context things you want available on all your templates.
 # It can be anything, data, functions, modules, etc.
 class ThemeUtil:
-    not_index_tags = ['not-index', 'life']
+    not_index_tags = ['not-index']
     @staticmethod
     def not_index(tags):
         for tag in tags:
