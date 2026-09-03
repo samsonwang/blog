@@ -13,7 +13,6 @@
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2025/linux-driver-dev-tips/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2025/opencv-morph/" title="opencv中的图像形态学处理" type="text/html">
-<link rel="next" href="/blog/posts/2026/calligrahpy-practice-202608/" title="2026年8月书法练习记录" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="Linux 驱动开发笔记">
@@ -81,9 +80,9 @@ MODULE_DESCRIPTION("pcie device driver");
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgf921c83" class="outline-2">
-<h2 id="orgf921c83">驱动程序的形式</h2>
-<div class="outline-text-2" id="text-orgf921c83">
+<div id="outline-container-orgc65b6c6" class="outline-2">
+<h2 id="orgc65b6c6">驱动程序的形式</h2>
+<div class="outline-text-2" id="text-orgc65b6c6">
 <p>
 编译好之后的的文件名为 <code>*.ko</code> 。<br></p>
 
@@ -104,18 +103,18 @@ MODULE_DESCRIPTION("pcie device driver");
 </div>
 
 
-<div id="outline-container-orgdcd66d0" class="outline-2">
-<h2 id="orgdcd66d0">安装卸载驱动程序</h2>
-<div class="outline-text-2" id="text-orgdcd66d0">
+<div id="outline-container-org73e3663" class="outline-2">
+<h2 id="org73e3663">安装卸载驱动程序</h2>
+<div class="outline-text-2" id="text-org73e3663">
 <p>
 安装驱动程序使用 <code>insmod</code> 命令；查看已经安装的驱动使用 <code>lsmod</code> 命令；卸载驱动程序使用 <code>rmmod</code> 命令。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org05dd30b" class="outline-2">
-<h2 id="org05dd30b">调试驱动程序</h2>
-<div class="outline-text-2" id="text-org05dd30b">
+<div id="outline-container-org15d64be" class="outline-2">
+<h2 id="org15d64be">调试驱动程序</h2>
+<div class="outline-text-2" id="text-org15d64be">
 <p>
 在驱动中输出调试信息使用 <code>printk</code> 接口。查看驱动的调试信息使用 <code>dmesg</code> 命令。<br></p>
 
@@ -137,9 +136,9 @@ MODULE_DESCRIPTION("pcie device driver");
 </div>
 
 
-<div id="outline-container-org4dc5f12" class="outline-2">
-<h2 id="org4dc5f12">查看指定的PCI设备</h2>
-<div class="outline-text-2" id="text-org4dc5f12">
+<div id="outline-container-org9e02a6c" class="outline-2">
+<h2 id="org9e02a6c">查看指定的PCI设备</h2>
+<div class="outline-text-2" id="text-org9e02a6c">
 <p>
 使用 lspci 能够查看系统中所有的PCI设备，在开发驱动时会指定查看某个硬件id设备的详细信息，可以使用如下的命令。<br></p>
 <div class="highlight"><pre><span></span>lspci -d&lt;vendor&gt;:&lt;device&gt; -vvv
@@ -148,9 +147,9 @@ MODULE_DESCRIPTION("pcie device driver");
 </div>
 
 
-<div id="outline-container-org3ae4fb9" class="outline-2">
-<h2 id="org3ae4fb9">内核态与用户态的交互有哪些解决方案</h2>
-<div class="outline-text-2" id="text-org3ae4fb9">
+<div id="outline-container-org2ded861" class="outline-2">
+<h2 id="org2ded861">内核态与用户态的交互有哪些解决方案</h2>
+<div class="outline-text-2" id="text-org2ded861">
 <ul class="org-ul">
 <li>a. 系统调用（同步）：<br>
 设备文件使用 <code>read()</code> / <code>poll()</code> / <code>select()</code><br>
@@ -189,9 +188,9 @@ MODULE_DESCRIPTION("pcie device driver");
 </div>
 
 
-<div id="outline-container-org85473f6" class="outline-2">
-<h2 id="org85473f6">分两步处理的中断响应</h2>
-<div class="outline-text-2" id="text-org85473f6">
+<div id="outline-container-org656be57" class="outline-2">
+<h2 id="org656be57">分两步处理的中断响应</h2>
+<div class="outline-text-2" id="text-org656be57">
 <p>
 与Windows系统的驱动程序处理中断的思路类似，先在中断处理函数中记录收到的中断信息（避免长时间阻塞中断），再在后续的流程中处理后续的中断信息。<br>
 在Linux系统中，创建了一个 <code>kthread</code> 来处理收到的中断信息，类似于用户态中的线程。通过 <code>struct completion</code> 实现中断处理函数唤醒中断处理线程。<br></p>
@@ -223,9 +222,9 @@ MODULE_DESCRIPTION("pcie device driver");
 </div>
 
 
-<div id="outline-container-org6689d1a" class="outline-2">
-<h2 id="org6689d1a">内核模块中的C语言标准</h2>
-<div class="outline-text-2" id="text-org6689d1a">
+<div id="outline-container-orgdc295cb" class="outline-2">
+<h2 id="orgdc295cb">内核模块中的C语言标准</h2>
+<div class="outline-text-2" id="text-orgdc295cb">
 <p>
 在编写 Linux 内核模块时，并不能完全使用C99标准，因为 Linux 内核并不完全遵循C99。<br>
 Linux 内核使用的是 GNU C(GCC) 的一个子集，支持部分C99特性。<br></p>
@@ -265,9 +264,9 @@ Linux 内核使用的是 GNU C(GCC) 的一个子集，支持部分C99特性。<b
 </div>
 
 
-<div id="outline-container-org6ce23cd" class="outline-2">
-<h2 id="org6ce23cd">Process Context 和 Interrupt Context</h2>
-<div class="outline-text-2" id="text-org6ce23cd">
+<div id="outline-container-orgad40771" class="outline-2">
+<h2 id="orgad40771">Process Context 和 Interrupt Context</h2>
+<div class="outline-text-2" id="text-orgad40771">
 <p>
 在内核开发中有两个重要的概念：程序上下文、中断上下文。<br></p>
 
@@ -307,9 +306,6 @@ Linux 内核使用的是 GNU C(GCC) 的一个子集，支持部分C99特性。<b
       </a>
     </li>
     <li class="next">
-      <a href="/blog/posts/2026/calligrahpy-practice-202608/" rel="next">Next post
-        <br><span>2026年8月书法练习记录</span>
-      </a>
     </li>
   </ul>
 <section class="comments hidden-print"><div id="disqus_thread"></div>
