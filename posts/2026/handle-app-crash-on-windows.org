@@ -7,7 +7,7 @@
 .. link:
 .. description:
 .. type: text
-.. status: draft
+/.. status: draft
 #+END_COMMENT
 #+OPTIONS: num:nil
 
@@ -21,7 +21,7 @@
 
 有些时候进程可能是卡住了，例如驱动程序错误导致进程卡在操作硬件设备的接口中，导致进程无法正常完成其预定的功能。
 
-还有种可能是进程提前结束，例如提前退出了网络事件循环；这种在无界面的服务程序中比较常见，出问题的进程在任务管理器中找不到了，但是它们不是崩溃了，而是正常退出了。
+还有种可能是进程提前结束，例如提前退出了网络事件循环；这种在无界面的服务程序中比较常见，出问题的进程在任务管理器中找不到了，但是它们不是崩溃了，而是“正常”退出了，这时就要分析软件中的流程错误。
 
 在Windows事件查看器中能够查到进程异常退出的记录。
 查看顺序为：Windows事件查看器 -> Windows日志 -> 应用程序 -> 过滤出事件id为1000的记录
@@ -32,21 +32,124 @@
 
 ** 生成调试信息文件
 在生产环境中排查进程崩溃问题需要在编译程序时就生成调试信息文件（pdb文件）。
+在MSVC中可以直接设置项目属性，或者在 =CMakeLists.txt= 增加配置项。
 
+#+BEGIN_SRC cmake
+if (MSVC)
+  add_compile_options (/Zi)
+  add_link_options (/DEBUG)
+endif ()  
+#+END_SRC
 
 
 ** 在程序中设置捕获崩溃时的异常信息文件
+可以在程序中添加对异常信息的捕获，但是需要注意的是有可能会失效，有时候遇到比较严重的错误会导致进程无法成功生成异常信息文件。
 
-有可能会失效。
+#+BEGIN_SRC C++
+#include <windows.h>
+#include <dbghelp.h>
+#include <shlwapi.h>
 
-** 使用Window Error Reporting机制捕获程序异常
-WER默认会捕获系统中所有的进程异常退出。
+#include <time.h>
+#include <stdio.h>
+#include <signal.h>
+
+#pragma comment(lib, "dbghelp.lib")
+#pragma comment(lib, "shlwapi.lib")
+
+static LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* pExceptionInfo)
+{
+    char szTime[64] = { 0 };
+    time_t tNow = time(NULL);
+    struct tm objTime;
+    localtime_s(&objTime, &tNow);
+    strftime(szTime, _countof(szTime), "%Y%m%d_%H%M%S", &objTime);
+
+    char szExePath[MAX_PATH] = { 0 };
+    GetModuleFileName(NULL, szExePath, MAX_PATH);
+    // 去掉文件名，拼 dump 目录
+    PathRemoveFileSpec(szExePath);
+
+    char szDumpFileName[MAX_PATH] = { 0 };
+    sprintf_s(szDumpFileName, MAX_PATH, "%s\\dump_%s.dmp", szExePath, szTime);
+
+    HANDLE hFile = CreateFile(szDumpFileName, GENERIC_WRITE, 0, NULL,
+                              CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+        MINIDUMP_EXCEPTION_INFORMATION mdei;
+        mdei.ThreadId = GetCurrentThreadId();
+        mdei.ExceptionPointers = pExceptionInfo;
+        mdei.ClientPointers = FALSE;
+
+        MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
+                          MiniDumpNormal, &mdei, NULL, NULL);
+        CloseHandle(hFile);
+    }
+
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+// ---- 还要额外处理 C++ 异常和 abort ----
+static void __cdecl InvalidParameterHandler(const wchar_t* szExpression,
+                                            const wchar_t* szFunction,
+                                            const wchar_t* szFile,
+                                            unsigned int nLine,
+                                            uintptr_t reserved)
+{
+    RaiseException(EXCEPTION_NONCONTINUABLE_EXCEPTION, 0, 0, NULL);
+}
+
+static void SignalHandler(int nSignal)
+{
+    RaiseException(EXCEPTION_NONCONTINUABLE_EXCEPTION, 0, 0, NULL);
+}
+
+// 在 main/DllMain 中调用此函数一次性注册
+void InstallCrashHandler()
+{
+    SetUnhandledExceptionFilter(ExceptionHandler);
+
+    // 捕获 CRT 无效参数
+    _set_invalid_parameter_handler(InvalidParameterHandler);
+
+    // 捕获 SIGABRT（abort() 调用）
+    signal(SIGABRT, SignalHandler);
+
+    // 禁用系统错误对话框，让程序静默退出（服务程序尤其需要）
+    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
+    _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+}
+#+END_SRC
+
+
+** 使用Windows Error Reporting机制捕获程序异常
+WER是Windwos系统自带的功能，但是WER默认会捕获系统中所有的进程异常退出，也支持通过修改配置来精细地控制捕获的规则。
+
+可以通过修改组策略或修改注册表开启WER功能，相关资料在网上有很多，在本文就不再罗列这些细节步骤了。
+
+我最终没有采用这种方式的原因是如果需要实现精细地控制捕获规则，配置起来有一些复杂，而且修改配置后需要重启系统才能生效。
+
 
 ** 使用procdump捕获程序异常
+procdump是Windows官方提供的调试工具，可以捕获指定进程的异常。
 
+我使用了两种捕获方式
+1. 让 procdump 帮我启动需要捕获的进程。在需要捕获的进程是界面程序时比较好用，因为界面程序一般是用户手动启动的。
+#+BEGIN_SRC bat
+procdump -e -ma -x c:\dumps <process_path>
+#+END_SRC
+运行上面的指令会启动 =process_path= 路径的程序，在程序出现异常时经dump文件保存在 =c:\dumps= 目录中。
+
+2. 让 procdump 捕获一个指定pid的进程。在需要捕获一些服务程序时比较好用，因为服务程序可能已经启动了。
+#+BEGIN_SRC bat
+procdump -accepteula -ma -e <pid> c:\dumps
+#+END_SRC
+运行上面的指令会捕获指定pid的进程，在程序出现异常时经dump文件保存在 =c:\dumps= 目录中, =-accepteula= 的作用是自动接收procdump启动时的用户协议。
+
+更详细的用法可以参考[[https://learn.microsoft.com/en-us/sysinternals/downloads/procdump][官方文档]]。
 
 
 （全文完）
-
 
 
