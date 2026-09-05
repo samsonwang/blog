@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>处理Windows系统下的软件崩溃问题 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2026/handle-app-crash-on-windows/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2025/linux-driver-dev-tips/" title="Linux 驱动开发笔记" type="text/html">
+<link rel="next" href="/blog/posts/2026/calligrahpy-practice-202608/" title="2026年8月书法练习记录" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="处理Windows系统下的软件崩溃问题">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2026/handle-app-crash-on-windows/">
+<meta property="og:description" content="在生产环境中会遇到程序崩溃问题，这里总结了几个处理软件崩溃的要点。
+
+
+
+
+
+确定是否真的是软件异常退出
+
+
+有些时候进程可能是卡住了，例如驱动程序错误导致进程卡在操作硬件设备的接口中，导致进程无法正常完成其预定的功能。
+
+
+
+还有种可能是进程提前结束，例如提前退出了网络事件循环；这种在无界面的服务程序中比较常见，出问题的进程在任务管理器中找不到了，但是它们不是崩溃了，而是“正常”退出了，这时就要">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-07-20T17:02:58+08:00">
+<meta property="article:tag" content="c++">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">处理Windows系统下的软件崩溃问题</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2026-07-20T17:02:58+08:00" itemprop="datePublished">Jul 20, 2026</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+在生产环境中会遇到程序崩溃问题，这里总结了几个处理软件崩溃的要点。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org5797448" class="outline-2">
+<h2 id="org5797448">确定是否真的是软件异常退出</h2>
+<div class="outline-text-2" id="text-org5797448">
+<p>
+有些时候进程可能是卡住了，例如驱动程序错误导致进程卡在操作硬件设备的接口中，导致进程无法正常完成其预定的功能。<br></p>
+
+<p>
+还有种可能是进程提前结束，例如提前退出了网络事件循环；这种在无界面的服务程序中比较常见，出问题的进程在任务管理器中找不到了，但是它们不是崩溃了，而是“正常”退出了，这时就要分析软件中的流程错误。<br></p>
+
+<p>
+在Windows事件查看器中能够查到进程异常退出的记录。<br>
+查看顺序为：Windows事件查看器 -&gt; Windows日志 -&gt; 应用程序 -&gt; 过滤出事件id为1000的记录<br>
+在记录中能够看到崩溃的应用程序名称和异常的模块名称，还能看到异常代码。不同的异常代码代表不同的软件错误，常见的如内存越界访问是 <code>0xc0000005</code> ，除零错误是 <code>0xc0000094</code> 。<br></p>
+
+<p>
+通过Windows事件记录能够初步判断进程异常退出的时间，获取到一些基本信息。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org1d4aa16" class="outline-2">
+<h2 id="org1d4aa16">生成调试信息文件</h2>
+<div class="outline-text-2" id="text-org1d4aa16">
+<p>
+在生产环境中排查进程崩溃问题需要在编译程序时就生成调试信息文件（pdb文件）。<br>
+在MSVC中可以直接设置项目属性，或者在 <code>CMakeLists.txt</code> 增加配置项。<br></p>
+
+<div class="highlight"><pre><span></span>if (MSVC)
+  add_compile_options (/Zi)
+  add_link_options (/DEBUG)
+endif ()  
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org0bbcbb1" class="outline-2">
+<h2 id="org0bbcbb1">在程序中设置捕获崩溃时的异常信息文件</h2>
+<div class="outline-text-2" id="text-org0bbcbb1">
+<p>
+可以在程序中添加对异常信息的捕获，但是需要注意的是有可能会失效，有时候遇到比较严重的错误会导致进程无法成功生成异常信息文件。<br></p>
+
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;windows.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;dbghelp.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;shlwapi.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;time.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;signal.h&gt;</span>
+
+<span class="cp">#pragma comment(lib, "dbghelp.lib")</span>
+<span class="cp">#pragma comment(lib, "shlwapi.lib")</span>
+
+<span class="k">static</span><span class="w"> </span><span class="n">LONG</span><span class="w"> </span><span class="n">WINAPI</span><span class="w"> </span><span class="n">ExceptionHandler</span><span class="p">(</span><span class="n">EXCEPTION_POINTERS</span><span class="o">*</span><span class="w"> </span><span class="n">pExceptionInfo</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">szTime</span><span class="p">[</span><span class="mi">64</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">};</span>
+<span class="w">    </span><span class="kt">time_t</span><span class="w"> </span><span class="n">tNow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">time</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">tm</span><span class="w"> </span><span class="n">objTime</span><span class="p">;</span>
+<span class="w">    </span><span class="n">localtime_s</span><span class="p">(</span><span class="o">&amp;</span><span class="n">objTime</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">tNow</span><span class="p">);</span>
+<span class="w">    </span><span class="n">strftime</span><span class="p">(</span><span class="n">szTime</span><span class="p">,</span><span class="w"> </span><span class="n">_countof</span><span class="p">(</span><span class="n">szTime</span><span class="p">),</span><span class="w"> </span><span class="s">"%Y%m%d_%H%M%S"</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">objTime</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">szExePath</span><span class="p">[</span><span class="n">MAX_PATH</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">};</span>
+<span class="w">    </span><span class="n">GetModuleFileName</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">szExePath</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_PATH</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// 去掉文件名，拼 dump 目录</span>
+<span class="w">    </span><span class="n">PathRemoveFileSpec</span><span class="p">(</span><span class="n">szExePath</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">szDumpFileName</span><span class="p">[</span><span class="n">MAX_PATH</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">};</span>
+<span class="w">    </span><span class="n">sprintf_s</span><span class="p">(</span><span class="n">szDumpFileName</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_PATH</span><span class="p">,</span><span class="w"> </span><span class="s">"%s</span><span class="se">\\</span><span class="s">dump_%s.dmp"</span><span class="p">,</span><span class="w"> </span><span class="n">szExePath</span><span class="p">,</span><span class="w"> </span><span class="n">szTime</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">HANDLE</span><span class="w"> </span><span class="n">hFile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CreateFile</span><span class="p">(</span><span class="n">szDumpFileName</span><span class="p">,</span><span class="w"> </span><span class="n">GENERIC_WRITE</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span>
+<span class="w">			      </span><span class="n">CREATE_ALWAYS</span><span class="p">,</span><span class="w"> </span><span class="n">FILE_ATTRIBUTE_NORMAL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">hFile</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">INVALID_HANDLE_VALUE</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">	</span><span class="n">MINIDUMP_EXCEPTION_INFORMATION</span><span class="w"> </span><span class="n">mdei</span><span class="p">;</span>
+<span class="w">	</span><span class="n">mdei</span><span class="p">.</span><span class="n">ThreadId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetCurrentThreadId</span><span class="p">();</span>
+<span class="w">	</span><span class="n">mdei</span><span class="p">.</span><span class="n">ExceptionPointers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pExceptionInfo</span><span class="p">;</span>
+<span class="w">	</span><span class="n">mdei</span><span class="p">.</span><span class="n">ClientPointers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">;</span>
+
+<span class="w">	</span><span class="n">MiniDumpWriteDump</span><span class="p">(</span><span class="n">GetCurrentProcess</span><span class="p">(),</span><span class="w"> </span><span class="n">GetCurrentProcessId</span><span class="p">(),</span><span class="w"> </span><span class="n">hFile</span><span class="p">,</span>
+<span class="w">			  </span><span class="n">MiniDumpNormal</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mdei</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
+<span class="w">	</span><span class="n">CloseHandle</span><span class="p">(</span><span class="n">hFile</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">EXCEPTION_EXECUTE_HANDLER</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// ---- 还要额外处理 C++ 异常和 abort ----</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="kr">__cdecl</span><span class="w"> </span><span class="n">InvalidParameterHandler</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">wchar_t</span><span class="o">*</span><span class="w"> </span><span class="n">szExpression</span><span class="p">,</span>
+<span class="w">					    </span><span class="k">const</span><span class="w"> </span><span class="kt">wchar_t</span><span class="o">*</span><span class="w"> </span><span class="n">szFunction</span><span class="p">,</span>
+<span class="w">					    </span><span class="k">const</span><span class="w"> </span><span class="kt">wchar_t</span><span class="o">*</span><span class="w"> </span><span class="n">szFile</span><span class="p">,</span>
+<span class="w">					    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nLine</span><span class="p">,</span>
+<span class="w">					    </span><span class="kt">uintptr_t</span><span class="w"> </span><span class="n">reserved</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">RaiseException</span><span class="p">(</span><span class="n">EXCEPTION_NONCONTINUABLE_EXCEPTION</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">SignalHandler</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">nSignal</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">RaiseException</span><span class="p">(</span><span class="n">EXCEPTION_NONCONTINUABLE_EXCEPTION</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// 在 main/DllMain 中调用此函数一次性注册</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">InstallCrashHandler</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">SetUnhandledExceptionFilter</span><span class="p">(</span><span class="n">ExceptionHandler</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// 捕获 CRT 无效参数</span>
+<span class="w">    </span><span class="n">_set_invalid_parameter_handler</span><span class="p">(</span><span class="n">InvalidParameterHandler</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// 捕获 SIGABRT（abort() 调用）</span>
+<span class="w">    </span><span class="n">signal</span><span class="p">(</span><span class="n">SIGABRT</span><span class="p">,</span><span class="w"> </span><span class="n">SignalHandler</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// 禁用系统错误对话框，让程序静默退出（服务程序尤其需要）</span>
+<span class="w">    </span><span class="n">SetErrorMode</span><span class="p">(</span><span class="n">SEM_FAILCRITICALERRORS</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">SEM_NOGPFAULTERRORBOX</span><span class="p">);</span>
+<span class="w">    </span><span class="n">_set_abort_behavior</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">_WRITE_ABORT_MSG</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">_CALL_REPORTFAULT</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org5e7305d" class="outline-2">
+<h2 id="org5e7305d">使用Windows Error Reporting机制捕获程序异常</h2>
+<div class="outline-text-2" id="text-org5e7305d">
+<p>
+WER是Windwos系统自带的功能，但是WER默认会捕获系统中所有的进程异常退出，也支持通过修改配置来精细地控制捕获的规则。<br></p>
+
+<p>
+可以通过修改组策略或修改注册表开启WER功能，相关资料在网上有很多，在本文就不再罗列这些细节步骤了。<br></p>
+
+<p>
+我最终没有采用这种方式的原因是如果需要实现精细地控制捕获规则，配置起来有一些复杂，而且修改配置后需要重启系统才能生效。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org142d2a3" class="outline-2">
+<h2 id="org142d2a3">使用procdump捕获程序异常</h2>
+<div class="outline-text-2" id="text-org142d2a3">
+<p>
+procdump是Windows官方提供的调试工具，可以捕获指定进程的异常。<br></p>
+
+<p>
+我使用了两种捕获方式<br></p>
+<ol class="org-ol">
+<li>让 procdump 帮我启动需要捕获的进程。在需要捕获的进程是界面程序时比较好用，因为界面程序一般是用户手动启动的。<br>
+</li>
+</ol>
+<div class="highlight"><pre><span></span>procdump -e -ma -x c:\dumps &lt;process_path&gt;
+</pre></div>
+<p>
+运行上面的指令会启动 <code>process_path</code> 路径的程序，在程序出现异常时经dump文件保存在 <code>c:\dumps</code> 目录中。<br></p>
+
+<ol class="org-ol">
+<li>让 procdump 捕获一个指定pid的进程。在需要捕获一些服务程序时比较好用，因为服务程序可能已经启动了。<br>
+</li>
+</ol>
+<div class="highlight"><pre><span></span>procdump -accepteula -ma -e &lt;pid&gt; c:\dumps
+</pre></div>
+<p>
+运行上面的指令会捕获指定pid的进程，在程序出现异常时经dump文件保存在 <code>c:\dumps</code> 目录中, <code>-accepteula</code> 的作用是自动接收procdump启动时的用户协议。<br></p>
+
+<p>
+更详细的用法可以参考<a href="https://learn.microsoft.com/en-us/sysinternals/downloads/procdump">官方文档</a>。<br></p>
+
+
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/blog/tags/c%2B%2B/" rel="tag">c++</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/blog/posts/2025/linux-driver-dev-tips/" rel="prev">Previous post
+        <br><span>Linux 驱动开发笔记</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/blog/posts/2026/calligrahpy-practice-202608/" rel="next">Next post
+        <br><span>2026年8月书法练习记录</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div id="disqus_thread"></div>
+        <script>
+        var disqus_shortname ="samsonwang-blog",
+            disqus_url="https://samsonwang.github.io/blog/posts/2026/handle-app-crash-on-windows/",
+        disqus_title="\u5904\u7406Windows\u7cfb\u7edf\u4e0b\u7684\u8f6f\u4ef6\u5d29\u6e83\u95ee\u9898",
+        disqus_identifier="_cache/posts/2026/handle-app-crash-on-windows.html",
+        disqus_config = function () {
+            this.language = "en";
+        };
+        (function() {
+            var dsq = document.createElement('script'); dsq.async = true;
+            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>
+    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2026, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>
