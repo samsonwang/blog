@@ -50,22 +50,223 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Jul 30, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2018/navigation-and-selection-effectively-in-emacs/">提高emacs中浏览和选择操作效率的技巧</a>
+    </h3>
+
+    <div id="outline-container-org1acb104" class="outline-2">
+<h2 id="org1acb104">
+<span class="section-number-2">1</span> 引言</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with-selection-and-navigation-in-emacs/">一篇博文</a> 给了我很大的启发，他详细地介绍了emacs中的相关概念，并提供了许多充满想象力的小技巧。作为emacs的入门级选手确实学到了很多，也拓宽了自己的思路。<br></p>
+
+<p>
+我最初的开发环境是Visual Studio，这一类比较大型的IDE集成了许多功能，但同时也会束缚住使用者的想法。通过这篇文章我感受到的由普通操作指令能组合成的新编辑方式。<br></p>
+
+<p>
+如果英文水平允许的话，非常推荐阅读一下原版的博文，原文中有更加丰富形象的图片示例，无论是跟我一样刚刚入门emacs的新手，还是经验丰富的老兵，都能够从中获得启发。下面，我结合自己的理解和收获谈谈emacs中操作的体会。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-orgb1f7758" class="outline-2">
+<h2 id="orgb1f7758">
+<span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+我之前进行代码段复制的操作是十分基础的，用 <code>C-@</code> 模拟鼠标按下，方向键模拟鼠标拖动，在鼠标拖动的过程中就形成了一个选区，然后用 <code>M-w</code> 对这个选区进行复制操作，用 <code>C-y</code> 粘贴被复制的内容。<br></p>
+
+<p>
+以上操作带出了几个非常重要的概念 。在emacs中，鼠标光标所在位置被称作 <code>point</code> ；组合键 <code>C-@</code> 执行的是 <code>set-mark-command</code> 命令，就是将 <code>point</code> 所在位置标记为 <code>mark</code> ；通过移动光标，也就是移动 <code>point</code> 后，在 <code>point</code> 与 <code>mark</code> 之间就形成了 <code>region</code> 。<br></p>
+</div>
+</div>
+
+
+<div id="outline-container-org8413274" class="outline-2">
+<h2 id="org8413274">
+<span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-org5ccc9e1" class="outline-3">
+<h3 id="org5ccc9e1">
+<span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+下面就来介绍一个非常重要的命令 <code>exchange-point-and-mark</code> ，这个命令默认被绑定在组合键 <code>C-x C-x</code> 上，从字面意思上很容易理解这条指令的作用，就是交换 <code>mark</code> 和 <code>point</code> 的位置。这样做的意义在于能够方便地切换 <code>region</code> 的可动边界，这样能够使 <code>region</code> 方便地分别从两端调整大小。<br>
+下面的示例是截取自Paul的博文，需要注意的是，他习惯于使用 <code>C-SPC</code> 调用 <code>set-mark-command</code> 。<br></p>
+
+<div class="highlight"><pre><span></span>Lorem ipsum dolor sit amet
+      ^ Cursor
+
+
+      Point
+      |
+      Mark
+      |
+Lorem ipsum dolor sit amet
+      ^ C-spc
+
+
+      Mark          Point
+      | ----region--|
+      |             |
+Lorem ipsum dolor sit amet
+	 move       ^
+	 forward -&gt;
+
+
+      Mark          Point
+      | ----region--|
+      |             |
+Lorem ipsum dolor sit amet
+		    ^
+		    C-x C-x
+
+
+      Point         Mark
+      | ----region--|
+      |             |
+Lorem ipsum dolor sit amet
+
+Point and mark interchanged
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org5e54f31" class="outline-3">
+<h3 id="org5e54f31">
+<span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+对于 <code>region</code> 相关的操作，通常是对已经存在的代码段进行编辑的，如果我们在输入之前就知道有许多字段是需要重复输入的，那么就可以在输入之前设置好 <code>mark</code> ，对输入后形成的 <code>region</code> 完成复制。这个技巧在特定情况能够很大地提升输入效率，但是我个人认为，想要在实战中完成这个操作，还需要保证非常清晰的思路。可以通过下面的示例感受这种操作带来的方便(示例截取自Paul的博文)。<br></p>
+
+<p>
+<img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-navigation-and-selection-effectively-in-emacs-1.gif" alt="nil"><br></p>
+
+<p>
+下面给出了详细的操作解析<br></p>
+
+<div class="highlight"><pre><span></span>class
+      ^ C-spc =&gt; Activate mark
+
+class Foo
+	  ^ M-w =&gt; Foo has now been killed (copied)
+
+class Foo extends React.Component&lt;
+				  ^ C-spc =&gt; Activate mark
+
+class Foo extends React.Component&lt;
+				  ^ C-y =&gt; Yank (paste) Foo
+
+class Foo extends React.Component&lt;FooProps
+					  ^ M-w =&gt; FooProps has now been killed (copied)
+
+class Foo extends React.Component&lt;FooProps&gt;
+
+// Later
+interface
+	   ^ C-y =&gt; Yank FooProps
+
+interface FooProps {}
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org1195263" class="outline-3">
+<h3 id="org1195263">
+<span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
+</h3>
+<div class="outline-text-3" id="text-3-3">
+<p>
+使用 <code>rectangle-mark-mode</code> 命令，默认快捷键 <code>C-x-SPC</code> ，能够框选出一个矩形的 <code>region</code> 。对于矩形 <code>region</code> ，Paul给出的示例是复制 <code>dired</code> 中的多个文件名称，貌似其他合适的使用场景不太多。<br></p>
+
+<p>
+<img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-navigation-and-selection-effectively-in-emacs-2.gif" alt="nil"><br></p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org45b9ee7" class="outline-2">
+<h2 id="org45b9ee7">
+<span class="section-number-2">4</span> 其他插件支持</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
+</div>
+
+<div id="outline-container-orgc035d1d" class="outline-3">
+<h3 id="orgc035d1d">
+<span class="section-number-3">4.1</span> helm swoop</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+从我个人的使用体验来看 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和helm occur的功能十分相似，它们都提供了方便的关键词跳转功能。<br></p>
+
+<p>
+下面的图片来自helm swoop的 <a href="https://github.com/ShingoFukuyama/helm-swoop">主页</a><br></p>
+
+<p>
+<img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-navigation-and-selection-effectively-in-emacs-3.gif" alt="nil"><br></p>
+</div>
+</div>
+
+<div id="outline-container-orgbaf94bf" class="outline-3">
+<h3 id="orgbaf94bf">
+<span class="section-number-3">4.2</span> avy</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+<a href="https://github.com/abo-abo/avy">avy</a> 的思路非常独特，这样的跳转和定位让我想起了Chrome浏览器中的Vimium插件，他允许我们使用更少的按键就能跳转到当前buffer中的任意位置，略微遗憾的是它只支持拉丁字母，不过在编写代码的大多数情况下是够用的。<br></p>
+
+<p>
+下面的图片来自Paul的博文<br></p>
+
+<p>
+<img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-navigation-and-selection-effectively-in-emacs-4.gif" alt="nil"><br></p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org47fc924" class="outline-2">
+<h2 id="org47fc924">
+<span class="section-number-2">5</span> 参考资料</h2>
+<div class="outline-text-2" id="text-5">
+<ul class="org-ul">
+<li>
+<a href="https://lorefnon.tech/2018/07/14/getting-productive-with-selection-and-navigation-in-emacs/">lorefnon.tech</a><br>
+</li>
+<li>
+<a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a><br>
+</li>
+<li>
+<a href="https://github.com/abo-abo/avy">avy</a><br>
+</li>
+</ul>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Jul 26, 2018</span>
     <h3>
       <a class="post-link" href="/blog/posts/2018/shell-output-redirections/">shell的输出重定向</a>
     </h3>
 
-    <div id="outline-container-org5841154" class="outline-2">
-<h2 id="org5841154">引言</h2>
-<div class="outline-text-2" id="text-org5841154">
+    <div id="outline-container-orgf9d9e4a" class="outline-2">
+<h2 id="orgf9d9e4a">引言</h2>
+<div class="outline-text-2" id="text-orgf9d9e4a">
 <p>
 在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgcf0cc53" class="outline-2">
-<h2 id="orgcf0cc53">使用尖括号完成重定向</h2>
-<div class="outline-text-2" id="text-orgcf0cc53">
+<div id="outline-container-orgc067d23" class="outline-2">
+<h2 id="orgc067d23">使用尖括号完成重定向</h2>
+<div class="outline-text-2" id="text-orgc067d23">
 <p>
 示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span>&gt;<span class="w"> </span>ls-output.txt
@@ -74,25 +275,25 @@
 可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
 </div>
 
-<div id="outline-container-orga098a5b" class="outline-3">
-<h3 id="orga098a5b">重定向 <code>stdout</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-orga098a5b">
+<div id="outline-container-org7d41c37" class="outline-3">
+<h3 id="org7d41c37">重定向 <code>stdout</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org7d41c37">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">1</span>&gt;<span class="w"> </span>ls-output.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgd2089c0" class="outline-3">
-<h3 id="orgd2089c0">重定向 <code>stderr</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-orgd2089c0">
+<div id="outline-container-orga4de383" class="outline-3">
+<h3 id="orga4de383">重定向 <code>stderr</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-orga4de383">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>ls-error.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org2e3c18f" class="outline-3">
-<h3 id="org2e3c18f">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
-<div class="outline-text-3" id="text-org2e3c18f">
+<div id="outline-container-org08ae258" class="outline-3">
+<h3 id="org08ae258">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
+<div class="outline-text-3" id="text-org08ae258">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span>ls-output-and-error.txt
 </pre></div>
 <p>
@@ -102,9 +303,9 @@
 </div>
 </div>
 
-<div id="outline-container-org7126425" class="outline-3">
-<h3 id="org7126425">将程序的输出丢掉</h3>
-<div class="outline-text-3" id="text-org7126425">
+<div id="outline-container-orgcf4d46a" class="outline-3">
+<h3 id="orgcf4d46a">将程序的输出丢掉</h3>
+<div class="outline-text-3" id="text-orgcf4d46a">
 <p>
 可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
 <div class="highlight"><pre><span></span>program<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
@@ -112,9 +313,9 @@
 </div>
 </div>
 
-<div id="outline-container-org93d0f7a" class="outline-3">
-<h3 id="org93d0f7a">将输出追加到指定文件尾部</h3>
-<div class="outline-text-3" id="text-org93d0f7a">
+<div id="outline-container-org7dda952" class="outline-3">
+<h3 id="org7dda952">将输出追加到指定文件尾部</h3>
+<div class="outline-text-3" id="text-org7dda952">
 <p>
 使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="nb">test</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>file-output.txt
@@ -123,9 +324,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgab5b88b" class="outline-2">
-<h2 id="orgab5b88b">使用管道完成重定向</h2>
-<div class="outline-text-2" id="text-orgab5b88b">
+<div id="outline-container-orgfe07e90" class="outline-2">
+<h2 id="orgfe07e90">使用管道完成重定向</h2>
+<div class="outline-text-2" id="text-orgfe07e90">
 <p>
 使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
 <div class="highlight"><pre><span></span>ls<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>&lt;pattern&gt;
@@ -142,9 +343,9 @@
       <a class="post-link" href="/blog/posts/2018/notes-on-libshmcache/">libshmcache源码阅读笔记</a>
     </h3>
 
-    <div id="outline-container-orgda08f98" class="outline-2">
-<h2 id="orgda08f98">引言</h2>
-<div class="outline-text-2" id="text-orgda08f98">
+    <div id="outline-container-org2986fd2" class="outline-2">
+<h2 id="org2986fd2">引言</h2>
+<div class="outline-text-2" id="text-org2986fd2">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -169,9 +370,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org91bbd3a" class="outline-2">
-<h2 id="org91bbd3a">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-org91bbd3a">
+<div id="outline-container-org04a3310" class="outline-2">
+<h2 id="org04a3310">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-org04a3310">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -215,9 +416,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org8a8eb04" class="outline-2">
-<h2 id="org8a8eb04">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-org8a8eb04">
+<div id="outline-container-org558733a" class="outline-2">
+<h2 id="org558733a">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-org558733a">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -226,18 +427,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orgc6c3dc4" class="outline-2">
-<h2 id="orgc6c3dc4">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-orgc6c3dc4">
+<div id="outline-container-orgcdf8aff" class="outline-2">
+<h2 id="orgcdf8aff">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-orgcdf8aff">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgafd383f" class="outline-2">
-<h2 id="orgafd383f">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-orgafd383f">
+<div id="outline-container-org2bda9bc" class="outline-2">
+<h2 id="org2bda9bc">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org2bda9bc">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -246,9 +447,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org0348cac" class="outline-2">
-<h2 id="org0348cac">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-org0348cac">
+<div id="outline-container-orgd1c1ff7" class="outline-2">
+<h2 id="orgd1c1ff7">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-orgd1c1ff7">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
@@ -263,9 +464,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
       <a class="post-link" href="/blog/posts/2018/cpp-bit-field/">C/C++中的位域</a>
     </h3>
 
-    <div id="outline-container-org73a42ae" class="outline-2">
-<h2 id="org73a42ae">什么是位域</h2>
-<div class="outline-text-2" id="text-org73a42ae">
+    <div id="outline-container-org6f5744e" class="outline-2">
+<h2 id="org6f5744e">什么是位域</h2>
+<div class="outline-text-2" id="text-org6f5744e">
 <p>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">维基百科</a> 给出了以下解释<br></p>
 <blockquote>
@@ -294,9 +495,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org44fe991" class="outline-2">
-<h2 id="org44fe991">位域的语法</h2>
-<div class="outline-text-2" id="text-org44fe991">
+<div id="outline-container-orgb8ec8ae" class="outline-2">
+<h2 id="orgb8ec8ae">位域的语法</h2>
+<div class="outline-text-2" id="text-orgb8ec8ae">
 <p>
 下面就是位域的语法格式。<br></p>
 <div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">size</span>
@@ -343,9 +544,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgac0dc5e" class="outline-3">
-<h3 id="orgac0dc5e">在 <code>size</code> 取0时如何理解</h3>
-<div class="outline-text-3" id="text-orgac0dc5e">
+<div id="outline-container-orgde0449e" class="outline-3">
+<h3 id="orgde0449e">在 <code>size</code> 取0时如何理解</h3>
+<div class="outline-text-3" id="text-orgde0449e">
 <p>
 对于 <code>size</code> 取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。<br>
 如下所示，定义了如下几种情况。<br></p>
@@ -430,10 +631,10 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org9805e09" class="outline-3">
-<h3 id="org9805e09">
+<div id="outline-container-org40601dc" class="outline-3">
+<h3 id="org40601dc">
 <code>struct</code> 与 <code>class</code> 关键字</h3>
-<div class="outline-text-3" id="text-org9805e09">
+<div class="outline-text-3" id="text-org40601dc">
 <p>
 多数例子都是以 <code>struct</code> 作为位域的组织标识，在C++中能否使用 <code>class</code> 作为位域的标识符呢？<br>
 经过测试，是可以使用 <code>class</code> 关键字的，但是需要注意 <code>class</code> 的默认访问控制属性为 <code>private</code> 。<br></p>
@@ -442,9 +643,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgd920cc5" class="outline-2">
-<h2 id="orgd920cc5">位域的常见应用场景</h2>
-<div class="outline-text-2" id="text-orgd920cc5">
+<div id="outline-container-org8ec12fb" class="outline-2">
+<h2 id="org8ec12fb">位域的常见应用场景</h2>
+<div class="outline-text-2" id="text-org8ec12fb">
 <p>
 为什么要使用位域？位域适合那些情况？<br></p>
 
@@ -457,18 +658,18 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org3ed4460" class="outline-2">
-<h2 id="org3ed4460">C++中的位操作接口</h2>
-<div class="outline-text-2" id="text-org3ed4460">
+<div id="outline-container-org373a718" class="outline-2">
+<h2 id="org373a718">C++中的位操作接口</h2>
+<div class="outline-text-2" id="text-org373a718">
 <p>
 C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接口提供了指定比特位数据的操作接口。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org002be45" class="outline-2">
-<h2 id="org002be45">参考资料</h2>
-<div class="outline-text-2" id="text-org002be45">
+<div id="outline-container-orgd59d042" class="outline-2">
+<h2 id="orgd59d042">参考资料</h2>
+<div class="outline-text-2" id="text-orgd59d042">
 <ul class="org-ul">
 <li>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">wikipedia - bit field</a><br>
@@ -500,8 +701,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
       <a class="post-link" href="/blog/posts/2018/gcc-built-in-functions-for-atomic-memory-access/">GCC的内存原子化操作函数接口</a>
     </h3>
 
-    <div id="outline-container-org4d40007" class="outline-2">
-<h2 id="org4d40007">
+    <div id="outline-container-org4e84eb4" class="outline-2">
+<h2 id="org4e84eb4">
 <span class="section-number-2">1</span> 原子化操作</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -531,8 +732,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
       <a class="post-link" href="/blog/posts/2018/asynchronous-synchronous-and-blocking-unblocking/">同步和异步、阻塞和非阻塞</a>
     </h3>
 
-    <div id="outline-container-org0f2602d" class="outline-2">
-<h2 id="org0f2602d">
+    <div id="outline-container-org7e35ed8" class="outline-2">
+<h2 id="org7e35ed8">
 <span class="section-number-2">1</span> 同步和异步</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -548,8 +749,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
 </div>
 
-<div id="outline-container-org160dda7" class="outline-3">
-<h3 id="org160dda7">
+<div id="outline-container-org773e1e6" class="outline-3">
+<h3 id="org773e1e6">
 <span class="section-number-3">1.1</span> POSIX AIO</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -581,8 +782,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-org2e4ec36" class="outline-3">
-<h3 id="org2e4ec36">
+<div id="outline-container-org07c5623" class="outline-3">
+<h3 id="org07c5623">
 <span class="section-number-3">1.2</span> Linux AIO</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -621,8 +822,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-org4883813" class="outline-3">
-<h3 id="org4883813">
+<div id="outline-container-org22048df" class="outline-3">
+<h3 id="org22048df">
 <span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -652,8 +853,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 </div>
 
-<div id="outline-container-orga04b885" class="outline-2">
-<h2 id="orga04b885">
+<div id="outline-container-org4ee07e0" class="outline-2">
+<h2 id="org4ee07e0">
 <span class="section-number-2">2</span> 阻塞和非阻塞</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -664,8 +865,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org843692f" class="outline-2">
-<h2 id="org843692f">
+<div id="outline-container-org127e6d7" class="outline-2">
+<h2 id="org127e6d7">
 <span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -675,8 +876,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org3301f5f" class="outline-2">
-<h2 id="org3301f5f">
+<div id="outline-container-orgcaa21ce" class="outline-2">
+<h2 id="orgcaa21ce">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
@@ -705,9 +906,9 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
     <p>
 查看Linux系统相关信息有助于排查和解决软件和硬件的兼容性问题。系统信息包括硬件信息和软件信息，硬件信息主要有CPU信息、内存信息、PCI信息、USB信息、硬盘信息等等。软件信息主要有系统版本、分区使用状态等等。本文主要介绍了获取当前Linux系统信息的命令。<br></p>
 
-<div id="outline-container-org4b3a4d4" class="outline-2">
-<h2 id="org4b3a4d4">查看系统相关信息</h2>
-<div class="outline-text-2" id="text-org4b3a4d4">
+<div id="outline-container-org8c37a5f" class="outline-2">
+<h2 id="org8c37a5f">查看系统相关信息</h2>
+<div class="outline-text-2" id="text-org8c37a5f">
 <p>
 <code>uname</code> 指令提供了查询系统信息的功能，使用该命令能够快速获取操作系统信息概览。<br></p>
 
@@ -746,25 +947,25 @@ hostnamectl
 </div>
 </div>
 
-<div id="outline-container-org973ecbe" class="outline-2">
-<h2 id="org973ecbe">查看CPU相关信息</h2>
-<div class="outline-text-2" id="text-org973ecbe">
+<div id="outline-container-org7c0dd51" class="outline-2">
+<h2 id="org7c0dd51">查看CPU相关信息</h2>
+<div class="outline-text-2" id="text-org7c0dd51">
 <p>
 <code>lscpu</code> 指令能够查看当前系统中CPU的详细信息，包括型号、主频、构架、大小端等信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4789ef7" class="outline-2">
-<h2 id="org4789ef7">查看硬盘相关信息</h2>
-<div class="outline-text-2" id="text-org4789ef7">
+<div id="outline-container-orgcb00c54" class="outline-2">
+<h2 id="orgcb00c54">查看硬盘相关信息</h2>
+<div class="outline-text-2" id="text-orgcb00c54">
 <p>
 <code>lsblk</code> 指令能够查看块设备（block device）的详细信息，块设备主要指系统中的存储设备如硬盘和闪存。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org61c299d" class="outline-2">
-<h2 id="org61c299d">查看PCI设备的相关信息</h2>
-<div class="outline-text-2" id="text-org61c299d">
+<div id="outline-container-org05900b4" class="outline-2">
+<h2 id="org05900b4">查看PCI设备的相关信息</h2>
+<div class="outline-text-2" id="text-org05900b4">
 <p>
 <code>lspci</code> 指令能够查看PCI设备的信息，PCI设备包括USB、显卡、串口、网卡等其他外围设备。<br></p>
 
@@ -781,17 +982,17 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-orgd636c71" class="outline-2">
-<h2 id="orgd636c71">查看USB设备的相关信息</h2>
-<div class="outline-text-2" id="text-orgd636c71">
+<div id="outline-container-orge36dae8" class="outline-2">
+<h2 id="orge36dae8">查看USB设备的相关信息</h2>
+<div class="outline-text-2" id="text-orge36dae8">
 <p>
 <code>lsusb</code> 指令能够查看USBS设备的信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0780329" class="outline-2">
-<h2 id="org0780329">查看文件系统相关信息</h2>
-<div class="outline-text-2" id="text-org0780329">
+<div id="outline-container-org2fd16a5" class="outline-2">
+<h2 id="org2fd16a5">查看文件系统相关信息</h2>
+<div class="outline-text-2" id="text-org2fd16a5">
 <p>
 <code>fdisk</code> 命令能够查看和操作linux系统的分区表。<br></p>
 
@@ -810,9 +1011,9 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-org33523ee" class="outline-2">
-<h2 id="org33523ee">参考资料</h2>
-<div class="outline-text-2" id="text-org33523ee">
+<div id="outline-container-org569b2e8" class="outline-2">
+<h2 id="org569b2e8">参考资料</h2>
+<div class="outline-text-2" id="text-org569b2e8">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/commands-to-collect-system-and-hardware-information-in-linux/">tecmint.com</a><br>
@@ -836,15 +1037,15 @@ lspci -vv
     <p>
 linux的top命令能够动态显示当前系统的运行状态。它能够显示操作系统的汇总信息和当前系统上的正在运行的进程列表。<br></p>
 
-<div id="outline-container-org52d0916" class="outline-2">
-<h2 id="org52d0916">统计信息说明</h2>
-<div class="outline-text-2" id="text-org52d0916">
+<div id="outline-container-org1782221" class="outline-2">
+<h2 id="org1782221">统计信息说明</h2>
+<div class="outline-text-2" id="text-org1782221">
 <p>
 (可以通过配置文件修改通计信息区的显示格式，下文所描述的都是在默认配置下的显示内容)<br></p>
 </div>
-<div id="outline-container-org25b101d" class="outline-3">
-<h3 id="org25b101d">第1行</h3>
-<div class="outline-text-3" id="text-org25b101d">
+<div id="outline-container-org69159b5" class="outline-3">
+<h3 id="org69159b5">第1行</h3>
+<div class="outline-text-3" id="text-org69159b5">
 <ul class="org-ul">
 <li>当前系统时间<br>
 </li>
@@ -859,9 +1060,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 这一行信息也可以通过 <code>uptime</code> 和 <code>w</code> 指令获得<br></p>
 </div>
 </div>
-<div id="outline-container-org3ca6dfb" class="outline-3">
-<h3 id="org3ca6dfb">第2行</h3>
-<div class="outline-text-3" id="text-org3ca6dfb">
+<div id="outline-container-orgd72dae8" class="outline-3">
+<h3 id="orgd72dae8">第2行</h3>
+<div class="outline-text-3" id="text-orgd72dae8">
 <ul class="org-ul">
 <li>总进程数<br>
 </li>
@@ -876,9 +1077,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </ul>
 </div>
 </div>
-<div id="outline-container-org1b96997" class="outline-3">
-<h3 id="org1b96997">第3行</h3>
-<div class="outline-text-3" id="text-org1b96997">
+<div id="outline-container-org76453d4" class="outline-3">
+<h3 id="org76453d4">第3行</h3>
+<div class="outline-text-3" id="text-org76453d4">
 <ul class="org-ul">
 <li>us 用户空间占用CPU百分比<br>
 </li>
@@ -900,9 +1101,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orga7e07d4" class="outline-3">
-<h3 id="orga7e07d4">第4行</h3>
-<div class="outline-text-3" id="text-orga7e07d4">
+<div id="outline-container-orgdfbb8ee" class="outline-3">
+<h3 id="orgdfbb8ee">第4行</h3>
+<div class="outline-text-3" id="text-orgdfbb8ee">
 <ul class="org-ul">
 <li>物理内存总量<br>
 </li>
@@ -916,9 +1117,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org0cae207" class="outline-3">
-<h3 id="org0cae207">第5行</h3>
-<div class="outline-text-3" id="text-org0cae207">
+<div id="outline-container-org7374eea" class="outline-3">
+<h3 id="org7374eea">第5行</h3>
+<div class="outline-text-3" id="text-org7374eea">
 <ul class="org-ul">
 <li>交换区总量<br>
 </li>
@@ -933,9 +1134,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orgaa9de11" class="outline-2">
-<h2 id="orgaa9de11">进程信息</h2>
-<div class="outline-text-2" id="text-orgaa9de11">
+<div id="outline-container-orgb311cf9" class="outline-2">
+<h2 id="orgb311cf9">进程信息</h2>
+<div class="outline-text-2" id="text-orgb311cf9">
 <p>
 在top命令中按f按可以查看显示的列信息，按对应字母来开启/关闭列，大写字母表示开启，小写字母表示关闭。带*号的是默认列。<br></p>
 
@@ -970,9 +1171,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-orgaa63f31" class="outline-2">
-<h2 id="orgaa63f31">参考资料</h2>
-<div class="outline-text-2" id="text-orgaa63f31">
+<div id="outline-container-org035e165" class="outline-2">
+<h2 id="org035e165">参考资料</h2>
+<div class="outline-text-2" id="text-org035e165">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/12-top-command-examples-in-linux/">tecmint.com</a><br>
@@ -1008,9 +1209,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
     <p>
 由于C++是兼容C的，所以使用C++进行文件操作时，会发现有两套库函数可以使用，它们分别是C风格的和C++风格的。<br></p>
 
-<div id="outline-container-org4791416" class="outline-2">
-<h2 id="org4791416">C风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-org4791416">
+<div id="outline-container-orgae561f0" class="outline-2">
+<h2 id="orgae561f0">C风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-orgae561f0">
 <p>
 <b>打开文件，关闭文件</b><br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
@@ -1039,9 +1240,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-orgc567f8e" class="outline-2">
-<h2 id="orgc567f8e">C++风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-orgc567f8e">
+<div id="outline-container-orga8b6c12" class="outline-2">
+<h2 id="orga8b6c12">C++风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-orga8b6c12">
 <p>
 C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件实际上就会对应一个 <code>fstream</code> 对象，一下函数都是 <code>fstream</code> 的成员函数。<br>
 文件打开和关闭<br></p>
@@ -1059,9 +1260,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 </div>
 
 
-<div id="outline-container-orgebfc9b9" class="outline-2">
-<h2 id="orgebfc9b9">题外话</h2>
-<div class="outline-text-2" id="text-orgebfc9b9">
+<div id="outline-container-orgc820040" class="outline-2">
+<h2 id="orgc820040">题外话</h2>
+<div class="outline-text-2" id="text-orgc820040">
 <p>
 在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。<br></p>
 </div>
@@ -1076,9 +1277,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
       <a class="post-link" href="/blog/posts/2018/endianness-and-union-type/">字节序与union类型</a>
     </h3>
 
-    <div id="outline-container-org764d9ce" class="outline-2">
-<h2 id="org764d9ce">字节序是什么</h2>
-<div class="outline-text-2" id="text-org764d9ce">
+    <div id="outline-container-org91fc85a" class="outline-2">
+<h2 id="org91fc85a">字节序是什么</h2>
+<div class="outline-text-2" id="text-org91fc85a">
 <p>
 字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。字节序分为大端字节序和小端字节序，两种字节序不能混用。<br></p>
 
@@ -1104,9 +1305,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 
 
 
-<div id="outline-container-orgcf7a10b" class="outline-2">
-<h2 id="orgcf7a10b">提供字节序转换功能的函数接口</h2>
-<div class="outline-text-2" id="text-orgcf7a10b">
+<div id="outline-container-orgc8fd963" class="outline-2">
+<h2 id="orgc8fd963">提供字节序转换功能的函数接口</h2>
+<div class="outline-text-2" id="text-orgc8fd963">
 <p>
 在网络通信接口中提供了转换主机字节序和网络字节序之间的函数接口，如下所示。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">htonl</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">hostlong</span><span class="p">);</span>
@@ -1192,9 +1393,9 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 
 
 
-<div id="outline-container-org0340f1c" class="outline-2">
-<h2 id="org0340f1c">查看当前系统的字节序</h2>
-<div class="outline-text-2" id="text-org0340f1c">
+<div id="outline-container-orge0d6999" class="outline-2">
+<h2 id="orge0d6999">查看当前系统的字节序</h2>
+<div class="outline-text-2" id="text-orge0d6999">
 <p>
 通过 <code>lscpu</code> 命令，能得到cpu的大端和小端信息。<br></p>
 <div class="highlight"><pre><span></span>lscpu<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>endian
@@ -1243,9 +1444,9 @@ hexdump<span class="w"> </span>-n<span class="w"> </span><span class="m">6</span
 </div>
 
 
-<div id="outline-container-org6851b1c" class="outline-2">
-<h2 id="org6851b1c">参考资料</h2>
-<div class="outline-text-2" id="text-org6851b1c">
+<div id="outline-container-org9452e9f" class="outline-2">
+<h2 id="org9452e9f">参考资料</h2>
+<div class="outline-text-2" id="text-org9452e9f">
 <ul class="org-ul">
 <li>
 <a href="https://en.wikipedia.org/wiki/Endianness">wikipedia.com - endianness</a><br>
@@ -1261,28 +1462,6 @@ hexdump<span class="w"> </span>-n<span class="w"> </span><span class="m">6</span
 （全文完）<br></p>
 </div>
 </div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">May 05, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/python-logging-with-function-name/">在Python日志中输出文件名和函数名</a>
-    </h3>
-
-    <p>
-Python内置了日志模块，在默认情况下输出的日志是不带文件名和函数名的，这样在排查问题时，遇到相似的日志就变得容易混淆，可以通过设置将输出的日志中带有文件名和函数名。参考了stackoverflow的回答，详细代码如下。<br></p>
-
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">'root'</span><span class="p">)</span>
-<span class="n">LOG_FORMAT</span> <span class="o">=</span> <span class="s2">"</span><span class="si">%(filename)s</span><span class="s2">:</span><span class="si">%(lineno)s</span><span class="s2"> </span><span class="si">%(funcName)s</span><span class="s2">() </span><span class="si">%(message)s</span><span class="s2">"</span>
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="n">LOG_FORMAT</span><span class="p">)</span>
-<span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
-</pre></div>
-
-<p>
-<b>参考资料</b><br><a href="https://stackoverflow.com/questions/10973362/python-logging-function-name-file-name-line-number-using-a-single-file">stackoverflow</a><br></p>
 
   </li>
 
