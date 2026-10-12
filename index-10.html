@@ -50,13 +50,176 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Aug 02, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/algorithm/algorithm-weekly-longest-substring-without-repeating-characters/">每周算法：最长不含重复字符的子串</a>
+    </h3>
+
+    <div id="outline-container-org6cee203" class="outline-2">
+<h2 id="org6cee203">Description</h2>
+<div class="outline-text-2" id="text-org6cee203">
+<p>
+Given a string, find the length of the longest substring without repeating characters.<br></p>
+
+<p>
+<b>Examples:</b><br>
+Given "abcabcbb", the answer is "abc", which the length is 3.<br>
+Given "bbbbb", the answer is "b", with the length of 1.<br>
+Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer must be a substring, "pwke" is a subsequence and not a substring.<br></p>
+
+<p>
+来源：<a href="https://leetcode.com/problems/longest-substring-without-repeating-characters/description/">LeetCode 03 Longest Substring Without Repeating Characters</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org24b022c" class="outline-2">
+<h2 id="org24b022c">Solution</h2>
+<div class="outline-text-2" id="text-org24b022c">
+<p>
+好久没刷算法题了，手有点生，没有什么思路，下面的答案是看过提示之后才写出来的。<br></p>
+</div>
+
+<div id="outline-container-orgabc004b" class="outline-3">
+<h3 id="orgabc004b">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-orgabc004b">
+<p>
+将所有的子串都穷举出来，并对它们进行判断，就能够得到最长子串的长度。这个算法很显然需要耗费很长时间。<br>
+需要注意的是： C++20中才支持 <code>std::set::contains</code> 这个接口（根据cppreference.com）。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="nf">isStringWithUniqueString</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">str</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// 用于判断字符串是否是具有唯一字符的</span>
+<span class="w">    </span><span class="n">set</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span><span class="w"> </span><span class="n">setChar</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">setChar</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">setChar</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
+<span class="w">	</span><span class="p">{</span>
+<span class="w">	    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">	</span><span class="p">}</span>
+
+<span class="w">	</span><span class="n">setChar</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">lengthMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;=</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">	</span><span class="p">{</span>
+<span class="w">	    </span><span class="c1">// get sub-string</span>
+<span class="w">	    </span><span class="n">string</span><span class="w"> </span><span class="n">strTemp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">-</span><span class="n">i</span><span class="p">);</span>
+<span class="w">	    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isStringWithUniqueString</span><span class="p">(</span><span class="n">strTemp</span><span class="p">))</span>
+<span class="w">	    </span><span class="p">{</span>
+<span class="w">		</span><span class="n">lengthMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">strTemp</span><span class="p">.</span><span class="n">length</span><span class="p">());</span>
+<span class="w">	    </span><span class="p">}</span>
+<span class="w">	</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">lengthMax</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org8634efa" class="outline-3">
+<h3 id="org8634efa">Approach 2 滑动窗口</h3>
+<div class="outline-text-3" id="text-org8634efa">
+<p>
+滑动窗口的概念在字符串处理问题中十分常用，保持子串的左端点不动，不断拓展右侧端点，就能穷举出所有满足条件的子串。<br>
+需要注意的是这句话： <code>lengthMax = max(lengthMax, int(j-i+1));</code><br></p>
+<ol class="org-ol">
+<li>
+<code>std::max</code> 并不能同时匹配 <code>int</code> 和 <code>size_t</code> ，所以需要进行强制类型转换。<br>
+</li>
+<li>在完成第 <code>j</code> 个字母的验证后，说明包含该字母的子串也满足条件，所以要进行 <code>+1</code> 操作，这个主要是针对只有一个字母的字符串。<br>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">lengthMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">	</span><span class="c1">// 这个循环目的是，验证从i到j的字符串是否满足条件</span>
+<span class="w">	</span><span class="n">set</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span><span class="w"> </span><span class="n">setChar</span><span class="p">;</span>
+
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="n">i</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">	</span><span class="p">{</span>
+<span class="w">	    </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+<span class="w">	    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">setChar</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">setChar</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
+<span class="w">	    </span><span class="p">{</span>
+<span class="w">		</span><span class="k">break</span><span class="p">;</span>
+<span class="w">	    </span><span class="p">}</span>
+<span class="w">	    </span><span class="k">else</span>
+<span class="w">	    </span><span class="p">{</span>
+<span class="w">		</span><span class="n">lengthMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+<span class="w">	    </span><span class="p">}</span>
+
+<span class="w">	    </span><span class="n">setChar</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
+<span class="w">	</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">lengthMax</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-org19b69d9" class="outline-3">
+<h3 id="org19b69d9">Approach 3 优化的滑动窗口</h3>
+<div class="outline-text-3" id="text-org19b69d9">
+<p>
+使用 <code>map</code> 对字母出现的位置进行记录，这样在出现相同字母时，就能够从上一次出现的位置向后开始寻找。<br>
+需要注意句话 <code>it-&gt;second+1&gt;=i</code> , 需要对位置加1后再比较，这样才能保证 <code>i</code> 的坐标计算正确。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">lengthOfLongestSubstring</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">lengthMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mapPos</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+<span class="w">	</span><span class="n">map</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="o">&gt;::</span><span class="n">iterator</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mapPos</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">ch</span><span class="p">);</span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">it</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">mapPos</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
+<span class="w">	</span><span class="p">{</span>
+<span class="w">	    </span><span class="c1">// 这里说明找到了字符上一次出现的位置</span>
+<span class="w">	    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="o">&gt;=</span><span class="w"> </span><span class="n">i</span><span class="p">)</span>
+<span class="w">	    </span><span class="p">{</span>
+<span class="w">		</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">it</span><span class="o">-&gt;</span><span class="n">second</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">	    </span><span class="p">}</span>
+<span class="w">	</span><span class="p">}</span>
+
+<span class="w">	</span><span class="n">lengthMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">lengthMax</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+
+<span class="w">	</span><span class="n">mapPos</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">lengthMax</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Jul 30, 2018</span>
     <h3>
       <a class="post-link" href="/blog/posts/2018/navigation-and-selection-effectively-in-emacs/">提高emacs中浏览和选择操作效率的技巧</a>
     </h3>
 
-    <div id="outline-container-org3daeb76" class="outline-2">
-<h2 id="org3daeb76">
+    <div id="outline-container-org9d83231" class="outline-2">
+<h2 id="org9d83231">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -71,8 +234,8 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-orgcc0d8d1" class="outline-2">
-<h2 id="orgcc0d8d1">
+<div id="outline-container-orgd192c95" class="outline-2">
+<h2 id="orgd192c95">
 <span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -84,13 +247,13 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-orgb3c6828" class="outline-2">
-<h2 id="orgb3c6828">
+<div id="outline-container-org4e2422d" class="outline-2">
+<h2 id="org4e2422d">
 <span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-org570d843" class="outline-3">
-<h3 id="org570d843">
+<div id="outline-container-org93ffa88" class="outline-3">
+<h3 id="org93ffa88">
 <span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -135,8 +298,8 @@ Point and mark interchanged
 </div>
 </div>
 
-<div id="outline-container-org63c5a9f" class="outline-3">
-<h3 id="org63c5a9f">
+<div id="outline-container-org7821e66" class="outline-3">
+<h3 id="org7821e66">
 <span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -174,8 +337,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org2e6f030" class="outline-3">
-<h3 id="org2e6f030">
+<div id="outline-container-org54c776f" class="outline-3">
+<h3 id="org54c776f">
 <span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
 </h3>
 <div class="outline-text-3" id="text-3-3">
@@ -189,16 +352,16 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org69cba91" class="outline-2">
-<h2 id="org69cba91">
+<div id="outline-container-org1bd4f69" class="outline-2">
+<h2 id="org1bd4f69">
 <span class="section-number-2">4</span> 其他插件支持</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
 </div>
 
-<div id="outline-container-org5d202eb" class="outline-3">
-<h3 id="org5d202eb">
+<div id="outline-container-org0006025" class="outline-3">
+<h3 id="org0006025">
 <span class="section-number-3">4.1</span> helm swoop</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
@@ -212,8 +375,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org48e40db" class="outline-3">
-<h3 id="org48e40db">
+<div id="outline-container-org07b145c" class="outline-3">
+<h3 id="org07b145c">
 <span class="section-number-3">4.2</span> avy</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
@@ -229,8 +392,8 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-orgd109857" class="outline-2">
-<h2 id="orgd109857">
+<div id="outline-container-orgbd8d2a1" class="outline-2">
+<h2 id="orgbd8d2a1">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -256,17 +419,17 @@ interface FooProps {}
       <a class="post-link" href="/blog/posts/2018/shell-output-redirections/">shell的输出重定向</a>
     </h3>
 
-    <div id="outline-container-org8c2793f" class="outline-2">
-<h2 id="org8c2793f">引言</h2>
-<div class="outline-text-2" id="text-org8c2793f">
+    <div id="outline-container-org88f5618" class="outline-2">
+<h2 id="org88f5618">引言</h2>
+<div class="outline-text-2" id="text-org88f5618">
 <p>
 在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgee50d1e" class="outline-2">
-<h2 id="orgee50d1e">使用尖括号完成重定向</h2>
-<div class="outline-text-2" id="text-orgee50d1e">
+<div id="outline-container-orgb1e419a" class="outline-2">
+<h2 id="orgb1e419a">使用尖括号完成重定向</h2>
+<div class="outline-text-2" id="text-orgb1e419a">
 <p>
 示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span>&gt;<span class="w"> </span>ls-output.txt
@@ -275,25 +438,25 @@ interface FooProps {}
 可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
 </div>
 
-<div id="outline-container-orgcc595f2" class="outline-3">
-<h3 id="orgcc595f2">重定向 <code>stdout</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-orgcc595f2">
+<div id="outline-container-orgccd6454" class="outline-3">
+<h3 id="orgccd6454">重定向 <code>stdout</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-orgccd6454">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">1</span>&gt;<span class="w"> </span>ls-output.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org9bb9b2b" class="outline-3">
-<h3 id="org9bb9b2b">重定向 <code>stderr</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org9bb9b2b">
+<div id="outline-container-org38ff0e7" class="outline-3">
+<h3 id="org38ff0e7">重定向 <code>stderr</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org38ff0e7">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>ls-error.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org311c0ea" class="outline-3">
-<h3 id="org311c0ea">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
-<div class="outline-text-3" id="text-org311c0ea">
+<div id="outline-container-org859f57d" class="outline-3">
+<h3 id="org859f57d">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
+<div class="outline-text-3" id="text-org859f57d">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span>ls-output-and-error.txt
 </pre></div>
 <p>
@@ -303,9 +466,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-orgbd5e103" class="outline-3">
-<h3 id="orgbd5e103">将程序的输出丢掉</h3>
-<div class="outline-text-3" id="text-orgbd5e103">
+<div id="outline-container-orgb24146b" class="outline-3">
+<h3 id="orgb24146b">将程序的输出丢掉</h3>
+<div class="outline-text-3" id="text-orgb24146b">
 <p>
 可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
 <div class="highlight"><pre><span></span>program<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
@@ -313,9 +476,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org9ad198a" class="outline-3">
-<h3 id="org9ad198a">将输出追加到指定文件尾部</h3>
-<div class="outline-text-3" id="text-org9ad198a">
+<div id="outline-container-orgad3ee21" class="outline-3">
+<h3 id="orgad3ee21">将输出追加到指定文件尾部</h3>
+<div class="outline-text-3" id="text-orgad3ee21">
 <p>
 使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="nb">test</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>file-output.txt
@@ -324,9 +487,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org07db1d8" class="outline-2">
-<h2 id="org07db1d8">使用管道完成重定向</h2>
-<div class="outline-text-2" id="text-org07db1d8">
+<div id="outline-container-org49bbf53" class="outline-2">
+<h2 id="org49bbf53">使用管道完成重定向</h2>
+<div class="outline-text-2" id="text-org49bbf53">
 <p>
 使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
 <div class="highlight"><pre><span></span>ls<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>&lt;pattern&gt;
@@ -343,9 +506,9 @@ interface FooProps {}
       <a class="post-link" href="/blog/posts/2018/notes-on-libshmcache/">libshmcache源码阅读笔记</a>
     </h3>
 
-    <div id="outline-container-org6b37203" class="outline-2">
-<h2 id="org6b37203">引言</h2>
-<div class="outline-text-2" id="text-org6b37203">
+    <div id="outline-container-orgaa3b314" class="outline-2">
+<h2 id="orgaa3b314">引言</h2>
+<div class="outline-text-2" id="text-orgaa3b314">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -370,9 +533,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org9226825" class="outline-2">
-<h2 id="org9226825">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-org9226825">
+<div id="outline-container-org4b07b38" class="outline-2">
+<h2 id="org4b07b38">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-org4b07b38">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -416,9 +579,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org5399257" class="outline-2">
-<h2 id="org5399257">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-org5399257">
+<div id="outline-container-orgb5739f3" class="outline-2">
+<h2 id="orgb5739f3">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-orgb5739f3">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -427,18 +590,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orgb118578" class="outline-2">
-<h2 id="orgb118578">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-orgb118578">
+<div id="outline-container-org11f87fa" class="outline-2">
+<h2 id="org11f87fa">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-org11f87fa">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgf6669aa" class="outline-2">
-<h2 id="orgf6669aa">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-orgf6669aa">
+<div id="outline-container-org6b76a09" class="outline-2">
+<h2 id="org6b76a09">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org6b76a09">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -447,9 +610,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-org27cf23a" class="outline-2">
-<h2 id="org27cf23a">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-org27cf23a">
+<div id="outline-container-org898fa95" class="outline-2">
+<h2 id="org898fa95">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-org898fa95">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
@@ -464,9 +627,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
       <a class="post-link" href="/blog/posts/2018/cpp-bit-field/">C/C++中的位域</a>
     </h3>
 
-    <div id="outline-container-org33bad9f" class="outline-2">
-<h2 id="org33bad9f">什么是位域</h2>
-<div class="outline-text-2" id="text-org33bad9f">
+    <div id="outline-container-org61fbc82" class="outline-2">
+<h2 id="org61fbc82">什么是位域</h2>
+<div class="outline-text-2" id="text-org61fbc82">
 <p>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">维基百科</a> 给出了以下解释<br></p>
 <blockquote>
@@ -495,9 +658,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orge3baba3" class="outline-2">
-<h2 id="orge3baba3">位域的语法</h2>
-<div class="outline-text-2" id="text-orge3baba3">
+<div id="outline-container-org5e0c507" class="outline-2">
+<h2 id="org5e0c507">位域的语法</h2>
+<div class="outline-text-2" id="text-org5e0c507">
 <p>
 下面就是位域的语法格式。<br></p>
 <div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">size</span>
@@ -544,9 +707,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org578dd8a" class="outline-3">
-<h3 id="org578dd8a">在 <code>size</code> 取0时如何理解</h3>
-<div class="outline-text-3" id="text-org578dd8a">
+<div id="outline-container-org27a2e26" class="outline-3">
+<h3 id="org27a2e26">在 <code>size</code> 取0时如何理解</h3>
+<div class="outline-text-3" id="text-org27a2e26">
 <p>
 对于 <code>size</code> 取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。<br>
 如下所示，定义了如下几种情况。<br></p>
@@ -631,10 +794,10 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org34b2a63" class="outline-3">
-<h3 id="org34b2a63">
+<div id="outline-container-org803f380" class="outline-3">
+<h3 id="org803f380">
 <code>struct</code> 与 <code>class</code> 关键字</h3>
-<div class="outline-text-3" id="text-org34b2a63">
+<div class="outline-text-3" id="text-org803f380">
 <p>
 多数例子都是以 <code>struct</code> 作为位域的组织标识，在C++中能否使用 <code>class</code> 作为位域的标识符呢？<br>
 经过测试，是可以使用 <code>class</code> 关键字的，但是需要注意 <code>class</code> 的默认访问控制属性为 <code>private</code> 。<br></p>
@@ -643,9 +806,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org8a2a632" class="outline-2">
-<h2 id="org8a2a632">位域的常见应用场景</h2>
-<div class="outline-text-2" id="text-org8a2a632">
+<div id="outline-container-org21aa363" class="outline-2">
+<h2 id="org21aa363">位域的常见应用场景</h2>
+<div class="outline-text-2" id="text-org21aa363">
 <p>
 为什么要使用位域？位域适合那些情况？<br></p>
 
@@ -658,18 +821,18 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgfce3c17" class="outline-2">
-<h2 id="orgfce3c17">C++中的位操作接口</h2>
-<div class="outline-text-2" id="text-orgfce3c17">
+<div id="outline-container-org7bc8908" class="outline-2">
+<h2 id="org7bc8908">C++中的位操作接口</h2>
+<div class="outline-text-2" id="text-org7bc8908">
 <p>
 C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接口提供了指定比特位数据的操作接口。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org5274069" class="outline-2">
-<h2 id="org5274069">参考资料</h2>
-<div class="outline-text-2" id="text-org5274069">
+<div id="outline-container-org38cfa4b" class="outline-2">
+<h2 id="org38cfa4b">参考资料</h2>
+<div class="outline-text-2" id="text-org38cfa4b">
 <ul class="org-ul">
 <li>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">wikipedia - bit field</a><br>
@@ -701,8 +864,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
       <a class="post-link" href="/blog/posts/2018/gcc-built-in-functions-for-atomic-memory-access/">GCC的内存原子化操作函数接口</a>
     </h3>
 
-    <div id="outline-container-org862746d" class="outline-2">
-<h2 id="org862746d">
+    <div id="outline-container-org99149fa" class="outline-2">
+<h2 id="org99149fa">
 <span class="section-number-2">1</span> 原子化操作</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -732,8 +895,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
       <a class="post-link" href="/blog/posts/2018/asynchronous-synchronous-and-blocking-unblocking/">同步和异步、阻塞和非阻塞</a>
     </h3>
 
-    <div id="outline-container-org11179ac" class="outline-2">
-<h2 id="org11179ac">
+    <div id="outline-container-orgacc09fc" class="outline-2">
+<h2 id="orgacc09fc">
 <span class="section-number-2">1</span> 同步和异步</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -749,8 +912,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
 </div>
 
-<div id="outline-container-orgae60822" class="outline-3">
-<h3 id="orgae60822">
+<div id="outline-container-orga7dd4de" class="outline-3">
+<h3 id="orga7dd4de">
 <span class="section-number-3">1.1</span> POSIX AIO</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -782,8 +945,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-org3511c0a" class="outline-3">
-<h3 id="org3511c0a">
+<div id="outline-container-org5799f54" class="outline-3">
+<h3 id="org5799f54">
 <span class="section-number-3">1.2</span> Linux AIO</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -822,8 +985,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-orgf6f2150" class="outline-3">
-<h3 id="orgf6f2150">
+<div id="outline-container-org00bad4a" class="outline-3">
+<h3 id="org00bad4a">
 <span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -853,8 +1016,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 </div>
 
-<div id="outline-container-org0aa1319" class="outline-2">
-<h2 id="org0aa1319">
+<div id="outline-container-orgd1a8bc0" class="outline-2">
+<h2 id="orgd1a8bc0">
 <span class="section-number-2">2</span> 阻塞和非阻塞</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -865,8 +1028,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org834b07c" class="outline-2">
-<h2 id="org834b07c">
+<div id="outline-container-orgdb3c05d" class="outline-2">
+<h2 id="orgdb3c05d">
 <span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -876,8 +1039,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org0f1d2f3" class="outline-2">
-<h2 id="org0f1d2f3">
+<div id="outline-container-org871bfd5" class="outline-2">
+<h2 id="org871bfd5">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
@@ -906,9 +1069,9 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
     <p>
 查看Linux系统相关信息有助于排查和解决软件和硬件的兼容性问题。系统信息包括硬件信息和软件信息，硬件信息主要有CPU信息、内存信息、PCI信息、USB信息、硬盘信息等等。软件信息主要有系统版本、分区使用状态等等。本文主要介绍了获取当前Linux系统信息的命令。<br></p>
 
-<div id="outline-container-orgbf004a5" class="outline-2">
-<h2 id="orgbf004a5">查看系统相关信息</h2>
-<div class="outline-text-2" id="text-orgbf004a5">
+<div id="outline-container-org95ac8ae" class="outline-2">
+<h2 id="org95ac8ae">查看系统相关信息</h2>
+<div class="outline-text-2" id="text-org95ac8ae">
 <p>
 <code>uname</code> 指令提供了查询系统信息的功能，使用该命令能够快速获取操作系统信息概览。<br></p>
 
@@ -947,25 +1110,25 @@ hostnamectl
 </div>
 </div>
 
-<div id="outline-container-org4e2758c" class="outline-2">
-<h2 id="org4e2758c">查看CPU相关信息</h2>
-<div class="outline-text-2" id="text-org4e2758c">
+<div id="outline-container-org10e768f" class="outline-2">
+<h2 id="org10e768f">查看CPU相关信息</h2>
+<div class="outline-text-2" id="text-org10e768f">
 <p>
 <code>lscpu</code> 指令能够查看当前系统中CPU的详细信息，包括型号、主频、构架、大小端等信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org76ac8e4" class="outline-2">
-<h2 id="org76ac8e4">查看硬盘相关信息</h2>
-<div class="outline-text-2" id="text-org76ac8e4">
+<div id="outline-container-org7fc8dbd" class="outline-2">
+<h2 id="org7fc8dbd">查看硬盘相关信息</h2>
+<div class="outline-text-2" id="text-org7fc8dbd">
 <p>
 <code>lsblk</code> 指令能够查看块设备（block device）的详细信息，块设备主要指系统中的存储设备如硬盘和闪存。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3a5f4d7" class="outline-2">
-<h2 id="org3a5f4d7">查看PCI设备的相关信息</h2>
-<div class="outline-text-2" id="text-org3a5f4d7">
+<div id="outline-container-org54eb3fa" class="outline-2">
+<h2 id="org54eb3fa">查看PCI设备的相关信息</h2>
+<div class="outline-text-2" id="text-org54eb3fa">
 <p>
 <code>lspci</code> 指令能够查看PCI设备的信息，PCI设备包括USB、显卡、串口、网卡等其他外围设备。<br></p>
 
@@ -982,17 +1145,17 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-org5ae972c" class="outline-2">
-<h2 id="org5ae972c">查看USB设备的相关信息</h2>
-<div class="outline-text-2" id="text-org5ae972c">
+<div id="outline-container-org3692311" class="outline-2">
+<h2 id="org3692311">查看USB设备的相关信息</h2>
+<div class="outline-text-2" id="text-org3692311">
 <p>
 <code>lsusb</code> 指令能够查看USBS设备的信息。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org5eb4a38" class="outline-2">
-<h2 id="org5eb4a38">查看文件系统相关信息</h2>
-<div class="outline-text-2" id="text-org5eb4a38">
+<div id="outline-container-org0ad5145" class="outline-2">
+<h2 id="org0ad5145">查看文件系统相关信息</h2>
+<div class="outline-text-2" id="text-org0ad5145">
 <p>
 <code>fdisk</code> 命令能够查看和操作linux系统的分区表。<br></p>
 
@@ -1011,9 +1174,9 @@ lspci -vv
 </div>
 </div>
 
-<div id="outline-container-orgaa1ccc6" class="outline-2">
-<h2 id="orgaa1ccc6">参考资料</h2>
-<div class="outline-text-2" id="text-orgaa1ccc6">
+<div id="outline-container-org9e44419" class="outline-2">
+<h2 id="org9e44419">参考资料</h2>
+<div class="outline-text-2" id="text-org9e44419">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/commands-to-collect-system-and-hardware-information-in-linux/">tecmint.com</a><br>
@@ -1037,15 +1200,15 @@ lspci -vv
     <p>
 linux的top命令能够动态显示当前系统的运行状态。它能够显示操作系统的汇总信息和当前系统上的正在运行的进程列表。<br></p>
 
-<div id="outline-container-org0596332" class="outline-2">
-<h2 id="org0596332">统计信息说明</h2>
-<div class="outline-text-2" id="text-org0596332">
+<div id="outline-container-orgffb8c19" class="outline-2">
+<h2 id="orgffb8c19">统计信息说明</h2>
+<div class="outline-text-2" id="text-orgffb8c19">
 <p>
 (可以通过配置文件修改通计信息区的显示格式，下文所描述的都是在默认配置下的显示内容)<br></p>
 </div>
-<div id="outline-container-org4b477cb" class="outline-3">
-<h3 id="org4b477cb">第1行</h3>
-<div class="outline-text-3" id="text-org4b477cb">
+<div id="outline-container-org55283a0" class="outline-3">
+<h3 id="org55283a0">第1行</h3>
+<div class="outline-text-3" id="text-org55283a0">
 <ul class="org-ul">
 <li>当前系统时间<br>
 </li>
@@ -1060,9 +1223,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 这一行信息也可以通过 <code>uptime</code> 和 <code>w</code> 指令获得<br></p>
 </div>
 </div>
-<div id="outline-container-org067bf2a" class="outline-3">
-<h3 id="org067bf2a">第2行</h3>
-<div class="outline-text-3" id="text-org067bf2a">
+<div id="outline-container-orgc1df460" class="outline-3">
+<h3 id="orgc1df460">第2行</h3>
+<div class="outline-text-3" id="text-orgc1df460">
 <ul class="org-ul">
 <li>总进程数<br>
 </li>
@@ -1077,9 +1240,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </ul>
 </div>
 </div>
-<div id="outline-container-orgaf6a405" class="outline-3">
-<h3 id="orgaf6a405">第3行</h3>
-<div class="outline-text-3" id="text-orgaf6a405">
+<div id="outline-container-org1a9cdc9" class="outline-3">
+<h3 id="org1a9cdc9">第3行</h3>
+<div class="outline-text-3" id="text-org1a9cdc9">
 <ul class="org-ul">
 <li>us 用户空间占用CPU百分比<br>
 </li>
@@ -1101,9 +1264,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org567c389" class="outline-3">
-<h3 id="org567c389">第4行</h3>
-<div class="outline-text-3" id="text-org567c389">
+<div id="outline-container-orgadba476" class="outline-3">
+<h3 id="orgadba476">第4行</h3>
+<div class="outline-text-3" id="text-orgadba476">
 <ul class="org-ul">
 <li>物理内存总量<br>
 </li>
@@ -1117,9 +1280,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orgdc95435" class="outline-3">
-<h3 id="orgdc95435">第5行</h3>
-<div class="outline-text-3" id="text-orgdc95435">
+<div id="outline-container-org2286af4" class="outline-3">
+<h3 id="org2286af4">第5行</h3>
+<div class="outline-text-3" id="text-org2286af4">
 <ul class="org-ul">
 <li>交换区总量<br>
 </li>
@@ -1134,9 +1297,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-orgb43e09d" class="outline-2">
-<h2 id="orgb43e09d">进程信息</h2>
-<div class="outline-text-2" id="text-orgb43e09d">
+<div id="outline-container-org4f5f5da" class="outline-2">
+<h2 id="org4f5f5da">进程信息</h2>
+<div class="outline-text-2" id="text-org4f5f5da">
 <p>
 在top命令中按f按可以查看显示的列信息，按对应字母来开启/关闭列，大写字母表示开启，小写字母表示关闭。带*号的是默认列。<br></p>
 
@@ -1171,9 +1334,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-org84cc022" class="outline-2">
-<h2 id="org84cc022">参考资料</h2>
-<div class="outline-text-2" id="text-org84cc022">
+<div id="outline-container-org7c897d2" class="outline-2">
+<h2 id="org7c897d2">参考资料</h2>
+<div class="outline-text-2" id="text-org7c897d2">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/12-top-command-examples-in-linux/">tecmint.com</a><br>
@@ -1209,9 +1372,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
     <p>
 由于C++是兼容C的，所以使用C++进行文件操作时，会发现有两套库函数可以使用，它们分别是C风格的和C++风格的。<br></p>
 
-<div id="outline-container-org5ec9d5b" class="outline-2">
-<h2 id="org5ec9d5b">C风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-org5ec9d5b">
+<div id="outline-container-org2b4c94c" class="outline-2">
+<h2 id="org2b4c94c">C风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-org2b4c94c">
 <p>
 <b>打开文件，关闭文件</b><br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
@@ -1240,9 +1403,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-org8bae779" class="outline-2">
-<h2 id="org8bae779">C++风格的文件操作函数</h2>
-<div class="outline-text-2" id="text-org8bae779">
+<div id="outline-container-org0cba769" class="outline-2">
+<h2 id="org0cba769">C++风格的文件操作函数</h2>
+<div class="outline-text-2" id="text-org0cba769">
 <p>
 C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件实际上就会对应一个 <code>fstream</code> 对象，一下函数都是 <code>fstream</code> 的成员函数。<br>
 文件打开和关闭<br></p>
@@ -1260,206 +1423,11 @@ C++将文件操作函数封装为 <code>fstream</code> 操作类，一个文件�
 </div>
 
 
-<div id="outline-container-orgaf8af88" class="outline-2">
-<h2 id="orgaf8af88">题外话</h2>
-<div class="outline-text-2" id="text-orgaf8af88">
+<div id="outline-container-orgcb92e05" class="outline-2">
+<h2 id="orgcb92e05">题外话</h2>
+<div class="outline-text-2" id="text-orgcb92e05">
 <p>
 在liunx下，可以使用wc命令查看文件中的相关信息。wc命令会打印出该文件的行数、单词数、字符数。<br></p>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">May 11, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/endianness-and-union-type/">字节序与union类型</a>
-    </h3>
-
-    <div id="outline-container-org36de944" class="outline-2">
-<h2 id="org36de944">字节序是什么</h2>
-<div class="outline-text-2" id="text-org36de944">
-<p>
-字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。字节序分为大端字节序和小端字节序，两种字节序不能混用。<br></p>
-
-<ul class="org-ul">
-<li>大端字节序 ：高位字节保存在较低位地址的内存中<br>
-</li>
-<li>小端字节序 ：高位字节保存在较高位地址的内存中<br>
-</li>
-</ul>
-<p>
-以 <code>int n = 0x12345678;</code> 为例，大端字节序内存中的存储的顺序为 <code>0x12 0x34 0x56 0x78</code> ，小端字节序内存中的存储顺序为 <code>0x78 0x56 0x34 0x12</code> 。很明显可以看出大端字节序更符合人类的阅读习惯。<br></p>
-
-<ul class="org-ul">
-<li>常见的大端系统CPU：IBM z/Atchitecture<br>
-</li>
-<li>常见的小端系统CPU：intel x86<br>
-</li>
-</ul>
-<p>
-网络字节序使用的大端字节序，常用网络协议如IPv4、IPv6、TCP和UDP协议都是使用大端字节序进行数据传输的。<br></p>
-</div>
-</div>
-
-
-
-<div id="outline-container-org96a580a" class="outline-2">
-<h2 id="org96a580a">提供字节序转换功能的函数接口</h2>
-<div class="outline-text-2" id="text-org96a580a">
-<p>
-在网络通信接口中提供了转换主机字节序和网络字节序之间的函数接口，如下所示。<br></p>
-<div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">htonl</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">hostlong</span><span class="p">);</span>
-<span class="kt">uint16_t</span><span class="w"> </span><span class="nf">htons</span><span class="p">(</span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">hostshort</span><span class="p">);</span>
-<span class="kt">uint32_t</span><span class="w"> </span><span class="nf">ntohl</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">netlong</span><span class="p">);</span>
-<span class="kt">uint16_t</span><span class="w"> </span><span class="nf">ntohs</span><span class="p">(</span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">netshort</span><span class="p">);</span>
-</pre></div>
-
-<p>
-有些时候，我们需要手动转换内存字节流，可以使用以下接口帮助实现指定字节序的转换。<br></p>
-
-<p>
-小端字节序的函数实现如下：<br></p>
-<div class="highlight"><pre><span></span><span class="c1">// small endian</span>
-<span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span><span class="w"> </span><span class="nf">SE_GetStreamU16</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span><span class="w"> </span><span class="n">pTemp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">));</span>
-<span class="p">}</span>
-
-<span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">SE_GetStreamU32</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span><span class="w"> </span><span class="n">pTemp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="w">			 </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">)</span>
-<span class="w">			 </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">16</span><span class="p">)</span>
-<span class="w">			 </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">24</span><span class="p">));</span>
-<span class="p">}</span>
-
-<span class="kr">inline</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">SE_SetStreamU16</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span><span class="w"> </span><span class="n">pTemp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="kr">inline</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">SE_SetStreamU32</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span><span class="w"> </span><span class="n">pTemp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">16</span><span class="p">);</span>
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">24</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
-
-<p>
-大端字节序的函数实现如下：<br></p>
-<div class="highlight"><pre><span></span><span class="c1">// big endian</span>
-<span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span><span class="w"> </span><span class="nf">BE_GetStreamU16</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span><span class="w"> </span><span class="n">pTemp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">BE_GetStreamU32</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span><span class="w"> </span><span class="n">pTemp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-<span class="w">			 </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">)</span>
-<span class="w">			 </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">16</span><span class="p">)</span>
-<span class="w">			 </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">24</span><span class="p">));</span>
-<span class="p">}</span>
-
-<span class="kr">inline</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">BE_SetStreamU16</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span><span class="w"> </span><span class="n">pTemp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="kr">inline</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">BE_SetStreamU32</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*</span><span class="w"> </span><span class="n">pTemp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">24</span><span class="p">);</span>
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">16</span><span class="p">);</span>
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
-<span class="w">    </span><span class="n">pTemp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">uint8_t</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-
-
-
-<div id="outline-container-orgfb1f272" class="outline-2">
-<h2 id="orgfb1f272">查看当前系统的字节序</h2>
-<div class="outline-text-2" id="text-orgfb1f272">
-<p>
-通过 <code>lscpu</code> 命令，能得到cpu的大端和小端信息。<br></p>
-<div class="highlight"><pre><span></span>lscpu<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>endian
-</pre></div>
-
-<p>
-通过常用shell命令，在大端系统中会输出0，在小端系统中会输出1。<br></p>
-<div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span>I<span class="w"> </span><span class="p">|</span><span class="w"> </span>od<span class="w"> </span>-to2<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n1<span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-f2<span class="w"> </span>-d<span class="s2">" "</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-c6
-</pre></div>
-
-<p>
-借助python进行判断。<br></p>
-<div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import sys; print(sys.byteorder)"</span>
-<span class="c1"># or</span>
-python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import sys;sys.exit(0 if sys.byteorder=='big' else 1)"</span>
-</pre></div>
-
-<p>
-借助linux的ELF进行判断，查看第6个字节，小端系统中为1，大端系统中为2。<br></p>
-<div class="highlight"><pre><span></span>xxd<span class="w"> </span>-c<span class="w"> </span><span class="m">1</span><span class="w"> </span>-l<span class="w"> </span><span class="m">6</span><span class="w"> </span>/bin/bash
-<span class="c1"># or</span>
-hexdump<span class="w"> </span>-n<span class="w"> </span><span class="m">6</span><span class="w"> </span>-C<span class="w"> </span>/bin/bash
-</pre></div>
-
-<p>
-可以使用union类型验证字节序，以下示例代码在不同的字节序下会有不同的输出。<br></p>
-<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;inttypes.h&gt;</span>
-
-<span class="k">typedef</span><span class="w"> </span><span class="k">union</span><span class="w"> </span><span class="nc">un</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">ch</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
-<span class="p">}</span><span class="w"> </span><span class="n">un</span><span class="p">;</span>
-
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">un</span><span class="w"> </span><span class="n">u</span><span class="p">;</span>
-<span class="w">    </span><span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">    </span><span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
-<span class="w">    </span><span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
-<span class="w">    </span><span class="n">u</span><span class="p">.</span><span class="n">ch</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"u.x=0x%x</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-
-
-<div id="outline-container-orga1f1566" class="outline-2">
-<h2 id="orga1f1566">参考资料</h2>
-<div class="outline-text-2" id="text-orga1f1566">
-<ul class="org-ul">
-<li>
-<a href="https://en.wikipedia.org/wiki/Endianness">wikipedia.com - endianness</a><br>
-</li>
-<li>
-<a href="https://serverfault.com/questions/163487/how-to-tell-if-a-linux-system-is-big-endian-or-little-endian">serverfault.com - how to check endian</a><br>
-</li>
-<li>
-<a href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format">wikipedia.com - ELF format</a><br>
-</li>
-</ul>
-<p>
-（全文完）<br></p>
 </div>
 </div>
 
@@ -1517,7 +1485,7 @@ hexdump<span class="w"> </span>-n<span class="w"> </span><span class="m">6</span
 </div>
 
 
-      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- google adsense --><script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
