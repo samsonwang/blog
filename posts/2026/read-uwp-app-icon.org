@@ -1,0 +1,530 @@
+#+BEGIN_COMMENT
+.. title: 读取UWP软件的图标
+.. slug: read-uwp-app-icon
+.. date: 2026-10-10 17:43:29 UTC+08:00
+.. tags: uwp, c++, com
+.. category: windows
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: 读取UWP软件的图标
+
+最近在软件里加了一个功能：读取系统中已安装的UWP应用列表，拿到它们的名称和图标，并且能用代码启动它们。
+
+这件事看起来很简单，做起来却踩了不少坑。UWP应用没有传统的exe文件，显示名称和图标都写在包的清单文件里，而且清单里记录的是“资源名”而不是真实的文件路径——同一个图标在包里可能同时存在 =Square44x44Logo.scale-100.png=、=Square44x44Logo.scale-200.png=、=Square44x44Logo.scale-400.png= 好几个版本，具体用哪个要由系统在运行时决定。
+
+这篇文章按三条技术栈路线整理我试过的做法：纯 WinRT、ATL + COM、纯 COM。最后一条是我在 LaunchyQt 里实际落地的方案，它完全不需要 WinRT，也不需要 ATL。
+
+{{{TEASER_END}}}
+
+
+** 先说结论
+
+先把三条路线的结论列出来，后面再逐个展开：
+
+1. *纯 WinRT* 。最省事的方案，名称、描述、图标的本地化和资源限定符全都由系统处理；代价是枚举和取图标都是异步操作，而且细节信息（比如图标的背景色）拿不到。
+2. *ATL + COM* 。自己解析 =AppxManifest.xml=，能拿到 AUMID、背景色这些 WinRT 不直接暴露的信息。ATL 在这里只是智能指针，不提供任何额外的能力。
+3. *纯 COM* 。走 Shell 的 =AppsFolder= 虚拟目录，枚举、名称、属性全是标准 Shell 接口，既不碰 WinRT 也不碰 ATL。这是我最终采用的方案。
+
+回头看，方案三里最关键的发现是： **枚举 UWP 应用并不只有 =PackageManager= 这一条路** 。Shell 的 =shell:AppsFolder= 虚拟目录里就有完整的已安装应用列表，用 =IEnumShellItems= 就能遍历，而且它给出的显示名已经是本地化之后的结果， =ms-resource= 那一整套解析根本用不上。
+
+需要提醒的是，方案二和方案三不是完全互斥的： =AppsFolder= 提供的图标属性不是每个应用都有，缺的时候仍然要回退到读清单，所以清单解析的代码最后还是留了下来。
+
+
+** 几个绕不开的概念
+
+在写代码之前，有几个名词必须先弄清楚，不然后面的接口参数根本不知道该填什么。
+
+=AppUserModelID（AUMID）= 是 UWP 应用的唯一标识，格式为 =包家族名!应用Id= ，例如 =Microsoft.WindowsCalculator_8wekyb3d8bbwe!App= 。启动应用靠它，把列表项和图标对上号也靠它。
+
+=PackageFullName= 是包的完整名称，里面带有版本号、架构和发布者哈希，例如 =Microsoft.WindowsCalculator_11.2503.2.0_x64__8wekyb3d8bbwe= 。 =PackageFamilyName= 则是去掉版本信息的那部分。
+
+=InstalledLocation= 是包的安装目录，一般在 =C:\Program Files\WindowsApps= 下面。这个目录默认没有访问权限，但通过 Shell 属性或者 =GetPackagePathByFullName= 拿到的路径可以直接读。
+
+=ms-resource= 是清单里引用资源的方式。清单中写的 DisplayName="ms-resource:AppName" 或者 Square44x44Logo="Assets\Square44x44Logo.png"，都只是逻辑名，真正的文件藏在 =resources.pri= 里，需要根据当前系统的缩放比例、语言、主题去选。这是方案二里最容易卡住的地方，方案三可以不碰它。
+
+
+** 方案一：纯 WinRT
+
+完整的一条龙方案：C++/WinRT 提供 =PackageManager= 枚举包， =Package::GetAppListEntriesAsync= 拿到包里的每个应用， =AppListEntry::DisplayInfo= 提供名称和图标， =AppListEntry::LaunchAsync= 负责启动。
+
+#+BEGIN_SRC C++
+#include <winrt/Windows.ApplicationModel.h>
+#include <winrt/Windows.ApplicationModel.Core.h>
+#include <winrt/Windows.Management.Deployment.h>
+#include <winrt/Windows.Storage.Streams.h>
+
+using namespace winrt;
+using namespace Windows::ApplicationModel;
+using namespace Windows::ApplicationModel::Core;
+using namespace Windows::Foundation;
+using namespace Windows::Management::Deployment;
+using namespace Windows::Storage::Streams;
+
+IAsyncAction EnumerateAppsAsync()
+{
+    PackageManager manager;
+
+    // 只枚举当前用户的包，FindPackages() 会枚举所有用户，
+    // 普通权限下拿到的结果不一定完整
+    for (auto const& package : manager.FindPackagesForUser({})) {
+        if (package.IsFramework()) {
+            continue;   // 框架包不是应用，必须过滤掉
+        }
+
+        for (auto const& entry : co_await package.GetAppListEntriesAsync()) {
+            AppDisplayInfo info = entry.DisplayInfo();
+
+            // 名称和描述已经做过本地化处理，不再是 ms-resource 引用
+            hstring name = info.DisplayName();
+            hstring desc = info.Description();
+
+            // AppUserModelId 需要 Windows 10 1709（SDK 16299）以上
+            hstring aumid = entry.AppUserModelId();
+
+            // 按指定尺寸取图标，MRT 的限定符由系统自动处理
+            RandomAccessStreamReference logo = info.GetLogo({ 256, 256 });
+            IRandomAccessStreamWithContentType stream = co_await logo.OpenReadAsync();
+
+            // 拿到流之后交给图像库解码即可
+            // ...
+
+            // 启动也走 WinRT
+            // co_await entry.LaunchAsync();
+        }
+    }
+}
+#+END_SRC
+
+这套方案最大的优点是几乎不用操心细节。名称的本地化、图标的缩放和主题限定符，WinRT 全帮你做完了；=GetLogo= 直接给的是流，不需要自己去猜文件名。
+
+缺点同样明显：
+
+- =GetAppListEntriesAsync= 返回 =IAsyncOperation= ，调用方必须能处理异步。在插件或者命令行程序里，这意味着要么上协程，要么起消息循环等待，代码结构会被迫改造。
+- 拿不到清单里的 =BackgroundColor=。UWP 图标普遍是透明底的 PNG，直接显示在大白底或者大黑底上很难看。
+- 多应用包（MAP）会有麻烦。一个包里有多个应用时， =GetAppListEntriesAsync= 返回多个 =AppListEntry= ，在 1709 之前的系统上没有任何办法知道哪个 =AppListEntry= 对应哪个AUMID，这正是 =AppListEntry.AppUserModelId= 在 1709 才被加进来的原因。
+- 绑定到 C++/WinRT 的语言投影。如果项目主体是纯 Win32 或者 Qt，为了这个功能引入整套 WinRT 头文件和运行时初始化，代价有点大。
+
+
+** 方案二：ATL + COM
+
+官方文档[[https://learn.microsoft.com/en-us/windows/uwp/xbox-apps/automate-launching-uwp-apps][Automate launching UWP apps]]用的就是这条路线，我一开始也是照着它写的。
+
+思路跟方案一完全不同：不去问 WinRT“这个应用的图标是什么”，而是自己把包安装目录里的 =AppxManifest.xml= 读出来，从清单里拿到 AUMID、显示名称、图标资源名和背景色。读清单用到的是打包 API， =IAppxFactory= 可以把一个 =IStream= 上的清单文件直接解析成 =IAppxManifestReader= ，不需要处理整个包。
+
+ATL 在这里承担的是 COM 智能指针的角色： =CComPtr= 管 =AddRef= 和 =Release=，=CComHeapPtr= 管 =CoTaskMemFree= 。
+
+#+BEGIN_SRC C++
+#include <windows.h>
+#include <atlbase.h>         // CComPtr
+#include <atlalloc.h>        // CComHeapPtr
+#include <appxpackaging.h>   // IAppxFactory / IAppxManifestReader
+#include <shlwapi.h>         // SHCreateStreamOnFileEx
+
+#pragma comment(lib, "shlwapi.lib")
+
+struct AppEntry
+{
+    std::wstring aumid;
+    std::wstring displayName;
+    std::wstring logo;              // 清单里写的资源名，不是文件路径
+    std::wstring backgroundColor;
+};
+
+bool ReadManifest(LPCWSTR manifestPath, std::vector<AppEntry>& apps)
+{
+    CComPtr<IAppxFactory> factory;
+    HRESULT hr = factory.CoCreateInstance(__uuidof(AppxFactory), nullptr,
+                                          CLSCTX_INPROC_SERVER);
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    CComPtr<IStream> stream;
+    hr = SHCreateStreamOnFileEx(manifestPath, STGM_READ | STGM_SHARE_EXCLUSIVE,
+                                0, FALSE, nullptr, &stream);
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    // 这里只是把清单当普通 XML 解析，不会校验包的数字签名
+    CComPtr<IAppxManifestReader> reader;
+    hr = factory->CreateManifestReader(stream, &reader);
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    CComPtr<IAppxManifestApplicationsEnumerator> enumerator;
+    hr = reader->GetApplications(&enumerator);
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    BOOL hasCurrent = FALSE;
+    while (SUCCEEDED(enumerator->GetHasCurrent(&hasCurrent)) && hasCurrent) {
+        CComPtr<IAppxManifestApplication> app;
+        if (FAILED(enumerator->GetCurrent(&app))) {
+            break;
+        }
+
+        AppEntry entry;
+
+        // 这些接口返回的字符串由 COM 分配，CComHeapPtr 析构时自动 CoTaskMemFree
+        CComHeapPtr<WCHAR> aumid;
+        if (SUCCEEDED(app->GetAppUserModelId(&aumid)) && aumid.p) {
+            entry.aumid = aumid.p;
+        }
+
+        CComHeapPtr<WCHAR> displayName;
+        if (SUCCEEDED(app->GetStringValue(L"DisplayName", &displayName)) && displayName.p) {
+            entry.displayName = displayName.p;
+        }
+
+        CComHeapPtr<WCHAR> logo;
+        if (SUCCEEDED(app->GetStringValue(L"Square44x44Logo", &logo)) && logo.p) {
+            entry.logo = logo.p;
+        }
+
+        CComHeapPtr<WCHAR> background;
+        if (SUCCEEDED(app->GetStringValue(L"BackgroundColor", &background)) && background.p) {
+            entry.backgroundColor = background.p;
+        }
+
+        if (!entry.aumid.empty()) {
+            apps.push_back(entry);
+        }
+
+        hr = enumerator->MoveNext(&hasCurrent);
+    }
+
+    return !apps.empty();
+}
+#+END_SRC
+
+=CComHeapPtr= 有个地方要注意：它的 =operator&= 带断言，要求指针当前为空，所以上面每个属性都单独声明了一个变量，不能复用同一个。
+
+另外，图标属性名在不同版本的清单里是不一样的。=IAppxManifestApplication= 的 =GetStringValue= 只认清单 =VisualElements= 节点上真实存在的属性名，所以要先看 =Package= 节点的命名空间再决定取哪个：
+
+#+BEGIN_SRC C++
+static LPCWSTR GetLogoKey(LPCWSTR packageNamespace)
+{
+    if (wcscmp(packageNamespace, L"http://schemas.microsoft.com/appx/manifest/foundation/windows10") == 0)
+        return L"Square44x44Logo";
+    if (wcscmp(packageNamespace, L"http://schemas.microsoft.com/appx/2013/manifest") == 0)
+        return L"Square30x30Logo";
+    if (wcscmp(packageNamespace, L"http://schemas.microsoft.com/appx/2010/manifest") == 0)
+        return L"SmallLogo";
+    return L"Square44x44Logo";   // 兜底
+}
+#+END_SRC
+
+这里必须说清楚一点：ATL 只覆盖了“读清单”和“启动”这两步，枚举包仍然要靠 WinRT 的 =PackageManager= 。也就是说方案二实际上是 =WinRT 枚举 + ATL/COM 读取= 的混合体。这个“必须碰 WinRT”的前提，正是我后来去找方案三的原因。
+
+
+** 方案二绕不开的一关：ms-resource
+
+清单读出来之后， =displayName= 可能是 =ms-resource:AppName=，=logo= 是 =Assets\Square44x44Logo.png= ，这两个都不是能直接用的东西。这是整个流程里最容易卡住的地方。
+
+Windows 提供了 =SHLoadIndirectString= 来做解析，它支持的语法是：
+
+#+BEGIN_EXAMPLE
+@{PackageFullName? ms-resource://资源路径}
+#+END_EXAMPLE
+
+把包全名和资源的 URI 填进去，它就会按当前系统的缩放、语言、对比度等条件，返回解析后的字符串。显示名称和图标路径都可以这么解析。
+
+#+BEGIN_SRC C++
+#include <shlwapi.h>   // SHLoadIndirectString
+
+// query 形如 @{PackageFullName? ms-resource://...}
+static std::wstring ResolveResource(const std::wstring& packageFullName,
+                                   const std::wstring& resourceUri)
+{
+    std::wstring query = L"@{" + packageFullName + L"? " + resourceUri + L"}";
+
+    wchar_t buffer[512] = { 0 };
+    HRESULT hr = SHLoadIndirectString(query.c_str(), buffer, ARRAYSIZE(buffer), nullptr);
+    if (FAILED(hr)) {
+        return {};
+    }
+    return buffer;
+}
+#+END_SRC
+
+解析图标路径时，清单里的相对路径要放到 =Files/= 下面，并且把反斜杠换成正斜杠：
+
+#+BEGIN_SRC C++
+std::wstring logo = entry.logo;
+std::replace(logo.begin(), logo.end(), L'\\', L'/');
+
+std::wstring uri = L"ms-resource://" + packageName + L"/Files/" + logo;
+std::wstring iconPath = ResolveResource(packageFullName, uri);
+#+END_SRC
+
+显示名称的处理要麻烦一些，因为 =ms-resource= 的写法并不统一，可能是 =ms-resource:AppName=、=ms-resource:///Resources/AppName= 或者 =ms-resource://Package/Resources/AppName= ，需要先规范化再解析。
+
+这套东西能用，但有几个一直让我不太满意的地方：固定长度的缓冲区有截断风险； =SHLoadIndirectString= 偶尔会失败，得留兜底；多应用包要对上号还得额外处理。后来改用方案三，这些麻烦就全没了。
+
+
+** 方案三：纯 COM，走 Shell 命名空间
+
+这条路线是我最终采用的，[[https://github.com/samsonwang/LaunchyQt/blob/master/src/Plugins/UWPApp/UWPApp.cpp][完整实现在 LaunchyQt 的 UWPApp 插件里]]。它既不碰 WinRT，也不碰 ATL，全部是标准的 Shell 和 COM 接口。
+
+核心思路是：Windows 有一个虚拟目录 =shell:AppsFolder= ，里面就是开始菜单里显示的那些应用条目。用 Shell 接口把它枚举出来，每个条目都能给出本地化之后的显示名、AUMID 和各种属性。
+
+*** 枚举：AppsFolder 与 IEnumShellItems
+
+打开虚拟目录用 =SHCreateItemFromParsingName=，拿到 =IShellItem= 之后再 =BindToHandler= 出枚举器。这里有个坑：=BHID_EnumItems= 和 =BHID_PropertyStore= 这两个 GUID 在 SDK 头文件里没有对应的符号，得自己定义。
+
+#+BEGIN_SRC C++
+DEFINE_GUID(BHID_EnumItems, 0x94f60519, 0x2850, 0x4924, 0xaa, 0x5a, 0xd1, 0x5e, 0x84, 0x86, 0x80, 0x39);
+DEFINE_GUID(BHID_PropertyStore, 0x0384e1a4, 0x1523, 0x439c, 0xa4, 0xc8, 0xab, 0x91, 0x10, 0x52, 0xf5, 0x86);
+
+IShellItem* appFolder = nullptr;
+if (FAILED(SHCreateItemFromParsingName(L"shell:AppsFolder", nullptr,
+                                       IID_PPV_ARGS(&appFolder)))) {
+    return;
+}
+
+IEnumShellItems* enumShellItems = nullptr;
+if (FAILED(appFolder->BindToHandler(nullptr, BHID_EnumItems,
+                                    IID_PPV_ARGS(&enumShellItems)))) {
+    appFolder->Release();
+    return;
+}
+
+IShellItem* shellItem = nullptr;
+while (enumShellItems->Next(1, &shellItem, nullptr) == S_OK) {
+    // 枚举器交出一个引用，循环体自己负责释放
+    // ...
+    shellItem->Release();
+}
+#+END_SRC
+
+对比方案一，这里最大的好处是 **同步的** 。没有 =IAsyncOperation= ，不需要协程，也不需要消息循环，一个 =while= 循环就结束了。
+
+*** 读属性：IPropertyStore
+
+每个条目通过 =BHID_PropertyStore= 绑定出 =IPropertyStore= ，然后用属性名查 =PROPERTYKEY= 再取值。用到的属性有这些：
+
+- =System.Launcher.AppState= —— 用来判断这是不是一个 UWP 条目。=AppsFolder= 里也混着普通桌面快捷方式，它们没有这个属性，而且 =ActivateApplication= 也启动不了它们。
+- =System.AppUserModel.ID= —— 就是 AUMID，启动要用。
+- =System.AppUserModel.PackageInstallPath= —— 包的安装目录。
+- =System.AppUserModel.PackageFullName= —— 上面那个属性缺失时用它兜底。
+- =System.Tile.SmallLogoPath= —— 图标的资源引用。
+
+#+BEGIN_SRC C++
+// 属性名到 PROPERTYKEY 的转换。注意检查返回值：
+// PSGetPropertyKeyFromName 遇到不认识的名字（老系统或者拼错）会把 key 置零，
+// 用这样的 key 去读会读到不该读的东西
+static bool isPropertyKeySet(const PROPERTYKEY& key)
+{
+    static const GUID kUnsetKey = { 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } };
+    return !IsEqualGUID(key.fmtid, kUnsetKey);
+}
+
+static bool readPropertyString(IPropertyStore* store, const PROPERTYKEY& key, QString* value)
+{
+    if (store == nullptr || value == nullptr || !isPropertyKeySet(key)) {
+        return false;
+    }
+
+    PROPVARIANT prop;
+    PropVariantInit(&prop);
+
+    bool ok = false;
+    if (SUCCEEDED(store->GetValue(key, &prop))) {
+        PWSTR text = nullptr;
+        // PropVariantToStringAlloc 分配的大小刚好够用，
+        // 比固定长度的缓冲区安全，不会静默截断
+        if (SUCCEEDED(PropVariantToStringAlloc(prop, &text)) && text != nullptr) {
+            *value = QString::fromWCharArray(text);
+            CoTaskMemFree(text);
+            ok = !value->isEmpty();
+        }
+    }
+
+    PropVariantClear(&prop);
+    return ok;
+}
+#+END_SRC
+
+显示名直接用 =GetDisplayName= 拿，它返回的已经是根据系统语言本地化过的结果：
+
+#+BEGIN_SRC C++
+wchar_t* name = nullptr;
+if (SUCCEEDED(shellItem->GetDisplayName(SIGDN_NORMALDISPLAY, &name))) {
+    shortName = QString::fromWCharArray(name);
+    CoTaskMemFree(name);
+}
+#+END_SRC
+
+这一步直接把方案二里最麻烦的 =ms-resource= 解析省掉了——Shell 已经帮你解析好了。
+
+如果 =System.AppUserModel.PackageInstallPath= 读不到（打包的桌面应用就是这样），可以用 =PackageFullName= 配合 =GetPackagePathByFullName= 反查目录。这个 API 是 Windows 8 才有的，要动态加载，否则插件在老系统上连加载都会失败：
+
+#+BEGIN_SRC C++
+typedef LONG (WINAPI *GetPackagePathByFullNameFn)(PCWSTR, UINT32*, PWSTR);
+
+// 动态加载而不是硬链接：老系统上拿不到这个函数，
+// 但插件至少还能给出一个空的列表，不至于直接加载失败
+static GetPackagePathByFullNameFn getPackagePathByFullName =
+    reinterpret_cast<GetPackagePathByFullNameFn>(
+        ::GetProcAddress(::GetModuleHandleW(L"kernel32.dll"),
+                         "GetPackagePathByFullName"));
+#+END_SRC
+
+*** 定位图标文件
+
+这是整个方案里最琐碎的部分。Shell 给的 =System.Tile.SmallLogoPath= 未必每个条目都有（打包的桌面应用和一些系统自带应用就没有），而且给了也是资源引用，不是真实路径。所以流程是“Shell 属性优先，清单兜底，然后自己去包里找文件”。
+
+清单兜底的实现不复杂，用 =QXmlStreamReader= 读 =AppxManifest.xml= ，按 AUMID 里的应用 Id 匹配对应的 =<Application>= ，再取 =VisualElements= 上的属性。候选顺序是有讲究的：
+
+#+BEGIN_SRC C++
+// Square44x44Logo 是开始菜单用的那个；Properties/Logo 是商店图标，
+// Windows 也拿它做兜底；Square150x150Logo 是 UWP 包必须提供的，
+// 所以放在最后一个有用的候选上
+const QString candidates[] = {
+    matchedSquare44x44, propertiesLogo, matchedSquare150x150,
+    anySquare44x44, anySquare150x150,
+};
+#+END_SRC
+
+拿到资源引用之后，要在包目录里找到真实文件。这里没有用 =SHLoadIndirectString=，而是直接按限定符逐个探测：
+
+#+BEGIN_SRC C++
+// 优先 unplated 变体：带背景板的那些把一块不透明的主题色底
+// 烤进了图片里，放进 Launchy 的列表里很难看。
+// 空串放最后，保证清单里原样引用的那个文件也能被找到
+const char* const kAssetQualifiers[] = {
+    ".targetsize-256_altform-unplated",
+    ".targetsize-48_altform-unplated",
+    ".targetsize-44_altform-unplated",
+    ".altform-unplated",
+    ".scale-200",
+    ".scale-400",
+    ".scale-125",
+    ".scale-150",
+    ".scale-100",
+    ".targetsize-256",
+    ".targetsize-48",
+    ".targetsize-44",
+    "",
+};
+#+END_SRC
+
+探测顺序是四级，逐级放宽：
+
+1. 按上面的限定符表拼文件名，用 =QFile::exists= 逐个试。这一步走的是“已知确切路径直接读文件”，即使包目录没法枚举也能工作，所以放在最前面。
+2. 在资源所在目录里扫一遍，按打分选最佳变体。打分里 =altform-unplated= 权重最高，其次是尺寸，=contrast-= 那些高对比度和单色变体排最后。
+3. 同样的方式，但递归到子目录。注意不能递归包根目录——那里全是 DLL 和各种语言文件夹。
+4. 有些包的图片放在跟清单声明不一致的目录里，或者清单里的目录根本不存在，最后再到 =Assets=、=images=、=VisualAssets= 这类常见目录里找一遍。
+
+扫目录时有个细节：必须在前缀匹配之后检查下一个字符是不是点，否则 =Square44x44Logo= 会误匹配到 =Square44x44LogoFoo= 这种无关文件。
+
+另外，UWP 图标都是带透明通道的 PNG，在深色界面上会“消失”。方案二的做法是读清单的 =BackgroundColor= 自己合成背景，方案三更省事——直接用 =altform-unplated= 变体，它本来就是透明底的，交给界面自己处理就行。
+
+*** 兜底：让 Shell 自己渲染图标
+
+如果上面四级都没找到（包里根本没有资源目录、清单读不了、图标是系统生成的），还有最后一招：直接让 Shell 把条目的图标渲染出来。
+
+#+BEGIN_SRC C++
+IShellItemImageFactory* factory = nullptr;
+if (FAILED(shellItem->QueryInterface(IID_PPV_ARGS(&factory)))) {
+    return QString();
+}
+
+// SIIGBF_ICONONLY 要的是图标而不是缩略图，
+// SIIGBF_BIGGERSIZEOK 让 Shell 返回它已有的大图，而不是把小图放大
+const SIZE size = { 256, 256 };
+HBITMAP bitmap = nullptr;
+const HRESULT hr = factory->GetImage(size, SIIGBF_ICONONLY | SIIGBF_BIGGERSIZEOK, &bitmap);
+factory->Release();
+#+END_SRC
+
+拿到 =HBITMAP= 之后要转成图像。Qt 5 没有加载 HBITMAP 的接口（=QImage::fromHICON= 是 Qt 6.4 才有的），所以用 =GetDIBits= 把像素取出来：
+
+#+BEGIN_SRC C++
+BITMAPINFO info;
+info.bmiHeader.biHeight = -header.bmHeight;   // 负值表示自上而下的行序
+
+// Shell 给的是预乘的 BGRA，正好就是 Format_ARGB32_Premultiplied 的内存布局
+QImage image(header.bmWidth, header.bmHeight, QImage::Format_ARGB32_Premultiplied);
+GetDIBits(dc, bitmap, 0, header.bmHeight, image.bits(), &info, DIB_RGB_COLORS);
+#+END_SRC
+
+还有两个容易忽略的问题：一是 =GetDIBits= 返回的行数要检查，不等于高度就说明失败了；二是有些位图没有可用的 alpha 数据，取出来是全透明的，存成文件就是一张看不见的图标，这时候要把同一块缓冲按不透明的 =Format_RGB32= 重新读一遍。
+
+最后把图像存到临时目录（比如 =<用户临时目录>/Launchy/icon= ）并返回路径。用临时目录而不是缓存目录是有意的：应用列表本来就会定期重建，位图不需要跨进程存活，也就没什么需要清理和管理的。
+
+*** 为什么不用 ATL
+
+这套实现里全是裸指针加手工 =Release= ，没有用 =CComPtr= 或者 =ComPtr= 。原因是 ATL 在 Visual Studio 里是可选组件，构建机上不一定装；而这个插件需要的只是引用计数和 =CoTaskMem= 字符串，这两样 COM 运行时本身就提供了，不值得为此引入一个依赖。
+
+如果不想手工管理，换成 =Microsoft::WRL::ComPtr= 也完全可以——它是 Windows SDK 的头文件，MinGW、Clang 这类工具链也能用，不像 ATL 那样绑定 MSVC。代价只是多一个头文件包含。
+
+
+** 启动 UWP 应用
+
+启动是这里面最简单的一步，三条路线最终都落在 =IApplicationActivationManager= 上，它是纯 COM 接口，传 AUMID 进去即可：
+
+#+BEGIN_SRC C++
+#include <shobjidl_core.h>   // IApplicationActivationManager / CLSID_ApplicationActivationManager
+
+bool LaunchApp(const std::wstring& aumid, DWORD* pid)
+{
+    IApplicationActivationManager* manager = nullptr;
+    HRESULT hr = CoCreateInstance(CLSID_ApplicationActivationManager, nullptr,
+                                  CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&manager));
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    // 第二个参数是传给应用的启动参数，不需要就传空串
+    hr = manager->ActivateApplication(aumid.c_str(), L"", AO_NONE, pid);
+
+    manager->Release();
+    return SUCCEEDED(hr);
+}
+#+END_SRC
+
+三个小提示：
+
+- 官方文档的示例用的是 =CLSCTX_LOCAL_SERVER= ，实测 =CLSCTX_INPROC_SERVER= 也能拿到对象。
+- 不想让启动失败时弹出系统错误框的话，把 =AO_NONE= 换成 =AO_NOERRORUI= 。
+- 走方案一的话可以直接用 =AppListEntry::LaunchAsync()= ，1803 以上还有 =LaunchForUserAsync= 可以在指定用户下启动。
+
+
+** 踩过的坑
+
+最后把过程中踩过的坑汇总一下，按被坑的严重程度排序：
+
+1. *AppsFolder 里混着非 UWP 条目。* 那个虚拟目录里也放着普通桌面快捷方式，它们没有 =System.Launcher.AppState= 属性， =ActivateApplication= 也启动不了。必须过滤。
+2. *BHID 常量没有现成符号。* =BHID_EnumItems= 和 =BHID_PropertyStore= 在 SDK 头文件里没有定义，要自己写 =DEFINE_GUID= 。
+3. *PSGetPropertyKeyFromName 失败时静默返回。* 它遇到不认识的属性名会把 =PROPERTYKEY= 置零而不是报错，用置零的 key 去读会读到不该读的东西。每次读之前先检查 =fmtid= 。
+4. *把清单里的 logo 值当成文件路径。* 它只是资源名，真实文件可能带 =scale-200= 、 =targetsize-256= 、 =altform-unplated= 之类的限定符。
+5. *图标文件名前缀匹配要加点检查。* 只判断 =startsWith= 会误匹配到共享前缀的无关文件，匹配之后要确认下一个字符是点。
+6. *忘了 =CoInitializeEx= 。*  Shell 和 COM 接口都需要在 COM 单元里工作， =COINIT_APARTMENTTHREADED= 就行。用了 =IAsyncOperation= 的话（方案一），还得保证有消息循环或者协程等待，否则会一直挂住。
+7. *没有做系统版本判断。* =GetPackagePathByFullName= 是 Windows 8 才有的，硬链接会让插件在老系统上直接加载失败。用 =GetProcAddress= 动态加载，拿不到就返回空，至少还能给出一个空的列表。
+8. *字符串释放。* COM 接口返回的字符串要用 =CoTaskMemFree= 释放，不是 =delete= 也不是 =LocalFree= 。
+9. *目录权限。* =C:\Program Files\WindowsApps= 默认不可访问，不要试图自己遍历这个目录，通过 Shell 属性或者 =GetPackagePathByFullName= 拿到的路径才是有权限读的。
+
+
+** 参考链接
+
+- [[https://learn.microsoft.com/en-us/uwp/api/windows.management.deployment.packagemanager][PackageManager Class]]
+- [[https://learn.microsoft.com/en-us/uwp/api/windows.applicationmodel.core.applistentry][AppListEntry Class]]
+- [[https://learn.microsoft.com/en-us/uwp/api/windows.applicationmodel.appdisplayinfo][AppDisplayInfo Class]]
+- [[https://learn.microsoft.com/en-us/windows/uwp/xbox-apps/automate-launching-uwp-apps][Automate launching UWP apps]]
+- [[https://learn.microsoft.com/en-us/windows/win32/api/appxpackaging/nn-appxpackaging-iappxmanifestreader][IAppxManifestReader interface]]
+- [[https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-shloadindirectstring][SHLoadIndirectString function]]
+- [[https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ishellitemimagefactory-getimage][IShellItemImageFactory::GetImage]]
+- [[https://stackoverflow.com/questions/32150759/how-to-enumerate-the-installed-storeapps-and-their-id-in-windows-8-and-10][How to enumerate the installed store apps and their id]]
+- [[https://github.com/samsonwang/LaunchyQt/blob/master/src/Plugins/UWPApp/UWPApp.cpp][LaunchyQt 里最终采用的实现]]
+- [[https://github.com/shirosaki/Launchy/blob/master/launchy/plugins/uwpapp/Package.cpp][早期基于 WinRT 枚举的实现]]
+
+（全文完）

@@ -1212,9 +1212,6 @@ USE_BUNDLES = False
 # (translatable)
 # BODY_END = ""
 BODY_END = """
-<!-- google adsense -->
-<script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-
 <!-- Google Analytics - Global site tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script>
 <script>
@@ -1224,6 +1221,9 @@ BODY_END = """
   gtag('config', 'UA-108507797-1');
 </script>
 """
+# <!-- google adsense -->
+# <script data-ad-client="ca-pub-6303134192857919" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
 
 # <!-- baidu tongji -->
 # <script>
