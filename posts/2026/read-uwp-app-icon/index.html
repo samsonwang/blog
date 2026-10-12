@@ -21,7 +21,7 @@
 
 
 
-这件事看起来很简单，做起来却踩了不少坑。UWP应用没有传统的exe文件，显示名称和图标都写在包的清单文件里，而且清单里记录的是“资源名”而不是真实的文件路径——同一个图标在包里可能同时存在 Square44x44Logo.scale-100.png=、=Square44x44Logo.s">
+这件事看起来很简单，做起来却踩了不少坑。UWP应用没有传统的exe文件，显示名称和图标都写在包的清单文件里，而且清单里记录的是“资源名”而不是真实的文件路径——同一个图标在包里可能同时存在 Square44x44Logo.scale-100.png 、 Square44x44Logo.s">
 <meta property="og:type" content="article">
 <meta property="article:published_time" content="2026-10-10T17:43:29+08:00">
 <meta property="article:tag" content="c++">
@@ -60,7 +60,7 @@
 最近在软件里加了一个功能：读取系统中已安装的UWP应用列表，拿到它们的名称和图标，并且能用代码启动它们。<br></p>
 
 <p>
-这件事看起来很简单，做起来却踩了不少坑。UWP应用没有传统的exe文件，显示名称和图标都写在包的清单文件里，而且清单里记录的是“资源名”而不是真实的文件路径——同一个图标在包里可能同时存在 <code>Square44x44Logo.scale-100.png=、=Square44x44Logo.scale-200.png=、=Square44x44Logo.scale-400.png</code> 好几个版本，具体用哪个要由系统在运行时决定。<br></p>
+这件事看起来很简单，做起来却踩了不少坑。UWP应用没有传统的exe文件，显示名称和图标都写在包的清单文件里，而且清单里记录的是“资源名”而不是真实的文件路径——同一个图标在包里可能同时存在 <code>Square44x44Logo.scale-100.png</code> 、 <code>Square44x44Logo.scale-200.png</code> 、 <code>Square44x44Logo.scale-400.png</code> 好几个版本，具体用哪个要由系统在运行时决定。<br></p>
 
 <p>
 这篇文章按三条技术栈路线整理我试过的做法：纯 WinRT、ATL + COM、纯 COM。最后一条是我在 LaunchyQt 里实际落地的方案，它完全不需要 WinRT，也不需要 ATL。<br></p>
@@ -68,21 +68,21 @@
 <!-- TEASER_END -->
 
 
-<div id="outline-container-org637ff51" class="outline-2">
-<h2 id="org637ff51">先说结论</h2>
-<div class="outline-text-2" id="text-org637ff51">
+<div id="outline-container-org1b71241" class="outline-2">
+<h2 id="org1b71241">先说结论</h2>
+<div class="outline-text-2" id="text-org1b71241">
 <p>
 先把三条路线的结论列出来，后面再逐个展开：<br></p>
 
 <ol class="org-ol">
 <li>
-<b>纯 WinRT</b> 。最省事的方案，名称、描述、图标的本地化和资源限定符全都由系统处理；代价是枚举和取图标都是异步操作，而且细节信息（比如图标的背景色）拿不到。<br>
+<b>纯 WinRT</b> ：最省事的方案，名称、描述、图标的本地化和资源限定符全都由系统处理；代价是枚举和取图标都是异步操作，而且细节信息（比如图标的背景色）拿不到。<br>
 </li>
 <li>
-<b>ATL + COM</b> 。自己解析 =AppxManifest.xml=，能拿到 AUMID、背景色这些 WinRT 不直接暴露的信息。ATL 在这里只是智能指针，不提供任何额外的能力。<br>
+<b>ATL + COM</b> ：自己解析 =AppxManifest.xml=，能拿到 AUMID、背景色这些 WinRT 不直接暴露的信息。ATL 在这里只是智能指针，不提供任何额外的能力。<br>
 </li>
 <li>
-<b>纯 COM</b> 。走 Shell 的 <code>AppsFolder</code> 虚拟目录，枚举、名称、属性全是标准 Shell 接口，既不碰 WinRT 也不碰 ATL。这是我最终采用的方案。<br>
+<b>纯 COM</b> ：走 Shell 的 <code>AppsFolder</code> 虚拟目录，枚举、名称、属性全是标准 Shell 接口，既不碰 WinRT 也不碰 ATL。这是我最终采用的方案。<br>
 </li>
 </ol>
 <p>
@@ -94,30 +94,36 @@
 </div>
 
 
-<div id="outline-container-org99d910d" class="outline-2">
-<h2 id="org99d910d">几个绕不开的概念</h2>
-<div class="outline-text-2" id="text-org99d910d">
+<div id="outline-container-org156c4ec" class="outline-2">
+<h2 id="org156c4ec">几个绕不开的概念</h2>
+<div class="outline-text-2" id="text-org156c4ec">
 <p>
 在写代码之前，有几个名词必须先弄清楚，不然后面的接口参数根本不知道该填什么。<br></p>
 
-<p>
-<code>AppUserModelID（AUMID）</code> 是 UWP 应用的唯一标识，格式为 <code>包家族名!应用Id</code> ，例如 <code>Microsoft.WindowsCalculator_8wekyb3d8bbwe!App</code> 。启动应用靠它，把列表项和图标对上号也靠它。<br></p>
+<ul class="org-ul">
+<li>
+<code>AppUserModelID（AUMID）</code> 是 UWP 应用的唯一标识，格式为 <code>包家族名!应用Id</code> ，例如 <code>Microsoft.WindowsCalculator_8wekyb3d8bbwe!App</code> 。启动应用靠它，把列表项和图标对上号也靠它。<br>
+</li>
 
-<p>
-<code>PackageFullName</code> 是包的完整名称，里面带有版本号、架构和发布者哈希，例如 <code>Microsoft.WindowsCalculator_11.2503.2.0_x64__8wekyb3d8bbwe</code> 。 <code>PackageFamilyName</code> 则是去掉版本信息的那部分。<br></p>
+<li>
+<code>PackageFullName</code> 是包的完整名称，里面带有版本号、架构和发布者哈希，例如 <code>Microsoft.WindowsCalculator_11.2503.2.0_x64__8wekyb3d8bbwe</code> 。 <code>PackageFamilyName</code> 则是去掉版本信息的那部分。<br>
+</li>
 
-<p>
-<code>InstalledLocation</code> 是包的安装目录，一般在 <code>C:\Program Files\WindowsApps</code> 下面。这个目录默认没有访问权限，但通过 Shell 属性或者 <code>GetPackagePathByFullName</code> 拿到的路径可以直接读。<br></p>
+<li>
+<code>InstalledLocation</code> 是包的安装目录，一般在 <code>C:\Program Files\WindowsApps</code> 下面。这个目录默认没有访问权限，但通过 Shell 属性或者 <code>GetPackagePathByFullName</code> 拿到的路径可以直接读。<br>
+</li>
 
-<p>
-<code>ms-resource</code> 是清单里引用资源的方式。清单中写的 DisplayName="ms-resource:AppName" 或者 Square44x44Logo="Assets\Square44x44Logo.png"，都只是逻辑名，真正的文件藏在 <code>resources.pri</code> 里，需要根据当前系统的缩放比例、语言、主题去选。这是方案二里最容易卡住的地方，方案三可以不碰它。<br></p>
+<li>
+<code>ms-resource</code> 是清单里引用资源的方式。清单中写的 DisplayName="ms-resource:AppName" 或者 Square44x44Logo="Assets\Square44x44Logo.png"，都只是逻辑名，真正的文件藏在 <code>resources.pri</code> 里，需要根据当前系统的缩放比例、语言、主题去选。这是方案二里最容易卡住的地方，方案三可以不碰它。<br>
+</li>
+</ul>
 </div>
 </div>
 
 
-<div id="outline-container-org1f354ae" class="outline-2">
-<h2 id="org1f354ae">方案一：纯 WinRT</h2>
-<div class="outline-text-2" id="text-org1f354ae">
+<div id="outline-container-org062a859" class="outline-2">
+<h2 id="org062a859">方案一：纯 WinRT</h2>
+<div class="outline-text-2" id="text-org062a859">
 <p>
 完整的一条龙方案：C++/WinRT 提供 <code>PackageManager</code> 枚举包， <code>Package::GetAppListEntriesAsync</code> 拿到包里的每个应用， <code>AppListEntry::DisplayInfo</code> 提供名称和图标， <code>AppListEntry::LaunchAsync</code> 负责启动。<br></p>
 
@@ -169,7 +175,7 @@
 </pre></div>
 
 <p>
-这套方案最大的优点是几乎不用操心细节。名称的本地化、图标的缩放和主题限定符，WinRT 全帮你做完了；=GetLogo= 直接给的是流，不需要自己去猜文件名。<br></p>
+这套方案最大的优点是几乎不用操心细节。名称的本地化、图标的缩放和主题限定符，WinRT 全帮你做完了； <code>GetLogo</code> 直接给的是流，不需要自己去猜文件名。<br></p>
 
 <p>
 缺点同样明显：<br></p>
@@ -189,17 +195,17 @@
 </div>
 
 
-<div id="outline-container-org9f196dd" class="outline-2">
-<h2 id="org9f196dd">方案二：ATL + COM</h2>
-<div class="outline-text-2" id="text-org9f196dd">
+<div id="outline-container-org0c6d3cb" class="outline-2">
+<h2 id="org0c6d3cb">方案二：ATL + COM</h2>
+<div class="outline-text-2" id="text-org0c6d3cb">
 <p>
-官方文档<a href="https://learn.microsoft.com/en-us/windows/uwp/xbox-apps/automate-launching-uwp-apps">Automate launching UWP apps</a>用的就是这条路线，我一开始也是照着它写的。<br></p>
+官方文档 <a href="https://learn.microsoft.com/en-us/windows/uwp/xbox-apps/automate-launching-uwp-apps">Automate launching UWP apps</a> 用的就是这条路线，我一开始也是照着它写的。<br></p>
 
 <p>
 思路跟方案一完全不同：不去问 WinRT“这个应用的图标是什么”，而是自己把包安装目录里的 <code>AppxManifest.xml</code> 读出来，从清单里拿到 AUMID、显示名称、图标资源名和背景色。读清单用到的是打包 API， <code>IAppxFactory</code> 可以把一个 <code>IStream</code> 上的清单文件直接解析成 <code>IAppxManifestReader</code> ，不需要处理整个包。<br></p>
 
 <p>
-ATL 在这里承担的是 COM 智能指针的角色： <code>CComPtr</code> 管 <code>AddRef</code> 和 <code>Release=，=CComHeapPtr</code> 管 <code>CoTaskMemFree</code> 。<br></p>
+ATL 在这里承担的是 COM 智能指针的角色： <code>CComPtr</code> 管 <code>AddRef</code> 和 <code>Release</code> ， <code>CComHeapPtr</code> 管 <code>CoTaskMemFree</code> 。<br></p>
 
 <div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;windows.h&gt;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;atlbase.h&gt;</span><span class="c1">         // CComPtr</span>
@@ -311,11 +317,11 @@ ATL 在这里承担的是 COM 智能指针的角色： <code>CComPtr</code> 管 
 </div>
 
 
-<div id="outline-container-org97fff4c" class="outline-2">
-<h2 id="org97fff4c">方案二绕不开的一关：ms-resource</h2>
-<div class="outline-text-2" id="text-org97fff4c">
+<div id="outline-container-org112878e" class="outline-2">
+<h2 id="org112878e">方案二绕不开的一关：ms-resource</h2>
+<div class="outline-text-2" id="text-org112878e">
 <p>
-清单读出来之后， <code>displayName</code> 可能是 <code>ms-resource:AppName=，=logo</code> 是 <code>Assets\Square44x44Logo.png</code> ，这两个都不是能直接用的东西。这是整个流程里最容易卡住的地方。<br></p>
+清单读出来之后， <code>displayName</code> 可能是 <code>ms-resource:AppName</code> ， <code>logo</code> 是 <code>Assets\Square44x44Logo.png</code> ，这两个都不是能直接用的东西。这是整个流程里最容易卡住的地方。<br></p>
 
 <p>
 Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的语法是：<br></p>
@@ -355,7 +361,7 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </pre></div>
 
 <p>
-显示名称的处理要麻烦一些，因为 <code>ms-resource</code> 的写法并不统一，可能是 <code>ms-resource:AppName=、=ms-resource:///Resources/AppName</code> 或者 <code>ms-resource://Package/Resources/AppName</code> ，需要先规范化再解析。<br></p>
+显示名称的处理要麻烦一些，因为 <code>ms-resource</code> 的写法并不统一，可能是 <code>ms-resource:AppName</code> 、 <code>ms-resource:///Resources/AppName</code> 或者 <code>ms-resource://Package/Resources/AppName</code> ，需要先规范化再解析。<br></p>
 
 <p>
 这套东西能用，但有几个一直让我不太满意的地方：固定长度的缓冲区有截断风险； <code>SHLoadIndirectString</code> 偶尔会失败，得留兜底；多应用包要对上号还得额外处理。后来改用方案三，这些麻烦就全没了。<br></p>
@@ -363,21 +369,21 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-orgad62b86" class="outline-2">
-<h2 id="orgad62b86">方案三：纯 COM，走 Shell 命名空间</h2>
-<div class="outline-text-2" id="text-orgad62b86">
+<div id="outline-container-org05a36aa" class="outline-2">
+<h2 id="org05a36aa">方案三：纯 COM，走 Shell 命名空间</h2>
+<div class="outline-text-2" id="text-org05a36aa">
 <p>
-这条路线是我最终采用的，<a href="https://github.com/samsonwang/LaunchyQt/blob/master/src/Plugins/UWPApp/UWPApp.cpp">完整实现在 LaunchyQt 的 UWPApp 插件里</a>。它既不碰 WinRT，也不碰 ATL，全部是标准的 Shell 和 COM 接口。<br></p>
+这条路线是我最终采用的，完整的实现在LaunchyQt的 <a href="https://github.com/samsonwang/LaunchyQt/blob/master/src/Plugins/UWPApp/UWPApp.cpp">UWPApp</a> 插件里。它既不碰 WinRT，也不碰 ATL，全部是标准的 Shell 和 COM 接口。<br></p>
 
 <p>
 核心思路是：Windows 有一个虚拟目录 <code>shell:AppsFolder</code> ，里面就是开始菜单里显示的那些应用条目。用 Shell 接口把它枚举出来，每个条目都能给出本地化之后的显示名、AUMID 和各种属性。<br></p>
 </div>
 
-<div id="outline-container-org8ec7dbb" class="outline-3">
-<h3 id="org8ec7dbb">枚举：AppsFolder 与 IEnumShellItems</h3>
-<div class="outline-text-3" id="text-org8ec7dbb">
+<div id="outline-container-orgc503119" class="outline-3">
+<h3 id="orgc503119">枚举：AppsFolder 与 IEnumShellItems</h3>
+<div class="outline-text-3" id="text-orgc503119">
 <p>
-打开虚拟目录用 <code>SHCreateItemFromParsingName=，拿到 =IShellItem</code> 之后再 <code>BindToHandler</code> 出枚举器。这里有个坑：=BHID<sub>EnumItems</sub>= 和 <code>BHID_PropertyStore</code> 这两个 GUID 在 SDK 头文件里没有对应的符号，得自己定义。<br></p>
+打开虚拟目录用 <code>SHCreateItemFromParsingName</code> ，拿到 <code>IShellItem</code> 之后再 <code>BindToHandler</code> 出枚举器。这里有个坑： <code>BHID_EnumItems</code> 和 <code>BHID_PropertyStore</code> 这两个 GUID 在 SDK 头文件里没有对应的符号，得自己定义。<br></p>
 
 <div class="highlight"><pre><span></span><span class="n">DEFINE_GUID</span><span class="p">(</span><span class="n">BHID_EnumItems</span><span class="p">,</span><span class="w"> </span><span class="mh">0x94f60519</span><span class="p">,</span><span class="w"> </span><span class="mh">0x2850</span><span class="p">,</span><span class="w"> </span><span class="mh">0x4924</span><span class="p">,</span><span class="w"> </span><span class="mh">0xaa</span><span class="p">,</span><span class="w"> </span><span class="mh">0x5a</span><span class="p">,</span><span class="w"> </span><span class="mh">0xd1</span><span class="p">,</span><span class="w"> </span><span class="mh">0x5e</span><span class="p">,</span><span class="w"> </span><span class="mh">0x84</span><span class="p">,</span><span class="w"> </span><span class="mh">0x86</span><span class="p">,</span><span class="w"> </span><span class="mh">0x80</span><span class="p">,</span><span class="w"> </span><span class="mh">0x39</span><span class="p">);</span>
 <span class="n">DEFINE_GUID</span><span class="p">(</span><span class="n">BHID_PropertyStore</span><span class="p">,</span><span class="w"> </span><span class="mh">0x0384e1a4</span><span class="p">,</span><span class="w"> </span><span class="mh">0x1523</span><span class="p">,</span><span class="w"> </span><span class="mh">0x439c</span><span class="p">,</span><span class="w"> </span><span class="mh">0xa4</span><span class="p">,</span><span class="w"> </span><span class="mh">0xc8</span><span class="p">,</span><span class="w"> </span><span class="mh">0xab</span><span class="p">,</span><span class="w"> </span><span class="mh">0x91</span><span class="p">,</span><span class="w"> </span><span class="mh">0x10</span><span class="p">,</span><span class="w"> </span><span class="mh">0x52</span><span class="p">,</span><span class="w"> </span><span class="mh">0xf5</span><span class="p">,</span><span class="w"> </span><span class="mh">0x86</span><span class="p">);</span>
@@ -408,15 +414,15 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-org86dbfcb" class="outline-3">
-<h3 id="org86dbfcb">读属性：IPropertyStore</h3>
-<div class="outline-text-3" id="text-org86dbfcb">
+<div id="outline-container-org1ab5574" class="outline-3">
+<h3 id="org1ab5574">读属性：IPropertyStore</h3>
+<div class="outline-text-3" id="text-org1ab5574">
 <p>
 每个条目通过 <code>BHID_PropertyStore</code> 绑定出 <code>IPropertyStore</code> ，然后用属性名查 <code>PROPERTYKEY</code> 再取值。用到的属性有这些：<br></p>
 
 <ul class="org-ul">
 <li>
-<code>System.Launcher.AppState</code> —— 用来判断这是不是一个 UWP 条目。=AppsFolder= 里也混着普通桌面快捷方式，它们没有这个属性，而且 <code>ActivateApplication</code> 也启动不了它们。<br>
+<code>System.Launcher.AppState</code> —— 用来判断这是不是一个 UWP 条目。 <code>AppsFolder</code> 里也混着普通桌面快捷方式，它们没有这个属性，而且 <code>ActivateApplication</code> 也启动不了它们。<br>
 </li>
 <li>
 <code>System.AppUserModel.ID</code> —— 就是 AUMID，启动要用。<br>
@@ -494,9 +500,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-org46ffa4e" class="outline-3">
-<h3 id="org46ffa4e">定位图标文件</h3>
-<div class="outline-text-3" id="text-org46ffa4e">
+<div id="outline-container-orgd63fff0" class="outline-3">
+<h3 id="orgd63fff0">定位图标文件</h3>
+<div class="outline-text-3" id="text-orgd63fff0">
 <p>
 这是整个方案里最琐碎的部分。Shell 给的 <code>System.Tile.SmallLogoPath</code> 未必每个条目都有（打包的桌面应用和一些系统自带应用就没有），而且给了也是资源引用，不是真实路径。所以流程是“Shell 属性优先，清单兜底，然后自己去包里找文件”。<br></p>
 
@@ -513,7 +519,7 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </pre></div>
 
 <p>
-拿到资源引用之后，要在包目录里找到真实文件。这里没有用 =SHLoadIndirectString=，而是直接按限定符逐个探测：<br></p>
+拿到资源引用之后，要在包目录里找到真实文件。这里没有用 <code>SHLoadIndirectString</code> ，而是直接按限定符逐个探测：<br></p>
 
 <div class="highlight"><pre><span></span><span class="c1">// 优先 unplated 变体：带背景板的那些把一块不透明的主题色底</span>
 <span class="c1">// 烤进了图片里，放进 Launchy 的列表里很难看。</span>
@@ -545,7 +551,7 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </li>
 <li>同样的方式，但递归到子目录。注意不能递归包根目录——那里全是 DLL 和各种语言文件夹。<br>
 </li>
-<li>有些包的图片放在跟清单声明不一致的目录里，或者清单里的目录根本不存在，最后再到 <code>Assets=、=images=、=VisualAssets</code> 这类常见目录里找一遍。<br>
+<li>有些包的图片放在跟清单声明不一致的目录里，或者清单里的目录根本不存在，最后再到 <code>Assets</code> 、 <code>images</code> 、 <code>VisualAssets</code> 这类常见目录里找一遍。<br>
 </li>
 </ol>
 <p>
@@ -556,9 +562,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-orgd2de816" class="outline-3">
-<h3 id="orgd2de816">兜底：让 Shell 自己渲染图标</h3>
-<div class="outline-text-3" id="text-orgd2de816">
+<div id="outline-container-org21f7586" class="outline-3">
+<h3 id="org21f7586">兜底：让 Shell 自己渲染图标</h3>
+<div class="outline-text-3" id="text-org21f7586">
 <p>
 如果上面四级都没找到（包里根本没有资源目录、清单读不了、图标是系统生成的），还有最后一招：直接让 Shell 把条目的图标渲染出来。<br></p>
 
@@ -594,9 +600,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-org779942e" class="outline-3">
-<h3 id="org779942e">为什么不用 ATL</h3>
-<div class="outline-text-3" id="text-org779942e">
+<div id="outline-container-orgad94ec2" class="outline-3">
+<h3 id="orgad94ec2">为什么不用 ATL</h3>
+<div class="outline-text-3" id="text-orgad94ec2">
 <p>
 这套实现里全是裸指针加手工 <code>Release</code> ，没有用 <code>CComPtr</code> 或者 <code>ComPtr</code> 。原因是 ATL 在 Visual Studio 里是可选组件，构建机上不一定装；而这个插件需要的只是引用计数和 <code>CoTaskMem</code> 字符串，这两样 COM 运行时本身就提供了，不值得为此引入一个依赖。<br></p>
 
@@ -607,9 +613,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-orgfbcf386" class="outline-2">
-<h2 id="orgfbcf386">启动 UWP 应用</h2>
-<div class="outline-text-2" id="text-orgfbcf386">
+<div id="outline-container-orgb3dab0a" class="outline-2">
+<h2 id="orgb3dab0a">启动 UWP 应用</h2>
+<div class="outline-text-2" id="text-orgb3dab0a">
 <p>
 启动是这里面最简单的一步，三条路线最终都落在 <code>IApplicationActivationManager</code> 上，它是纯 COM 接口，传 AUMID 进去即可：<br></p>
 
@@ -647,48 +653,47 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-orgbf81090" class="outline-2">
-<h2 id="orgbf81090">踩过的坑</h2>
-<div class="outline-text-2" id="text-orgbf81090">
+<div id="outline-container-orgd597e89" class="outline-2">
+<h2 id="orgd597e89">踩过的坑</h2>
+<div class="outline-text-2" id="text-orgd597e89">
 <p>
 最后把过程中踩过的坑汇总一下，按被坑的严重程度排序：<br></p>
 
 <ol class="org-ol">
 <li>
-<b>AppsFolder 里混着非 UWP 条目。</b> 那个虚拟目录里也放着普通桌面快捷方式，它们没有 <code>System.Launcher.AppState</code> 属性， <code>ActivateApplication</code> 也启动不了。必须过滤。<br>
+<b>AppsFolder 里混着非 UWP 条目</b> ：那个虚拟目录里也放着普通桌面快捷方式，它们没有 <code>System.Launcher.AppState</code> 属性， <code>ActivateApplication</code> 也启动不了。必须过滤。<br>
 </li>
 <li>
-<b>BHID 常量没有现成符号。</b> <code>BHID_EnumItems</code> 和 <code>BHID_PropertyStore</code> 在 SDK 头文件里没有定义，要自己写 <code>DEFINE_GUID</code> 。<br>
+<b>BHID 常量没有现成符号</b> ： <code>BHID_EnumItems</code> 和 <code>BHID_PropertyStore</code> 在 SDK 头文件里没有定义，要自己写 <code>DEFINE_GUID</code> 。<br>
 </li>
 <li>
-<b>PSGetPropertyKeyFromName 失败时静默返回。</b> 它遇到不认识的属性名会把 <code>PROPERTYKEY</code> 置零而不是报错，用置零的 key 去读会读到不该读的东西。每次读之前先检查 <code>fmtid</code> 。<br>
+<b>PSGetPropertyKeyFromName 失败时静默返回</b> ：它遇到不认识的属性名会把 <code>PROPERTYKEY</code> 置零而不是报错，用置零的 key 去读会读到不该读的东西。每次读之前先检查 <code>fmtid</code> 。<br>
 </li>
 <li>
-<b>把清单里的 logo 值当成文件路径。</b> 它只是资源名，真实文件可能带 <code>scale-200</code> 、 <code>targetsize-256</code> 、 <code>altform-unplated</code> 之类的限定符。<br>
+<b>把清单里的 logo 值当成文件路径</b> ：它只是资源名，真实文件可能带 <code>scale-200</code> 、 <code>targetsize-256</code> 、 <code>altform-unplated</code> 之类的限定符。<br>
 </li>
 <li>
-<b>图标文件名前缀匹配要加点检查。</b> 只判断 <code>startsWith</code> 会误匹配到共享前缀的无关文件，匹配之后要确认下一个字符是点。<br>
+<b>图标文件名前缀匹配要加点检查</b> ：只判断 <code>startsWith</code> 会误匹配到共享前缀的无关文件，匹配之后要确认下一个字符是“.”。<br>
+</li>
+<li>*忘了 <code>CoInitializeEx</code> * ：Shell 和 COM 接口都需要在 COM 单元里工作， <code>COINIT_APARTMENTTHREADED</code> 就行。用了 <code>IAsyncOperation</code> 的话（方案一），还得保证有消息循环或者协程等待，否则会一直挂住。<br>
 </li>
 <li>
-<b>忘了 <code>CoInitializeEx</code> 。</b>  Shell 和 COM 接口都需要在 COM 单元里工作， <code>COINIT_APARTMENTTHREADED</code> 就行。用了 <code>IAsyncOperation</code> 的话（方案一），还得保证有消息循环或者协程等待，否则会一直挂住。<br>
+<b>没有做系统版本判断</b> ： <code>GetPackagePathByFullName</code> 是 Windows 8 才有的，硬链接会让插件在老系统上直接加载失败。用 <code>GetProcAddress</code> 动态加载，拿不到就返回空，至少还能给出一个空的列表。<br>
 </li>
 <li>
-<b>没有做系统版本判断。</b> <code>GetPackagePathByFullName</code> 是 Windows 8 才有的，硬链接会让插件在老系统上直接加载失败。用 <code>GetProcAddress</code> 动态加载，拿不到就返回空，至少还能给出一个空的列表。<br>
+<b>字符串释放</b> ：COM 接口返回的字符串要用 <code>CoTaskMemFree</code> 释放，不是 <code>delete</code> 也不是 <code>LocalFree</code> 。<br>
 </li>
 <li>
-<b>字符串释放。</b> COM 接口返回的字符串要用 <code>CoTaskMemFree</code> 释放，不是 <code>delete</code> 也不是 <code>LocalFree</code> 。<br>
-</li>
-<li>
-<b>目录权限。</b> <code>C:\Program Files\WindowsApps</code> 默认不可访问，不要试图自己遍历这个目录，通过 Shell 属性或者 <code>GetPackagePathByFullName</code> 拿到的路径才是有权限读的。<br>
+<b>目录权限</b> ： <code>C:\Program Files\WindowsApps</code> 默认不可访问，不要试图自己遍历这个目录，通过 Shell 属性或者 <code>GetPackagePathByFullName</code> 拿到的路径才是有权限读的。<br>
 </li>
 </ol>
 </div>
 </div>
 
 
-<div id="outline-container-org0059e7e" class="outline-2">
-<h2 id="org0059e7e">参考链接</h2>
-<div class="outline-text-2" id="text-org0059e7e">
+<div id="outline-container-orged88463" class="outline-2">
+<h2 id="orged88463">参考链接</h2>
+<div class="outline-text-2" id="text-orged88463">
 <ul class="org-ul">
 <li>
 <a href="https://learn.microsoft.com/en-us/uwp/api/windows.management.deployment.packagemanager">PackageManager Class</a><br>
