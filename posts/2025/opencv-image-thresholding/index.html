@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>opencv图像二值化 | Hack Note</title>
+<meta name="description" content="OpenCV 的二值化：固定阈值、自适应阈值，以及 Otsu 和三角法自动求阈值的原理、参数与踩坑记录。">
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
+      if (theme === 'dark') {
+        activate(dark, light, 'dark');
+      } else {
+        activate(light, dark, 'light');
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2025/opencv-image-thresholding/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2025/opencv-image-filters/" title="opencv的中值滤波和双边滤波" type="text/html">
+<link rel="next" href="/blog/posts/2025/opencv-morph/" title="opencv中的图像形态学处理" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="opencv图像二值化">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2025/opencv-image-thresholding/">
+<meta property="og:description" content="OpenCV 的二值化：固定阈值、自适应阈值，以及 Otsu 和三角法自动求阈值的原理、参数与踩坑记录。">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2025-07-08T09:33:13+08:00">
+<meta property="article:tag" content="opencv">
+<meta property="article:tag" content="thresholding">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">opencv图像二值化</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2025-07-08T09:33:13+08:00" itemprop="datePublished">Jul 08, 2025</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+二值化是把灰度图压成只剩黑和白两种像素的图像，通常是形态学处理、轮廓提取、连通域分析的前一步。OpenCV 里管二值化的入口只有两个函数：固定阈值交给 <code>cv.threshold</code> 处理，自适应阈值交给 <code>cv.adaptiveThreshold</code> 处理；此外 Otsu 和三角法并不单独成函数，只是 <code>cv.threshold</code> 的 type 参数里多出来的两个标志位。<br></p>
+
+<p>
+这篇按「固定阈值 → 自适应阈值 → 自动阈值」的顺序过一遍，最后汇总参数含义和踩过的坑。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-orgc16b525" class="outline-2">
+<h2 id="orgc16b525">固定阈值二值化</h2>
+<div class="outline-text-2" id="text-orgc16b525">
+<p>
+二值化过程就是将灰度图像转化为只有黑和白两种像素值图像的过程。<br>
+对图像中的每个像素点使用固定阈值处理，小于等于阈值的像素被赋值为0，大于阈值的像素被赋值为最大值（在8位深度图像的情况下是255）。<br></p>
+
+<p>
+<code>cv.threshold(src, thresh, maxval, type)</code> 是固定阈值的唯一入口，返回 retval 和 dst 两个值：retval 是实际生效的阈值，dst 是结果图像。<br></p>
+
+<p>
+这里有个容易写反的细节（以 THRESH_BINARY 为例），判断条件是严格的「大于」：像素值恰好等于阈值时，会被归到黑色那一侧。<br></p>
+
+<p>
+在进行处理时还可以指定不同的阈值类型，效果也各不相同，如：<br></p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<colgroup>
+<col class="org-left">
+<col class="org-left">
+<col class="org-left">
+</colgroup>
+<thead><tr>
+<th scope="col" class="org-left">类型</th>
+<th scope="col" class="org-left">规则</th>
+<th scope="col" class="org-left">效果</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="org-left">THRESH_BINARY</td>
+<td class="org-left">大于阈值取 maxval，其余取 0</td>
+<td class="org-left">一般的阈值处理</td>
+</tr>
+<tr>
+<td class="org-left">THRESH_BINARY_INV</td>
+<td class="org-left">大于阈值取 0，其余取 maxval</td>
+<td class="org-left">黑白颠倒</td>
+</tr>
+<tr>
+<td class="org-left">THRESH_TRUNC</td>
+<td class="org-left">大于阈值取阈值本身，其余保留原值</td>
+<td class="org-left">亮部被削平</td>
+</tr>
+<tr>
+<td class="org-left">THRESH_TOZERO</td>
+<td class="org-left">大于阈值保留原值，其余取 0</td>
+<td class="org-left">暗部清零，亮部保留</td>
+</tr>
+<tr>
+<td class="org-left">THRESH_TOZERO_INV</td>
+<td class="org-left">大于阈值取 0，其余保留原值</td>
+<td class="org-left">亮部清零，暗部保留</td>
+</tr>
+</tbody>
+</table>
+<p>
+用一个横向渐变的测试图跑一遍五种类型，差别一目了然：<br></p>
+
+<p>
+<img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-opencv-image-thresholding-1.png" alt="五种固定阈值类型的对比"><br></p>
+
+<p>
+上图从左到右、从上到下依次是灰度原图与五种类型的结果。可以看出 TRUNC 和 TOZERO 两个系列并不是真正的「二值」：TRUNC 把亮部压到 127 就停了，TOZERO 保留了亮部的原始灰度。想要纯粹的黑白图，只能用 BINARY 和 BINARY_INV。<br></p>
+
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span> <span class="k">as</span> <span class="nn">cv</span>
+
+<span class="n">gray</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s1">'input.png'</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">IMREAD_GRAYSCALE</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">gray</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'image is invalid'</span>
+
+<span class="n">thresh</span><span class="p">,</span> <span class="n">binary</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'threshold:'</span><span class="p">,</span> <span class="n">thresh</span><span class="p">)</span>  <span class="c1"># 固定阈值时原样返回 127</span>
+
+<span class="c1"># 五种类型一起跑一遍</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY_INV</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_TRUNC</span><span class="p">,</span>
+	  <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_TOZERO</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_TOZERO_INV</span><span class="p">):</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">dst</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+    <span class="n">cv</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="s1">'out_</span><span class="si">%d</span><span class="s1">.png'</span> <span class="o">%</span> <span class="n">t</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org328cca8" class="outline-2">
+<h2 id="org328cca8">自适应阈值二值化</h2>
+<div class="outline-text-2" id="text-org328cca8">
+<p>
+在图片中的各个区域的光照有变化时，就不能对整个图片使用全局阈值了。每个像素的阈值基于其周围的区域计算出来，每个像素点都有一个局部阈值。<br></p>
+
+<p>
+<code>cv.adaptiveThreshold(src, maxValue, adaptiveMethod, thresholdType, blockSize, C)</code> 是它的入口，只返回结果图像，没有阈值可返。<br></p>
+
+<p>
+它的规则是先用邻域算出一个局部阈值，再拿中心像素和它比较：<br></p>
+
+<div class="highlight"><pre><span></span>T(x, y) = 邻域统计值 - C
+dst(x, y) = maxValue  如果 src(x, y) 大于 T(x, y)，否则为 0
+</pre></div>
+
+<p>
+三个关键参数：<br></p>
+
+<ol class="org-ol">
+<li>blockSize：邻域边长，必须是大于 1 的奇数。它决定「局部」的范围：太大就退化成全局阈值，太小则容易把噪声甚至笔画内部都当成背景。<br>
+</li>
+<li>C：从邻域统计值里减掉的常数。C 越大阈值越低，判为白色的像素越多，结果整体偏白；C 取负数则整体偏黑。<br>
+</li>
+<li>thresholdType：只能是 <code>cv.THRESH_BINARY</code> 或 <code>cv.THRESH_BINARY_INV</code> 这两种，不支持 TRUNC 和 TOZERO 系列，传了会报错。<br>
+</li>
+</ol>
+<p>
+在计算局部阈值时有两种策略：<br></p>
+
+<ol class="org-ol">
+<li>均值：用 <code>cv.ADAPTIVE_THRESH_MEAN_C</code> 指定，取相邻像素的均值再减去一个常数参数。<br>
+</li>
+<li>高斯加权：用 <code>cv.ADAPTIVE_THRESH_GAUSSIAN_C</code> 指定，取相邻像素的高斯加权均值再减去一个常数参数。<br>
+</li>
+</ol>
+</div>
+
+<div id="outline-container-org84c340f" class="outline-3">
+<h3 id="org84c340f">均值</h3>
+<div class="outline-text-3" id="text-org84c340f">
+<p>
+均值法就是邻域内的算术平均，实现上是一个 box filter，属于可分离滤波；改成积分图也能做到与 blockSize 无关的常数复杂度。它对邻域内每个像素一视同仁，所以邻域跨越明暗交界的地方，阈值会被另一侧的像素拉偏，边缘处容易留下轻微的块状感。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgb4b9d8f" class="outline-3">
+<h3 id="orgb4b9d8f">高斯加权</h3>
+<div class="outline-text-3" id="text-orgb4b9d8f">
+<p>
+高斯加权把权重按到中心的距离衰减，越靠近中心的像素权重越大，远处的像素只提供一点参考。核的 sigma 没有暴露成参数，OpenCV 自己按 0.3 * ((blockSize - 1) * 0.5 - 1) + 0.8 算出来。也就是说 blockSize 越大，权重分布越平缓，效果越接近均值法；blockSize 越小，中心像素的话语权越大，细节保留得多，也更容易把噪声一起留下。<br></p>
+
+<p>
+这个式子可以自己验证：blockSize 取 31 时 sigma 正好是 5，用 <code>cv.getGaussianKernel</code> 造一个同样大小的核手动做一次加权平均、再减去 C，得到的结果和 <code>cv.ADAPTIVE_THRESH_GAUSSIAN_C</code> 几乎逐像素一致，只有边界处少量像素因为取整而不同。<br></p>
+
+<p>
+实际选哪个：文字、笔画细、噪点多的场景，用高斯法过渡更自然，孤立噪点也少；图像本身干净或者追求速度，均值法就够了。<br></p>
+
+<p>
+下面这张图是同一张光照不均的文档图，左半亮、右半暗：<br></p>
+
+<p>
+<img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-opencv-image-thresholding-2.png" alt="全局阈值与两种自适应阈值的对比"><br></p>
+
+<p>
+全局阈值 127 在左半边还凑合，右半边因为整体亮度掉到 127 以下，整块变黑，字直接没了。换成自适应阈值后，两种策略都能把左右两侧的字完整地抠出来。差别在细节上：均值法在笔画边缘留下了一些毛刺和噪点，高斯法的边缘更干净一些。<br></p>
+
+<div class="highlight"><pre><span></span><span class="c1"># 全局阈值：右半边整体变黑，文字丢了</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">global_bin</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="p">)</span>
+
+<span class="c1"># 自适应阈值：均值 / 高斯</span>
+<span class="n">mean_bin</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">adaptiveThreshold</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">ADAPTIVE_THRESH_MEAN_C</span><span class="p">,</span>
+				<span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">gauss_bin</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">adaptiveThreshold</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">ADAPTIVE_THRESH_GAUSSIAN_C</span><span class="p">,</span>
+				 <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orga266bab" class="outline-2">
+<h2 id="orga266bab">自动确定全局阈值</h2>
+<div class="outline-text-2" id="text-orga266bab">
+<p>
+如何确定图像二值化的全局阈值？靠直方图。先统计图片像素值的分布，再看分布的形状决定用哪种算法：双峰的用 Otsu，单峰带长尾的用三角法。<br></p>
+</div>
+
+<div id="outline-container-orgbabf682" class="outline-3">
+<h3 id="orgbabf682">Otsu</h3>
+<div class="outline-text-3" id="text-orgbabf682">
+<p>
+双峰直方图，使用 Otsu 算法确定阈值。直方图上有两个明显的峰，前景和背景各占一个，中间是一段下凹的谷，理想阈值就落在谷底附近。<br></p>
+
+<p>
+Otsu 的做法是把 0 到 255 每个值都当成候选阈值试一遍：对某个阈值 t，把像素分成「小于等于 t」和「大于 t」两类，算这两类的类间方差，最后取使类间方差最大的那个 t。<br></p>
+
+<p>
+类间方差写作：<br></p>
+
+<div class="highlight"><pre><span></span>sigma_b^2(t) = w0(t) * w1(t) * (mu0(t) - mu1(t))^2
+</pre></div>
+
+<p>
+其中 w0、w1 是两类像素的占比，mu0、mu1 是两类的均值。类间方差加上类内方差恒等于图像的总方差，是个常数，所以「最大化类间方差」和「最小化类内方差」是同一件事，Otsu 要找的就是让两类分得最开的那个阈值。<br></p>
+
+<p>
+用法上不用自己写循环，把 type 或上 <code>cv.THRESH_OTSU</code> 即可。此时 thresh 参数传 0 占位，真正的阈值从返回的 retval 里拿。<br></p>
+
+<p>
+<img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-opencv-image-thresholding-3.png" alt="Otsu 在双峰直方图上求阈值"><br></p>
+
+<p>
+这张测试图的背景灰度在 70 附近、前景在 175 附近，Otsu 算出的阈值是 121，正好落在两峰之间的谷底，二值化结果干净，没有拖泥带水。<br></p>
+
+<p>
+它有两个前提：直方图得是双峰的；两类面积不能太悬殊。前景面积远小于背景时，前景那一类对类间方差的贡献变小，阈值会往背景峰一侧偏，分布重叠得越厉害偏得越多。另外，它只支持 8 位单通道图像。<br></p>
+
+<div class="highlight"><pre><span></span><span class="c1"># thresh 传 0 占位，真正阈值由 Otsu 算出</span>
+<span class="n">ret</span><span class="p">,</span> <span class="n">otsu_bin</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span> <span class="o">|</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_OTSU</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'otsu threshold:'</span><span class="p">,</span> <span class="n">ret</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org9e6d8ac" class="outline-3">
+<h3 id="org9e6d8ac">三角法</h3>
+<div class="outline-text-3" id="text-org9e6d8ac">
+<p>
+单峰直方图，使用三角法阈值。典型场景是背景占了绝大多数像素、前景只是一个小而亮的峰：整个直方图只有一个大峰加一条长长的尾巴，找不到「谷」，Otsu 那套双峰假设就不成立了。<br></p>
+
+<p>
+三角法的几何做法是：在直方图上找到最高峰，再找到离峰最远的那一端，两点连一条直线；然后沿着直方图找距离这条直线最远的点，该点的灰度值就是阈值。由于直方图在峰值之后是一段陡降再转入长尾，距离最大的位置正好落在峰值开始下坠的肩部。<br></p>
+
+<p>
+<img src="/blog/assets/images/spinner.svg" data-src="/blog/images/post-opencv-image-thresholding-4.png" alt="三角法在单峰直方图上求阈值"><br></p>
+
+<p>
+测试图里背景集中在 28 附近，前景只有一个很小的亮斑，直方图呈现出典型的单峰加长尾。三角法给出的阈值是 45，刚好切在背景峰的右肩上，把亮斑完整地分了出来。<br></p>
+
+<p>
+这里要老老实实说一句：这张图里 Otsu 给的是 48，和三角法的 45 几乎没差别。因为背景峰和前景之间隔着一大段空白灰度，切在哪儿都差不多，两种方法都能得到干净的结果。两者的真正区别在假设上，而不在某张图上的数值：Otsu 要求「双峰且两类面积相当」，背景只是一条连续下滑的长尾、根本没有第二个峰时，它的双峰假设就不成立了；三角法只要求「有一个峰和一条尾巴」，对这种分布更稳。<br></p>
+
+<p>
+用法与 Otsu 一致，把标志位换成 <code>cv.THRESH_TRIANGLE</code> 即可：<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">ret</span><span class="p">,</span> <span class="n">tri_bin</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">threshold</span><span class="p">(</span><span class="n">gray</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_BINARY</span> <span class="o">|</span> <span class="n">cv</span><span class="o">.</span><span class="n">THRESH_TRIANGLE</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'triangle threshold:'</span><span class="p">,</span> <span class="n">ret</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0af6cfe" class="outline-2">
+<h2 id="org0af6cfe">踩坑清单</h2>
+<div class="outline-text-2" id="text-org0af6cfe">
+<ol class="org-ol">
+<li>通道数。注意 <code>cv.threshold</code> 可以直接吃多通道图，会逐通道处理；但 <code>cv.adaptiveThreshold</code> 只接受 8 位单通道，传彩色图直接抛异常。养成先 <code>cv.cvtColor</code> 转灰度再处理的习惯，能省掉一半的调试时间。<br>
+</li>
+<li>blockSize 必须是大于 1 的奇数，传偶数会报错。常见的取值是 11、31、51，跟目标细节的尺寸相关。<br>
+</li>
+<li>自适应阈值会把大块纯色区域掏空。一整块邻域内的像素值都差不多，算出来的阈值是「均值减 C」，块内像素全都大于它，于是整块被填成白色，只在边界留下一圈黑边。它适合文字、笔画这类细节密集的目标，不适合大色块分割，这点和直觉相反。<br>
+</li>
+<li>二值化前先滤波。噪声在阈值附近会被放大成孤立黑白点，先做一次高斯或中值滤波，往往能省掉后面好几步形态学操作。<br>
+</li>
+<li>maxval 只在 BINARY 和 BINARY_INV 里起作用。TRUNC 的上限是 thresh 本身，TOZERO 系列保留的是原值，改 maxval 对它们没有影响。<br>
+</li>
+<li>Otsu 和三角法都可以和 BINARY、BINARY_INV 组合，此时传入的 thresh 被忽略，返回的 retval 才是真正用上的阈值。如果只取 dst 而不接 retval，就永远不知道阈值是多少。<br>
+</li>
+<li>光照不均别硬套全局阈值。除了自适应阈值，也可以先做背景校正：用一个大核的模糊结果估计背景，把原图除以它，光照拉平之后再走 Otsu，阈值会稳得多。<br>
+</li>
+<li>二值图里的值是 0 和 maxval，不是 0 和 1。后续的形态学、轮廓函数默认把白色当作前景，黑白弄反了，整条流水线的结果都会是反的。<br>
+</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-org09dd226" class="outline-2">
+<h2 id="org09dd226">参考链接</h2>
+<div class="outline-text-2" id="text-org09dd226">
+<ul class="org-ul">
+<li>
+<a href="https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html">OpenCV: Image Thresholding</a><br>
+</li>
+<li>
+<a href="https://docs.opencv.org/4.x/d7/d1b/group__imgproc__misc.html">imgproc: threshold 与 adaptiveThreshold 的 API 文档</a><br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/blog/tags/opencv/" rel="tag">opencv</a>
+    </li>
+    <li>
+      <a class="badge" href="/blog/tags/thresholding/" rel="tag">thresholding</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/blog/posts/2025/opencv-image-filters/" rel="prev">Previous post
+        <br><span>opencv的中值滤波和双边滤波</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/blog/posts/2025/opencv-morph/" rel="next">Next post
+        <br><span>opencv中的图像形态学处理</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
+
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2025/opencv-image-thresholding/",
+        title: "opencv\u56fe\u50cf\u4e8c\u503c\u5316",
+        identifier: "_cache/posts/2025/opencv-image-thresholding.html",
+        lang: "en"
+      };
+
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2026, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -134,8 +181,8 @@ js也是具有OOP（object oriented programming）特性的，OOP在构建一些
       
     <time class="dt-published" datetime="2018-08-26T10:31:37+08:00" itemprop="datePublished">Aug 26, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org0ad6b52" class="outline-2">
-<h2 id="org0ad6b52">
+    <div id="outline-container-org5b2159a" class="outline-2">
+<h2 id="org5b2159a">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -144,13 +191,13 @@ js也是具有OOP（object oriented programming）特性的，OOP在构建一些
 </div>
 </div>
 
-<div id="outline-container-org0380dda" class="outline-2">
-<h2 id="org0380dda">
+<div id="outline-container-orgfc78b2d" class="outline-2">
+<h2 id="orgfc78b2d">
 <span class="section-number-2">2</span> 写给C++使用者的js中的OOP特性介绍</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-orgd169824" class="outline-3">
-<h3 id="orgd169824">
+<div id="outline-container-org7c2c7c6" class="outline-3">
+<h3 id="org7c2c7c6">
 <span class="section-number-3">2.1</span> 创建对象（object）</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -170,8 +217,8 @@ js中也有 <code>this</code> 关键字，与C++相同， <code>this</code> 关�
 </div>
 </div>
 
-<div id="outline-container-org11d62ef" class="outline-3">
-<h3 id="org11d62ef">
+<div id="outline-container-org9b4142e" class="outline-3">
+<h3 id="org9b4142e">
 <span class="section-number-3">2.2</span> 类（class）的声明</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -192,8 +239,8 @@ crow instanceof Bird; // =&gt; true
 </div>
 </div>
 
-<div id="outline-container-orgabd507c" class="outline-3">
-<h3 id="orgabd507c">
+<div id="outline-container-orgc794985" class="outline-3">
+<h3 id="orgc794985">
 <span class="section-number-3">2.3</span> 类的共有成员</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
@@ -221,8 +268,8 @@ js中通过 <code>prototype</code> 这一属性（把它叫做关键字好像还
 </div>
 </div>
 
-<div id="outline-container-orgd72ddd6" class="outline-3">
-<h3 id="orgd72ddd6">
+<div id="outline-container-org4353c94" class="outline-3">
+<h3 id="org4353c94">
 <span class="section-number-3">2.4</span> 类的私有成员</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
@@ -243,8 +290,8 @@ ducky.getHatchedEggCount(); // returns 10
 </div>
 </div>
 
-<div id="outline-container-org28ed879" class="outline-3">
-<h3 id="org28ed879">
+<div id="outline-container-org4864298" class="outline-3">
+<h3 id="org4864298">
 <span class="section-number-3">2.5</span> 类的继承和派生</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
@@ -255,8 +302,8 @@ Bird.prototype.constructor = Bird;
 </div>
 </div>
 
-<div id="outline-container-org92ca831" class="outline-3">
-<h3 id="org92ca831">
+<div id="outline-container-orgc800796" class="outline-3">
+<h3 id="orgc800796">
 <span class="section-number-3">2.6</span> 类的覆盖</h3>
 <div class="outline-text-3" id="text-2-6">
 <p>
@@ -286,8 +333,8 @@ Bird.prototype.fly = function() {
 </div>
 
 
-<div id="outline-container-orge672d59" class="outline-2">
-<h2 id="orge672d59">
+<div id="outline-container-orge2236c7" class="outline-2">
+<h2 id="orge2236c7">
 <span class="section-number-2">3</span> 参考资料</h2>
 <div class="outline-text-2" id="text-3">
 <ul class="org-ul">

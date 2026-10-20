@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -142,9 +189,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org1aadbc6" class="outline-2">
-<h2 id="org1aadbc6">使用 <code>ldd</code> 查看动态库加载信息</h2>
-<div class="outline-text-2" id="text-org1aadbc6">
+<div id="outline-container-orgffac5ee" class="outline-2">
+<h2 id="orgffac5ee">使用 <code>ldd</code> 查看动态库加载信息</h2>
+<div class="outline-text-2" id="text-orgffac5ee">
 <p>
 可以使用 <code>ldd</code> 查看是否能够成功找到程序所需要的动态库。在搜索成功的情况下会将动态库的绝对地址显示出来。<br></p>
 <div class="highlight"><pre><span></span>ldd<span class="w"> </span>&lt;exec-file&gt;
@@ -156,9 +203,9 @@
 </div>
 
 
-<div id="outline-container-orgb572e88" class="outline-2">
-<h2 id="orgb572e88">使用 <code>chrpath</code> 修改可执行程序的run path信息</h2>
-<div class="outline-text-2" id="text-orgb572e88">
+<div id="outline-container-org77e5472" class="outline-2">
+<h2 id="org77e5472">使用 <code>chrpath</code> 修改可执行程序的run path信息</h2>
+<div class="outline-text-2" id="text-org77e5472">
 <p>
 linux程序的run path是ELF信息的一部分，保存了该程序在加载动态库时的搜索路径。chrpath是一个能够查看和修改run path的程序。我在包管理器中并没有搜索到这个软件包，最终通过编译源码的方式安装成功。<br></p>
 
@@ -175,9 +222,9 @@ linux程序的run path是ELF信息的一部分，保存了该程序在加载动�
 </div>
 
 
-<div id="outline-container-orgb0aa014" class="outline-2">
-<h2 id="orgb0aa014">通过设置 <code>LD_LIBRARY_PATH</code> 增加动态库的查找路径</h2>
-<div class="outline-text-2" id="text-orgb0aa014">
+<div id="outline-container-org8098a3f" class="outline-2">
+<h2 id="org8098a3f">通过设置 <code>LD_LIBRARY_PATH</code> 增加动态库的查找路径</h2>
+<div class="outline-text-2" id="text-org8098a3f">
 <p>
 <code>LD_LIBRARY_PATH</code> 提供了一种额外的动态库搜索路径，它是一个环境变量，这个设置是对终端生效的。<br></p>
 
@@ -192,10 +239,10 @@ tips：需要注意的是，在linux下进行路径之间分隔符使用的是�
 </div>
 
 
-<div id="outline-container-orgbec9d75" class="outline-2">
-<h2 id="orgbec9d75">
+<div id="outline-container-orgb9d8b50" class="outline-2">
+<h2 id="orgb9d8b50">
 <code>rpath</code> 和 <code>LD_LIBRARY_PATH</code> 的比较</h2>
-<div class="outline-text-2" id="text-orgbec9d75">
+<div class="outline-text-2" id="text-orgb9d8b50">
 <p>
 <code>rpath</code> 和 <code>LD_LIBRARY_PATH</code> 都能提供额外的动态库搜索路径，这里主要谈谈它们之间的区别。<br></p>
 
@@ -213,9 +260,9 @@ tips：需要注意的是，在linux下进行路径之间分隔符使用的是�
 </div>
 
 
-<div id="outline-container-org0bbed64" class="outline-2">
-<h2 id="org0bbed64">参考资料</h2>
-<div class="outline-text-2" id="text-org0bbed64">
+<div id="outline-container-orgf595bdb" class="outline-2">
+<h2 id="orgf595bdb">参考资料</h2>
+<div class="outline-text-2" id="text-orgf595bdb">
 <ul class="org-ul">
 <li>
 <a href="https://osdn.net/projects/sfnet_pisilinux/downloads/source/chrpath-0.16.tar.gz/">osdn.net - chrpath download</a><br>

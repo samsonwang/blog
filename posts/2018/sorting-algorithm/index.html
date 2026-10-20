@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -151,9 +198,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org86144da" class="outline-2">
-<h2 id="org86144da">冒泡排序</h2>
-<div class="outline-text-2" id="text-org86144da">
+<div id="outline-container-orga7a728b" class="outline-2">
+<h2 id="orga7a728b">冒泡排序</h2>
+<div class="outline-text-2" id="text-orga7a728b">
 <p>
 从头开始依次对相邻的两个数字比较大小并进行交换，对于 <code>n</code> 个数字，最多只需要进行 <code>n-1</code> 次交换。<br>
 代码示例：<br></p>
@@ -175,9 +222,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-org4e16cda" class="outline-2">
-<h2 id="org4e16cda">插入排序</h2>
-<div class="outline-text-2" id="text-org4e16cda">
+<div id="outline-container-orgdb7dcb2" class="outline-2">
+<h2 id="orgdb7dcb2">插入排序</h2>
+<div class="outline-text-2" id="text-orgdb7dcb2">
 <p>
 从第二个元素开始，将该元素插入到已排序数字列的和合适位置。<br>
 代码示例：<br></p>
@@ -205,9 +252,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-org0062f7c" class="outline-2">
-<h2 id="org0062f7c">选择排序</h2>
-<div class="outline-text-2" id="text-org0062f7c">
+<div id="outline-container-org55ac147" class="outline-2">
+<h2 id="org55ac147">选择排序</h2>
+<div class="outline-text-2" id="text-org55ac147">
 <p>
 以从小到大排序为例，选择排序每次从剩下未排序的数字列中选出最小的数字，将其放在已排序数字列的尾部。<br>
 代码示例：<br></p>
@@ -231,9 +278,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-orgb9bba6f" class="outline-2">
-<h2 id="orgb9bba6f">归并排序</h2>
-<div class="outline-text-2" id="text-orgb9bba6f">
+<div id="outline-container-org401fd37" class="outline-2">
+<h2 id="org401fd37">归并排序</h2>
+<div class="outline-text-2" id="text-org401fd37">
 <p>
 将数字列分不断划分为多个较小的数字列，对较小的数字列按照顺序进行归并，最终实现归并后的数字列是有序的。<br>
 归并排序体现了分治法的思想。归并排序的实现有两种：递归方式和非递归方式。<br></p>
@@ -339,9 +386,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-orgb657fa4" class="outline-2">
-<h2 id="orgb657fa4">快速排序</h2>
-<div class="outline-text-2" id="text-orgb657fa4">
+<div id="outline-container-org7ba2997" class="outline-2">
+<h2 id="org7ba2997">快速排序</h2>
+<div class="outline-text-2" id="text-org7ba2997">
 <p>
 快速排序与归并排序比较相似，它们都会对所排序的数字列进行分割，对分割后的子数字列进行排序，对排序后的子数字列进行归并。二者的区别在于分割子数字列的方式，快速排序会根据选取的轴点对数字列进行划分，归并排序总会对数字列进行等分。<br></p>
 
@@ -376,13 +423,13 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-org51fa9cc" class="outline-2">
-<h2 id="org51fa9cc">排序算法的性能指标</h2>
-<div class="outline-text-2" id="text-org51fa9cc">
+<div id="outline-container-orgce64a8f" class="outline-2">
+<h2 id="orgce64a8f">排序算法的性能指标</h2>
+<div class="outline-text-2" id="text-orgce64a8f">
 </div>
-<div id="outline-container-org379ce7c" class="outline-3">
-<h3 id="org379ce7c">时间复杂度</h3>
-<div class="outline-text-3" id="text-org379ce7c">
+<div id="outline-container-org49719a7" class="outline-3">
+<h3 id="org49719a7">时间复杂度</h3>
+<div class="outline-text-3" id="text-org49719a7">
 <p>
 算法的时间复杂度就是算法的运行速度，是算法性能的重要指标。<br></p>
 
@@ -444,9 +491,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-orge00a3b6" class="outline-3">
-<h3 id="orge00a3b6">空间复杂度</h3>
-<div class="outline-text-3" id="text-orge00a3b6">
+<div id="outline-container-org35478a5" class="outline-3">
+<h3 id="org35478a5">空间复杂度</h3>
+<div class="outline-text-3" id="text-org35478a5">
 <p>
 算法的空间复杂度表示算法运行时需要的内存空间。<br></p>
 
@@ -486,9 +533,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-org9716d78" class="outline-3">
-<h3 id="org9716d78">稳定性</h3>
-<div class="outline-text-3" id="text-org9716d78">
+<div id="outline-container-org6c2677a" class="outline-3">
+<h3 id="org6c2677a">稳定性</h3>
+<div class="outline-text-3" id="text-org6c2677a">
 <p>
 算法的稳定性主要指相同的元素在排序后，它们的相对位置能够保持不变。<br>
 稳定的排序算法：冒泡排序，插入排序，归并排序<br>
@@ -498,13 +545,13 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-org7c934f2" class="outline-2">
-<h2 id="org7c934f2">相似排序算法的比较</h2>
-<div class="outline-text-2" id="text-org7c934f2">
+<div id="outline-container-orgc7f0faa" class="outline-2">
+<h2 id="orgc7f0faa">相似排序算法的比较</h2>
+<div class="outline-text-2" id="text-orgc7f0faa">
 </div>
-<div id="outline-container-org9726f0e" class="outline-3">
-<h3 id="org9726f0e">插入排序和选择排序</h3>
-<div class="outline-text-3" id="text-org9726f0e">
+<div id="outline-container-orgd549b9a" class="outline-3">
+<h3 id="orgd549b9a">插入排序和选择排序</h3>
+<div class="outline-text-3" id="text-orgd549b9a">
 <p>
 插入排序是稳定的算法，而选择排序是不稳定的算法。<br>
 在最理想情况下，插入排序的时间复杂度为 <code>O(n)</code> ，选择排序的时间复杂度为 <code>O(n^2)</code> 。<br></p>
@@ -512,9 +559,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-org4c000ee" class="outline-3">
-<h3 id="org4c000ee">归并排序和快速排序</h3>
-<div class="outline-text-3" id="text-org4c000ee">
+<div id="outline-container-org73f6785" class="outline-3">
+<h3 id="org73f6785">归并排序和快速排序</h3>
+<div class="outline-text-3" id="text-org73f6785">
 <p>
 归并排序是稳定的算法，而一般的快速排序是不稳定的算法，也存在以稳定的快速排序算法。<br>
 在最坏情况下，归并排序的时间复杂度为 <code>O(nlogn)</code> ，快速排序的时间复杂度为 <code>O(n^2)</code> 。<br>
@@ -523,9 +570,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 </div>
 
-<div id="outline-container-org894ae87" class="outline-2">
-<h2 id="org894ae87">参考资料</h2>
-<div class="outline-text-2" id="text-org894ae87">
+<div id="outline-container-org096935b" class="outline-2">
+<h2 id="org096935b">参考资料</h2>
+<div class="outline-text-2" id="text-org096935b">
 <ul class="org-ul">
 <li>
 <a href="https://en.wikipedia.org/wiki/Sorting_algorithm">wikipedia - sorting algorithm</a><br>

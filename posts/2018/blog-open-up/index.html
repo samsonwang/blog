@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -148,9 +195,9 @@ Samson的博客开通了。
       
     <time class="dt-published" datetime="2017-10-23T21:58:25+08:00" itemprop="datePublished">Oct 23, 2017</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org0aad434" class="outline-2">
-<h2 id="org0aad434">1 前言</h2>
-<div class="outline-text-2" id="text-org0aad434">
+    <div id="outline-container-orge5dbfdb" class="outline-2">
+<h2 id="orge5dbfdb">1 前言</h2>
+<div class="outline-text-2" id="text-orge5dbfdb">
 <p>
 Samson的博客开通了。<br>
 作为码农，一直想要有个博客作为学习与积累的记录。<br>
@@ -160,9 +207,9 @@ Samson的博客开通了。<br>
 </div>
 </div>
 
-<div id="outline-container-org5fec9d9" class="outline-2">
-<h2 id="org5fec9d9">2 个人博客的需求整理</h2>
-<div class="outline-text-2" id="text-org5fec9d9">
+<div id="outline-container-orgfe08ae5" class="outline-2">
+<h2 id="orgfe08ae5">2 个人博客的需求整理</h2>
+<div class="outline-text-2" id="text-orgfe08ae5">
 <p>
 在开通博客的想法产生之后，我认真整理了自己的需求点，详细如下：<br></p>
 <ul class="org-ul">
@@ -184,16 +231,16 @@ Samson的博客开通了。<br>
 </div>
 </div>
 
-<div id="outline-container-org7202aca" class="outline-2">
-<h2 id="org7202aca">3 折腾过的方案</h2>
-<div class="outline-text-2" id="text-org7202aca">
+<div id="outline-container-orge9f452a" class="outline-2">
+<h2 id="orge9f452a">3 折腾过的方案</h2>
+<div class="outline-text-2" id="text-orge9f452a">
 <p>
 生命在于折腾，我挑选了一些目前常见的博客方案进行了尝试和比较。<br></p>
 </div>
 
-<div id="outline-container-org580d19a" class="outline-3">
-<h3 id="org580d19a">3.1 Markdown + Jekyll</h3>
-<div class="outline-text-3" id="text-org580d19a">
+<div id="outline-container-org7293713" class="outline-3">
+<h3 id="org7293713">3.1 Markdown + Jekyll</h3>
+<div class="outline-text-3" id="text-org7293713">
 <p>
 这种方案是GitHub Pages所推荐的方案，也是我最先接触到的方案。<br></p>
 <ul class="org-ul">
@@ -207,9 +254,9 @@ Samson的博客开通了。<br>
 </div>
 </div>
 
-<div id="outline-container-org5b3f141" class="outline-3">
-<h3 id="org5b3f141">3.2 org-mode + Jekyll</h3>
-<div class="outline-text-3" id="text-org5b3f141">
+<div id="outline-container-org9d2cd04" class="outline-3">
+<h3 id="org9d2cd04">3.2 org-mode + Jekyll</h3>
+<div class="outline-text-3" id="text-org9d2cd04">
 <p>
 我还是想使用emacs+orgmode做为内容产出的方式。<br></p>
 <ul class="org-ul">
@@ -221,9 +268,9 @@ Samson的博客开通了。<br>
 </div>
 </div>
 
-<div id="outline-container-org7dbdfcb" class="outline-3">
-<h3 id="org7dbdfcb">3.3 org-mode + org-publish / org-mode + o-blog</h3>
-<div class="outline-text-3" id="text-org7dbdfcb">
+<div id="outline-container-orgd0d31fd" class="outline-3">
+<h3 id="orgd0d31fd">3.3 org-mode + org-publish / org-mode + o-blog</h3>
+<div class="outline-text-3" id="text-orgd0d31fd">
 <p>
 后来我开始尝试寻找仅使用emacs就能完成内容编辑与网页生成的方案。<br></p>
 <ul class="org-ul">
@@ -234,9 +281,9 @@ Samson的博客开通了。<br>
 </ul>
 </div>
 
-<div id="outline-container-org87b85a9" class="outline-4">
-<h4 id="org87b85a9">3.3.1 org-publish</h4>
-<div class="outline-text-4" id="text-org87b85a9">
+<div id="outline-container-orgc6f4da9" class="outline-4">
+<h4 id="orgc6f4da9">3.3.1 org-publish</h4>
+<div class="outline-text-4" id="text-orgc6f4da9">
 <ul class="org-ul">
 <li>能够直接将org文件导出为html文件，也可以通过css进行样式上的美化。<br>
 </li>
@@ -246,9 +293,9 @@ Samson的博客开通了。<br>
 </div>
 </div>
 
-<div id="outline-container-org8a42e34" class="outline-4">
-<h4 id="org8a42e34">3.3.2 o-blog</h4>
-<div class="outline-text-4" id="text-org8a42e34">
+<div id="outline-container-orgeb2da50" class="outline-4">
+<h4 id="orgeb2da50">3.3.2 o-blog</h4>
+<div class="outline-text-4" id="text-orgeb2da50">
 <ul class="org-ul">
 <li>o-blog的作者已经有很长一段时间没有维护这个项目了，如果使用o-blog可能意味着需要对o-blog的代码进行一些优化。我需要学习一些lisp相关的知识和web前端相关的知识，这些与我目前的学习内容计划还是有一些出入的，会打破我现有的计划。<br>
 </li>
@@ -262,9 +309,9 @@ Samson的博客开通了。<br>
 </div>
 </div>
 
-<div id="outline-container-org4ca8f96" class="outline-2">
-<h2 id="org4ca8f96">4 最终选用的方案</h2>
-<div class="outline-text-2" id="text-org4ca8f96">
+<div id="outline-container-orga081cda" class="outline-2">
+<h2 id="orga081cda">4 最终选用的方案</h2>
+<div class="outline-text-2" id="text-orga081cda">
 <p>
 emacs + org-mode + nikola + github pages 这是我最终的方案。<br></p>
 <ul class="org-ul">

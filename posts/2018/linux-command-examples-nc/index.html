@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -165,9 +212,9 @@ nc 会默认以TCP协议运行，可以增加 -u 参数转换">
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org6a1c2db" class="outline-2">
-<h2 id="org6a1c2db">1. 基本 <code>C/S</code> 模型</h2>
-<div class="outline-text-2" id="text-org6a1c2db">
+<div id="outline-container-orgbff1370" class="outline-2">
+<h2 id="orgbff1370">1. 基本 <code>C/S</code> 模型</h2>
+<div class="outline-text-2" id="text-orgbff1370">
 <p>
 作为服务端建立监听<br></p>
 <div class="highlight"><pre><span></span>nc<span class="w"> </span>-l<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span><span class="m">8060</span>
@@ -186,9 +233,9 @@ nc 会默认以TCP协议运行，可以增加 -u 参数转换">
 </div>
 </div>
 
-<div id="outline-container-orgb152db1" class="outline-2">
-<h2 id="orgb152db1">2. 文件传输</h2>
-<div class="outline-text-2" id="text-orgb152db1">
+<div id="outline-container-org9c4d3df" class="outline-2">
+<h2 id="org9c4d3df">2. 文件传输</h2>
+<div class="outline-text-2" id="text-org9c4d3df">
 <p>
 模拟客户端向服务端传输文件的示例代码如下，同理，也可以模拟服务端向客户端发送文件。<br></p>
 <div class="highlight"><pre><span></span>nc<span class="w"> </span>-l<span class="w"> </span><span class="m">1234</span><span class="w">  </span>&gt;<span class="w"> </span>filename.out
@@ -197,9 +244,9 @@ nc<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </spa
 </div>
 </div>
 
-<div id="outline-container-org9ef31ba" class="outline-2">
-<h2 id="org9ef31ba">3. 连接远程系统</h2>
-<div class="outline-text-2" id="text-org9ef31ba">
+<div id="outline-container-orgbff6033" class="outline-2">
+<h2 id="orgbff6033">3. 连接远程系统</h2>
+<div class="outline-text-2" id="text-orgbff6033">
 <p>
 已连接http服务器为例，在作为客户端连接以后，可以向服务器发送 <code>GET /HTTP/1.1</code> 来获取网站的主页。<br>
 示例代码如下<br></p>
@@ -208,9 +255,9 @@ nc<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </spa
 </div>
 </div>
 
-<div id="outline-container-orgb01f243" class="outline-2">
-<h2 id="orgb01f243">4. 简易代理</h2>
-<div class="outline-text-2" id="text-orgb01f243">
+<div id="outline-container-org30a1ebd" class="outline-2">
+<h2 id="org30a1ebd">4. 简易代理</h2>
+<div class="outline-text-2" id="text-org30a1ebd">
 <p>
 将nc命令嵌套使用，可以将一个端口中的数据转发到目的ip和端口。<br></p>
 <div class="highlight"><pre><span></span>ncat<span class="w"> </span>-l<span class="w"> </span><span class="m">8080</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>ncat<span class="w"> </span><span class="m">192</span>.168.1.200<span class="w"> </span><span class="m">80</span>
@@ -223,9 +270,9 @@ ncat<span class="w"> </span>-l<span class="w"> </span><span class="m">8080</span
 </div>
 </div>
 
-<div id="outline-container-org7923d39" class="outline-2">
-<h2 id="org7923d39">5. 参考资料</h2>
-<div class="outline-text-2" id="text-org7923d39">
+<div id="outline-container-org976c218" class="outline-2">
+<h2 id="org976c218">5. 参考资料</h2>
+<div class="outline-text-2" id="text-org976c218">
 <ul class="org-ul">
 <li>
 <a href="https://www.linuxtechi.com/nc-ncat-command-examples-linux-systems/">linuxtechi.com - 10 useful ncat command examples</a><br>

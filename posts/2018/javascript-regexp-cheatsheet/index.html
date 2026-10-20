@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -139,9 +186,9 @@
 
     </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org9f888b0" class="outline-2">
-<h2 id="org9f888b0">引言</h2>
-<div class="outline-text-2" id="text-org9f888b0">
+    <div id="outline-container-org87f1e7e" class="outline-2">
+<h2 id="org87f1e7e">引言</h2>
+<div class="outline-text-2" id="text-org87f1e7e">
 <p>
 近在FreeCodeCamp(FCC)学习前端的课程，其中有一节就是讲的 <code>regexp</code> ，也就是正则表达式。我之前零星地了解过一些正则表达式的相关知识，但不足以对正则表达式得出一个完整的认识。FCC的教程循序渐进，由简到繁，在教学中结合练习，非常适合初学者的学习过程。如何你的英文能够达到阅读技术类文献的水平，又正好想学习一下正则表达式，我推荐你试一下FCC的正则表达式教程，花3~4个小时就能够对正则表达式有个完整的理解。<br></p>
 
@@ -154,9 +201,9 @@
 </div>
 
 
-<div id="outline-container-org97de191" class="outline-2">
-<h2 id="org97de191">要点总结（js版）</h2>
-<div class="outline-text-2" id="text-org97de191">
+<div id="outline-container-org754b72c" class="outline-2">
+<h2 id="org754b72c">要点总结（js版）</h2>
+<div class="outline-text-2" id="text-org754b72c">
 <p>
 FCC的教程使用javascript作为开发语言，本节所有的代码都是js代码。<br></p>
 
@@ -399,9 +446,9 @@ lookahead 的概念， <code>(?=...)</code> 与 <code>(?!...)</code><br></p>
 </div>
 
 
-<div id="outline-container-org8e6ae8d" class="outline-2">
-<h2 id="org8e6ae8d">elisp和python中的正则表达式</h2>
-<div class="outline-text-2" id="text-org8e6ae8d">
+<div id="outline-container-org5cbcc34" class="outline-2">
+<h2 id="org5cbcc34">elisp和python中的正则表达式</h2>
+<div class="outline-text-2" id="text-org5cbcc34">
 <p>
 在emacs中内置了 <code>string-match</code> 函数进行正则表达式匹配，其函数原型为 <code>(string-match REGEXP STRING &amp;optional START)</code> ，下面就是在emacs中使用regexp的示例。<br></p>
 <div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">str-regexp</span><span class="w"> </span><span class="s">"</span><span class="se">\.</span><span class="s">[h|cpp]$"</span><span class="p">)</span>
@@ -423,9 +470,9 @@ python中内置了 <code>re</code> 模块用于正则表达式匹配，下面就
 </div>
 
 
-<div id="outline-container-org6c2d160" class="outline-2">
-<h2 id="org6c2d160">参考资料</h2>
-<div class="outline-text-2" id="text-org6c2d160">
+<div id="outline-container-org9e0459f" class="outline-2">
+<h2 id="org9e0459f">参考资料</h2>
+<div class="outline-text-2" id="text-org9e0459f">
 <ul class="org-ul">
 <li>
 <a href="https://learn.freecodecamp.org/javascript-algorithms-and-data-structures/regular-expressions">FCC regular-expression tutorial</a><br>

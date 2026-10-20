@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -132,9 +179,9 @@ Given an array nums of n integers and an integer target , are there elements a, 
       
     <time class="dt-published" datetime="2018-09-21T09:56:09+08:00" itemprop="datePublished">Sep 21, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orgd098424" class="outline-2">
-<h2 id="orgd098424">Description</h2>
-<div class="outline-text-2" id="text-orgd098424">
+    <div id="outline-container-orge07625f" class="outline-2">
+<h2 id="orge07625f">Description</h2>
+<div class="outline-text-2" id="text-orge07625f">
 <p>
 Given an array <code>nums</code> of n integers and an integer <code>target</code> , are there elements <i>a</i>, <i>b</i>, <i>c</i>, and <i>d</i> in <code>nums</code> such that <i>a</i> + <i>b</i> + <i>c</i> + <i>d</i> = <code>target</code> ? Find all unique quadruplets in the array which gives the sum of <code>target</code> .<br></p>
 
@@ -157,13 +204,13 @@ A solution set is:
 </div>
 </div>
 
-<div id="outline-container-org186a4d6" class="outline-2">
-<h2 id="org186a4d6">Solution</h2>
-<div class="outline-text-2" id="text-org186a4d6">
+<div id="outline-container-orgad71952" class="outline-2">
+<h2 id="orgad71952">Solution</h2>
+<div class="outline-text-2" id="text-orgad71952">
 </div>
-<div id="outline-container-org467afeb" class="outline-3">
-<h3 id="org467afeb">Apporach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org467afeb">
+<div id="outline-container-org40aecad" class="outline-3">
+<h3 id="org40aecad">Apporach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org40aecad">
 <p>
 将所有的组合穷举出来，与目标进行逐一比对，将满足条件的组合收集起来，就能得到结果。需要注意的是去除结果中的重复项。<br></p>
 <div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fourSum</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">target</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -187,9 +234,9 @@ A solution set is:
 </div>
 </div>
 
-<div id="outline-container-orge6fd848" class="outline-3">
-<h3 id="orge6fd848">Approach 2 拓展3sum算法</h3>
-<div class="outline-text-3" id="text-orge6fd848">
+<div id="outline-container-org48cff4e" class="outline-3">
+<h3 id="org48cff4e">Approach 2 拓展3sum算法</h3>
+<div class="outline-text-3" id="text-org48cff4e">
 <p>
 这道题的与之前的 <a href="/blog/posts/algorithm-weekly-three-sum/" class="post-url">3 sum</a> 十分类似，通过简单的拓展就能得到该问题的解法。<br></p>
 <div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fourSum</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">target</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -228,9 +275,9 @@ A solution set is:
 </div>
 </div>
 
-<div id="outline-container-org4703af4" class="outline-3">
-<h3 id="org4703af4">Approach 3 优化的拓展3sum算法</h3>
-<div class="outline-text-3" id="text-org4703af4">
+<div id="outline-container-org960e064" class="outline-3">
+<h3 id="org960e064">Approach 3 优化的拓展3sum算法</h3>
+<div class="outline-text-3" id="text-org960e064">
 <p>
 在 approach 2 的基础上，增加一些边界条件判断，能够很大程度上提升算法的速度。下面的代码截取自leetcode，通过增加边界条件的判断，可以明显缩短代码的运行耗时。其中注释的代码是令一种较慢边界条件的判断方法，该代码的作者进一步优化了边界条件的判断逻辑。可以说，这种解法就是压榨算法的性能。这种优化方法是值得思考和学习的。<br></p>
 <div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fourSum</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">target</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>

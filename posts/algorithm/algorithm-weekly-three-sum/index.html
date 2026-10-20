@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -137,9 +184,9 @@ The solution se">
       
     <time class="dt-published" datetime="2018-09-10T16:14:02+08:00" itemprop="datePublished">Sep 10, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org2c38687" class="outline-2">
-<h2 id="org2c38687">Description</h2>
-<div class="outline-text-2" id="text-org2c38687">
+    <div id="outline-container-org828297a" class="outline-2">
+<h2 id="org828297a">Description</h2>
+<div class="outline-text-2" id="text-org828297a">
 <p>
 Given an array nums of n integers, are there elements a, b, c in nums such that a + b + c = 0? Find all unique triplets in the array which gives the sum of zero.<br></p>
 
@@ -164,13 +211,13 @@ A solution set is:
 </div>
 </div>
 
-<div id="outline-container-orgde880d4" class="outline-2">
-<h2 id="orgde880d4">Solution</h2>
-<div class="outline-text-2" id="text-orgde880d4">
+<div id="outline-container-org132be6c" class="outline-2">
+<h2 id="org132be6c">Solution</h2>
+<div class="outline-text-2" id="text-org132be6c">
 </div>
-<div id="outline-container-org1137da3" class="outline-3">
-<h3 id="org1137da3">Approach 1</h3>
-<div class="outline-text-3" id="text-org1137da3">
+<div id="outline-container-org599cebb" class="outline-3">
+<h3 id="org599cebb">Approach 1</h3>
+<div class="outline-text-3" id="text-org599cebb">
 <p>
 这道题有点难度，第一时间没有什么思路。我想到的主要问题是如何保证返回结果中不包含重复的一组数。如果使用暴力解法，将所有满足条件的组合取到后进行重复性清洗，应该是一种可行的解法，只是这样做时间复杂度有点高。<br></p>
 
@@ -235,9 +282,9 @@ A solution set is:
 </div>
 </div>
 
-<div id="outline-container-orgfb78585" class="outline-3">
-<h3 id="orgfb78585">Approach 2</h3>
-<div class="outline-text-3" id="text-orgfb78585">
+<div id="outline-container-org412efbb" class="outline-3">
+<h3 id="org412efbb">Approach 2</h3>
+<div class="outline-text-3" id="text-org412efbb">
 <p>
 我认为这到题的主要难点啊主要是在去除重复的问题上。下面的解法来自 <a href="https://leetcode.com/problems/3sum/discuss/7402/Share-my-AC-C++-solution-around-50ms-O(N*N)-with-explanation-and-comments">leetcode</a> ，在处理重复性问题时，在匹配答案时将重复的数字跳过，这样就不用在后续的结果中进行剔除重复元素的步骤了。<br></p>
 
@@ -290,9 +337,9 @@ A solution set is:
 </div>
 
 
-<div id="outline-container-orge2adb5a" class="outline-2">
-<h2 id="orge2adb5a">Reference</h2>
-<div class="outline-text-2" id="text-orge2adb5a">
+<div id="outline-container-orgf54af4e" class="outline-2">
+<h2 id="orgf54af4e">Reference</h2>
+<div class="outline-text-2" id="text-orgf54af4e">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/3sum/discuss/7402/Share-my-AC-C++-solution-around-50ms-O(N*N)-with-explanation-and-comments">leetcode.com discuss</a><br>

@@ -1,0 +1,174 @@
+#+BEGIN_COMMENT
+.. title: opencv图像二值化
+.. slug: opencv-image-thresholding
+.. date: 2025-07-08 09:33:13 UTC+08:00
+.. tags: opencv, thresholding
+.. category: opencv
+.. link:
+.. description: OpenCV 的二值化：固定阈值、自适应阈值，以及 Otsu 和三角法自动求阈值的原理、参数与踩坑记录。
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil ^:{}
+
+#+TITLE: opencv图像二值化
+
+二值化是把灰度图压成只剩黑和白两种像素的图像，通常是形态学处理、轮廓提取、连通域分析的前一步。OpenCV 里管二值化的入口只有两个函数：固定阈值交给 =cv.threshold= 处理，自适应阈值交给 =cv.adaptiveThreshold= 处理；此外 Otsu 和三角法并不单独成函数，只是 =cv.threshold= 的 type 参数里多出来的两个标志位。
+
+这篇按「固定阈值 → 自适应阈值 → 自动阈值」的顺序过一遍，最后汇总参数含义和踩过的坑。
+
+{{{TEASER_END}}}
+
+** 固定阈值二值化
+二值化过程就是将灰度图像转化为只有黑和白两种像素值图像的过程。
+对图像中的每个像素点使用固定阈值处理，小于等于阈值的像素被赋值为0，大于阈值的像素被赋值为最大值（在8位深度图像的情况下是255）。
+
+=cv.threshold(src, thresh, maxval, type)= 是固定阈值的唯一入口，返回 retval 和 dst 两个值：retval 是实际生效的阈值，dst 是结果图像。
+
+这里有个容易写反的细节（以 THRESH_BINARY 为例），判断条件是严格的「大于」：像素值恰好等于阈值时，会被归到黑色那一侧。
+
+在进行处理时还可以指定不同的阈值类型，效果也各不相同，如：
+
+| 类型                    | 规则                                              | 效果               |
+|-------------------------+---------------------------------------------------+--------------------|
+| THRESH_BINARY           | 大于阈值取 maxval，其余取 0                       | 一般的阈值处理     |
+| THRESH_BINARY_INV       | 大于阈值取 0，其余取 maxval                       | 黑白颠倒           |
+| THRESH_TRUNC            | 大于阈值取阈值本身，其余保留原值                  | 亮部被削平         |
+| THRESH_TOZERO           | 大于阈值保留原值，其余取 0                        | 暗部清零，亮部保留 |
+| THRESH_TOZERO_INV       | 大于阈值取 0，其余保留原值                        | 亮部清零，暗部保留 |
+
+用一个横向渐变的测试图跑一遍五种类型，差别一目了然：
+
+[[img-url://images/post-opencv-image-thresholding-1.png][五种固定阈值类型的对比]]
+
+上图从左到右、从上到下依次是灰度原图与五种类型的结果。可以看出 TRUNC 和 TOZERO 两个系列并不是真正的「二值」：TRUNC 把亮部压到 127 就停了，TOZERO 保留了亮部的原始灰度。想要纯粹的黑白图，只能用 BINARY 和 BINARY_INV。
+
+#+BEGIN_SRC python
+import cv2 as cv
+
+gray = cv.imread('input.png', cv.IMREAD_GRAYSCALE)
+assert gray is not None, 'image is invalid'
+
+thresh, binary = cv.threshold(gray, 127, 255, cv.THRESH_BINARY)
+print('threshold:', thresh)  # 固定阈值时原样返回 127
+
+# 五种类型一起跑一遍
+for t in (cv.THRESH_BINARY, cv.THRESH_BINARY_INV, cv.THRESH_TRUNC,
+          cv.THRESH_TOZERO, cv.THRESH_TOZERO_INV):
+    _, dst = cv.threshold(gray, 127, 255, t)
+    cv.imwrite('out_%d.png' % t, dst)
+#+END_SRC
+
+** 自适应阈值二值化
+在图片中的各个区域的光照有变化时，就不能对整个图片使用全局阈值了。每个像素的阈值基于其周围的区域计算出来，每个像素点都有一个局部阈值。
+
+=cv.adaptiveThreshold(src, maxValue, adaptiveMethod, thresholdType, blockSize, C)= 是它的入口，只返回结果图像，没有阈值可返。
+
+它的规则是先用邻域算出一个局部阈值，再拿中心像素和它比较：
+
+#+BEGIN_SRC text
+T(x, y) = 邻域统计值 - C
+dst(x, y) = maxValue  如果 src(x, y) 大于 T(x, y)，否则为 0
+#+END_SRC
+
+三个关键参数：
+
+1. blockSize：邻域边长，必须是大于 1 的奇数。它决定「局部」的范围：太大就退化成全局阈值，太小则容易把噪声甚至笔画内部都当成背景。
+2. C：从邻域统计值里减掉的常数。C 越大阈值越低，判为白色的像素越多，结果整体偏白；C 取负数则整体偏黑。
+3. thresholdType：只能是 =cv.THRESH_BINARY= 或 =cv.THRESH_BINARY_INV= 这两种，不支持 TRUNC 和 TOZERO 系列，传了会报错。
+
+在计算局部阈值时有两种策略：
+
+1. 均值：用 =cv.ADAPTIVE_THRESH_MEAN_C= 指定，取相邻像素的均值再减去一个常数参数。
+2. 高斯加权：用 =cv.ADAPTIVE_THRESH_GAUSSIAN_C= 指定，取相邻像素的高斯加权均值再减去一个常数参数。
+
+*** 均值
+均值法就是邻域内的算术平均，实现上是一个 box filter，属于可分离滤波；改成积分图也能做到与 blockSize 无关的常数复杂度。它对邻域内每个像素一视同仁，所以邻域跨越明暗交界的地方，阈值会被另一侧的像素拉偏，边缘处容易留下轻微的块状感。
+
+*** 高斯加权
+高斯加权把权重按到中心的距离衰减，越靠近中心的像素权重越大，远处的像素只提供一点参考。核的 sigma 没有暴露成参数，OpenCV 自己按 0.3 * ((blockSize - 1) * 0.5 - 1) + 0.8 算出来。也就是说 blockSize 越大，权重分布越平缓，效果越接近均值法；blockSize 越小，中心像素的话语权越大，细节保留得多，也更容易把噪声一起留下。
+
+这个式子可以自己验证：blockSize 取 31 时 sigma 正好是 5，用 =cv.getGaussianKernel= 造一个同样大小的核手动做一次加权平均、再减去 C，得到的结果和 =cv.ADAPTIVE_THRESH_GAUSSIAN_C= 几乎逐像素一致，只有边界处少量像素因为取整而不同。
+
+实际选哪个：文字、笔画细、噪点多的场景，用高斯法过渡更自然，孤立噪点也少；图像本身干净或者追求速度，均值法就够了。
+
+下面这张图是同一张光照不均的文档图，左半亮、右半暗：
+
+[[img-url://images/post-opencv-image-thresholding-2.png][全局阈值与两种自适应阈值的对比]]
+
+全局阈值 127 在左半边还凑合，右半边因为整体亮度掉到 127 以下，整块变黑，字直接没了。换成自适应阈值后，两种策略都能把左右两侧的字完整地抠出来。差别在细节上：均值法在笔画边缘留下了一些毛刺和噪点，高斯法的边缘更干净一些。
+
+#+BEGIN_SRC python
+# 全局阈值：右半边整体变黑，文字丢了
+_, global_bin = cv.threshold(gray, 127, 255, cv.THRESH_BINARY)
+
+# 自适应阈值：均值 / 高斯
+mean_bin = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_MEAN_C,
+                                cv.THRESH_BINARY, 31, 10)
+gauss_bin = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                 cv.THRESH_BINARY, 31, 10)
+#+END_SRC
+
+** 自动确定全局阈值
+如何确定图像二值化的全局阈值？靠直方图。先统计图片像素值的分布，再看分布的形状决定用哪种算法：双峰的用 Otsu，单峰带长尾的用三角法。
+
+*** Otsu
+双峰直方图，使用 Otsu 算法确定阈值。直方图上有两个明显的峰，前景和背景各占一个，中间是一段下凹的谷，理想阈值就落在谷底附近。
+
+Otsu 的做法是把 0 到 255 每个值都当成候选阈值试一遍：对某个阈值 t，把像素分成「小于等于 t」和「大于 t」两类，算这两类的类间方差，最后取使类间方差最大的那个 t。
+
+类间方差写作：
+
+#+BEGIN_SRC text
+sigma_b^2(t) = w0(t) * w1(t) * (mu0(t) - mu1(t))^2
+#+END_SRC
+
+其中 w0、w1 是两类像素的占比，mu0、mu1 是两类的均值。类间方差加上类内方差恒等于图像的总方差，是个常数，所以「最大化类间方差」和「最小化类内方差」是同一件事，Otsu 要找的就是让两类分得最开的那个阈值。
+
+用法上不用自己写循环，把 type 或上 =cv.THRESH_OTSU= 即可。此时 thresh 参数传 0 占位，真正的阈值从返回的 retval 里拿。
+
+[[img-url://images/post-opencv-image-thresholding-3.png][Otsu 在双峰直方图上求阈值]]
+
+这张测试图的背景灰度在 70 附近、前景在 175 附近，Otsu 算出的阈值是 121，正好落在两峰之间的谷底，二值化结果干净，没有拖泥带水。
+
+它有两个前提：直方图得是双峰的；两类面积不能太悬殊。前景面积远小于背景时，前景那一类对类间方差的贡献变小，阈值会往背景峰一侧偏，分布重叠得越厉害偏得越多。另外，它只支持 8 位单通道图像。
+
+#+BEGIN_SRC python
+# thresh 传 0 占位，真正阈值由 Otsu 算出
+ret, otsu_bin = cv.threshold(gray, 0, 255, cv.THRESH_BINARY | cv.THRESH_OTSU)
+print('otsu threshold:', ret)
+#+END_SRC
+
+*** 三角法
+单峰直方图，使用三角法阈值。典型场景是背景占了绝大多数像素、前景只是一个小而亮的峰：整个直方图只有一个大峰加一条长长的尾巴，找不到「谷」，Otsu 那套双峰假设就不成立了。
+
+三角法的几何做法是：在直方图上找到最高峰，再找到离峰最远的那一端，两点连一条直线；然后沿着直方图找距离这条直线最远的点，该点的灰度值就是阈值。由于直方图在峰值之后是一段陡降再转入长尾，距离最大的位置正好落在峰值开始下坠的肩部。
+
+[[img-url://images/post-opencv-image-thresholding-4.png][三角法在单峰直方图上求阈值]]
+
+测试图里背景集中在 28 附近，前景只有一个很小的亮斑，直方图呈现出典型的单峰加长尾。三角法给出的阈值是 45，刚好切在背景峰的右肩上，把亮斑完整地分了出来。
+
+这里要老老实实说一句：这张图里 Otsu 给的是 48，和三角法的 45 几乎没差别。因为背景峰和前景之间隔着一大段空白灰度，切在哪儿都差不多，两种方法都能得到干净的结果。两者的真正区别在假设上，而不在某张图上的数值：Otsu 要求「双峰且两类面积相当」，背景只是一条连续下滑的长尾、根本没有第二个峰时，它的双峰假设就不成立了；三角法只要求「有一个峰和一条尾巴」，对这种分布更稳。
+
+用法与 Otsu 一致，把标志位换成 =cv.THRESH_TRIANGLE= 即可：
+
+#+BEGIN_SRC python
+ret, tri_bin = cv.threshold(gray, 0, 255, cv.THRESH_BINARY | cv.THRESH_TRIANGLE)
+print('triangle threshold:', ret)
+#+END_SRC
+
+** 踩坑清单
+1. 通道数。注意 =cv.threshold= 可以直接吃多通道图，会逐通道处理；但 =cv.adaptiveThreshold= 只接受 8 位单通道，传彩色图直接抛异常。养成先 =cv.cvtColor= 转灰度再处理的习惯，能省掉一半的调试时间。
+2. blockSize 必须是大于 1 的奇数，传偶数会报错。常见的取值是 11、31、51，跟目标细节的尺寸相关。
+3. 自适应阈值会把大块纯色区域掏空。一整块邻域内的像素值都差不多，算出来的阈值是「均值减 C」，块内像素全都大于它，于是整块被填成白色，只在边界留下一圈黑边。它适合文字、笔画这类细节密集的目标，不适合大色块分割，这点和直觉相反。
+4. 二值化前先滤波。噪声在阈值附近会被放大成孤立黑白点，先做一次高斯或中值滤波，往往能省掉后面好几步形态学操作。
+5. maxval 只在 BINARY 和 BINARY_INV 里起作用。TRUNC 的上限是 thresh 本身，TOZERO 系列保留的是原值，改 maxval 对它们没有影响。
+6. Otsu 和三角法都可以和 BINARY、BINARY_INV 组合，此时传入的 thresh 被忽略，返回的 retval 才是真正用上的阈值。如果只取 dst 而不接 retval，就永远不知道阈值是多少。
+7. 光照不均别硬套全局阈值。除了自适应阈值，也可以先做背景校正：用一个大核的模糊结果估计背景，把原图除以它，光照拉平之后再走 Otsu，阈值会稳得多。
+8. 二值图里的值是 0 和 maxval，不是 0 和 1。后续的形态学、轮廓函数默认把白色当作前景，黑白弄反了，整条流水线的结果都会是反的。
+
+** 参考链接
+- [[https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html][OpenCV: Image Thresholding]]
+- [[https://docs.opencv.org/4.x/d7/d1b/group__imgproc__misc.html][imgproc: threshold 与 adaptiveThreshold 的 API 文档]]
+
+（全文完）

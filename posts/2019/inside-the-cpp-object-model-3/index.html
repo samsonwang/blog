@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -146,9 +193,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org724c635" class="outline-2">
-<h2 id="org724c635">第三章 Data语意学（the semantics of data）</h2>
-<div class="outline-text-2" id="text-org724c635">
+<div id="outline-container-orgdb442ed" class="outline-2">
+<h2 id="orgdb442ed">第三章 Data语意学（the semantics of data）</h2>
+<div class="outline-text-2" id="text-orgdb442ed">
 <p>
 一个空的（不含有任何成员变量）class，事实上并不是空的，它有一个隐晦的1byte，那是被编译器安插进去的一个char，这使得这个class的两个objects得以在内存中配置独一无二的地址。<br></p>
 
@@ -165,9 +212,9 @@
 </div>
 
 
-<div id="outline-container-org7715911" class="outline-3">
-<h3 id="org7715911">3.1 Data Member的绑定（the binding of a data member）</h3>
-<div class="outline-text-3" id="text-org7715911">
+<div id="outline-container-org1de1de2" class="outline-3">
+<h3 id="org1de1de2">3.1 Data Member的绑定（the binding of a data member）</h3>
+<div class="outline-text-3" id="text-org1de1de2">
 <p>
 文中介绍的一个古老的语言规则“member rewriting rule”，大意是：一个inline函数实体，在整个 class 声明未被完全看见之前，是不会被评估求值（evaluated）的。<br></p>
 
@@ -204,9 +251,9 @@
 </div>
 
 
-<div id="outline-container-org47d10a7" class="outline-3">
-<h3 id="org47d10a7">3.2 Data Member 的布局（data member layout）</h3>
-<div class="outline-text-3" id="text-org47d10a7">
+<div id="outline-container-org0f1fffe" class="outline-3">
+<h3 id="org0f1fffe">3.2 Data Member 的布局（data member layout）</h3>
+<div class="outline-text-3" id="text-org0f1fffe">
 <p>
 Nonstatic data members 在 class object 中的排列顺序将和其被声明的顺序一样，任何中间介入的 static data members 如 freeList 和 chunkSize 都不会被放进对象布局之中。<br></p>
 
@@ -217,9 +264,9 @@ C++ standard 要求，在同一个 access section（也就是 private、public�
 </div>
 
 
-<div id="outline-container-orgf4a4074" class="outline-3">
-<h3 id="orgf4a4074">3.3 Data member 的存取</h3>
-<div class="outline-text-3" id="text-orgf4a4074">
+<div id="outline-container-org0863067" class="outline-3">
+<h3 id="org0863067">3.3 Data member 的存取</h3>
+<div class="outline-text-3" id="text-org0863067">
 <p>
 思考一个问题，对于如下代码，通过 origin 存取和通过 pt 存取，有什么重大差异吗？<br></p>
 <div class="highlight"><pre><span></span><span class="n">Point3d</span><span class="w"> </span><span class="n">origin</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">pt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">origin</span><span class="p">;</span>
@@ -230,9 +277,9 @@ C++ standard 要求，在同一个 access section（也就是 private、public�
 </div>
 
 
-<div id="outline-container-org955c646" class="outline-4">
-<h4 id="org955c646">Static Data Members</h4>
-<div class="outline-text-4" id="text-org955c646">
+<div id="outline-container-org6073ddd" class="outline-4">
+<h4 id="org6073ddd">Static Data Members</h4>
+<div class="outline-text-4" id="text-org6073ddd">
 <p>
 Static data members，按其字面意义，被编译器提出于 class 之外，并被视为一个global变量（但只在 class 声明范围之内可见）。每一个 static data member 只有一个实体，存放在程序的 data segment 之中，每次程序取用 static member，就会被内部转化为对该唯一的 extern 实体的直接参考操作。<br></p>
 
@@ -254,9 +301,9 @@ Static data members，按其字面意义，被编译器提出于 class 之外，
 </div>
 
 
-<div id="outline-container-org6a06357" class="outline-4">
-<h4 id="org6a06357">Nonstatic Data Members</h4>
-<div class="outline-text-4" id="text-org6a06357">
+<div id="outline-container-org4180636" class="outline-4">
+<h4 id="org4180636">Nonstatic Data Members</h4>
+<div class="outline-text-4" id="text-org4180636">
 <p>
 Nonstatic data members 直接存放在每一个 class object 之中，需要通过明确的（explicit）或暗喻的（implicit） class object 存取它们。常见的Implicit存取方式是使用省略掉的 <code>this</code> 指针对成员变量进行存取。<br></p>
 
@@ -290,9 +337,9 @@ Nonstatic data members 直接存放在每一个 class object 之中，需要通�
 </div>
 
 
-<div id="outline-container-org593ee86" class="outline-3">
-<h3 id="org593ee86">3.4 “继承” 与 Data Member</h3>
-<div class="outline-text-3" id="text-org593ee86">
+<div id="outline-container-org23e17b3" class="outline-3">
+<h3 id="org23e17b3">3.4 “继承” 与 Data Member</h3>
+<div class="outline-text-3" id="text-org23e17b3">
 <p>
 把两个原本独立不相干的 classes 凑成一对“type/subtype”，并带有继承关系，会有一些易犯错误：<br></p>
 <ol class="org-ol">
@@ -325,9 +372,9 @@ class 如果内含一个或多个 virtual base class subobjects，将被分割�
 </div>
 
 
-<div id="outline-container-org4839994" class="outline-3">
-<h3 id="org4839994">3.5 对象成员的效率（object member efficiency）</h3>
-<div class="outline-text-3" id="text-org4839994">
+<div id="outline-container-org3c43bc4" class="outline-3">
+<h3 id="org3c43bc4">3.5 对象成员的效率（object member efficiency）</h3>
+<div class="outline-text-3" id="text-org3c43bc4">
 <p>
 本节包含数个测试，测试聚合（aggregation）、封装（encapsulation）、继承（inheritance）所引发的额外负荷的程度。<br></p>
 
@@ -343,9 +390,9 @@ class 如果内含一个或多个 virtual base class subobjects，将被分割�
 </div>
 
 
-<div id="outline-container-org33931ed" class="outline-3">
-<h3 id="org33931ed">3.6 指向 data members 的指针（pointer to data members）</h3>
-<div class="outline-text-3" id="text-org33931ed">
+<div id="outline-container-org97b6434" class="outline-3">
+<h3 id="org97b6434">3.6 指向 data members 的指针（pointer to data members）</h3>
+<div class="outline-text-3" id="text-org97b6434">
 <p>
 指向 data members 的指针，是一个有点神秘但颇有用处的语言特性。特别是你需要详细调查 class members 的底层布局的话，可以得知 vptr 是放在 class 的起始处或是尾端。另一个用途展现于3.2节，可以用来检测 class 中的 access section 的次序。<br></p>
 

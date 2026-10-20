@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -157,17 +204,17 @@
 
     </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orgae89391" class="outline-2">
-<h2 id="orgae89391">1 代码编译阶段</h2>
-<div class="outline-text-2" id="text-orgae89391">
+    <div id="outline-container-org24123b3" class="outline-2">
+<h2 id="org24123b3">1 代码编译阶段</h2>
+<div class="outline-text-2" id="text-org24123b3">
 <p>
 在调试C/C++代码时，在编译阶段使用 <code>gcc/g++ -g</code> 命令编译，将调试信息生成在目标文件中。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org2bf4e00" class="outline-2">
-<h2 id="org2bf4e00">2 开启gdb模式</h2>
-<div class="outline-text-2" id="text-org2bf4e00">
+<div id="outline-container-org1cd5c16" class="outline-2">
+<h2 id="org1cd5c16">2 开启gdb模式</h2>
+<div class="outline-text-2" id="text-org1cd5c16">
 <ul class="org-ul">
 <li>直接进入gdb模式: <code>gdb</code> <br>
 </li>
@@ -179,9 +226,9 @@
 <!-- TEASER_END -->
 </div>
 
-<div id="outline-container-org5883432" class="outline-3">
-<h3 id="org5883432">2.1 gdb模式中常用命令</h3>
-<div class="outline-text-3" id="text-org5883432">
+<div id="outline-container-org86fe61f" class="outline-3">
+<h3 id="org86fe61f">2.1 gdb模式中常用命令</h3>
+<div class="outline-text-3" id="text-org86fe61f">
 <p>
 以下指令为常用指令以及它们的缩写。<br></p>
 <ul class="org-ul">
@@ -213,9 +260,9 @@
 </div>
 </div>
 
-<div id="outline-container-org612ca9b" class="outline-3">
-<h3 id="org612ca9b">2.2 调试一个正在运行中的进程</h3>
-<div class="outline-text-3" id="text-org612ca9b">
+<div id="outline-container-org008c008" class="outline-3">
+<h3 id="org008c008">2.2 调试一个正在运行中的进程</h3>
+<div class="outline-text-3" id="text-org008c008">
 <p>
 如果一个正在运行中的程序与我们的预想不一样，我们可以使用gdb查看程序的运行状态（debug a running process）<br></p>
 <ul class="org-ul">
@@ -227,9 +274,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgf9e51bf" class="outline-3">
-<h3 id="orgf9e51bf">2.3 设置源文件的目录</h3>
-<div class="outline-text-3" id="text-orgf9e51bf">
+<div id="outline-container-org08c04d0" class="outline-3">
+<h3 id="org08c04d0">2.3 设置源文件的目录</h3>
+<div class="outline-text-3" id="text-org08c04d0">
 <ul class="org-ul">
 <li>
 <code>files</code> 命令<br>
@@ -242,16 +289,16 @@
 </div>
 </div>
 
-<div id="outline-container-orgda45aa9" class="outline-2">
-<h2 id="orgda45aa9">3 core 文件相关设置</h2>
-<div class="outline-text-2" id="text-orgda45aa9">
+<div id="outline-container-org95f67d6" class="outline-2">
+<h2 id="org95f67d6">3 core 文件相关设置</h2>
+<div class="outline-text-2" id="text-org95f67d6">
 <p>
 core文件是程序异常崩溃以后产生的，会将程序异常时的执行状态以快照的形式保存下来。可以通过gdb查看core文件内包含的信息，用于分析程序异常的原因。<br></p>
 </div>
 
-<div id="outline-container-org9fd0227" class="outline-3">
-<h3 id="org9fd0227">3.1 查看core文件的设置</h3>
-<div class="outline-text-3" id="text-org9fd0227">
+<div id="outline-container-orgf41ba67" class="outline-3">
+<h3 id="orgf41ba67">3.1 查看core文件的设置</h3>
+<div class="outline-text-3" id="text-orgf41ba67">
 <ul class="org-ul">
 <li>
 <code>ulimit -c</code><br>
@@ -265,9 +312,9 @@ core文件是程序异常崩溃以后产生的，会将程序异常时的执行�
 </div>
 </div>
 
-<div id="outline-container-orge8becc9" class="outline-3">
-<h3 id="orge8becc9">3.2 更改core文件的设置</h3>
-<div class="outline-text-3" id="text-orge8becc9">
+<div id="outline-container-orgdb141d2" class="outline-3">
+<h3 id="orgdb141d2">3.2 更改core文件的设置</h3>
+<div class="outline-text-3" id="text-orgdb141d2">
 <ul class="org-ul">
 <li>
 <code>ulimit -c unlimited</code> 不限制生成core文件的大小<br>

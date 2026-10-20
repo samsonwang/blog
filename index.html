@@ -10,8 +10,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -32,6 +32,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -48,12 +62,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -73,6 +113,13 @@
 
   apply();
 
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
+
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
     if (btn) { btn.addEventListener('click', cycle); }
@@ -89,7 +136,7 @@
 <link rel="canonical" href="https://samsonwang.github.io/blog/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="next" href="/blog/index-1.html" type="text/html">
-<link rel="prefetch" href="/blog/posts/2026/read-uwp-app-icon/" type="text/html">
+<link rel="prefetch" href="/blog/posts/2026/frp-tips/" type="text/html">
 </head>
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
@@ -127,6 +174,18 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Oct 19, 2026</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2026/frp-tips/">frp使用技巧</a>
+    </h3>
+
+    <p>
+开发机器在 NAT 后面，想让外面能连进来，最省事的办法是用 frp 打一条隧道出去。这里记一下服务端怎么配才不至于被人当跳板、Windows 客户端怎么做成开机自启的服务，以及中间踩过的一些坑。<br></p>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Oct 10, 2026</span>
     <h3>
       <a class="post-link" href="/blog/posts/2026/read-uwp-app-icon/">读取UWP软件的图标</a>
@@ -173,6 +232,18 @@
 
 
   <li>
+    <span class="post-meta">Aug 22, 2025</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2025/opencv-lut/">opencv中LUT函数效率更高的原因</a>
+    </h3>
+
+    <p>
+LUT 快不是「查表比算术快」这么一句空话，而是三件事叠在一起——把每个像素的一次运算换成了常驻 L1 的一次内存读；src 和 dst 都是严格顺序的流式访问，硬件预取器全程满负荷；再叠上 OpenCV 的后端分派和多线程。而最有意思的一点是，OpenCV 在 x86 上主动放弃了向量化，因为实测算下来 gather 比标量还慢。<br></p>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Jul 22, 2025</span>
     <h3>
       <a class="post-link" href="/blog/posts/2025/linux-driver-dev-tips/">Linux 驱动开发笔记</a>
@@ -197,14 +268,32 @@
 
 
   <li>
+    <span class="post-meta">Jul 08, 2025</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2025/opencv-image-thresholding/">opencv图像二值化</a>
+    </h3>
+
+    <div>
+<p>
+二值化是把灰度图压成只剩黑和白两种像素的图像，通常是形态学处理、轮廓提取、连通域分析的前一步。OpenCV 里管二值化的入口只有两个函数：固定阈值交给 <code>cv.threshold</code> 处理，自适应阈值交给 <code>cv.adaptiveThreshold</code> 处理；此外 Otsu 和三角法并不单独成函数，只是 <code>cv.threshold</code> 的 type 参数里多出来的两个标志位。<br></p>
+
+<p>
+这篇按「固定阈值 → 自适应阈值 → 自动阈值」的顺序过一遍，最后汇总参数含义和踩过的坑。<br></p>
+
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Jul 07, 2025</span>
     <h3>
       <a class="post-link" href="/blog/posts/2025/opencv-image-filters/">opencv的中值滤波和双边滤波</a>
     </h3>
 
-    <div id="outline-container-org94ad5a8" class="outline-2">
-<h2 id="org94ad5a8">非线性滤波</h2>
-<div class="outline-text-2" id="text-org94ad5a8">
+    <div id="outline-container-org22f46f0" class="outline-2">
+<h2 id="org22f46f0">非线性滤波</h2>
+<div class="outline-text-2" id="text-org22f46f0">
 <p>
 中值滤波和双边滤波都是非线性滤波 <code>nonlinear filtering</code> ，那什么是非线性滤波呢?<br></p>
 
@@ -248,44 +337,6 @@
     </h3>
 
     <p>svn的 <cite>externals</cite> 功能用于将代码库中其他位置的代码链接到本目录中来。最近我尝试将代码回退到某个历史版本时发现 <cite>externals</cite> 链接过来的代码并没有回退到历史版本，仍然是库中最新的版本。</p>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Jan 18, 2024</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2024/guassian-function-in-image-processing/">高斯函数在图像处理中的应用 </a>
-    </h3>
-
-    <p>
-高斯模糊是一种常见图像模糊算法。本文介绍其算法原理和在图像处理中的操作细节。<br></p>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Nov 08, 2023</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2023/database-data-model/">数据库使用的数据模型</a>
-    </h3>
-
-    <p>
-根据数据库所使用的数据模型来划分，数据库可以分为层次数据库、网状数据库、关系数据库。<br>
-它们分别对应数据库的三种数据模型：层次模型，网状模型，关系模型。<br>
-目前最常用的也就是关系型数据库。<br></p>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Oct 18, 2023</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2023/ood-principles/">面向对象设计中的五大原则</a>
-    </h3>
-
-    <p>
-最近在看软考资料，正好遇到了一个与面向对象设计有关的题目，把五大原则拿出来好好复习一下。将五大原则分别是单一职责原则、开闭原则、里式替换换则、接口隔离原则、依赖倒转原则，将它们的英文首字母取出来就能组成单词 <code>SOLID</code> ，这些原则的主要宗旨是使软件维护和软件拓展变得更加容易。<br></p>
 
   </li>
 

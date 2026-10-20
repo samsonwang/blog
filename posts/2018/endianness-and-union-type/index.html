@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -147,9 +194,9 @@
 
     </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org479c883" class="outline-2">
-<h2 id="org479c883">字节序是什么</h2>
-<div class="outline-text-2" id="text-org479c883">
+    <div id="outline-container-org49224d7" class="outline-2">
+<h2 id="org49224d7">字节序是什么</h2>
+<div class="outline-text-2" id="text-org49224d7">
 <p>
 字节序是指在数据传输时，高位字节存储在内存中的较高位地址还是较低位地址。字节序分为大端字节序和小端字节序，两种字节序不能混用。<br></p>
 
@@ -175,9 +222,9 @@
 
 
 
-<div id="outline-container-org6b54215" class="outline-2">
-<h2 id="org6b54215">提供字节序转换功能的函数接口</h2>
-<div class="outline-text-2" id="text-org6b54215">
+<div id="outline-container-orge55f83d" class="outline-2">
+<h2 id="orge55f83d">提供字节序转换功能的函数接口</h2>
+<div class="outline-text-2" id="text-orge55f83d">
 <p>
 在网络通信接口中提供了转换主机字节序和网络字节序之间的函数接口，如下所示。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">htonl</span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">hostlong</span><span class="p">);</span>
@@ -263,9 +310,9 @@
 
 
 
-<div id="outline-container-orgc352bc1" class="outline-2">
-<h2 id="orgc352bc1">查看当前系统的字节序</h2>
-<div class="outline-text-2" id="text-orgc352bc1">
+<div id="outline-container-org0656d59" class="outline-2">
+<h2 id="org0656d59">查看当前系统的字节序</h2>
+<div class="outline-text-2" id="text-org0656d59">
 <p>
 通过 <code>lscpu</code> 命令，能得到cpu的大端和小端信息。<br></p>
 <div class="highlight"><pre><span></span>lscpu<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>endian
@@ -314,9 +361,9 @@ hexdump<span class="w"> </span>-n<span class="w"> </span><span class="m">6</span
 </div>
 
 
-<div id="outline-container-org972a8e4" class="outline-2">
-<h2 id="org972a8e4">参考资料</h2>
-<div class="outline-text-2" id="text-org972a8e4">
+<div id="outline-container-org78c202e" class="outline-2">
+<h2 id="org78c202e">参考资料</h2>
+<div class="outline-text-2" id="text-org78c202e">
 <ul class="org-ul">
 <li>
 <a href="https://en.wikipedia.org/wiki/Endianness">wikipedia.com - endianness</a><br>

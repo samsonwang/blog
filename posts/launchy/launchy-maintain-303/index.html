@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -153,9 +200,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgd9ab286" class="outline-2">
-<h2 id="orgd9ab286">代码迁移 - 3.0.0初版</h2>
-<div class="outline-text-2" id="text-orgd9ab286">
+<div id="outline-container-orgf25fd5d" class="outline-2">
+<h2 id="orgf25fd5d">代码迁移 - 3.0.0初版</h2>
+<div class="outline-text-2" id="text-orgf25fd5d">
 <p>
 从原始代码fork， 迁移到qt5，完成核心功能的编译。这是我做的第一步，是整个项目的起点，我开始慢慢阅读源码，不断了解各个模块的结构。<br></p>
 
@@ -170,9 +217,9 @@
 </div>
 </div>
 
-<div id="outline-container-org4457c4b" class="outline-2">
-<h2 id="org4457c4b">第二版 - 3.0.1</h2>
-<div class="outline-text-2" id="text-org4457c4b">
+<div id="outline-container-orgf0059d7" class="outline-2">
+<h2 id="orgf0059d7">第二版 - 3.0.1</h2>
+<div class="outline-text-2" id="text-orgf0059d7">
 <p>
 在这个版本的开发过程中，我不断打磨代码风格和代码结构，不断将旧的功能一点点迁移过来。主要改动如下：<br></p>
 
@@ -187,9 +234,9 @@ calcy的移植，原版calcy中使用了boost中的phinex作为数值运算库�
 </div>
 </div>
 
-<div id="outline-container-orgb9d30d5" class="outline-2">
-<h2 id="orgb9d30d5">第三版 - 3.0.2</h2>
-<div class="outline-text-2" id="text-orgb9d30d5">
+<div id="outline-container-orge41486e" class="outline-2">
+<h2 id="orge41486e">第三版 - 3.0.2</h2>
+<div class="outline-text-2" id="text-orge41486e">
 <p>
 这一版对calcy增加了额外的功能，这个主要是方便日常生活中的数值转换操作。verby插件也移植了过来，这个插件的功能还是比较实用的。<br></p>
 
@@ -199,9 +246,9 @@ calcy的移植，原版calcy中使用了boost中的phinex作为数值运算库�
 </div>
 
 
-<div id="outline-container-org9db46d6" class="outline-2">
-<h2 id="org9db46d6">第四版3.0.3</h2>
-<div class="outline-text-2" id="text-org9db46d6">
+<div id="outline-container-org0c915da" class="outline-2">
+<h2 id="org0c915da">第四版3.0.3</h2>
+<div class="outline-text-2" id="text-org0c915da">
 <p>
 这一版主要是增加python插件功能，经过了不断的摸索，我终于将这个功能迁移过来了。原先的pylaunchy采用的是boost.python，还是老原因，我不想引入这样厚重的依赖，使用类似的pybind11完成了功能迁移。<br></p>
 
@@ -214,9 +261,9 @@ calcy的移植，原版calcy中使用了boost中的phinex作为数值运算库�
 </div>
 
 
-<div id="outline-container-org6a1aa2b" class="outline-2">
-<h2 id="org6a1aa2b">目前的想法</h2>
-<div class="outline-text-2" id="text-org6a1aa2b">
+<div id="outline-container-org7ada01e" class="outline-2">
+<h2 id="org7ada01e">目前的想法</h2>
+<div class="outline-text-2" id="text-org7ada01e">
 <p>
 所以目前的状态是，我没有了改进的方向，不知道下一步该开发什么功能。有用户向我反应有关python包管理相关的问题，但是python embedded不支持pip，我又不喜欢使用安装版的python，因为这样会让软件的目录看起来很乱。再者python embedded也是官方推荐的集成方法，所以我有点不想对这块逻辑做出改动。<br></p>
 
@@ -228,9 +275,9 @@ calcy的移植，原版calcy中使用了boost中的phinex作为数值运算库�
 </div>
 </div>
 
-<div id="outline-container-org453d0fa" class="outline-2">
-<h2 id="org453d0fa">相关链接</h2>
-<div class="outline-text-2" id="text-org453d0fa">
+<div id="outline-container-org5b675b5" class="outline-2">
+<h2 id="org5b675b5">相关链接</h2>
+<div class="outline-text-2" id="text-org5b675b5">
 <ul class="org-ul">
 <li>
 <a href="https://github.com/samsonwang/LaunchyQt">https://github.com/samsonwang/LaunchyQt</a><br>

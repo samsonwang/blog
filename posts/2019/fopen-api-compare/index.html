@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -149,9 +196,9 @@ FILE* fopen(const c">
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgb40f650" class="outline-2">
-<h2 id="orgb40f650"><code>fopen</code></h2>
-<div class="outline-text-2" id="text-orgb40f650">
+<div id="outline-container-orgc294e84" class="outline-2">
+<h2 id="orgc294e84"><code>fopen</code></h2>
+<div class="outline-text-2" id="text-orgc294e84">
 <p>
 <code>fopen</code> 应该是最普通也是最常见的文件操作接口了，属于标准C接口，其完整形式如下。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">FILE</span><span class="o">*</span><span class="w"> </span><span class="nf">fopen</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">filename</span><span class="p">,</span>
@@ -163,9 +210,9 @@ FILE* fopen(const c">
 </div>
 </div>
 
-<div id="outline-container-org506ec68" class="outline-2">
-<h2 id="org506ec68"><code>fopen_s</code></h2>
-<div class="outline-text-2" id="text-org506ec68">
+<div id="outline-container-orgf5b472f" class="outline-2">
+<h2 id="orgf5b472f"><code>fopen_s</code></h2>
+<div class="outline-text-2" id="text-orgf5b472f">
 <p>
 <code>fopen_s</code> 较前一个接口提升了安全性，是C11标准中的接口，其完整形式如下。<br></p>
 <div class="highlight"><pre><span></span><span class="n">errno_t</span><span class="w"> </span><span class="nf">fopen_s</span><span class="p">(</span><span class="kt">FILE</span><span class="w"> </span><span class="o">*</span><span class="kr">restrict</span><span class="w"> </span><span class="o">*</span><span class="kr">restrict</span><span class="w"> </span><span class="n">streamptr</span><span class="p">,</span>
@@ -178,9 +225,9 @@ FILE* fopen(const c">
 </div>
 </div>
 
-<div id="outline-container-org41a8460" class="outline-2">
-<h2 id="org41a8460"><code>_fsopen</code></h2>
-<div class="outline-text-2" id="text-org41a8460">
+<div id="outline-container-orgf0ce087" class="outline-2">
+<h2 id="orgf0ce087"><code>_fsopen</code></h2>
+<div class="outline-text-2" id="text-orgf0ce087">
 <p>
 <code>_fsopen</code> 是windows平台专属的接口，可以在打开文件时指定共享权限，其完整形式如下。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">FILE</span><span class="w"> </span><span class="o">*</span><span class="nf">_fsopen</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">filename</span><span class="p">,</span>
@@ -199,9 +246,9 @@ FILE* fopen(const c">
 </div>
 </div>
 
-<div id="outline-container-orgc7df36f" class="outline-2">
-<h2 id="orgc7df36f"><code>fstream</code></h2>
-<div class="outline-text-2" id="text-orgc7df36f">
+<div id="outline-container-org7a099a6" class="outline-2">
+<h2 id="org7a099a6"><code>fstream</code></h2>
+<div class="outline-text-2" id="text-org7a099a6">
 <p>
 上面介绍的几种接口都是C风格的，而 <code>std::fstream</code> 是C++风格的接口，其完整形式如下。<br></p>
 <div class="highlight"><pre><span></span><span class="c1">// constructor</span>
@@ -215,9 +262,9 @@ FILE* fopen(const c">
 </div>
 
 
-<div id="outline-container-orgc604557" class="outline-2">
-<h2 id="orgc604557">参考资料</h2>
-<div class="outline-text-2" id="text-orgc604557">
+<div id="outline-container-org9108a6e" class="outline-2">
+<h2 id="org9108a6e">参考资料</h2>
+<div class="outline-text-2" id="text-org9108a6e">
 <ul class="org-ul">
 <li>
 <a href="https://en.cppreference.com/w/c/io/fopen">cppreference.com - fopen</a><br>

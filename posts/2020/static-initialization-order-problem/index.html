@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -148,9 +195,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org0634bae" class="outline-2">
-<h2 id="org0634bae">静态初始化顺序</h2>
-<div class="outline-text-2" id="text-org0634bae">
+<div id="outline-container-orgbae35ba" class="outline-2">
+<h2 id="orgbae35ba">静态初始化顺序</h2>
+<div class="outline-text-2" id="text-orgbae35ba">
 <p>
 静态初始化顺序问题的英文名称是 static initialization order problem，这个问题所涉及到的对象有：类域中的静态变量、文件中的和命名空间中的（全局）变量。<br></p>
 
@@ -171,9 +218,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-org74f5515" class="outline-2">
-<h2 id="org74f5515">使用指针的单例模式</h2>
-<div class="outline-text-2" id="text-org74f5515">
+<div id="outline-container-orgfa7cedd" class="outline-2">
+<h2 id="orgfa7cedd">使用指针的单例模式</h2>
+<div class="outline-text-2" id="text-orgfa7cedd">
 <p>
 使用单例模式能够解决全局变量初始化问题。在单例模式中通常会有个静态函数用于返回单例类（class）的对象（object）的引用，这样就保证了在使用这个单例对象时该对象肯定是被初始化了的。<br></p>
 
@@ -192,9 +239,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-orgd78d778" class="outline-2">
-<h2 id="orgd78d778">使用对象的单例模式</h2>
-<div class="outline-text-2" id="text-orgd78d778">
+<div id="outline-container-org89682d6" class="outline-2">
+<h2 id="org89682d6">使用对象的单例模式</h2>
+<div class="outline-text-2" id="text-org89682d6">
 <p>
 直接使用静态的类对象就能够避免内存泄漏问题。与使用对象指针的写法不同，静态变量在程序退出前一定会销毁，其析构函数一定会被调用。示例代码如下所示。<br></p>
 
@@ -210,9 +257,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-orgdbbc19e" class="outline-2">
-<h2 id="orgdbbc19e">终极形式的单例模式</h2>
-<div class="outline-text-2" id="text-orgdbbc19e">
+<div id="outline-container-org120c2bf" class="outline-2">
+<h2 id="org120c2bf">终极形式的单例模式</h2>
+<div class="outline-text-2" id="text-org120c2bf">
 <p>
 那么是否有一种单例模式的范例能够同时解决内存泄漏问题和析构顺序问题呢？答案是有的，只不过写法稍微复杂，并且存在一定的性能损失。示例代码如下：<br></p>
 
@@ -280,9 +327,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-org8edb5ab" class="outline-2">
-<h2 id="org8edb5ab">总结</h2>
-<div class="outline-text-2" id="text-org8edb5ab">
+<div id="outline-container-org42e0b25" class="outline-2">
+<h2 id="org42e0b25">总结</h2>
+<div class="outline-text-2" id="text-org42e0b25">
 <p>
 下面对这几种方案进行了比较：<br></p>
 
@@ -314,9 +361,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-orgaa326bf" class="outline-2">
-<h2 id="orgaa326bf">参考资料</h2>
-<div class="outline-text-2" id="text-orgaa326bf">
+<div id="outline-container-orgd65084e" class="outline-2">
+<h2 id="orgd65084e">参考资料</h2>
+<div class="outline-text-2" id="text-orgd65084e">
 <ul class="org-ul">
 <li>
 <a href="http://www.cs.technion.ac.il/users/yechiel/c++-faq/static-init-order-on-first-use.html">C++ FAQs - static init order on first use</a><br>

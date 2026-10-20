@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -153,9 +200,9 @@ C++中有很多智能指针如 <code>unique_ptr</code> 和 <code>shared_ptr</cod
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org3c82387" class="outline-2">
-<h2 id="org3c82387"><code>unique_ptr</code></h2>
-<div class="outline-text-2" id="text-org3c82387">
+<div id="outline-container-org84ea382" class="outline-2">
+<h2 id="org84ea382"><code>unique_ptr</code></h2>
+<div class="outline-text-2" id="text-org84ea382">
 <p>
 <code>unique_ptr</code> 用于保证作用域范围内的指针能够被释放，有效避免一些情况下跳出作用域而没有对动态内存进行释放引起的内存泄漏。<br></p>
 
@@ -189,11 +236,11 @@ The object is disposed of using the associated deleter when either of the follow
 </div>
 
 
-<div id="outline-container-orgc2764d8" class="outline-2">
-<h2 id="orgc2764d8">
+<div id="outline-container-org490a574" class="outline-2">
+<h2 id="org490a574">
 <code>shared_ptr</code> 与 <code>auto_ptr</code>
 </h2>
-<div class="outline-text-2" id="text-orgc2764d8">
+<div class="outline-text-2" id="text-org490a574">
 <p>
 <code>auto_ptr</code> 是 <code>shared_ptr</code> 的前身， 在C++11中开始支持 <code>shared_ptr</code> ，并弃用了 <code>auto_ptr</code> ，所以在新开发的项目中应该都使用 <code>shared_ptr</code> 。<br></p>
 
@@ -234,9 +281,9 @@ The object is destroyed and its memory deallocated when either of the following 
 </div>
 
 
-<div id="outline-container-org9ea9ceb" class="outline-2">
-<h2 id="org9ea9ceb"><code>weak_ptr</code></h2>
-<div class="outline-text-2" id="text-org9ea9ceb">
+<div id="outline-container-org1a4efe7" class="outline-2">
+<h2 id="org1a4efe7"><code>weak_ptr</code></h2>
+<div class="outline-text-2" id="text-org1a4efe7">
 <p>
 <code>weak_ptr</code> 是从c++11开始支持的，用于存放已经由 <code>shared_ptr</code> 管理的对象。在 <code>weak_ptr</code> 需要操作其管理的对象时，需要先转化为 <code>shared_ptr</code> 再进行操作。<br></p>
 
@@ -263,9 +310,9 @@ The object is destroyed and its memory deallocated when either of the following 
 </div>
 
 
-<div id="outline-container-org613ee69" class="outline-2">
-<h2 id="org613ee69">Reference</h2>
-<div class="outline-text-2" id="text-org613ee69">
+<div id="outline-container-orgb1a3d23" class="outline-2">
+<h2 id="orgb1a3d23">Reference</h2>
+<div class="outline-text-2" id="text-orgb1a3d23">
 <ul class="org-ul">
 <li>
 <a href="https://en.cppreference.com/book/intro/smart_pointers">cppreference - smart pointers</a><br>

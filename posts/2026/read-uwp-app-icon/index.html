@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -72,6 +112,13 @@
 
   apply();
 
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
+
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
     if (btn) { btn.addEventListener('click', cycle); }
@@ -88,6 +135,7 @@
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2026/read-uwp-app-icon/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2026/qt-msvc-pyside-dev-env/" title="Qt-MSVC-pyside开发环境的搭建" type="text/html">
+<link rel="next" href="/blog/posts/2026/frp-tips/" title="frp使用技巧" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="读取UWP软件的图标">
@@ -145,9 +193,9 @@
 <!-- TEASER_END -->
 
 
-<div id="outline-container-org20cad11" class="outline-2">
-<h2 id="org20cad11">先说结论</h2>
-<div class="outline-text-2" id="text-org20cad11">
+<div id="outline-container-orgc08bed5" class="outline-2">
+<h2 id="orgc08bed5">先说结论</h2>
+<div class="outline-text-2" id="text-orgc08bed5">
 <p>
 先把三条路线的结论列出来，后面再逐个展开：<br></p>
 
@@ -171,9 +219,9 @@
 </div>
 
 
-<div id="outline-container-orgd17909a" class="outline-2">
-<h2 id="orgd17909a">几个绕不开的概念</h2>
-<div class="outline-text-2" id="text-orgd17909a">
+<div id="outline-container-orgd19a9ff" class="outline-2">
+<h2 id="orgd19a9ff">几个绕不开的概念</h2>
+<div class="outline-text-2" id="text-orgd19a9ff">
 <p>
 在写代码之前，有几个名词必须先弄清楚，不然后面的接口参数根本不知道该填什么。<br></p>
 
@@ -198,9 +246,9 @@
 </div>
 
 
-<div id="outline-container-org3b8350d" class="outline-2">
-<h2 id="org3b8350d">方案一：纯 WinRT</h2>
-<div class="outline-text-2" id="text-org3b8350d">
+<div id="outline-container-orgd06adcb" class="outline-2">
+<h2 id="orgd06adcb">方案一：纯 WinRT</h2>
+<div class="outline-text-2" id="text-orgd06adcb">
 <p>
 完整的一条龙方案：C++/WinRT 提供 <code>PackageManager</code> 枚举包， <code>Package::GetAppListEntriesAsync</code> 拿到包里的每个应用， <code>AppListEntry::DisplayInfo</code> 提供名称和图标， <code>AppListEntry::LaunchAsync</code> 负责启动。<br></p>
 
@@ -272,9 +320,9 @@
 </div>
 
 
-<div id="outline-container-orgf57528a" class="outline-2">
-<h2 id="orgf57528a">方案二：ATL + COM</h2>
-<div class="outline-text-2" id="text-orgf57528a">
+<div id="outline-container-org16d536f" class="outline-2">
+<h2 id="org16d536f">方案二：ATL + COM</h2>
+<div class="outline-text-2" id="text-org16d536f">
 <p>
 官方文档 <a href="https://learn.microsoft.com/en-us/windows/uwp/xbox-apps/automate-launching-uwp-apps">Automate launching UWP apps</a> 用的就是这条路线，我一开始也是照着它写的。<br></p>
 
@@ -394,9 +442,9 @@ ATL 在这里承担的是 COM 智能指针的角色： <code>CComPtr</code> 管 
 </div>
 
 
-<div id="outline-container-orgc045725" class="outline-2">
-<h2 id="orgc045725">方案二绕不开的一关：ms-resource</h2>
-<div class="outline-text-2" id="text-orgc045725">
+<div id="outline-container-org5c3de3b" class="outline-2">
+<h2 id="org5c3de3b">方案二绕不开的一关：ms-resource</h2>
+<div class="outline-text-2" id="text-org5c3de3b">
 <p>
 清单读出来之后， <code>displayName</code> 可能是 <code>ms-resource:AppName</code> ， <code>logo</code> 是 <code>Assets\Square44x44Logo.png</code> ，这两个都不是能直接用的东西。这是整个流程里最容易卡住的地方。<br></p>
 
@@ -446,9 +494,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-org5280986" class="outline-2">
-<h2 id="org5280986">方案三：纯 COM，走 Shell 命名空间</h2>
-<div class="outline-text-2" id="text-org5280986">
+<div id="outline-container-orga605984" class="outline-2">
+<h2 id="orga605984">方案三：纯 COM，走 Shell 命名空间</h2>
+<div class="outline-text-2" id="text-orga605984">
 <p>
 这条路线是我最终采用的，完整的实现在LaunchyQt的 <a href="https://github.com/samsonwang/LaunchyQt/blob/master/src/Plugins/UWPApp/UWPApp.cpp">UWPApp</a> 插件里。它既不碰 WinRT，也不碰 ATL，全部是标准的 Shell 和 COM 接口。<br></p>
 
@@ -456,9 +504,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 核心思路是：Windows 有一个虚拟目录 <code>shell:AppsFolder</code> ，里面就是开始菜单里显示的那些应用条目。用 Shell 接口把它枚举出来，每个条目都能给出本地化之后的显示名、AUMID 和各种属性。<br></p>
 </div>
 
-<div id="outline-container-org9aa8eb5" class="outline-3">
-<h3 id="org9aa8eb5">枚举：AppsFolder 与 IEnumShellItems</h3>
-<div class="outline-text-3" id="text-org9aa8eb5">
+<div id="outline-container-org625ea3f" class="outline-3">
+<h3 id="org625ea3f">枚举：AppsFolder 与 IEnumShellItems</h3>
+<div class="outline-text-3" id="text-org625ea3f">
 <p>
 打开虚拟目录用 <code>SHCreateItemFromParsingName</code> ，拿到 <code>IShellItem</code> 之后再 <code>BindToHandler</code> 出枚举器。这里有个坑： <code>BHID_EnumItems</code> 和 <code>BHID_PropertyStore</code> 这两个 GUID 在 SDK 头文件里没有对应的符号，得自己定义。<br></p>
 
@@ -491,9 +539,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-org67d4353" class="outline-3">
-<h3 id="org67d4353">读属性：IPropertyStore</h3>
-<div class="outline-text-3" id="text-org67d4353">
+<div id="outline-container-orgc57323c" class="outline-3">
+<h3 id="orgc57323c">读属性：IPropertyStore</h3>
+<div class="outline-text-3" id="text-orgc57323c">
 <p>
 每个条目通过 <code>BHID_PropertyStore</code> 绑定出 <code>IPropertyStore</code> ，然后用属性名查 <code>PROPERTYKEY</code> 再取值。用到的属性有这些：<br></p>
 
@@ -577,9 +625,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-org48293d1" class="outline-3">
-<h3 id="org48293d1">定位图标文件</h3>
-<div class="outline-text-3" id="text-org48293d1">
+<div id="outline-container-org87e8a87" class="outline-3">
+<h3 id="org87e8a87">定位图标文件</h3>
+<div class="outline-text-3" id="text-org87e8a87">
 <p>
 这是整个方案里最琐碎的部分。Shell 给的 <code>System.Tile.SmallLogoPath</code> 未必每个条目都有（打包的桌面应用和一些系统自带应用就没有），而且给了也是资源引用，不是真实路径。所以流程是“Shell 属性优先，清单兜底，然后自己去包里找文件”。<br></p>
 
@@ -639,9 +687,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-org2ef462c" class="outline-3">
-<h3 id="org2ef462c">兜底：让 Shell 自己渲染图标</h3>
-<div class="outline-text-3" id="text-org2ef462c">
+<div id="outline-container-org4565fd9" class="outline-3">
+<h3 id="org4565fd9">兜底：让 Shell 自己渲染图标</h3>
+<div class="outline-text-3" id="text-org4565fd9">
 <p>
 如果上面四级都没找到（包里根本没有资源目录、清单读不了、图标是系统生成的），还有最后一招：直接让 Shell 把条目的图标渲染出来。<br></p>
 
@@ -677,9 +725,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-org21eb232" class="outline-3">
-<h3 id="org21eb232">为什么不用 ATL</h3>
-<div class="outline-text-3" id="text-org21eb232">
+<div id="outline-container-orga933177" class="outline-3">
+<h3 id="orga933177">为什么不用 ATL</h3>
+<div class="outline-text-3" id="text-orga933177">
 <p>
 这套实现里全是裸指针加手工 <code>Release</code> ，没有用 <code>CComPtr</code> 或者 <code>ComPtr</code> 。原因是 ATL 在 Visual Studio 里是可选组件，构建机上不一定装；而这个插件需要的只是引用计数和 <code>CoTaskMem</code> 字符串，这两样 COM 运行时本身就提供了，不值得为此引入一个依赖。<br></p>
 
@@ -690,9 +738,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-org88658ed" class="outline-2">
-<h2 id="org88658ed">启动 UWP 应用</h2>
-<div class="outline-text-2" id="text-org88658ed">
+<div id="outline-container-orgfbcdee4" class="outline-2">
+<h2 id="orgfbcdee4">启动 UWP 应用</h2>
+<div class="outline-text-2" id="text-orgfbcdee4">
 <p>
 启动是这里面最简单的一步，三条路线最终都落在 <code>IApplicationActivationManager</code> 上，它是纯 COM 接口，传 AUMID 进去即可：<br></p>
 
@@ -730,9 +778,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-orge27415c" class="outline-2">
-<h2 id="orge27415c">踩过的坑</h2>
-<div class="outline-text-2" id="text-orge27415c">
+<div id="outline-container-org0cd8348" class="outline-2">
+<h2 id="org0cd8348">踩过的坑</h2>
+<div class="outline-text-2" id="text-org0cd8348">
 <p>
 最后把过程中踩过的坑汇总一下，按被坑的严重程度排序：<br></p>
 
@@ -769,9 +817,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-org0ac29e8" class="outline-2">
-<h2 id="org0ac29e8">参考链接</h2>
-<div class="outline-text-2" id="text-org0ac29e8">
+<div id="outline-container-org66ee37c" class="outline-2">
+<h2 id="org66ee37c">参考链接</h2>
+<div class="outline-text-2" id="text-org66ee37c">
 <ul class="org-ul">
 <li>
 <a href="https://learn.microsoft.com/en-us/uwp/api/windows.management.deployment.packagemanager">PackageManager Class</a><br>
@@ -827,6 +875,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
       </a>
     </li>
     <li class="next">
+      <a href="/blog/posts/2026/frp-tips/" rel="next">Next post
+        <br><span>frp使用技巧</span>
+      </a>
     </li>
   </ul>
 <section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">

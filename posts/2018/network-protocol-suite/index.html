@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -152,9 +199,9 @@ OSI模型及其常见协议
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgde698f5" class="outline-2">
-<h2 id="orgde698f5">OSI模型</h2>
-<div class="outline-text-2" id="text-orgde698f5">
+<div id="outline-container-org613d482" class="outline-2">
+<h2 id="org613d482">OSI模型</h2>
+<div class="outline-text-2" id="text-org613d482">
 <p>
 OSI（open system interconnection）模型是一个概念模型，它特征化、标准化了计算机系统之间的通信过程。OSI模型分为7层，在模型中对端的同一层间使用相同的通信协议。<br></p>
 
@@ -186,9 +233,9 @@ OSI（open system interconnection）模型是一个概念模型，它特征化�
 </div>
 </div>
 
-<div id="outline-container-org6152614" class="outline-2">
-<h2 id="org6152614">TCP/IP协议（互联网协议）</h2>
-<div class="outline-text-2" id="text-org6152614">
+<div id="outline-container-org45692ca" class="outline-2">
+<h2 id="org45692ca">TCP/IP协议（互联网协议）</h2>
+<div class="outline-text-2" id="text-org45692ca">
 <p>
 互联网协议是以TCP协议（transmission control protocol）和IP协议（internet protocol）做为基础的，所以它也称为TCP/IP协议。<br></p>
 
@@ -222,9 +269,9 @@ OSI（open system interconnection）模型是一个概念模型，它特征化�
 </div>
 </div>
 
-<div id="outline-container-org72d355d" class="outline-2">
-<h2 id="org72d355d">TCP/IP协议与OSI模型的比较</h2>
-<div class="outline-text-2" id="text-org72d355d">
+<div id="outline-container-orgcdb58cd" class="outline-2">
+<h2 id="orgcdb58cd">TCP/IP协议与OSI模型的比较</h2>
+<div class="outline-text-2" id="text-orgcdb58cd">
 <p>
 两种网络协议的区别可以通过下面的图表看出来。<br></p>
 
@@ -271,9 +318,9 @@ OSI（open system interconnection）模型是一个概念模型，它特征化�
 </div>
 </div>
 
-<div id="outline-container-orgcee0585" class="outline-2">
-<h2 id="orgcee0585">参考资料</h2>
-<div class="outline-text-2" id="text-orgcee0585">
+<div id="outline-container-org8bfc8e6" class="outline-2">
+<h2 id="org8bfc8e6">参考资料</h2>
+<div class="outline-text-2" id="text-org8bfc8e6">
 <ul class="org-ul">
 <li>
 <a href="https://codeburst.io/learning-tcp-ip-protocol-suite-6947b601ea11">codeburst.io - tcp ip suite</a><br>

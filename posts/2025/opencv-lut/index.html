@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>opencv中LUT函数效率更高的原因 | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
+      if (theme === 'dark') {
+        activate(dark, light, 'dark');
+      } else {
+        activate(light, dark, 'light');
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/posts/2025/opencv-lut/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="prev" href="/blog/posts/2025/linux-driver-dev-tips/" title="Linux 驱动开发笔记" type="text/html">
+<link rel="next" href="/blog/posts/2026/handle-app-crash-on-windows/" title="处理Windows系统下的软件崩溃问题" type="text/html">
+<meta name="author" content="Samson Wang">
+<meta property="og:site_name" content="Hack Note">
+<meta property="og:title" content="opencv中LUT函数效率更高的原因">
+<meta property="og:url" content="https://samsonwang.github.io/blog/posts/2025/opencv-lut/">
+<meta property="og:description" content="LUT 快不是「查表比算术快」这么一句空话，而是三件事叠在一起——把每个像素的一次运算换成了常驻 L1 的一次内存读；src 和 dst 都是严格顺序的流式访问，硬件预取器全程满负荷；再叠上 OpenCV 的后端分派和多线程。而最有意思的一点是，OpenCV 在 x86 上主动放弃了向量化，因为实测算下来 gather 比标量还慢。
+
+
+
+
+
+LUT 把什么换成了什么
+
+
+单通道 8 位输入、8 ">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2025-08-22T16:04:05+08:00">
+<meta property="article:tag" content="opencv">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="post h-entry" itemscope="" itemtype="http://schema.org/BlogPosting"><header class="post-header"><h1 class="post-title p-name" itemprop="name headline">opencv中LUT函数效率更高的原因</h1>
+
+    <p class="post-meta">
+      
+    <time class="dt-published" datetime="2025-08-22T16:04:05+08:00" itemprop="datePublished">Aug 22, 2025</time></p>
+  </header><div class="post-content e-content" itemprop="articleBody text">
+    <p>
+LUT 快不是「查表比算术快」这么一句空话，而是三件事叠在一起——把每个像素的一次运算换成了常驻 L1 的一次内存读；src 和 dst 都是严格顺序的流式访问，硬件预取器全程满负荷；再叠上 OpenCV 的后端分派和多线程。而最有意思的一点是，OpenCV 在 x86 上主动放弃了向量化，因为实测算下来 gather 比标量还慢。<br></p>
+
+<!-- TEASER_END -->
+
+<div id="outline-container-org6da2b73" class="outline-2">
+<h2 id="org6da2b73">LUT 把什么换成了什么</h2>
+<div class="outline-text-2" id="text-org6da2b73">
+<p>
+单通道 8 位输入、8 位输出的核心循环就三行：<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="n">dst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lut</span><span class="p">[</span><span class="n">src</span><span class="p">[</span><span class="n">i</span><span class="p">]];</span>
+</pre></div>
+
+<p>
+原来每个像素要做的事（gamma 的 pow、对比度的乘加、伪彩色的三分支判断）现在在建表的时候一次性做完 256 次。像素数从 200 万次运算降到 200 万次查表，而查表的表只有 256 字节。<br></p>
+
+<p>
+这个替换有两个前提，缺一不可：<br></p>
+
+<ol class="org-ol">
+<li>映射只依赖像素值本身，不依赖坐标、不依赖邻域。带位置信息的晕影、自适应阈值都没法预先建表。<br>
+</li>
+<li>输入的值域必须小。8 位只有 256 种取值，表就是 256 项；16 位是 65536 项，表的大小立刻从 256 字节涨到 128 KB。<br>
+</li>
+</ol>
+<p>
+第二条正是 OpenCV 入口那句断言在管的事：<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">CV_Assert</span><span class="p">((</span><span class="n">lutcn</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">cn</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">lutcn</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">_lut</span><span class="p">.</span><span class="n">isContinuous</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">    </span><span class="p">(((</span><span class="n">lut_size</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">256</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">((</span><span class="n">depth</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">CV_8U</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="n">depth</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">CV_8S</span><span class="p">)))</span><span class="w"> </span><span class="o">||</span>
+<span class="w">     </span><span class="p">((</span><span class="n">lut_size</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">65536</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">((</span><span class="n">depth</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">CV_16U</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="n">depth</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">CV_16S</span><span class="p">)))));</span>
+</pre></div>
+
+<p>
+三个条件：通道数要么和源一致、要么是 1（一张表给所有通道用）；表必须连续，不能是 ROI 那种带行间隔的视图；表长必须和源深度匹配。CV<sub>32F</sub> 的输入走不通，因为那需要 4G 项的表。<br></p>
+
+<p>
+顺带一个容易踩的点：输出类型不是由源决定的，而是由表决定的。<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">_dst</span><span class="p">.</span><span class="n">create</span><span class="p">(</span><span class="n">src</span><span class="p">.</span><span class="n">dims</span><span class="p">,</span><span class="w"> </span><span class="n">src</span><span class="p">.</span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="n">CV_MAKETYPE</span><span class="p">(</span><span class="n">_lut</span><span class="p">.</span><span class="n">depth</span><span class="p">(),</span><span class="w"> </span><span class="n">cn</span><span class="p">));</span>
+</pre></div>
+
+<p>
+传一个 CV<sub>32F</sub> 的 256 项表，输出就是 CV<sub>32F</sub>。做「8 位灰度映射到 0~1 浮点」这类归一化时，这个特性挺好用，比 convertTo 少一遍遍历。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org00d967a" class="outline-2">
+<h2 id="org00d967a">源码里的四层分派</h2>
+<div class="outline-text-2" id="text-org00d967a">
+<p>
+cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<br></p>
+
+<ol class="org-ol">
+<li>OpenCL。目标是 UMat 且表长 256 时走 GPU 上的 lut kernel。<br>
+</li>
+<li>HAL。=cv<sub>hal</sub><sub>lut</sub>= 和 <code>cv_hal_lut16</code> 这两个钩子，给 IPP、ARM 那边的第三方加速库留的，没接就是空实现。<br>
+</li>
+<li>CPU 分派。getLUTFunc 按源深度和目标深度的组合返回一个函数指针；只有两条热路径会继续走到运行时指令集分派。<br>
+</li>
+<li>多线程。只有目标像素数过 2<sup>18</sup>（26 万）才开 parallel<sub>for</sub>_。<br>
+</li>
+</ol>
+<p>
+第 4 条值得单独看，小图是不开线程的：<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">dst</span><span class="p">.</span><span class="n">total</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="p">)(</span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">18</span><span class="p">))</span>
+<span class="w">    </span><span class="n">parallel_for_</span><span class="p">(</span><span class="n">all</span><span class="p">,</span><span class="w"> </span><span class="n">body</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">std</span><span class="o">::</span><span class="n">max</span><span class="p">((</span><span class="kt">size_t</span><span class="p">)</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">dst</span><span class="p">.</span><span class="n">total</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">16</span><span class="p">));</span>
+<span class="k">else</span>
+<span class="w">    </span><span class="n">body</span><span class="p">(</span><span class="n">all</span><span class="p">);</span>
+</pre></div>
+
+<p>
+分片数是总像素数右移 16 位：100 万像素分 16 片，26 万像素正好卡在 4 片。而 640x480 只有 30 万像素，勉强过线；再小一点就直接单线程跑完。线程唤醒加同步的成本比整张图查一遍表还贵，很多「我调了怎么没变快」的疑问就出在这。<br></p>
+
+<p>
+第 3 条的分派表本身也很说明问题。getLUTFunc 里，8U/8S 到 8U、8U 到 16U 这两组走的是 <code>LUT8u_dispatch</code> 和 <code>LUT16u_dispatch</code> 这两个函数，它们有专用 SIMD 实现；其余所有组合——8U 到 8S、到 16S、到 32S、到 32F、到 64F——全部落到模板 LUT_ 里的标量循环。OpenCV 只优化了真正被大量调用的那两条路。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orgf85c020" class="outline-2">
+<h2 id="orgf85c020">SIMD：x86 上唯一划算的指令</h2>
+<div class="outline-text-2" id="text-orgf85c020">
+<p>
+这是整个实现里最反直觉的一段。lut.simd.hpp 开头就是一整块注释加宏，直白地写着：x86 上只有 AVX-512 VBMI 的 vpermb 比标量快，AVX2/SSE 的 gather 因为延迟太高，反而更慢。<br></p>
+
+<div class="highlight"><pre><span></span><span class="c1">// VBMI vpermb is the only x86 SIMD path faster than scalar for byte LUT.</span>
+<span class="c1">// x86 gather (AVX2/SSE) is slower than scalar due to high gather latency.</span>
+<span class="c1">// Non-x86 (NEON, etc.) benefits from v_lut implementation.</span>
+<span class="cp">#if CV_AVX_512VBMI</span>
+<span class="cp">#define CV_LUT8U_SIMD 1</span>
+<span class="cp">#elif (defined(CV_CPU_COMPILE_SSE) || defined(CV_CPU_COMPILE_SSE2) || ... )</span>
+<span class="cp">#define CV_LUT8U_SIMD 0</span>
+<span class="cp">#elif CV_SIMD || CV_SIMD_SCALABLE</span>
+<span class="cp">#define CV_LUT8U_SIMD 1</span>
+<span class="cp">#else</span>
+<span class="cp">#define CV_LUT8U_SIMD 0</span>
+<span class="cp">#endif</span>
+</pre></div>
+
+<p>
+换句话说，编译 SSE/AVX2 版本的翻译单元时，这个宏被硬设成 0，根本不生成向量代码；只有到 AVX512<sub>ICL</sub> 那一档（带 VBMI）才打开。翻译单元里循环体的写法一模一样，只是被宏切掉了。<br></p>
+
+<p>
+为什么 vpermb 行、gather 不行？vpermb 是「拿一个 64 字节寄存器当表，对每个字节下标做 64 路并行重排」，纯寄存器操作，一条指令出 64 个结果。256 项的表要 4 个 64 字节寄存器，靠下标的高 2 位在 4 张表之间选，再掩码混合。而 gather 是从内存里按 16 个下标各取一次，微码把它拆成 16 次独立加载，延迟 10 个周期起步，吞吐还不如标量的三级流水。所以「向量查表」这件事，在 gather 指令上是负优化。<br></p>
+
+<p>
+真正的向量路径长这样：<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nlanes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">VTraits</span><span class="o">&lt;</span><span class="n">v_uint8</span><span class="o">&gt;::</span><span class="n">vlanes</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">nlanes</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">nlanes</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">v_uint8</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vx_load</span><span class="p">(</span><span class="n">src</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
+<span class="w">    </span><span class="n">v_uint8</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_lut</span><span class="p">(</span><span class="n">lut</span><span class="p">,</span><span class="w"> </span><span class="n">idx</span><span class="p">);</span>
+<span class="w">    </span><span class="n">v_store</span><span class="p">(</span><span class="n">dst</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">total</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="n">dst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lut</span><span class="p">[</span><span class="n">src</span><span class="p">[</span><span class="n">i</span><span class="p">]];</span>
+</pre></div>
+
+<p>
+注意边界是 total - nlanes，剩下的几个像素必须单独走标量，否则会越界读。这是所有手写 SIMD 的固定结构，也是「SIMD 版本代码量翻倍」的来源。<br></p>
+</div>
+
+<div id="outline-container-org54405ba" class="outline-3">
+<h3 id="org54405ba">三通道为什么要先把表拆开</h3>
+<div class="outline-text-3" id="text-org54405ba">
+<p>
+三通道最自然的写法是 lut[src[i]*3 + k]，但这样表是交错的，一个 vpermb 只能对一张连续的表做重排。OpenCV 的做法是先花 256 次把交错表拆成三张独立的 256 字节表，主循环就变成「解交织、三次单表查表、再交织」：<br></p>
+
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">nlanes</span><span class="o">*</span><span class="mi">3</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">nlanes</span><span class="o">*</span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">v_uint8</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="w">    </span><span class="n">v_load_deinterleave</span><span class="p">(</span><span class="n">src</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="w">    </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_lut</span><span class="p">(</span><span class="n">lut0</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">);</span>
+<span class="w">    </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_lut</span><span class="p">(</span><span class="n">lut1</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="p">);</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_lut</span><span class="p">(</span><span class="n">lut2</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="w">    </span><span class="n">v_store_interleave</span><span class="p">(</span><span class="n">dst</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>
+解交织和再交织在硬件上只是几条 shuffle，比三次跨步 gather 便宜得多。这个「预处理一次数据结构、换取主循环规整」的思路很通用：主循环跑了几十万次，建表只跑 256 次，怎么算都划算。<br></p>
+</div>
+</div>
+
+<div id="outline-container-orga4818db" class="outline-3">
+<h3 id="orga4818db">16 位表拆高低字节</h3>
+<div class="outline-text-3" id="text-orga4818db">
+<p>
+8U 源配 16U 表时，表是 256 个 ushort。OpenCV 没有去找 16 位的查表指令，而是把每个 ushort 拆成低字节表和高字节表，做两次字节查表，再用 zip 拼回去：<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">uchar</span><span class="w"> </span><span class="n">lut_lo</span><span class="p">[</span><span class="mi">256</span><span class="p">],</span><span class="w"> </span><span class="n">lut_hi</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">256</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">lut_lo</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">uchar</span><span class="p">)(</span><span class="n">lut</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
+<span class="w">    </span><span class="n">lut_hi</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">uchar</span><span class="p">)(</span><span class="n">lut</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="c1">// 主循环里：</span>
+<span class="n">v_uint8</span><span class="w"> </span><span class="n">lo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_lut</span><span class="p">(</span><span class="n">lut_lo</span><span class="p">,</span><span class="w"> </span><span class="n">idx</span><span class="p">);</span>
+<span class="n">v_uint8</span><span class="w"> </span><span class="n">hi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v_lut</span><span class="p">(</span><span class="n">lut_hi</span><span class="p">,</span><span class="w"> </span><span class="n">idx</span><span class="p">);</span>
+<span class="n">v_zip</span><span class="p">(</span><span class="n">lo</span><span class="p">,</span><span class="w"> </span><span class="n">hi</span><span class="p">,</span><span class="w"> </span><span class="n">res0</span><span class="p">,</span><span class="w"> </span><span class="n">res1</span><span class="p">);</span><span class="w">   </span><span class="c1">// [l0,h0,l1,h1,...]</span>
+</pre></div>
+
+<p>
+小端序刚好让 [lo, hi] 的排列等于一个 ushort 的内存布局，所以 zip 完直接改写类型存回去就是对的。这个技巧在别的场合也用得上，比如 8 位灰度拼 RGB565。<br></p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgfa0badf" class="outline-2">
+<h2 id="orgfa0badf">缓存：它凭什么对 cache 友好</h2>
+<div class="outline-text-2" id="text-orgfa0badf">
+<p>
+前面讲的是指令，这一层才是「为什么它天然快」的主因。<br></p>
+
+<ul class="org-ul">
+<li>表极小，且反复命中。8 位单表 256 字节，三通道拆开也就 768 字节。x86 的 L1 数据缓存是 32~48 KB，一张表连 1% 都占不到。整个循环里那张表被读几十万次，除了第一次以外全部命中 L1，查表那次 load 的延迟只有 4~5 个周期，跟一次算术差不多。<br>
+</li>
+<li>源和目标是严格递增的顺序流。没有跨步、没有随机跳转，硬件预取器对递增模式的识别率接近 100%，等于内存延迟被完全隐藏。此时瓶颈是内存带宽，不是延迟，而带宽是这种循环唯一无法避免的成本。<br>
+</li>
+<li>不产生中间 Mat。整条路径只在最后写一遍 dst，没有临时缓冲，也就没有额外的分配和一次多余的读写往返。相比之下，先 <code>src.clone()</code> 再原地处理、最后拷回去，内存流量直接翻三倍。<br>
+</li>
+<li>分块单位是「平面」，不是「整张图」。对非连续的 Mat（比如从大图上切出来的 ROI），NAryMatIterator 按平面推进，len 取当次连续段的长度：<br>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">Mat</span><span class="o">*</span><span class="w"> </span><span class="n">arrays</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="o">&amp;</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">dst</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+<span class="n">uchar</span><span class="o">*</span><span class="w"> </span><span class="n">ptrs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{};</span>
+<span class="n">NAryMatIterator</span><span class="w"> </span><span class="nf">it</span><span class="p">(</span><span class="n">arrays</span><span class="p">,</span><span class="w"> </span><span class="n">ptrs</span><span class="p">);</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">len</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">it</span><span class="p">.</span><span class="n">size</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">it</span><span class="p">.</span><span class="n">nplanes</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">,</span><span class="w"> </span><span class="o">++</span><span class="n">it</span><span class="p">)</span>
+<span class="w">    </span><span class="n">func_</span><span class="p">(</span><span class="n">ptrs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="n">lut_</span><span class="p">.</span><span class="n">ptr</span><span class="p">(),</span><span class="w"> </span><span class="n">ptrs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">len</span><span class="p">,</span><span class="w"> </span><span class="n">cn</span><span class="p">,</span><span class="w"> </span><span class="n">lutcn</span><span class="p">);</span>
+</pre></div>
+
+<p>
+这一手是很多人手写代码会漏掉的：ROI 的 Mat 每行之间是有间隔的（step 大于 cols），直接按 cols*rows 当成连续内存遍历会读到错误的数据，而在 Debug 下还看不出来，因为它只是读到了别的行。OpenCV 把「可能不连续」这件事统一交给迭代器，所以调用方永远不用关心。<br></p>
+</div>
+</div>
+
+<div id="outline-container-org25ef7ab" class="outline-2">
+<h2 id="org25ef7ab">那手写循环为什么慢</h2>
+<div class="outline-text-2" id="text-org25ef7ab">
+<p>
+说实话：如果手写的是裸指针、连续内存、一行 for、开 -O3，那它和 LUT 的标量路径性能是一样的，差距只在多线程。真正慢的是下面几种写法：<br></p>
+
+<div class="highlight"><pre><span></span><span class="c1">// 慢 1：每个像素一次 at 调用，边界检查和坐标计算都不肯白给</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">img</span><span class="p">.</span><span class="n">rows</span><span class="p">;</span><span class="w"> </span><span class="n">y</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">img</span><span class="p">.</span><span class="n">cols</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="o">++</span><span class="p">)</span>
+<span class="w">	</span><span class="n">img</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="n">uchar</span><span class="o">&gt;</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lut</span><span class="p">[</span><span class="n">img</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="n">uchar</span><span class="o">&gt;</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)];</span>
+
+<span class="c1">// 慢 2：每次循环都重新算一遍映射函数</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="n">dst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">saturate_cast</span><span class="o">&lt;</span><span class="n">uchar</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">src</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">255.0</span><span class="p">,</span><span class="w"> </span><span class="n">gamma</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">255</span><span class="p">);</span>
+
+<span class="c1">// 慢 3：制造中间副本</span>
+<span class="n">Mat</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">src</span><span class="p">.</span><span class="n">clone</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(...)</span><span class="w"> </span><span class="n">tmp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+<span class="n">tmp</span><span class="p">.</span><span class="n">copyTo</span><span class="p">(</span><span class="n">dst</span><span class="p">);</span>
+</pre></div>
+
+<p>
+第一种是把 at 的便利当成免费的；第二种是把该建表的事做了 200 万次，pow 一次几十个周期，比查表慢两个数量级；第三种多了一次全图分配加两次内存往返。这三种和 cv::LUT 的差距都是数量级的，而且跟 SIMD 一点关系都没有——先把自己的循环写对，再谈指令。<br></p>
+
+<p>
+另外 cv::LUT 是同类型时就地安全的（8U 到 8U，src 和 dst 传同一个 Mat）：它是逐字节读一个写一个，同一个下标先读后写，不存在别名问题。所以没必要 clone。<br></p>
+
+<p>
+想自己量一遍的话，别用 clock 掐单次，噪声比信号大：<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">cv</span><span class="o">::</span><span class="n">TickMeter</span><span class="w"> </span><span class="n">tm</span><span class="p">;</span>
+<span class="n">tm</span><span class="p">.</span><span class="n">start</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">k</span><span class="p">)</span>
+<span class="w">    </span><span class="n">cv</span><span class="o">::</span><span class="n">LUT</span><span class="p">(</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="n">lut</span><span class="p">,</span><span class="w"> </span><span class="n">dst</span><span class="p">);</span>
+<span class="n">tm</span><span class="p">.</span><span class="n">stop</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tm</span><span class="p">.</span><span class="n">getTimeMilli</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">" ms/iter"</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org854abfa" class="outline-2">
+<h2 id="org854abfa">自己写代码怎么让缓存友好</h2>
+<div class="outline-text-2" id="text-org854abfa">
+<p>
+按投入产出排序，前三条的收益比后面所有加起来都大：<br></p>
+
+<ol class="org-ol">
+<li>能查表的一律建表。只依赖像素值的映射，先算 256 项，再扫一遍图。这条是数量级的差别，其他都是百分比。<br>
+</li>
+<li>遍历顺序跟内存布局一致。Mat 是行优先，就按行、按递增下标扫。按列扫等于每读一个字节换一条 cache line。<br>
+</li>
+<li>取行首指针，别在两层循环里用 at。一次 ptr(y) 拿到行首，内层循环就是纯粹的地址递增，编译器敢把它展开、敢做向量化。<br>
+</li>
+<li>能就地就地。dst 和 src 复用同一块内存，省一次分配、省一遍内存往返。前提是算法允许（逐点映射都允许）。<br>
+</li>
+<li>分块时把块宽对齐到 64 字节的倍数。卷积、滤波这类必须分块的算法，块宽对齐能避免每个块首尾各碎一条 cache line。<br>
+</li>
+<li>逐通道处理就先 split。三通道交错时，同一个通道的相邻像素隔了 3 字节，一行 1920 像素的图横跨 5760 字节，等于每次扫都跨越 cache line 边界。先 split 成三个单通道 Mat，每张的扫描都是完全连续的。<br>
+</li>
+<li>小图别开多线程。低于 20 万像素老实单线程，阈值可以照抄 OpenCV 的 2<sup>18</sup>。<br>
+</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-org4aab2dc" class="outline-2">
+<h2 id="org4aab2dc">什么时候不该用 LUT</h2>
+<div class="outline-text-2" id="text-org4aab2dc">
+<ul class="org-ul">
+<li>16 位输入的 65536 项表。ushort 表是 128 KB，直接溢出 L1，命中 L2 甚至 L3，一次查表就是 10~40 个周期。原来那几个算术周期反而更便宜，这时候 LUT 是负优化。除非表在循环里有极高复用率，否则别碰。<br>
+</li>
+<li>映射依赖坐标或邻域。自适应阈值、晕影、导向滤波这类，没法预先建表。<br>
+</li>
+<li>需要高精度中间结果。LUT 的输出精度在建表那一刻就定死了，8 位表就是 8 位量化。如果后面还要做浮点累加，损失已经发生了。<br>
+</li>
+<li>映射本身就是一次线性变换。直接用 <code>convertTo</code> 或者手写乘加更划算，它们不占 load 端口，比查表还快。<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org1a45fb8" class="outline-2">
+<h2 id="org1a45fb8">踩坑清单</h2>
+<div class="outline-text-2" id="text-org1a45fb8">
+<ul class="org-ul">
+<li>表必须连续。从大 Mat 里切出来的 ROI 再 reshape 成 256x1，往往不连续，断言直接抛异常。老老实实 <code>clone()</code> 或者 copyTo 到一个独立的 Mat。<br>
+</li>
+<li>输出深度由表决定，不由 dst 决定。想要 CV<sub>32F</sub> 输出就构造 CV<sub>32F</sub> 的 256 项表。<br>
+</li>
+<li>lutcn 只能是 1 或者等于源通道数。三通道配 256x1x3 的表，每个通道可以有不同映射；配 256x1 就是三通道共用一张。注意表的通道顺序是「每个像素连续三个」，不是按通道平面排列的。<br>
+</li>
+<li>CV<sub>8S</sub> 也能用，但索引是按 uint8 解释的。源码里 8S 源被强转成 uint8<sub>t</sub>，所以 -1 实际查到的是 255 那一项。做有符号映射前先想清楚这个循环绕回。<br>
+</li>
+<li>小图不会走多线程。别指望 cv::LUT 在 640x480 上比手写循环快多少。<br>
+</li>
+<li>x86 上别指望编译器自动向量化查表。GCC 和 MSVC 都不会把 dst[i] = lut[src[i]] 变成 vpermb，最多展开成几条标量 load。想快只能手写 intrinsic，或者指望目标机有 AVX512VBMI。<br>
+</li>
+<li>OpenCV 只给两条组合做了专用实现。8 位源到 8U、到 16U 是 SIMD 的，8U 到 32F 走的是标量模板。拿 cv::LUT 和手写循环比性能前，先确认自己比的是哪一条路。<br>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgfb61bdf" class="outline-2">
+<h2 id="orgfb61bdf">参考链接</h2>
+<div class="outline-text-2" id="text-orgfb61bdf">
+<ul class="org-ul">
+<li>
+<a href="https://github.com/opencv/opencv/blob/4.x/modules/core/src/lut.cpp">modules/core/src/lut.cpp</a>：入口、断言、HAL/OpenCL 分派、多线程<br>
+</li>
+<li>
+<a href="https://github.com/opencv/opencv/blob/4.x/modules/core/src/lut.simd.hpp">modules/core/src/lut.simd.hpp</a>：SIMD 实现与 <code>v_lut</code> 的启用条件<br>
+</li>
+<li>
+<a href="https://github.com/opencv/opencv/blob/4.x/modules/core/src/lut.dispatch.cpp">modules/core/src/lut.dispatch.cpp</a>：运行时指令集分派<br>
+</li>
+<li>
+<a href="https://github.com/opencv/opencv/blob/4.x/modules/core/src/hal_replacement.hpp">modules/core/src/hal-replacement.hpp</a>： <code>cv_hal_lut</code> 钩子声明<br>
+</li>
+</ul>
+<p>
+（全文完）<br></p>
+</div>
+</div>
+  </div>
+  
+  <ul class="tags-list vertical-center">
+<li>
+      <a class="badge" href="/blog/tags/opencv/" rel="tag">opencv</a>
+    </li>
+  </ul></article><ul class="post-pager hidden-print">
+<li class="previous">
+      <a href="/blog/posts/2025/linux-driver-dev-tips/" rel="prev">Previous post
+        <br><span>Linux 驱动开发笔记</span>
+      </a>
+    </li>
+    <li class="next">
+      <a href="/blog/posts/2026/handle-app-crash-on-windows/" rel="next">Next post
+        <br><span>处理Windows系统下的软件崩溃问题</span>
+      </a>
+    </li>
+  </ul>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
+
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2025/opencv-lut/",
+        title: "opencv\u4e2dLUT\u51fd\u6570\u6548\u7387\u66f4\u9ad8\u7684\u539f\u56e0",
+        identifier: "_cache/posts/2025/opencv-lut.html",
+        lang: "en"
+      };
+
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2026, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

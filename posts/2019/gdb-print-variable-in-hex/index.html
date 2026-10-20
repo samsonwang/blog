@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -158,9 +205,9 @@ a 指针格">
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgd2143a1" class="outline-2">
-<h2 id="orgd2143a1">调整变量的输出格式</h2>
-<div class="outline-text-2" id="text-orgd2143a1">
+<div id="outline-container-orge829293" class="outline-2">
+<h2 id="orge829293">调整变量的输出格式</h2>
+<div class="outline-text-2" id="text-orge829293">
 <p>
 在使用gdb调试时，使用 <code>p/x</code> 就能够以16进制（hexadecimal）的形式输出该变量，使用语法为：<br></p>
 <div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p/x<span class="w"> </span>variable_name
@@ -198,9 +245,9 @@ gdb中的格式参数还有以下几种：<br></p>
 
 
 
-<div id="outline-container-org5544882" class="outline-2">
-<h2 id="org5544882">使用 <code>display</code> 跟踪某个变量</h2>
-<div class="outline-text-2" id="text-org5544882">
+<div id="outline-container-orged4a194" class="outline-2">
+<h2 id="orged4a194">使用 <code>display</code> 跟踪某个变量</h2>
+<div class="outline-text-2" id="text-orged4a194">
 <p>
 <code>display</code> 的用法与 <code>print</code> 的用法相似，但是 <code>display</code> 会在每次步进执行后输出该变量。这个功能与Visual Studio中的Watch功能比较类似。在不想观察该变量时，使用 <code>undisplay</code> 命令可以取消。<br></p>
 </div>
@@ -208,9 +255,9 @@ gdb中的格式参数还有以下几种：<br></p>
 
 
 
-<div id="outline-container-org263b373" class="outline-2">
-<h2 id="org263b373">使用 <code>x</code> 命令输出内存</h2>
-<div class="outline-text-2" id="text-org263b373">
+<div id="outline-container-org2d67640" class="outline-2">
+<h2 id="org2d67640">使用 <code>x</code> 命令输出内存</h2>
+<div class="outline-text-2" id="text-org2d67640">
 <p>
 使用 <code>x</code> 命令可以将指定内存地址中的内容打印出来。<br></p>
 
@@ -236,9 +283,9 @@ gdb中的格式参数还有以下几种：<br></p>
 
 
 
-<div id="outline-container-org5f8b201" class="outline-2">
-<h2 id="org5f8b201">参考资料</h2>
-<div class="outline-text-2" id="text-org5f8b201">
+<div id="outline-container-orgd1172be" class="outline-2">
+<h2 id="orgd1172be">参考资料</h2>
+<div class="outline-text-2" id="text-orgd1172be">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/9671820/print-variables-in-hexadecimal-or-decimal-format">stackoverflow - print variables in hexadeimal or decimal format</a><br>

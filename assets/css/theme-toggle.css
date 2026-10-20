@@ -15,6 +15,17 @@ html[data-theme="dark"] {
   color-scheme: dark;
 }
 
+/* 没有脚本时 html 上不会有 data-theme，此时至少让原生控件和图片降亮也跟随系统 */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    color-scheme: dark;
+  }
+
+  html:not([data-theme]) img {
+    filter: brightness(.88) contrast(1.03);
+  }
+}
+
 /* ---------------- 按钮本体 ---------------- */
 
 .theme-toggle {
@@ -111,6 +122,11 @@ html[data-theme="dark"] ::selection {
 /* 切换时给底色一个过渡，避免整页颜色硬跳 */
 body {
   transition: background-color .25s ease, color .25s ease;
+}
+
+/* 首次渲染还没落定配色之前不要过渡，否则底色会从默认值「渐变」进目标色 */
+html:not([data-theme-ready]) body {
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

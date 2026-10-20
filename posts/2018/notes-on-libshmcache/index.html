@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -137,9 +184,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
       
     <time class="dt-published" datetime="2018-07-23T10:51:59+08:00" itemprop="datePublished">Jul 23, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org9452141" class="outline-2">
-<h2 id="org9452141">引言</h2>
-<div class="outline-text-2" id="text-org9452141">
+    <div id="outline-container-org4eee6d2" class="outline-2">
+<h2 id="org4eee6d2">引言</h2>
+<div class="outline-text-2" id="text-org4eee6d2">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -164,9 +211,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-orgdc739ce" class="outline-2">
-<h2 id="orgdc739ce">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-orgdc739ce">
+<div id="outline-container-org28ddfc6" class="outline-2">
+<h2 id="org28ddfc6">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-org28ddfc6">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -210,9 +257,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-orga0d880a" class="outline-2">
-<h2 id="orga0d880a">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-orga0d880a">
+<div id="outline-container-org0bff9e6" class="outline-2">
+<h2 id="org0bff9e6">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-org0bff9e6">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -221,18 +268,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orga8fa820" class="outline-2">
-<h2 id="orga8fa820">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-orga8fa820">
+<div id="outline-container-orgeba128e" class="outline-2">
+<h2 id="orgeba128e">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-orgeba128e">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgef9a60c" class="outline-2">
-<h2 id="orgef9a60c">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-orgef9a60c">
+<div id="outline-container-org3d2207a" class="outline-2">
+<h2 id="org3d2207a">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org3d2207a">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -241,9 +288,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orge16ed46" class="outline-2">
-<h2 id="orge16ed46">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-orge16ed46">
+<div id="outline-container-orgfb5bb12" class="outline-2">
+<h2 id="orgfb5bb12">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-orgfb5bb12">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>

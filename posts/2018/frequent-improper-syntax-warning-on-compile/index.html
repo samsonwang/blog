@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -150,9 +197,9 @@ int printf(const char* format, ...">
       
     <time class="dt-published" datetime="2018-01-04T00:45:52+08:00" itemprop="datePublished">Jan 04, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orgc0951ca" class="outline-2">
-<h2 id="orgc0951ca">1 引言</h2>
-<div class="outline-text-2" id="text-orgc0951ca">
+    <div id="outline-container-org6b3c3f7" class="outline-2">
+<h2 id="org6b3c3f7">1 引言</h2>
+<div class="outline-text-2" id="text-org6b3c3f7">
 <p>
 本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。<br>
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
@@ -161,13 +208,13 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-org9a2b4ee" class="outline-2">
-<h2 id="org9a2b4ee">2 代码缺陷总结</h2>
-<div class="outline-text-2" id="text-org9a2b4ee">
+<div id="outline-container-org32175f6" class="outline-2">
+<h2 id="org32175f6">2 代码缺陷总结</h2>
+<div class="outline-text-2" id="text-org32175f6">
 </div>
-<div id="outline-container-org9e5cbd4" class="outline-3">
-<h3 id="org9e5cbd4">2.1 格式化字符串与后续参数不匹配</h3>
-<div class="outline-text-3" id="text-org9e5cbd4">
+<div id="outline-container-orgac752b3" class="outline-3">
+<h3 id="orgac752b3">2.1 格式化字符串与后续参数不匹配</h3>
+<div class="outline-text-3" id="text-orgac752b3">
 <p>
 函数原型如下<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">printf</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">format</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
@@ -175,9 +222,9 @@ int printf(const char* format, ...">
 </pre></div>
 </div>
 
-<div id="outline-container-org03297cc" class="outline-4">
-<h4 id="org03297cc">2.1.1 <code>size_t</code> 类型</h4>
-<div class="outline-text-4" id="text-org03297cc">
+<div id="outline-container-org8c97615" class="outline-4">
+<h4 id="org8c97615">2.1.1 <code>size_t</code> 类型</h4>
+<div class="outline-text-4" id="text-org8c97615">
 <p>
 由于 <code>size_t</code> 在不同平台上会有不同的类型定义，合适的做法是使用 <code>z</code> 对 <code>size_t</code> 进行格式化。<br>
 变量宽度标识符 <code>z</code> 需要编译器支持C++11或C99特性。<br>
@@ -189,9 +236,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-orga3d74c1" class="outline-4">
-<h4 id="orga3d74c1">2.1.2 <code>int64_t</code> 及其相关类型</h4>
-<div class="outline-text-4" id="text-orga3d74c1">
+<div id="outline-container-orgb231391" class="outline-4">
+<h4 id="orgb231391">2.1.2 <code>int64_t</code> 及其相关类型</h4>
+<div class="outline-text-4" id="text-orgb231391">
 <p>
 <code>int64_t</code> 是固定宽度为8字节的整形定义，在文件 <code>&lt;cstdint&gt;</code> 中有定义。<br>
 类似的还有 <code>int8_t</code>, <code>int16_t</code>, <code>int32_t</code> 分对应1，2，4字节的整形定义。<br>
@@ -216,9 +263,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-org0562532" class="outline-4">
-<h4 id="org0562532">2.1.3 <code>%x</code> 对应无符号整数</h4>
-<div class="outline-text-4" id="text-org0562532">
+<div id="outline-container-org7447840" class="outline-4">
+<h4 id="org7447840">2.1.3 <code>%x</code> 对应无符号整数</h4>
+<div class="outline-text-4" id="text-org7447840">
 <p>
 在使用 <code>sscanf</code> 函数对取16进制数据时需要注意传入的需要是无符号类型的地址。<br>
 示例代码如下：<br></p>
@@ -231,9 +278,9 @@ int printf(const char* format, ...">
 </div>
 
 
-<div id="outline-container-org1b8dd99" class="outline-3">
-<h3 id="org1b8dd99">2.2 多个逻辑表达式之间在 <code>&amp;&amp;</code> 和 <code>||</code> 之间的运算符优先级</h3>
-<div class="outline-text-3" id="text-org1b8dd99">
+<div id="outline-container-orgc7d95f8" class="outline-3">
+<h3 id="orgc7d95f8">2.2 多个逻辑表达式之间在 <code>&amp;&amp;</code> 和 <code>||</code> 之间的运算符优先级</h3>
+<div class="outline-text-3" id="text-orgc7d95f8">
 <p>
 先看以下示例代码：<br></p>
 <div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">EXPR1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">EXPR2</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">EXPR3</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">EXPR4</span><span class="p">)</span>
@@ -257,9 +304,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-orgd1749e9" class="outline-3">
-<h3 id="orgd1749e9">2.3 有符号整数和无符号整数之间的大小比较</h3>
-<div class="outline-text-3" id="text-orgd1749e9">
+<div id="outline-container-orgb41e0eb" class="outline-3">
+<h3 id="orgb41e0eb">2.3 有符号整数和无符号整数之间的大小比较</h3>
+<div class="outline-text-3" id="text-orgb41e0eb">
 <p>
 有符号整数和无符号整数在进行大小比较时，有符号数会被转化为无符号数。<br>
 这样会引起一些不必要误解，所以应该避免这种用法。<br>
@@ -284,9 +331,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-orgacb2305" class="outline-3">
-<h3 id="orgacb2305">2.4 函数的重载和覆盖</h3>
-<div class="outline-text-3" id="text-orgacb2305">
+<div id="outline-container-org9a0ea96" class="outline-3">
+<h3 id="org9a0ea96">2.4 函数的重载和覆盖</h3>
+<div class="outline-text-3" id="text-org9a0ea96">
 <p>
 在进行虚函数多态实现时，注意检查函数的一致性。<br>
 出现相同函数名称但是积累为非 <code>const</code> 版本，而派生类为 <code>const</code> 时，这时并不会导致多态，而会导致基类函数被隐藏。<br></p>

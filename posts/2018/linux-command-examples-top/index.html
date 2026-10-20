@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -154,15 +201,15 @@
     <p>
 linux的top命令能够动态显示当前系统的运行状态。它能够显示操作系统的汇总信息和当前系统上的正在运行的进程列表。<br></p>
 
-<div id="outline-container-org7adc4f9" class="outline-2">
-<h2 id="org7adc4f9">统计信息说明</h2>
-<div class="outline-text-2" id="text-org7adc4f9">
+<div id="outline-container-org75e5c11" class="outline-2">
+<h2 id="org75e5c11">统计信息说明</h2>
+<div class="outline-text-2" id="text-org75e5c11">
 <p>
 (可以通过配置文件修改通计信息区的显示格式，下文所描述的都是在默认配置下的显示内容)<br></p>
 </div>
-<div id="outline-container-orgf28aa8b" class="outline-3">
-<h3 id="orgf28aa8b">第1行</h3>
-<div class="outline-text-3" id="text-orgf28aa8b">
+<div id="outline-container-orgc2dc0e8" class="outline-3">
+<h3 id="orgc2dc0e8">第1行</h3>
+<div class="outline-text-3" id="text-orgc2dc0e8">
 <ul class="org-ul">
 <li>当前系统时间<br>
 </li>
@@ -177,9 +224,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 这一行信息也可以通过 <code>uptime</code> 和 <code>w</code> 指令获得<br></p>
 </div>
 </div>
-<div id="outline-container-org2906813" class="outline-3">
-<h3 id="org2906813">第2行</h3>
-<div class="outline-text-3" id="text-org2906813">
+<div id="outline-container-orgd3b700a" class="outline-3">
+<h3 id="orgd3b700a">第2行</h3>
+<div class="outline-text-3" id="text-orgd3b700a">
 <ul class="org-ul">
 <li>总进程数<br>
 </li>
@@ -194,9 +241,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </ul>
 </div>
 </div>
-<div id="outline-container-org83bd4db" class="outline-3">
-<h3 id="org83bd4db">第3行</h3>
-<div class="outline-text-3" id="text-org83bd4db">
+<div id="outline-container-org776d67b" class="outline-3">
+<h3 id="org776d67b">第3行</h3>
+<div class="outline-text-3" id="text-org776d67b">
 <ul class="org-ul">
 <li>us 用户空间占用CPU百分比<br>
 </li>
@@ -218,9 +265,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org24d0f9e" class="outline-3">
-<h3 id="org24d0f9e">第4行</h3>
-<div class="outline-text-3" id="text-org24d0f9e">
+<div id="outline-container-org012a32c" class="outline-3">
+<h3 id="org012a32c">第4行</h3>
+<div class="outline-text-3" id="text-org012a32c">
 <ul class="org-ul">
 <li>物理内存总量<br>
 </li>
@@ -234,9 +281,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org0c2b8b7" class="outline-3">
-<h3 id="org0c2b8b7">第5行</h3>
-<div class="outline-text-3" id="text-org0c2b8b7">
+<div id="outline-container-org6735a6c" class="outline-3">
+<h3 id="org6735a6c">第5行</h3>
+<div class="outline-text-3" id="text-org6735a6c">
 <ul class="org-ul">
 <li>交换区总量<br>
 </li>
@@ -251,9 +298,9 @@ linux的top命令能够动态显示当前系统的运行状态。它能够显示
 </div>
 </div>
 
-<div id="outline-container-org793e56d" class="outline-2">
-<h2 id="org793e56d">进程信息</h2>
-<div class="outline-text-2" id="text-org793e56d">
+<div id="outline-container-orgf38095f" class="outline-2">
+<h2 id="orgf38095f">进程信息</h2>
+<div class="outline-text-2" id="text-orgf38095f">
 <p>
 在top命令中按f按可以查看显示的列信息，按对应字母来开启/关闭列，大写字母表示开启，小写字母表示关闭。带*号的是默认列。<br></p>
 
@@ -288,9 +335,9 @@ X: COMMAND = (Command name/line) 命令名/命令行<br></p>
 </div>
 
 
-<div id="outline-container-orge078e50" class="outline-2">
-<h2 id="orge078e50">参考资料</h2>
-<div class="outline-text-2" id="text-orge078e50">
+<div id="outline-container-org9dd6eab" class="outline-2">
+<h2 id="org9dd6eab">参考资料</h2>
+<div class="outline-text-2" id="text-org9dd6eab">
 <ul class="org-ul">
 <li>
 <a href="https://www.tecmint.com/12-top-command-examples-in-linux/">tecmint.com</a><br>

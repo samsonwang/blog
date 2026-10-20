@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -152,45 +199,45 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org26e5cf5" class="outline-3">
-<h3 id="org26e5cf5"><code>-fsyntax-only</code></h3>
-<div class="outline-text-3" id="text-org26e5cf5">
+<div id="outline-container-org9aa5df6" class="outline-3">
+<h3 id="org9aa5df6"><code>-fsyntax-only</code></h3>
+<div class="outline-text-3" id="text-org9aa5df6">
 <p>
 检查代码中的语法错误，但是不做任何处理，通常用作语法检查。<br>
 在使用这个参数以后，编译器仅仅检查代码中的语法错误并予以提示，并不会生成目标文件。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd1676b7" class="outline-3">
-<h3 id="orgd1676b7"><code>-w</code></h3>
-<div class="outline-text-3" id="text-orgd1676b7">
+<div id="outline-container-org141c542" class="outline-3">
+<h3 id="org141c542"><code>-w</code></h3>
+<div class="outline-text-3" id="text-org141c542">
 <p>
 禁止所有的报警信息<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org0c3edb2" class="outline-3">
-<h3 id="org0c3edb2"><code>-Werror</code></h3>
-<div class="outline-text-3" id="text-org0c3edb2">
+<div id="outline-container-orgcf5de2c" class="outline-3">
+<h3 id="orgcf5de2c"><code>-Werror</code></h3>
+<div class="outline-text-3" id="text-orgcf5de2c">
 <p>
 将所有的警告视为错误<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org98e4a24" class="outline-3">
-<h3 id="org98e4a24"><code>-Wfatal-errors</code></h3>
-<div class="outline-text-3" id="text-org98e4a24">
+<div id="outline-container-orgc7c9b74" class="outline-3">
+<h3 id="orgc7c9b74"><code>-Wfatal-errors</code></h3>
+<div class="outline-text-3" id="text-orgc7c9b74">
 <p>
 在出现第一条错误信息停止编译<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orga741939" class="outline-3">
-<h3 id="orga741939"><code>-Wall</code></h3>
-<div class="outline-text-3" id="text-orga741939">
+<div id="outline-container-orgad39eb6" class="outline-3">
+<h3 id="orgad39eb6"><code>-Wall</code></h3>
+<div class="outline-text-3" id="text-orgad39eb6">
 <p>
 启用以下警告<br></p>
 <pre class="example">
@@ -248,9 +295,9 @@
 </div>
 
 
-<div id="outline-container-org85d049e" class="outline-3">
-<h3 id="org85d049e"><code>-Wextra</code></h3>
-<div class="outline-text-3" id="text-org85d049e">
+<div id="outline-container-org5ade968" class="outline-3">
+<h3 id="org5ade968"><code>-Wextra</code></h3>
+<div class="outline-text-3" id="text-org5ade968">
 <p>
 启用以下警告<br></p>
 <pre class="example">
@@ -274,9 +321,9 @@
 </div>
 
 
-<div id="outline-container-org342a0a5" class="outline-3">
-<h3 id="org342a0a5"><code>-Wdelete-incomplete</code></h3>
-<div class="outline-text-3" id="text-org342a0a5">
+<div id="outline-container-org96e1b9f" class="outline-3">
+<h3 id="org96e1b9f"><code>-Wdelete-incomplete</code></h3>
+<div class="outline-text-3" id="text-org96e1b9f">
 <p>
 (C++ and Objective-C++ only)<br>
 析构一个指向不完整的类型的指针，可能会造成运行时错误未定义行为。<br>
@@ -285,9 +332,9 @@
 </div>
 
 
-<div id="outline-container-orgfff876f" class="outline-3">
-<h3 id="orgfff876f"><code>-Wuseless-cast</code></h3>
-<div class="outline-text-3" id="text-orgfff876f">
+<div id="outline-container-org1d866dc" class="outline-3">
+<h3 id="org1d866dc"><code>-Wuseless-cast</code></h3>
+<div class="outline-text-3" id="text-org1d866dc">
 <p>
 (C++ and Objective-C++ only)<br>
 变量被转换为自身类型。<br></p>
@@ -295,33 +342,33 @@
 </div>
 
 
-<div id="outline-container-org4e41511" class="outline-3">
-<h3 id="org4e41511"><code>-Wduplicated-branches</code></h3>
-<div class="outline-text-3" id="text-org4e41511">
+<div id="outline-container-org5aab1f9" class="outline-3">
+<h3 id="org5aab1f9"><code>-Wduplicated-branches</code></h3>
+<div class="outline-text-3" id="text-org5aab1f9">
 <p>
 用于检查在 <code>if/else</code> 语句中是否存在返回值相同的结果返回值。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge9e2ad2" class="outline-3">
-<h3 id="orge9e2ad2"><code>-Wduplicated-cond</code></h3>
-<div class="outline-text-3" id="text-orge9e2ad2">
+<div id="outline-container-orgc52899a" class="outline-3">
+<h3 id="orgc52899a"><code>-Wduplicated-cond</code></h3>
+<div class="outline-text-3" id="text-orgc52899a">
 <p>
 用于检查在 <code>if/else</code> 语句中存在相同的条件<br></p>
 </div>
 </div>
 
-<div id="outline-container-orga9884ff" class="outline-3">
-<h3 id="orga9884ff"><code>-Wfloat-equal</code></h3>
-<div class="outline-text-3" id="text-orga9884ff">
+<div id="outline-container-orga453a03" class="outline-3">
+<h3 id="orga453a03"><code>-Wfloat-equal</code></h3>
+<div class="outline-text-3" id="text-orga453a03">
 <p>
 检查使用等号比较float相等的情况<br></p>
 </div>
 </div>
 
-<div id="outline-container-org2522ef6" class="outline-3">
-<h3 id="org2522ef6"><code>-Wformat</code></h3>
-<div class="outline-text-3" id="text-org2522ef6">
+<div id="outline-container-org39a7ef2" class="outline-3">
+<h3 id="org39a7ef2"><code>-Wformat</code></h3>
+<div class="outline-text-3" id="text-org39a7ef2">
 <p>
 检查printf相关函数中的格式字符串是否符合与后续的实际参数对应。<br>
 该项检查在 <code>-Wall</code> 中默认开启，可以通过 <code>-Wformat=0</code> 进行关闭。<br></p>
@@ -329,9 +376,9 @@
 </div>
 
 
-<div id="outline-container-orgba92a30" class="outline-2">
-<h2 id="orgba92a30">配置范例</h2>
-<div class="outline-text-2" id="text-orgba92a30">
+<div id="outline-container-org559792b" class="outline-2">
+<h2 id="org559792b">配置范例</h2>
+<div class="outline-text-2" id="text-org559792b">
 <p>
 这里是正在使用的警告相关的参数配置<br></p>
 <div class="highlight"><pre><span></span><span class="c">#编译时的警告信息</span>
@@ -346,9 +393,9 @@
 </div>
 
 
-<div id="outline-container-org60870d7" class="outline-2">
-<h2 id="org60870d7">参考资料</h2>
-<div class="outline-text-2" id="text-org60870d7">
+<div id="outline-container-orgdad2c9e" class="outline-2">
+<h2 id="orgdad2c9e">参考资料</h2>
+<div class="outline-text-2" id="text-orgdad2c9e">
 <p>
 <a href="https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html">gcc online doc - warning options</a><br></p>
 </div>

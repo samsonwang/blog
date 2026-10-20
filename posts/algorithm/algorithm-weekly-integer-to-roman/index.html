@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -140,9 +187,9 @@ C          ">
       
     <time class="dt-published" datetime="2018-09-05T09:15:43+08:00" itemprop="datePublished">Sep 05, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org7d2a270" class="outline-2">
-<h2 id="org7d2a270">Description</h2>
-<div class="outline-text-2" id="text-org7d2a270">
+    <div id="outline-container-org3de9141" class="outline-2">
+<h2 id="org3de9141">Description</h2>
+<div class="outline-text-2" id="text-org3de9141">
 <p>
 Roman numerals are represented by seven different symbols: <code>I</code> , <code>V</code> , <code>X</code> , <code>L</code> , <code>C</code> , <code>D</code> and <code>M</code>.<br></p>
 <pre class="example">
@@ -218,13 +265,13 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orga0b97b4" class="outline-2">
-<h2 id="orga0b97b4">Solution</h2>
-<div class="outline-text-2" id="text-orga0b97b4">
+<div id="outline-container-orgaff031e" class="outline-2">
+<h2 id="orgaff031e">Solution</h2>
+<div class="outline-text-2" id="text-orgaff031e">
 </div>
-<div id="outline-container-orgdf676f3" class="outline-3">
-<h3 id="orgdf676f3">Approach 1</h3>
-<div class="outline-text-3" id="text-orgdf676f3">
+<div id="outline-container-orgc21f6d5" class="outline-3">
+<h3 id="orgc21f6d5">Approach 1</h3>
+<div class="outline-text-3" id="text-orgc21f6d5">
 <p>
 这道题并不难，方法也很容易想到，这道题被归为 <code>medium</code> 难度反而让我感到有些奇怪，下面的代码就是我的解法。<br></p>
 <div class="highlight"><pre><span></span><span class="n">string</span><span class="w"> </span><span class="nf">intToRoman</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">num</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -345,9 +392,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgc53c60e" class="outline-3">
-<h3 id="orgc53c60e">Approach 2</h3>
-<div class="outline-text-3" id="text-orgc53c60e">
+<div id="outline-container-orge2193e1" class="outline-3">
+<h3 id="orge2193e1">Approach 2</h3>
+<div class="outline-text-3" id="text-orge2193e1">
 <p>
 下面代码是从leetcode上找的，这样的打表法，看起来至少从形式上会更加美观，而且也非常好理解。<br></p>
 <div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
@@ -374,9 +421,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orga789769" class="outline-3">
-<h3 id="orga789769">Approach 3</h3>
-<div class="outline-text-3" id="text-orga789769">
+<div id="outline-container-org413c4d1" class="outline-3">
+<h3 id="org413c4d1">Approach 3</h3>
+<div class="outline-text-3" id="text-org413c4d1">
 <p>
 下面这段代码也是leetcode上的答案，这个答案的通用性要好一些，最起码找到了规律，这有助于算法的后续拓展。<br></p>
 <div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>

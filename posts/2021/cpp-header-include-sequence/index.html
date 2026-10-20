@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -136,9 +183,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgdc25599" class="outline-2">
-<h2 id="orgdc25599">头文件引用顺序</h2>
-<div class="outline-text-2" id="text-orgdc25599">
+<div id="outline-container-orgbc80c20" class="outline-2">
+<h2 id="orgbc80c20">头文件引用顺序</h2>
+<div class="outline-text-2" id="text-orgbc80c20">
 <p>
 一般来讲，头文件的使用者并不需要关注头文件的引用顺序，只要代码能够正常编译即可，由头文件引用顺序导致的问题其实是头文件本身的问题。头文件的编写者应该保证提供的头文件不需要先包含其他头文件，并且在使用时尽量不影响其他头文件。<br></p>
 
@@ -153,9 +200,9 @@
 </div>
 </div>
 
-<div id="outline-container-org30035a2" class="outline-2">
-<h2 id="org30035a2">Google风格</h2>
-<div class="outline-text-2" id="text-org30035a2">
+<div id="outline-container-orgda07083" class="outline-2">
+<h2 id="orgda07083">Google风格</h2>
+<div class="outline-text-2" id="text-orgda07083">
 <p>
 Google在其C++编码风格指南<sup><a id="fnr.1" class="footref" href="/blog/posts/2021/cpp-header-include-sequence/#fn.1">1</a></sup>中提到了头文件引用顺序问题，其中给出的建议是：<br></p>
 
@@ -176,9 +223,9 @@ Google在其C++编码风格指南<sup><a id="fnr.1" class="footref" href="/blog/
 </div>
 </div>
 
-<div id="outline-container-org71be373" class="outline-2">
-<h2 id="org71be373">Lakos风格</h2>
-<div class="outline-text-2" id="text-org71be373">
+<div id="outline-container-org31aa901" class="outline-2">
+<h2 id="org31aa901">Lakos风格</h2>
+<div class="outline-text-2" id="text-org31aa901">
 <p>
 Lakos在其编写的《Large Scale C++ Software Design》中推荐了下面的排序风格：<br></p>
 
@@ -197,9 +244,9 @@ Lakos在其编写的《Large Scale C++ Software Design》中推荐了下面的�
 </div>
 </div>
 
-<div id="outline-container-orgd59ff9a" class="outline-2">
-<h2 id="orgd59ff9a">小结</h2>
-<div class="outline-text-2" id="text-orgd59ff9a">
+<div id="outline-container-org3a15fcf" class="outline-2">
+<h2 id="org3a15fcf">小结</h2>
+<div class="outline-text-2" id="text-org3a15fcf">
 <p>
 这两种风格都推荐将cpp文件对应的h文件放在引用顺序的最开始位置，因为这样能够帮我们检查自己编写的头文件是否是“自给自足”的，我们自己的cpp文件充当了对应h文件的第一个测试用例。<br></p>
 
@@ -208,9 +255,9 @@ Lakos在其编写的《Large Scale C++ Software Design》中推荐了下面的�
 </div>
 </div>
 
-<div id="outline-container-orge458c62" class="outline-2">
-<h2 id="orge458c62">参考资料</h2>
-<div class="outline-text-2" id="text-orge458c62">
+<div id="outline-container-org404dddd" class="outline-2">
+<h2 id="org404dddd">参考资料</h2>
+<div class="outline-text-2" id="text-org404dddd">
 <ul class="org-ul">
 <li>
 <a href="https://www.cplusplus.com/forum/articles/10627/">cplusplus.com</a><br>

@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -138,9 +185,9 @@
       
     <time class="dt-published" datetime="2018-08-27T22:10:35+08:00" itemprop="datePublished">Aug 27, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org71ab3e5" class="outline-2">
-<h2 id="org71ab3e5">引言</h2>
-<div class="outline-text-2" id="text-org71ab3e5">
+    <div id="outline-container-orgf99665e" class="outline-2">
+<h2 id="orgf99665e">引言</h2>
+<div class="outline-text-2" id="text-orgf99665e">
 <p>
 在学习前端的过程中，我开始接触到许多开发框架或开发工具，这些工具让我开始眼花缭乱。使用常规的html/css/js就已经能够开发出这种网页了，所以我问自己，为什么要学习这些框架或工具，这些库是用来解决什么问题的。想明白这个问题，我学习的目的就更加明确，在遇到一些开发情景时，也能够快速准确地挑选出应该使用的框架。<br></p>
 
@@ -149,9 +196,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgefac9d9" class="outline-2">
-<h2 id="orgefac9d9">为什么要使用jQuery</h2>
-<div class="outline-text-2" id="text-orgefac9d9">
+<div id="outline-container-orgc6c6d4e" class="outline-2">
+<h2 id="orgc6c6d4e">为什么要使用jQuery</h2>
+<div class="outline-text-2" id="text-orgc6c6d4e">
 <p>
 jQuery是一个轻量级js库，它有如下特性：<br></p>
 <ul class="org-ul">
@@ -171,9 +218,9 @@ jQuery是一个轻量级js库，它有如下特性：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org16b8de3" class="outline-2">
-<h2 id="org16b8de3">为什么要使用SASS</h2>
-<div class="outline-text-2" id="text-org16b8de3">
+<div id="outline-container-orgadcdf08" class="outline-2">
+<h2 id="orgadcdf08">为什么要使用SASS</h2>
+<div class="outline-text-2" id="text-orgadcdf08">
 <p>
 SASS是一种CSS预编译格式，它最终会编译成CSS。<br>
 SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操作，函数操作，样式模板（mixin）等强大的特性。它能够让开发人员更方便地编写CSS。SASS支持 <code>import</code> 关键字，这样就能够很方便地对样式进行模块化设计。<br></p>
@@ -186,9 +233,9 @@ SASS提供了CSS语法的拓展，它支持变量，算数运算符，循环操�
 </div>
 </div>
 
-<div id="outline-container-org1722bf6" class="outline-2">
-<h2 id="org1722bf6">为什么要使用Bootstrap</h2>
-<div class="outline-text-2" id="text-org1722bf6">
+<div id="outline-container-org18bb413" class="outline-2">
+<h2 id="org18bb413">为什么要使用Bootstrap</h2>
+<div class="outline-text-2" id="text-org18bb413">
 <p>
 Bootstrap是一个用于快速开发网页的前端框架。以我目前的理解来看，它更像是一个网页样式框架。<br></p>
 <ul class="org-ul">
@@ -204,9 +251,9 @@ Bootstrap是一个用于快速开发网页的前端框架。以我目前的理�
 </div>
 </div>
 
-<div id="outline-container-org796ce67" class="outline-2">
-<h2 id="org796ce67">为什么要使用React</h2>
-<div class="outline-text-2" id="text-org796ce67">
+<div id="outline-container-org42e80d7" class="outline-2">
+<h2 id="org42e80d7">为什么要使用React</h2>
+<div class="outline-text-2" id="text-org42e80d7">
 <p>
 DOM操作对性能的影响很大，频繁的DOM操作会使网页渲染的速度变慢，React主要解决了这个问题。<br>
 React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新渲染。<br></p>
@@ -246,9 +293,9 @@ React.js允许在js中编写html，形成Virtual DOM，只在变化进行重新�
 </div>
 
 
-<div id="outline-container-org43b81aa" class="outline-2">
-<h2 id="org43b81aa">参考资料</h2>
-<div class="outline-text-2" id="text-org43b81aa">
+<div id="outline-container-org239e112" class="outline-2">
+<h2 id="org239e112">参考资料</h2>
+<div class="outline-text-2" id="text-org239e112">
 <ol class="org-ol">
 <li>
 <a href="https://www.w3schools.com/jquery/jquery_intro.asp">w3schools jQuery intro</a><br>

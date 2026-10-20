@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -148,9 +195,9 @@ TCP是基于">
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org7e7e9ee" class="outline-2">
-<h2 id="org7e7e9ee">概述</h2>
-<div class="outline-text-2" id="text-org7e7e9ee">
+<div id="outline-container-org1580a11" class="outline-2">
+<h2 id="org1580a11">概述</h2>
+<div class="outline-text-2" id="text-org1580a11">
 <p>
 本节主要讲述了TCP协议的定义，阐述了核心功能的实现原理。<br></p>
 
@@ -195,9 +242,9 @@ Applications that do not require reliable data stream service may use the User D
 </blockquote>
 </div>
 
-<div id="outline-container-org183f2c8" class="outline-3">
-<h3 id="org183f2c8">基础概念</h3>
-<div class="outline-text-3" id="text-org183f2c8">
+<div id="outline-container-org2e354b6" class="outline-3">
+<h3 id="org2e354b6">基础概念</h3>
+<div class="outline-text-3" id="text-org2e354b6">
 <p>
 本节内容主要是TCP协议中的相关基础概念，对基础概念的准确理解是TCP协议展开论述的前提。<br></p>
 
@@ -229,9 +276,9 @@ The TCP is assumed to be a module in an operating system. The users access the T
 </div>
 </div>
 
-<div id="outline-container-org06a0ac7" class="outline-3">
-<h3 id="org06a0ac7">通信可靠性（Reliable Communication）</h3>
-<div class="outline-text-3" id="text-org06a0ac7">
+<div id="outline-container-orgb84ca2e" class="outline-3">
+<h3 id="orgb84ca2e">通信可靠性（Reliable Communication）</h3>
+<div class="outline-text-3" id="text-orgb84ca2e">
 <p>
 使用TCP进行传输的数据是有序的、可靠的。<br></p>
 <blockquote>
@@ -256,9 +303,9 @@ To govern the flow of data between TCPs, a flow control mechanism is employed. T
 </div>
 </div>
 
-<div id="outline-container-org1ff2b8a" class="outline-3">
-<h3 id="org1ff2b8a">连接的建立和断开（Connection Establishment and Clearing）</h3>
-<div class="outline-text-3" id="text-org1ff2b8a">
+<div id="outline-container-orgef3b48a" class="outline-3">
+<h3 id="orgef3b48a">连接的建立和断开（Connection Establishment and Clearing）</h3>
+<div class="outline-text-3" id="text-orgef3b48a">
 <p>
 通过IP地址和端口号来创建唯一的 <code>socket</code> 。<br></p>
 <blockquote>
@@ -286,9 +333,9 @@ The clearing of a connection also involves the exchange of segments, in this cas
 </div>
 </div>
 
-<div id="outline-container-org8b6fadd" class="outline-3">
-<h3 id="org8b6fadd">数据传输（Data Communication）</h3>
-<div class="outline-text-3" id="text-org8b6fadd">
+<div id="outline-container-org1a63430" class="outline-3">
+<h3 id="org1a63430">数据传输（Data Communication）</h3>
+<div class="outline-text-3" id="text-org1a63430">
 <p>
 The data that flows on a connection may be thought of as a stream of octets. The sending user indicates in each SEND call whether the data in that call (and any preceeding calls) should be immediately pushed through to the receiving user by the setting of the PUSH flag.<br></p>
 
@@ -303,9 +350,9 @@ TCP also provides a means to communicate to the receiver of data that at some po
 </div>
 </div>
 
-<div id="outline-container-org156574e" class="outline-3">
-<h3 id="org156574e">优先性和安全性（Precedence and Security）</h3>
-<div class="outline-text-3" id="text-org156574e">
+<div id="outline-container-orgc5e614d" class="outline-3">
+<h3 id="orgc5e614d">优先性和安全性（Precedence and Security）</h3>
+<div class="outline-text-3" id="text-orgc5e614d">
 <p>
 The TCP makes use of the internet protocol type of service field and security option to provide precedence and security on a per connection basis to TCP users. Not all TCP modules will necessarily function in a multilevel secure environment; some may be limited to unclassified use only, and others may operate at only one security level and compartment. Consequently, some TCP implementations and services to users may be limited to a subset of the multilevel secure case.<br></p>
 
@@ -314,9 +361,9 @@ TCP modules which operate in a multilevel secure environment must properly mark 
 </div>
 </div>
 
-<div id="outline-container-orgca5a168" class="outline-3">
-<h3 id="orgca5a168">鲁棒性原则（Robustness Principle）</h3>
-<div class="outline-text-3" id="text-orgca5a168">
+<div id="outline-container-orgdcb0689" class="outline-3">
+<h3 id="orgdcb0689">鲁棒性原则（Robustness Principle）</h3>
+<div class="outline-text-3" id="text-orgdcb0689">
 <p>
 TCP implementations will follow a general principle of robustness: be conservative in what you do, be liberal in what you accept from others.<br></p>
 </div>
@@ -324,9 +371,9 @@ TCP implementations will follow a general principle of robustness: be conservati
 </div>
 
 
-<div id="outline-container-org14d8735" class="outline-2">
-<h2 id="org14d8735">参考资料</h2>
-<div class="outline-text-2" id="text-org14d8735">
+<div id="outline-container-org2c57fc8" class="outline-2">
+<h2 id="org2c57fc8">参考资料</h2>
+<div class="outline-text-2" id="text-org2c57fc8">
 <ul class="org-ul">
 <li>
 <a href="https://tools.ietf.org/html/rfc793">https://tools.ietf.org/html/rfc793</a><br>

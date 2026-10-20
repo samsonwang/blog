@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -137,8 +184,8 @@
       
     <time class="dt-published" datetime="2018-06-26T09:27:06+08:00" itemprop="datePublished">Jun 26, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org9403278" class="outline-2">
-<h2 id="org9403278">
+    <div id="outline-container-org14afeca" class="outline-2">
+<h2 id="org14afeca">
 <span class="section-number-2">1</span> 同步和异步</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -154,8 +201,8 @@
 异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
 </div>
 
-<div id="outline-container-org3325cda" class="outline-3">
-<h3 id="org3325cda">
+<div id="outline-container-org92db8f7" class="outline-3">
+<h3 id="org92db8f7">
 <span class="section-number-3">1.1</span> POSIX AIO</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -187,8 +234,8 @@
 </div>
 </div>
 
-<div id="outline-container-org5bc8361" class="outline-3">
-<h3 id="org5bc8361">
+<div id="outline-container-orgbc83681" class="outline-3">
+<h3 id="orgbc83681">
 <span class="section-number-3">1.2</span> Linux AIO</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -227,8 +274,8 @@
 </div>
 </div>
 
-<div id="outline-container-orgc97135a" class="outline-3">
-<h3 id="orgc97135a">
+<div id="outline-container-org469b7b2" class="outline-3">
+<h3 id="org469b7b2">
 <span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -258,8 +305,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 </div>
 
-<div id="outline-container-org0ecd8f5" class="outline-2">
-<h2 id="org0ecd8f5">
+<div id="outline-container-orgb18836c" class="outline-2">
+<h2 id="orgb18836c">
 <span class="section-number-2">2</span> 阻塞和非阻塞</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -270,8 +317,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org28e1cd4" class="outline-2">
-<h2 id="org28e1cd4">
+<div id="outline-container-org7f4aea3" class="outline-2">
+<h2 id="org7f4aea3">
 <span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -281,8 +328,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-orgf82af50" class="outline-2">
-<h2 id="orgf82af50">
+<div id="outline-container-orgec622b8" class="outline-2">
+<h2 id="orgec622b8">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">

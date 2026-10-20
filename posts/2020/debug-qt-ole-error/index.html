@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -145,17 +192,17 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org57d328b" class="outline-2">
-<h2 id="org57d328b">什么是OLE错误</h2>
-<div class="outline-text-2" id="text-org57d328b">
+<div id="outline-container-org27bf708" class="outline-2">
+<h2 id="org27bf708">什么是OLE错误</h2>
+<div class="outline-text-2" id="text-org27bf708">
 <p>
 OLE的全称是Object Linking and Embedding，主要用在Windows Office软件中，它支持编辑类应用程序向另一个应用程序发送当前文档的一部分。出现OLE错误时大多是应用程序没有及时响应OLE操作，错误的完整提示为“Microsoft Excel is waiting for another application to complete an OLE action”。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgdee3a82" class="outline-2">
-<h2 id="orgdee3a82">不要在非GUI线程中调用QClipboard</h2>
-<div class="outline-text-2" id="text-orgdee3a82">
+<div id="outline-container-orga293e4e" class="outline-2">
+<h2 id="orga293e4e">不要在非GUI线程中调用QClipboard</h2>
+<div class="outline-text-2" id="text-orga293e4e">
 <p>
 出现这个问题，我首先想到的是Qt相关的bug，因为剪切版能够在一般的程序中正常完成复制和粘粘操作，只会在excel中出现错误。<br></p>
 
@@ -173,9 +220,9 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 </div>
 </div>
 
-<div id="outline-container-org0525baf" class="outline-2">
-<h2 id="org0525baf">在nativeEventFilter中过滤消息时需要格外谨慎</h2>
-<div class="outline-text-2" id="text-org0525baf">
+<div id="outline-container-org2657eff" class="outline-2">
+<h2 id="org2657eff">在nativeEventFilter中过滤消息时需要格外谨慎</h2>
+<div class="outline-text-2" id="text-org2657eff">
 <p>
 我开始怀疑是自己使用QClipboard的方法不正确，于是新建了一个应用程序工程，在这个工程中只加入了一个简单界面，在控件的槽函数中使用QClipboard。结果是这个新应用程序能够成功完成与excel的复制粘粘的数据交互，然后我又将这个简单界面挪到Launchy中，发现在Launchy工程中使用这个界面就会出现OLE错误。这样以来，能够确定是问题并不是QClipboard的使用出现了错误，也不是由于界面部分引起的错误，问题被缩小到QApplication相关的的代码中。<br></p>
 
@@ -190,9 +237,9 @@ OLE的全称是Object Linking and Embedding，主要用在Windows Office软件�
 </div>
 </div>
 
-<div id="outline-container-org2faf28e" class="outline-2">
-<h2 id="org2faf28e">参考资料</h2>
-<div class="outline-text-2" id="text-org2faf28e">
+<div id="outline-container-orgfe6c674" class="outline-2">
+<h2 id="orgfe6c674">参考资料</h2>
+<div class="outline-text-2" id="text-orgfe6c674">
 <ul class="org-ul">
 <li>
 <a href="https://windowsreport.com/excel-is-waiting-for-ole/">windowsreport.com - excel is waiting for ole</a><br>

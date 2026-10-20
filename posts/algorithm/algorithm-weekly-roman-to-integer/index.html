@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -141,9 +188,9 @@ C             1">
       
     <time class="dt-published" datetime="2018-09-07T13:01:05+08:00" itemprop="datePublished">Sep 07, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org8637b94" class="outline-2">
-<h2 id="org8637b94">Description</h2>
-<div class="outline-text-2" id="text-org8637b94">
+    <div id="outline-container-org74b0c54" class="outline-2">
+<h2 id="org74b0c54">Description</h2>
+<div class="outline-text-2" id="text-org74b0c54">
 <p>
 Roman numerals are represented by seven different symbols: I, V, X, L, C, D and M.<br></p>
 
@@ -210,13 +257,13 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orga43c3fd" class="outline-2">
-<h2 id="orga43c3fd">Solution</h2>
-<div class="outline-text-2" id="text-orga43c3fd">
+<div id="outline-container-orgd91393d" class="outline-2">
+<h2 id="orgd91393d">Solution</h2>
+<div class="outline-text-2" id="text-orgd91393d">
 </div>
-<div id="outline-container-org3271185" class="outline-3">
-<h3 id="org3271185">Approach 1</h3>
-<div class="outline-text-3" id="text-org3271185">
+<div id="outline-container-org6552fb8" class="outline-3">
+<h3 id="org6552fb8">Approach 1</h3>
+<div class="outline-text-3" id="text-org6552fb8">
 <p>
 这道题不是很难，很容易就能想到解法，需要注意好边界条件问题，下面就是我的解法。<br></p>
 <div class="highlight"><pre><span></span><span class="n">pint</span><span class="w"> </span><span class="nf">romanToInt</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -350,9 +397,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgc6f5995" class="outline-3">
-<h3 id="orgc6f5995">Approach 2</h3>
-<div class="outline-text-3" id="text-orgc6f5995">
+<div id="outline-container-org7601f03" class="outline-3">
+<h3 id="org7601f03">Approach 2</h3>
+<div class="outline-text-3" id="text-org7601f03">
 <p>
 这个解法是leetcode上最快的解法之一，只使用一个循环就完成了计算，代码整体上很简洁，也比较好理解。只需要针对6种特殊情况做特殊处理就好。<br></p>
 
@@ -416,9 +463,9 @@ Explanation: M = 1000, CM = 900, XC = 90 and IV = 4.
 </div>
 </div>
 
-<div id="outline-container-orgc9aa80a" class="outline-3">
-<h3 id="orgc9aa80a">Approach 3</h3>
-<div class="outline-text-3" id="text-orgc9aa80a">
+<div id="outline-container-org01d30b7" class="outline-3">
+<h3 id="org01d30b7">Approach 3</h3>
+<div class="outline-text-3" id="text-org01d30b7">
 <p>
 下面这个是我在看该问题的discuss板块的时候发现的。不得不说，结题思路实在新奇，这点是值得学习的。不过我比较担心它的时间复杂度。该方法使用Java编写。<br></p>
 <div class="highlight"><pre><span></span><span class="kd">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">romanToInt</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>

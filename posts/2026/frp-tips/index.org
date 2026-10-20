@@ -1,0 +1,264 @@
+#+BEGIN_COMMENT
+.. title: frp使用技巧
+.. slug: frp-tips
+.. date: 2026-10-19 22:18:42 UTC+08:00
+.. tags: frp, linux, windows
+.. category: network
+.. link:
+.. description: frp 服务端的加固配置、Windows 客户端做成开机自启服务的做法，以及踩过的坑。
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: frp使用技巧
+
+开发机器在 NAT 后面，想让外面能连进来，最省事的办法是用 frp 打一条隧道出去。这里记一下服务端怎么配才不至于被人当跳板、Windows 客户端怎么做成开机自启的服务，以及中间踩过的一些坑。
+
+{{{TEASER_END}}}
+
+** frp的功能
+
+frp 是一个反向代理工具，由两个程序组成：跑在公网服务器上的 =frps=，和跑在内网机器上的 =frpc=。
+
+内网机器主动向公网服务器发起一条长连接，之后外部访问 VPS 上的端口，流量就顺着这条已经建立的连接反向送进内网。因为是「主动出站」，所以不需要公网 IP，不用在路由器上做端口映射，也能穿过大部分公司防火墙。
+
+#+BEGIN_SRC text
+                     VPS                        内网机器
+                  +--------+                  +--------+
+  外部访问方 ---> | frps   | <== TLS 长连接 ==> | frpc   |
+                  +--------+                  +--------+
+                                                  |
+                                                  +--> 127.0.0.1:3389
+                                                  +--> 127.0.0.1:8080
+#+END_SRC
+
+支持的代理类型有 tcp、udp、http、https、stcp、xtcp、sudp、tcpmux，日常用得上的其实只有两类：
+
+- tcp：在 VPS 上开一个公网端口转发到内网。配置最简单，也最容易出安全问题。
+- stcp：VPS 上不开任何公网端口，只有持有同一份 secretKey 的访问端（visitor）才能接进来，流量全程加密。
+
+我的用法是只用 stcp，VPS 上只留一个控制端口对公网开放，理由在下面两节展开。
+
+有人会问为什么不直接用 WireGuard 或者 Tailscale 组网，这里说下我的取舍。frp 是按端口转发，不是把两台机器塞进同一个网段，粒度更细，客户端也不用装虚拟网卡；代价是每加一个服务都要改配置，而且必须有一台自己的公网服务器。
+
+WireGuard 只跑 UDP，不少便宜的 VPS（NAT 型、超售严重的尤其明显）会限速甚至直接封 UDP，部分移动网络也经常丢 UDP，只放行 TCP 443 这类端口。遇到这种情况，WireGuard 的握手根本完不成，现象是「配置全对但一直连不上」，而且日志里没什么有用的信息。frp 的控制连接默认走 TCP，只靠 TCP 就能把隧道建起来；它也支持 QUIC 之类的 UDP 传输方式，但那是可选项，不是前提。
+
+** frps在Linux端的配置
+
+默认配置能跑起来，但默认配置基本等于把内网拱手让人：控制端口对着全网开放、token 是空的、Dashboard 绑在 0.0.0.0、客户端可以申请任意端口。下面这份配置是逐条收紧之后的结果。
+
+#+BEGIN_SRC toml
+# 1) 控制端口：客户端连它，公网必须开
+bindPort = 17380
+
+# 2) 认证：强随机，别用 7000/admin/123456
+auth.method = "token"
+auth.token = "K7f8Q2...很长随机串..."
+
+# 3) 强制 TLS：防中间人、防明文 token
+transport.tls.force = true
+
+# 4) Dashboard 只绑本机，绝不 0.0.0.0
+webServer.addr = "127.0.0.1"
+webServer.port = 7500
+webServer.user = "frpadmin"
+webServer.password = "另一串很强随机密码"
+
+# 5) stcp 不需要 remotePort，但以防客户端乱写 tcp：
+#    如果只用 stcp，可以直接把 tcp 代理能力关掉/缩到极小
+allowPorts = [
+  { start = 61000, end = 61010 }
+]
+
+# 6) 单客户端最多建几个代理，防炸端口
+maxPortsPerClient = 5
+
+# 7) 日志
+log.level = "info"
+log.maxDays = 7
+#+END_SRC
+
+逐条说为什么这么配：
+
+- =bindPort= —— 客户端连的是这个端口，公网必须开。默认值是 7000，全世界的内网穿透扫描器都盯着它，换成高位端口能少掉绝大部分噪音。但换端口不是安全边界，只是降低被扫到的概率。
+- =auth.token= —— 服务端和客户端共用的口令。token 留空时 frps 允许任何人接入，你的 VPS 就成了别人的免费中转。用 =openssl rand -base64 32= 生成，别手打，base64 结尾的等号放在引号里没有问题。
+- =transport.tls.force= —— 只接受 TLS 连接。不开的话 token 在握手阶段是明文传输的，路径上任何一跳都能抓走；开了之后即使 token 泄漏，也没法在别处直接拿来冒充。前提是客户端也要开 TLS，见下一节。
+- =webServer.addr= —— Dashboard 是排查问题时最有用的东西，但它没有防爆破机制，做端口扫描的人看到 7500 端口就会顺手试一下默认口令。绑 127.0.0.1 之后外部根本扫不到，要看的时候用 SSH 转发进来。
+- =allowPorts= —— 限制客户端能申请的 remotePort 范围。这一条防的不是外人，是「token 泄漏之后」：没有这个限制，拿到 token 的人可以让你的 VPS 开几千个端口当代理跳板，拿去发垃圾邮件或者做扫描，最后被封的是你的机器。就算只用 stcp，也建议配一个很小的区间兜底。
+- =maxPortsPerClient= —— 单个客户端最多能注册几个代理，防止一个客户端把端口区间占满。
+- =log.maxDays= —— 日志保留天数。注意它只在日志输出到文件时有效，走 systemd 的 console 输出时日志归 journald 管，这行留着不影响，但别指望它清理 journal。
+
+另外要清楚 =allowPorts= 约束的只是 tcp/udp 的 remotePort，stcp 和 http 类型都不占这个区间，所以把范围缩到十来个端口不影响 stcp 的使用。
+
+** 防火墙只开需要的端口
+
+#+BEGIN_SRC shell
+ufw allow 17380/tcp          # 控制端口，客户端要连
+ufw allow 61000:61010/tcp    # allowPorts 区间，配了 tcp 代理才需要
+ufw enable
+#+END_SRC
+
+用 nftables 或 firewalld 的话同理。最容易犯的错是只放行了控制端口，然后 tcp 代理怎么都连不上——frps 的日志里看不出任何异常，因为连接根本没到。
+
+** 看Dashboard用SSH转发
+
+Dashboard 只绑了本机，从公网访问不到。需要看的时候开一条 SSH 本地转发：
+
+#+BEGIN_SRC shell
+ssh -L 7500:127.0.0.1:7500 root@你的VPS
+#+END_SRC
+
+保持这个终端不要关，本地浏览器打开 =http://127.0.0.1:7500= 就能看到。用完直接断开 SSH，Dashboard 也跟着没了，比在防火墙上开洞再关洞省事。
+
+** 常见作死配置（别碰）
+
+- =webServer.addr= 设成 0.0.0.0 —— Dashboard 直接暴露在公网上，7500 端口是测绘平台的常客，扫描器一抓一个准。
+- =auth.token= 写成 frp123 这类 —— 弱口令在爆破字典前几页，等于没配认证。
+- =allowPorts= 写成 0-65535 —— 客户端能把 VPS 变成开放代理，拿去发垃圾流量、做扫描，轻则 IP 进黑名单，重则服务商直接封机器。
+- 用 tcp 类型把 3389 怼到公网 —— RDP 暴露在公网上，几个小时就能收几万次爆破尝试，被攻破只是时间问题。
+- frps 用 root 加 nohup 裸跑 —— 被拿下就是整机 root。
+
+** frpc在Windows端的配置
+
+客户端这边我只需要一条 stcp 隧道，把本机的 3389 送出去。配置文件同样用 TOML：
+
+#+BEGIN_SRC toml
+serverAddr = "你的VPS公网IP"
+serverPort = 17380
+
+auth.method = "token"
+auth.token = "和服务端完全一致的随机串"
+
+# 开机时网卡可能还没就绪，让 frpc 自己重试，不要直接退出
+loginFailExit = false
+
+transport.tls.enable = true
+# 如果做了双向 TLS，再打开下面三行
+# transport.tls.certFile = "client.crt"
+# transport.tls.keyFile = "client.key"
+# transport.tls.trustedCaFile = "ca.crt"
+
+# 输出到 stdout，由 WinSW 收集到 logs 目录
+log.to = "console"
+log.level = "info"
+
+[[proxies]]
+name = "rdp"
+type = "stcp"
+secretKey = "访问端也要一致的第二个随机串"
+localIP = "127.0.0.1"
+localPort = 3389
+#+END_SRC
+
+几个要点：
+
+- =[[proxies]]= 是新版格式。老教程里的 =[rdp]= 后面跟 type 字段的写法，以及整个 ini 格式，在 v0.52 之后都已经被官方替换掉了，新版本不再支持，照抄会直接报解析错误。
+- stcp 不需要 remotePort，因为它不占 VPS 的公网端口，这也是它比 tcp 安全的地方。
+- =secretKey= 是 stcp 自己的密钥，和 =auth.token= 不是一回事，两边要一致。别复用同一个串：分成两段之后，即使 token 泄漏，别人也接不进这条隧道。
+- =loginFailExit= 设成 false。服务化之后这个很关键，否则开机时网卡还没起来、frpc 连不上服务端就会直接退出，只能等服务管理器过一分钟重启。
+- 如果 stcp 传大文件觉得慢，可以调大 =transport.maxPoolCount=（默认 5），它决定 frpc 预建的工作连接数；别调太夸张，占的是 VPS 的文件描述符。
+
+** 访问端怎么连
+
+任何一台能连上 frps 的机器都能当访问端，配一段 visitor 就行：
+
+#+BEGIN_SRC toml
+serverAddr = "你的VPS公网IP"
+serverPort = 17380
+
+auth.method = "token"
+auth.token = "和服务端完全一致的随机串"
+
+[[visitors]]
+name = "rdp-visitor"
+type = "stcp"
+serverName = "rdp"
+secretKey = "和 frpc 端完全一致的第二个随机串"
+bindAddr = "127.0.0.1"
+bindPort = 13389
+#+END_SRC
+
+然后连 =127.0.0.1:13389= 就等于连到了内网那台机器的 3389。visitor 只在需要访问的时候开，用完关掉，不用做成服务。
+
+如果用 xtcp 代替 stcp，两边配置几乎一样，只是 type 换掉；xtcp 会先尝试打洞直连，打不通再走 frps 中转（可以配 fallbackTo）。家宽的 NAT 类型经常不友好，日常用 stcp 更省心。
+
+这里需要注意的是 visitors 中的 serverName 要与 proxies 中的 name 保持一致。
+
+** 把frpc做成Windows服务
+
+frpc 自己不注册服务，需要一个 wrapper。我用的是 WinSW，下面那个 XML 就是它的配置。
+
+第一步，下载 WinSW-x64.exe（v2 系列，要求 .NET Framework 4.6.1 以上，Win10/11 自带 4.8，不用额外装），和 =frpc.exe= 、 =frpc.toml= 、 =WinSW-x64.xml= 放在同一个目录。
+
+第二步，用管理员权限的 PowerShell 在这个目录下执行：
+
+#+BEGIN_SRC powershell
+.\WinSW-x64.exe install
+.\WinSW-x64.exe start
+.\WinSW-x64.exe status
+#+END_SRC
+
+之后在服务管理器里能看到名为 FRP Client 的服务，启动类型是自动。
+
+#+BEGIN_SRC xml
+<service>
+  <id>frpc</id>
+  <name>FRP Client</name>
+  <description>frp stcp client (Windows service via WinSW)</description>
+  <executable>%BASE%\frpc.exe</executable>
+  <arguments>-c %BASE%\frpc.toml</arguments>
+  <workingdirectory>%BASE%</workingdirectory>
+
+  <logpath>%BASE%\logs\</logpath>
+  <logmode>roll</logmode>
+  
+  <startmode>Automatic</startmode>
+  <!-- 只要进程非零退出，就 1 分钟后重启；超过配置条数后最后一个动作会重复 -->
+  <onfailure action="restart" delay="1 min"/>
+  <!-- 服务连续正常运行 1 天后，失败计数器归零 -->
+  <resetfailure>1 day</resetfailure>
+
+  <stopparentprocessfirst>true</stopparentprocessfirst>
+  <stoptimeout>15 sec</stoptimeout>
+</service>
+#+END_SRC
+
+XML 里有几个地方值得说明：
+
+- =%BASE%= 会被 WinSW 替换成 exe 所在目录，所以整个目录可以随便搬，不用改路径。
+- XML 的文件名必须和 exe 同名：=frpc-service.exe= 对应 =frpc-service.xml=，否则 install 会报找不到配置。这是最常踩的坑。
+- onfailure 加 resetfailure 配合起来的意思是：异常退出后一分钟重启，连续稳定运行一天后失败计数清零。再配合 frpc 侧的 =loginFailExit= 设成 false，开机时网络没就绪也不会陷入反复重启。
+- =logmode= 用 roll 按大小滚动，长期跑不会把磁盘写满。
+- =startmode= 是开机启动。如果希望服务晚一点起来，可以再加 delayedAutoStart，不过在 =loginFailExit= 已经设成 false 的前提下意义不大。
+
+升级 frpc 的时候先停服务再替换 exe，否则文件被占用替换不了：
+
+#+BEGIN_SRC powershell
+.\WinSW-x64.exe stop
+# 替换 frpc.exe 和 frpc.toml
+.\WinSW-x64.exe start
+#+END_SRC
+
+彻底卸载要用 =uninstall= 。只 =stop= 的话注册表里的服务项还在，下次 =install= 会报服务已存在。
+
+** 踩坑清单
+
+- 照着老教程写 ini 配置，新版 frps/frpc 直接报解析错误。v0.52 之后官方主推 TOML/YAML/JSON，老教程里的 =[common]= 那一套已经不能用了。
+- 服务端开了 =transport.tls.force= 而客户端没开 TLS，frpc 报 tls: first record does not look like a TLS handshake 。两边必须一起开。
+- 改了 =bindPort= 只改了服务端，客户端还连 7000，日志里只有一句 connect timeout，看不出是端口不对。
+- WinSW 的 XML 和 exe 不同名，install 报找不到配置文件。
+- 配了 =allowPorts= 却用 tcp 代理，端口落在区间外，frpc 报 =port not allowed= 。
+- 只放行了控制端口，忘了放行 remotePort 区间，tcp 代理连不上而且服务端日志毫无异常。
+- 把 =auth.token= 和 stcp 的 =secretKey= 写成同一个串，等于把两层防护压成一层。
+
+** 参考链接
+
+- [[https://github.com/fatedier/frp][frp 官方仓库]]
+- [[https://gofrp.org/zh-cn/docs/][frp 官方文档]]
+- [[https://github.com/winsw/winsw][WinSW]]
+- [[https://github.com/winsw/winsw/blob/v2/docs/xml-config-file.md][WinSW XML 配置文档]]
+
+（全文完）
+
+

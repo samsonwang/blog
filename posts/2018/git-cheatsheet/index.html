@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -153,37 +200,37 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org0721c14" class="outline-2">
-<h2 id="org0721c14">1 撤销与回退相关</h2>
-<div class="outline-text-2" id="text-org0721c14">
+<div id="outline-container-org42ffa9e" class="outline-2">
+<h2 id="org42ffa9e">1 撤销与回退相关</h2>
+<div class="outline-text-2" id="text-org42ffa9e">
 </div>
-<div id="outline-container-orga976028" class="outline-3">
-<h3 id="orga976028">1.1 修正最近的提交消息</h3>
-<div class="outline-text-3" id="text-orga976028">
+<div id="outline-container-orga4149b6" class="outline-3">
+<h3 id="orga4149b6">1.1 修正最近的提交消息</h3>
+<div class="outline-text-3" id="text-orga4149b6">
 <p>
 <b>情景</b> ：在最近的一次提交（ <code>git commit</code> ）中输入的信息有误，并且这次提交没有被推送（ <code>git push</code> ）到远程仓库。<br><b>方法</b> ： <code>git commit --amend</code> 或 <code>git commit --amend -m "correct_message"</code><br><b>说明</b> ： <code>git commit --amend</code> 会使用一个新的提交更新并替换最近的一次提交，如果有在临时区域（staged）的修改，也会合并提交；如果有新的提交信息，则会一并提交。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org6a1e1bd" class="outline-3">
-<h3 id="org6a1e1bd">1.2 撤销本地变更</h3>
-<div class="outline-text-3" id="text-org6a1e1bd">
+<div id="outline-container-org44b7d1c" class="outline-3">
+<h3 id="org44b7d1c">1.2 撤销本地变更</h3>
+<div class="outline-text-3" id="text-org44b7d1c">
 <p>
 <b>情景</b> ：当无意中修改了一个文件，想要回退这个文件的修改时。<br><b>方法</b> ： <code>git checkout -- &lt;filename&gt;</code><br><b>说明</b> ：这条指令会把该文件回退到某个git记录中的版本，git默认会回退到 <code>HEAD</code> 版本。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4fea151" class="outline-3">
-<h3 id="org4fea151">1.3 重置本地修改</h3>
-<div class="outline-text-3" id="text-org4fea151">
+<div id="outline-container-orgcd94b95" class="outline-3">
+<h3 id="orgcd94b95">1.3 重置本地修改</h3>
+<div class="outline-text-3" id="text-orgcd94b95">
 <p>
 <b>情景</b> ：已经进行了多次提交，但是没有推送到版本库中，希望撤销这些提交。<br><b>方法</b> ： <code>git reset &lt;last good SHA&gt;</code> 或 <code>git reset --hard &lt;last good SHA&gt;</code><br><b>说明</b> ： <code>git reset</code> 会把本地代码恢复到没有提交（ <code>git commit</code> ）的状态，做出的修改会保留。 <code>git reset --hard</code> 会把这些修改丢弃掉。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org7c3d626" class="outline-3">
-<h3 id="org7c3d626">1.4 恢复被重置的本地修改</h3>
-<div class="outline-text-3" id="text-org7c3d626">
+<div id="outline-container-org880c948" class="outline-3">
+<h3 id="org880c948">1.4 恢复被重置的本地修改</h3>
+<div class="outline-text-3" id="text-org880c948">
 <p>
 <b>情景</b> ：在按照1.3中操作后，想恢复重置以前的状态。<br><b>方法</b> ： <code>git reflog</code> 后执行 <code>git reset</code> 或 <code>git checkout</code><br><b>说明</b> ： <code>git reflog</code> 会呈现所有提交过的历史，是一个十分实用的功能。<br></p>
 </div>
@@ -191,13 +238,13 @@
 </div>
 
 
-<div id="outline-container-org621b533" class="outline-2">
-<h2 id="org621b533">2 分支操作相关</h2>
-<div class="outline-text-2" id="text-org621b533">
+<div id="outline-container-org491dd2c" class="outline-2">
+<h2 id="org491dd2c">2 分支操作相关</h2>
+<div class="outline-text-2" id="text-org491dd2c">
 </div>
-<div id="outline-container-org2c6cb51" class="outline-3">
-<h3 id="org2c6cb51">2.1 创建一个本地分支并推送到远端</h3>
-<div class="outline-text-3" id="text-org2c6cb51">
+<div id="outline-container-orgb5efd57" class="outline-3">
+<h3 id="orgb5efd57">2.1 创建一个本地分支并推送到远端</h3>
+<div class="outline-text-3" id="text-orgb5efd57">
 <p>
 <b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git branch branch_name
@@ -206,9 +253,9 @@ git push origin branch_name
 </div>
 </div>
 
-<div id="outline-container-orgc405d12" class="outline-3">
-<h3 id="orgc405d12">2.2 在本地创建一个远程分支</h3>
-<div class="outline-text-3" id="text-orgc405d12">
+<div id="outline-container-orgb48e677" class="outline-3">
+<h3 id="orgb48e677">2.2 在本地创建一个远程分支</h3>
+<div class="outline-text-3" id="text-orgb48e677">
 <p>
 <b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git fetch origin
@@ -217,9 +264,9 @@ git checkout -b branch_name origin/branch_name
 </div>
 </div>
 
-<div id="outline-container-orgddcbe9e" class="outline-3">
-<h3 id="orgddcbe9e">2.3 下载远程分支到本地</h3>
-<div class="outline-text-3" id="text-orgddcbe9e">
+<div id="outline-container-orgf322b0e" class="outline-3">
+<h3 id="orgf322b0e">2.3 下载远程分支到本地</h3>
+<div class="outline-text-3" id="text-orgf322b0e">
 <p>
 在第一次下载远程分支时，创建与远程分支同名的本地分支，并跟踪(track)到远程分支。<br><b>方法</b> :<br></p>
 <div class="highlight"><pre><span></span>git checkout -t origin/branch_name
@@ -227,9 +274,9 @@ git checkout -b branch_name origin/branch_name
 </div>
 </div>
 
-<div id="outline-container-org90740d5" class="outline-3">
-<h3 id="org90740d5">2.4 在分支上进行进度迁移</h3>
-<div class="outline-text-3" id="text-org90740d5">
+<div id="outline-container-org4dbed38" class="outline-3">
+<h3 id="org4dbed38">2.4 在分支上进行进度迁移</h3>
+<div class="outline-text-3" id="text-org4dbed38">
 <p>
 <b>情景</b> ： 进行了几次提交后，发现自己正在错误的分支上干活。<br><b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git branch feature
@@ -243,21 +290,21 @@ git checkout feature
 </div>
 
 
-<div id="outline-container-org734987d" class="outline-2">
-<h2 id="org734987d">3 git submodule 相关操作</h2>
-<div class="outline-text-2" id="text-org734987d">
+<div id="outline-container-orgd84138b" class="outline-2">
+<h2 id="orgd84138b">3 git submodule 相关操作</h2>
+<div class="outline-text-2" id="text-orgd84138b">
 </div>
-<div id="outline-container-orgbb3d586" class="outline-3">
-<h3 id="orgbb3d586">3.1 向当前repo中增加一个submodule</h3>
-<div class="outline-text-3" id="text-orgbb3d586">
+<div id="outline-container-org0c8f934" class="outline-3">
+<h3 id="org0c8f934">3.1 向当前repo中增加一个submodule</h3>
+<div class="outline-text-3" id="text-org0c8f934">
 <div class="highlight"><pre><span></span>git submoudle add &lt;module url&gt; &lt;local path&gt;
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org508dcd1" class="outline-3">
-<h3 id="org508dcd1">3.2 初始化submodule</h3>
-<div class="outline-text-3" id="text-org508dcd1">
+<div id="outline-container-org88b2073" class="outline-3">
+<h3 id="org88b2073">3.2 初始化submodule</h3>
+<div class="outline-text-3" id="text-org88b2073">
 <p>
 在将一个具有submodule的repo拉取到本地以后需要对submodule进行初始化<br></p>
 <div class="highlight"><pre><span></span>git submodule init
@@ -265,9 +312,9 @@ git checkout feature
 </div>
 </div>
 
-<div id="outline-container-org233bc95" class="outline-3">
-<h3 id="org233bc95">3.3 更新submodule</h3>
-<div class="outline-text-3" id="text-org233bc95">
+<div id="outline-container-orgfb7cccb" class="outline-3">
+<h3 id="orgfb7cccb">3.3 更新submodule</h3>
+<div class="outline-text-3" id="text-orgfb7cccb">
 <p>
 在开发中可以直接进入submodule的目录对每一个submodule执行更新操作，也可以使用命令统一完成submodule的更新操作。<br></p>
 <div class="highlight"><pre><span></span>git submodule update
@@ -275,9 +322,9 @@ git checkout feature
 </div>
 </div>
 
-<div id="outline-container-org9e4fa5f" class="outline-3">
-<h3 id="org9e4fa5f">3.4 删掉submodule</h3>
-<div class="outline-text-3" id="text-org9e4fa5f">
+<div id="outline-container-org3b3aa5f" class="outline-3">
+<h3 id="org3b3aa5f">3.4 删掉submodule</h3>
+<div class="outline-text-3" id="text-org3b3aa5f">
 <p>
 对于不需要的submodule，可以将其删掉。<br></p>
 <div class="highlight"><pre><span></span>git submodule rm &lt;local/path&gt;
@@ -287,9 +334,9 @@ git checkout feature
 </div>
 
 
-<div id="outline-container-orgc555b10" class="outline-2">
-<h2 id="orgc555b10">4 终端配置</h2>
-<div class="outline-text-2" id="text-orgc555b10">
+<div id="outline-container-org8ae34cd" class="outline-2">
+<h2 id="org8ae34cd">4 终端配置</h2>
+<div class="outline-text-2" id="text-org8ae34cd">
 <p>
 使用命令简称方便操作，可以将以下配置加入到 <code>.bashrc</code> 中。<br></p>
 <div class="highlight"><pre><span></span># git related
@@ -310,21 +357,21 @@ alias gpl='git pull'
 </div>
 
 
-<div id="outline-container-org356be39" class="outline-2">
-<h2 id="org356be39">5 缓存登录密码</h2>
-<div class="outline-text-2" id="text-org356be39">
+<div id="outline-container-org9bf6c04" class="outline-2">
+<h2 id="org9bf6c04">5 缓存登录密码</h2>
+<div class="outline-text-2" id="text-org9bf6c04">
 </div>
-<div id="outline-container-orgcb8540e" class="outline-3">
-<h3 id="orgcb8540e">3.1 保存登录密码</h3>
-<div class="outline-text-3" id="text-orgcb8540e">
+<div id="outline-container-org569289c" class="outline-3">
+<h3 id="org569289c">3.1 保存登录密码</h3>
+<div class="outline-text-3" id="text-org569289c">
 <p>
 当我们不想重复输入密码时可以将密码保存<br></p>
 </div>
 </div>
 
-<div id="outline-container-org9b81a3e" class="outline-3">
-<h3 id="org9b81a3e">3.2 删除保存的密码</h3>
-<div class="outline-text-3" id="text-org9b81a3e">
+<div id="outline-container-orgbfc923e" class="outline-3">
+<h3 id="orgbfc923e">3.2 删除保存的密码</h3>
+<div class="outline-text-3" id="text-orgbfc923e">
 <p>
 当需要更新密码时，需要从系统中删掉旧的密码否则<br></p>
 </div>

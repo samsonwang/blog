@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -152,20 +199,20 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org4dc64ce" class="outline-2">
-<h2 id="org4dc64ce">使用denyhosts防止暴力破解</h2>
-<div class="outline-text-2" id="text-org4dc64ce">
+<div id="outline-container-orgd46ef20" class="outline-2">
+<h2 id="orgd46ef20">使用denyhosts防止暴力破解</h2>
+<div class="outline-text-2" id="text-orgd46ef20">
 <p>
 登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，屏蔽该登录ip，限制密码的尝试次数。<br></p>
 </div>
 
-<div id="outline-container-orgd9eabef" class="outline-3">
-<h3 id="orgd9eabef">安装denyhosts</h3>
-<div class="outline-text-3" id="text-orgd9eabef">
+<div id="outline-container-org625bc2b" class="outline-3">
+<h3 id="org625bc2b">安装denyhosts</h3>
+<div class="outline-text-3" id="text-org625bc2b">
 </div>
-<div id="outline-container-org0d65f03" class="outline-4">
-<h4 id="org0d65f03">使用包管理器安装</h4>
-<div class="outline-text-4" id="text-org0d65f03">
+<div id="outline-container-org0b563a5" class="outline-4">
+<h4 id="org0b563a5">使用包管理器安装</h4>
+<div class="outline-text-4" id="text-org0b563a5">
 <p>
 可以使用自带的包管理器安装denyhost，这样是比较方便的，后续的配置工作也会简单一些。<br></p>
 <div class="highlight"><pre><span></span>yum install denyhosts
@@ -173,9 +220,9 @@
 </div>
 </div>
 
-<div id="outline-container-org920984c" class="outline-4">
-<h4 id="org920984c">手动安装</h4>
-<div class="outline-text-4" id="text-org920984c">
+<div id="outline-container-orge6f01c5" class="outline-4">
+<h4 id="orge6f01c5">手动安装</h4>
+<div class="outline-text-4" id="text-orge6f01c5">
 <p>
 update: 2020-6-5<br>
 在包管理器中没有找到denyhosts，于是按照官方文档进行手动安装，使用的denyhost版本为3.1.2beta。<br></p>
@@ -205,9 +252,9 @@ pip<span class="w"> </span>install<span class="w"> </span>ipaddr
 </div>
 </div>
 
-<div id="outline-container-orge88d79e" class="outline-3">
-<h3 id="orge88d79e">编辑配置文件</h3>
-<div class="outline-text-3" id="text-orge88d79e">
+<div id="outline-container-orgedfe1a6" class="outline-3">
+<h3 id="orgedfe1a6">编辑配置文件</h3>
+<div class="outline-text-3" id="text-orgedfe1a6">
 <p>
 安装好denyhosts之后，它的默认配置文件为 <code>/etc/denyhosts.conf</code> 。该配置文件有很好的注释，对于每个配置项的作用都有很好的说明。可能需要修改的相关配置项有如下几个。<br></p>
 
@@ -225,9 +272,9 @@ DENY_THRESHOLD_ROOT = 5
 </div>
 </div>
 
-<div id="outline-container-orga5130db" class="outline-3">
-<h3 id="orga5130db">启动denyhosts</h3>
-<div class="outline-text-3" id="text-orga5130db">
+<div id="outline-container-org5d0f787" class="outline-3">
+<h3 id="org5d0f787">启动denyhosts</h3>
+<div class="outline-text-3" id="text-org5d0f787">
 <p>
 使用以下命令启动denyhosts，查看denyhosts的运行状态。<br></p>
 <div class="highlight"><pre><span></span>service<span class="w"> </span>denyhosts<span class="w"> </span>start
@@ -255,16 +302,16 @@ ln<span class="w"> </span>-s<span class="w"> </span>/usr/bin/daemon-control-dist
 </div>
 
 
-<div id="outline-container-orga38c336" class="outline-2">
-<h2 id="orga38c336">使用fail2ban防止暴力破解</h2>
-<div class="outline-text-2" id="text-orga38c336">
+<div id="outline-container-orge6e6727" class="outline-2">
+<h2 id="orge6e6727">使用fail2ban防止暴力破解</h2>
+<div class="outline-text-2" id="text-orge6e6727">
 <p>
 由于在默认的软件仓库中经常找不到denyhosts软件，所以我尝试切换到了fail2ban。fail2ban支持的功能更多，命令交互也更加友好。<br></p>
 </div>
 
-<div id="outline-container-orgc7ffb24" class="outline-3">
-<h3 id="orgc7ffb24">安装fail2ban</h3>
-<div class="outline-text-3" id="text-orgc7ffb24">
+<div id="outline-container-orgf2e4427" class="outline-3">
+<h3 id="orgf2e4427">安装fail2ban</h3>
+<div class="outline-text-3" id="text-orgf2e4427">
 <p>
 使用自带的包管理器中安装fail2ban，命令行如下。<br></p>
 <div class="highlight"><pre><span></span>yum install fail2ban
@@ -272,9 +319,9 @@ ln<span class="w"> </span>-s<span class="w"> </span>/usr/bin/daemon-control-dist
 </div>
 </div>
 
-<div id="outline-container-org93b3601" class="outline-3">
-<h3 id="org93b3601">编辑配置文件</h3>
-<div class="outline-text-3" id="text-org93b3601">
+<div id="outline-container-orge3ed7b7" class="outline-3">
+<h3 id="orge3ed7b7">编辑配置文件</h3>
+<div class="outline-text-3" id="text-orge3ed7b7">
 <p>
 安装包中自带的默认配置文件为 <code>/etc/fail2ban/jail.conf</code> ；为了防止由于软件更新导致配置文件被覆盖，推荐将用户配置保存在 <code>/etc/fail2ban/jail.local</code> 中；软件会先加载默认配置，再加载用户配置。<br></p>
 
@@ -295,9 +342,9 @@ ignoreip = 127.0.0.1
 </div>
 </div>
 
-<div id="outline-container-orgd86135c" class="outline-3">
-<h3 id="orgd86135c">启动fail2ban</h3>
-<div class="outline-text-3" id="text-orgd86135c">
+<div id="outline-container-org08da21b" class="outline-3">
+<h3 id="org08da21b">启动fail2ban</h3>
+<div class="outline-text-3" id="text-org08da21b">
 <p>
 使用下面的命令启动fail2ban服务。<br></p>
 <div class="highlight"><pre><span></span>systemctl start fail2ban
@@ -311,9 +358,9 @@ service fail2ban start
 </div>
 </div>
 
-<div id="outline-container-org58ffcc0" class="outline-3">
-<h3 id="org58ffcc0">查看fail2ban的运行情况</h3>
-<div class="outline-text-3" id="text-org58ffcc0">
+<div id="outline-container-org09bbebb" class="outline-3">
+<h3 id="org09bbebb">查看fail2ban的运行情况</h3>
+<div class="outline-text-3" id="text-org09bbebb">
 <p>
 查看系统服务的运行状态，命令如下：<br></p>
 <div class="highlight"><pre><span></span>systemctl status fail2ban
@@ -334,9 +381,9 @@ fail2ban提供了自带的命令工具，用于查看服务端的状态，命令
 </div>
 
 
-<div id="outline-container-org9ef5883" class="outline-2">
-<h2 id="org9ef5883">加固sshd的配置</h2>
-<div class="outline-text-2" id="text-org9ef5883">
+<div id="outline-container-org1a802df" class="outline-2">
+<h2 id="org1a802df">加固sshd的配置</h2>
+<div class="outline-text-2" id="text-org1a802df">
 <p>
 sshd的默认端口号为22，很多暴力破解程序会直接对该端口进行登录尝试，通过修改默认的sshd端口号，可以增加破解难度。<br></p>
 
@@ -347,9 +394,9 @@ sshd的默认端口号为22，很多暴力破解程序会直接对该端口进�
 由于所有Linux系统都必然有root用户，所以在暴力破解时最容易被攻击的就是root用户，可以通过禁用远程root用户登录的方式增加攻击难度。因为如果root用户可用，攻击者只需要对root用户的密码进行暴力破解；而禁用远程root登录后，攻击者需要同时猜测用户名和密码。<br></p>
 </div>
 
-<div id="outline-container-org9dcc37a" class="outline-3">
-<h3 id="org9dcc37a">编辑配置文件</h3>
-<div class="outline-text-3" id="text-org9dcc37a">
+<div id="outline-container-org098c07b" class="outline-3">
+<h3 id="org098c07b">编辑配置文件</h3>
+<div class="outline-text-3" id="text-org098c07b">
 <p>
 sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 
@@ -365,9 +412,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb5113e8" class="outline-3">
-<h3 id="orgb5113e8">重启sshd服务</h3>
-<div class="outline-text-3" id="text-orgb5113e8">
+<div id="outline-container-orge050d31" class="outline-3">
+<h3 id="orge050d31">重启sshd服务</h3>
+<div class="outline-text-3" id="text-orge050d31">
 <p>
 更改配置文件后，需要重启服务使配置文件生效。<br></p>
 
@@ -381,9 +428,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 </div>
 
 
-<div id="outline-container-orga8a9d8d" class="outline-2">
-<h2 id="orga8a9d8d">查看系统登录记录</h2>
-<div class="outline-text-2" id="text-orga8a9d8d">
+<div id="outline-container-org8a9e412" class="outline-2">
+<h2 id="org8a9e412">查看系统登录记录</h2>
+<div class="outline-text-2" id="text-org8a9e412">
 <p>
 <code>last</code> 指令能够查看登录成功的记录，记录保存位置为 <code>/var/log/wtmp</code> 。<br></p>
 
@@ -410,9 +457,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 </div>
 
 
-<div id="outline-container-org88eb7e6" class="outline-2">
-<h2 id="org88eb7e6">参考资料</h2>
-<div class="outline-text-2" id="text-org88eb7e6">
+<div id="outline-container-org63d8e9c" class="outline-2">
+<h2 id="org63d8e9c">参考资料</h2>
+<div class="outline-text-2" id="text-org63d8e9c">
 <ul class="org-ul">
 <li>
 <a href="https://github.com/denyhosts/denyhosts">github - denyhosts</a><br>

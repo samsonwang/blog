@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -153,18 +200,18 @@ Qt版本能够将msvc的版本区间缩小到具体的几个选项。针对某�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org3bedfa0" class="outline-2">
-<h2 id="org3bedfa0">1. 首先需要确定的是Qt版本</h2>
-<div class="outline-text-2" id="text-org3bedfa0">
+<div id="outline-container-org4d79b89" class="outline-2">
+<h2 id="org4d79b89">1. 首先需要确定的是Qt版本</h2>
+<div class="outline-text-2" id="text-org4d79b89">
 <p>
 Qt版本能够将msvc的版本区间缩小到具体的几个选项。针对某个具体的Qt版本，Qt官方会提供使用不同版本msvc编译出的二进制文件，使用官方编译好的二进制文件是比较简单省力的。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgaddf8fe" class="outline-2">
-<h2 id="orgaddf8fe">2. 根据Qt版本选择pyside版本</h2>
-<div class="outline-text-2" id="text-orgaddf8fe">
+<div id="outline-container-org44531cc" class="outline-2">
+<h2 id="org44531cc">2. 根据Qt版本选择pyside版本</h2>
+<div class="outline-text-2" id="text-org44531cc">
 <p>
 由于涉及到C++和python的混合开发，为了避免出现兼容性问题，建议pyside版本与Qt版本的大版本号保持一致，小版本号可以不一致。<br>
 例如，Qt5.12.12匹配pyside2(5.12.6)，这两个版本都是它们在5.12这个版本号的最终版本。<br></p>
@@ -172,9 +219,9 @@ Qt版本能够将msvc的版本区间缩小到具体的几个选项。针对某�
 </div>
 
 
-<div id="outline-container-org20c5e35" class="outline-2">
-<h2 id="org20c5e35">3. 根据pyside版本选择python版本</h2>
-<div class="outline-text-2" id="text-org20c5e35">
+<div id="outline-container-org8a9aa50" class="outline-2">
+<h2 id="org8a9aa50">3. 根据pyside版本选择python版本</h2>
+<div class="outline-text-2" id="text-org8a9aa50">
 <p>
 我使用pip安装pyside，可以在pypi的网站上找到这个版本的pyside适配哪些版本的python。<br>
 我这次选用的pyside2(5.12.6)，支持的python版本有3.5/3.6/3.7。<br></p>
@@ -182,9 +229,9 @@ Qt版本能够将msvc的版本区间缩小到具体的几个选项。针对某�
 </div>
 
 
-<div id="outline-container-org19729b8" class="outline-2">
-<h2 id="org19729b8">4. 根据python版本选择pybind11版本</h2>
-<div class="outline-text-2" id="text-org19729b8">
+<div id="outline-container-org915d97f" class="outline-2">
+<h2 id="org915d97f">4. 根据python版本选择pybind11版本</h2>
+<div class="outline-text-2" id="text-org915d97f">
 <p>
 最后根据python版本选择适配的pybind11版本。<br>
 由于我使用的是老版本的python，最新版本的pybind11已经不再支持了，在pybind11的版本changelog里能能够查到。<br></p>

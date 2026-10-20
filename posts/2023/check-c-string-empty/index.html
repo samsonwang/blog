@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -148,9 +195,9 @@ bool CheckStringEmpty(const char* pStr) {
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org4f011c4" class="outline-2">
-<h2 id="org4f011c4">使用 <code>strlen</code> 判断空字符串</h2>
-<div class="outline-text-2" id="text-org4f011c4">
+<div id="outline-container-org00bd26b" class="outline-2">
+<h2 id="org00bd26b">使用 <code>strlen</code> 判断空字符串</h2>
+<div class="outline-text-2" id="text-org00bd26b">
 <p>
 使用 <code>strlen</code> 接口进行判断，这是我看到这个问题时的第一反应，示例代码段如下：<br></p>
 
@@ -164,9 +211,9 @@ bool CheckStringEmpty(const char* pStr) {
 </div>
 </div>
 
-<div id="outline-container-org25ac595" class="outline-2">
-<h2 id="org25ac595">效率改进的空字符串判断</h2>
-<div class="outline-text-2" id="text-org25ac595">
+<div id="outline-container-org9f6b0a2" class="outline-2">
+<h2 id="org9f6b0a2">效率改进的空字符串判断</h2>
+<div class="outline-text-2" id="text-org9f6b0a2">
 <p>
 判断空字符串只需要保证字符串长度大于0，所以仅需要检查第一个字符是否为结束字符即可。示例代码段如下：<br></p>
 
@@ -177,9 +224,9 @@ bool CheckStringEmpty(const char* pStr) {
 </div>
 </div>
 
-<div id="outline-container-org01dec5c" class="outline-2">
-<h2 id="org01dec5c">思考</h2>
-<div class="outline-text-2" id="text-org01dec5c">
+<div id="outline-container-org60c50f5" class="outline-2">
+<h2 id="org60c50f5">思考</h2>
+<div class="outline-text-2" id="text-org60c50f5">
 <p>
 这个问题其实并不是很难，但是又比较零碎，而且随着硬件设备的性能逐渐提高，这种关乎性能的问题很容易被忽略。<br>
 只有在硬件资源比较紧张时才有可能扣这些细节，优秀的代码就是在这些细节上做到无可挑剔。以此共勉。<br></p>
@@ -187,9 +234,9 @@ bool CheckStringEmpty(const char* pStr) {
 </div>
 
 
-<div id="outline-container-orgf08f617" class="outline-2">
-<h2 id="orgf08f617">参考资料</h2>
-<div class="outline-text-2" id="text-orgf08f617">
+<div id="outline-container-org0701af0" class="outline-2">
+<h2 id="org0701af0">参考资料</h2>
+<div class="outline-text-2" id="text-org0701af0">
 <ul class="org-ul">
 <li>
 <a href="https://mail.openvswitch.org/pipermail/ovs-dev/2023-February/402361.html">mail list - openvswitch</a><br>

@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -139,8 +186,8 @@ Gaurab Paul的 一篇博文 给了我很大的启发，他详细地介绍了emac
       
     <time class="dt-published" datetime="2018-07-30T11:14:41+08:00" itemprop="datePublished">Jul 30, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org593f367" class="outline-2">
-<h2 id="org593f367">
+    <div id="outline-container-org01c7c93" class="outline-2">
+<h2 id="org01c7c93">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -155,8 +202,8 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-org20c48f4" class="outline-2">
-<h2 id="org20c48f4">
+<div id="outline-container-org29fbef2" class="outline-2">
+<h2 id="org29fbef2">
 <span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -168,13 +215,13 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-org16f045e" class="outline-2">
-<h2 id="org16f045e">
+<div id="outline-container-org5e164c1" class="outline-2">
+<h2 id="org5e164c1">
 <span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-orgb1df201" class="outline-3">
-<h3 id="orgb1df201">
+<div id="outline-container-org604d17e" class="outline-3">
+<h3 id="org604d17e">
 <span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -219,8 +266,8 @@ Point and mark interchanged
 </div>
 </div>
 
-<div id="outline-container-org379b134" class="outline-3">
-<h3 id="org379b134">
+<div id="outline-container-orgd076cd0" class="outline-3">
+<h3 id="orgd076cd0">
 <span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -258,8 +305,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org22665e7" class="outline-3">
-<h3 id="org22665e7">
+<div id="outline-container-org3075c58" class="outline-3">
+<h3 id="org3075c58">
 <span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
 </h3>
 <div class="outline-text-3" id="text-3-3">
@@ -273,16 +320,16 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org5cc5cde" class="outline-2">
-<h2 id="org5cc5cde">
+<div id="outline-container-orgde3a7e6" class="outline-2">
+<h2 id="orgde3a7e6">
 <span class="section-number-2">4</span> 其他插件支持</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
 </div>
 
-<div id="outline-container-org9521b30" class="outline-3">
-<h3 id="org9521b30">
+<div id="outline-container-org4e3afc9" class="outline-3">
+<h3 id="org4e3afc9">
 <span class="section-number-3">4.1</span> helm swoop</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
@@ -296,8 +343,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-orga33b0a3" class="outline-3">
-<h3 id="orga33b0a3">
+<div id="outline-container-org72a1f6c" class="outline-3">
+<h3 id="org72a1f6c">
 <span class="section-number-3">4.2</span> avy</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
@@ -313,8 +360,8 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org5bda2ff" class="outline-2">
-<h2 id="org5bda2ff">
+<div id="outline-container-org89fc288" class="outline-2">
+<h2 id="org89fc288">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">

@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -148,9 +195,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgf1ca366" class="outline-2">
-<h2 id="orgf1ca366">为什么要使用时间轮算法</h2>
-<div class="outline-text-2" id="text-orgf1ca366">
+<div id="outline-container-org0ad11ea" class="outline-2">
+<h2 id="org0ad11ea">为什么要使用时间轮算法</h2>
+<div class="outline-text-2" id="text-org0ad11ea">
 <p>
 时间轮算法是为了应对定时器的数量越来越多的情况，在待处理定时器的总数达到几千个甚至上万个时，我们希望定时器的性能仍有保证，定时器的性能要从时间复杂度和空间复杂度两方面考虑。<br></p>
 
@@ -172,9 +219,9 @@
 </div>
 </div>
 
-<div id="outline-container-org3d09b62" class="outline-2">
-<h2 id="org3d09b62">基础时间轮算法</h2>
-<div class="outline-text-2" id="text-org3d09b62">
+<div id="outline-container-orgbab47f1" class="outline-2">
+<h2 id="orgbab47f1">基础时间轮算法</h2>
+<div class="outline-text-2" id="text-orgbab47f1">
 <p>
 在实现前需要假定所有定时器的超时时间（周期数量）都不会超过某个最大值 <code>N</code> ，这样我们可以用一个容量为 <code>N</code> 的环形链表存放定i时器，每个链表节点对应一个超时时间，将所有超时时间相同的定时器存放在同一个链表节点中。链表中有一个节点代表当前时间 <code>i</code> ，在每次执行检查时将当前时间 <code>i</code> 向前移动移动一个节点变成 <code>i+1</code> 节点， 这样 <code>i+1</code> 节点中的所有定时器就需要超时触发了。在添加一个超时时间为 <code>t</code> 新的定时器时，需要将其放在第 <code>(i+t)%N</code> 个节点中。<br></p>
 
@@ -187,9 +234,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgb922517" class="outline-2">
-<h2 id="orgb922517">哈希时间轮算法</h2>
-<div class="outline-text-2" id="text-orgb922517">
+<div id="outline-container-org152d45b" class="outline-2">
+<h2 id="org152d45b">哈希时间轮算法</h2>
+<div class="outline-text-2" id="text-org152d45b">
 <p>
 当最大超时时间 <code>N</code> 很大时，基础时间轮中的节点增多，这样会消耗很多内存。我们可以将相邻的定时器归为一组，将这一组作为一个时间轮节点。每次在定时器超时判断时只需关注当前节点中的那一组定时器。这种方法借鉴了哈希运算的思想，可以看作是一种广义上的哈希运算，就是将变化范围大的对象经过哈希函数映射到一个较小的范围。<br></p>
 
@@ -198,25 +245,25 @@
 </div>
 </div>
 
-<div id="outline-container-org71ecb65" class="outline-2">
-<h2 id="org71ecb65">分层时间轮算法</h2>
-<div class="outline-text-2" id="text-org71ecb65">
+<div id="outline-container-orge23b0db" class="outline-2">
+<h2 id="orge23b0db">分层时间轮算法</h2>
+<div class="outline-text-2" id="text-orge23b0db">
 <p>
 分层时间轮算法可以看作是哈希时间轮算法的一个特例，即哈希时间轮中的每个节点中存放的仍然是时间轮。以我们生活中的常见的钟表为例：有24个节点表示小时，每个节点表示1小时；小时节点中有60个分钟节点，每个分钟节点表示1分钟；分钟节点中有60个秒节点，每个秒节点表示1秒。其中的时、分、秒就是将时间轮分为了3个层次。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0340299" class="outline-2">
-<h2 id="org0340299">算法演进的思路分析</h2>
-<div class="outline-text-2" id="text-org0340299">
+<div id="outline-container-org746a525" class="outline-2">
+<h2 id="org746a525">算法演进的思路分析</h2>
+<div class="outline-text-2" id="text-org746a525">
 <p>
 上面提到的时间轮算法的几个变体是空间与时间转换的典型案例。为了使每次超时判断处理的速度变快，将定时器按照超时时间分开，这样每次只需要关注那一小部分快要超时的定时器，这是空间换时间。为了减少存储定时器所需要内存，将超时时间接近的放在一个节点中，这是时间换空间。而分层时间轮其实就是每层的节点中仍然是时间轮，这又使用是递归思想。仔细品味算法的设计思路，还真的是蛮有意思的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org7ced26b" class="outline-2">
-<h2 id="org7ced26b">时间轮算法的实现</h2>
-<div class="outline-text-2" id="text-org7ced26b">
+<div id="outline-container-org5095705" class="outline-2">
+<h2 id="org5095705">时间轮算法的实现</h2>
+<div class="outline-text-2" id="text-org5095705">
 <p>
 我找了几个时间轮算法的实现代码，不过没有深入研究，等以后有时间的时候再仔细看看：<br></p>
 <ul class="org-ul">
@@ -230,9 +277,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgdffed90" class="outline-2">
-<h2 id="orgdffed90">参考资料</h2>
-<div class="outline-text-2" id="text-orgdffed90">
+<div id="outline-container-org57ca35d" class="outline-2">
+<h2 id="org57ca35d">参考资料</h2>
+<div class="outline-text-2" id="text-org57ca35d">
 <ul class="org-ul">
 <li>
 <a href="http://www.cs.columbia.edu/~nahum/w6998/papers/sosp87-timing-wheels.pdf">columbia edu - timing wheel</a><br>

@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -140,9 +187,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org043736a" class="outline-2">
-<h2 id="org043736a">Bjarne Stroustrup 的观点</h2>
-<div class="outline-text-2" id="text-org043736a">
+<div id="outline-container-orgb8fc159" class="outline-2">
+<h2 id="orgb8fc159">Bjarne Stroustrup 的观点</h2>
+<div class="outline-text-2" id="text-orgb8fc159">
 <p>
 C++创始人Bjarne Stroustrup针对此问题发表了一些观点（见参考资料1），其中对比了两种方案的优势和劣势，会在下文中详细展开讲讲。<br></p>
 
@@ -193,9 +240,9 @@ Bjarne的最终观点是：<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge84ea35" class="outline-2">
-<h2 id="orge84ea35">无符号数存在的问题</h2>
-<div class="outline-text-2" id="text-orge84ea35">
+<div id="outline-container-orgbc179aa" class="outline-2">
+<h2 id="orgbc179aa">无符号数存在的问题</h2>
+<div class="outline-text-2" id="text-orgbc179aa">
 <p>
 混用无符号数和有符号数非常容易引起混淆和bug。然而，在以下两种情况会容易出现有符号数和无符号数的混用。<br></p>
 <ul class="org-ul">
@@ -251,9 +298,9 @@ Bjarne的最终观点是：<br></p>
 </div>
 
 
-<div id="outline-container-orgd7e0394" class="outline-2">
-<h2 id="orgd7e0394">专有名词</h2>
-<div class="outline-text-2" id="text-orgd7e0394">
+<div id="outline-container-org727c85c" class="outline-2">
+<h2 id="org727c85c">专有名词</h2>
+<div class="outline-text-2" id="text-org727c85c">
 <ul class="org-ul">
 <li>modular arithmetic - 模算术<br>
 </li>
@@ -274,9 +321,9 @@ EWG 的目标是使 C++ 语言更加现代、安全、高效和易于使用。EW
 </div>
 
 
-<div id="outline-container-org8eaa0f2" class="outline-2">
-<h2 id="org8eaa0f2">参考资料</h2>
-<div class="outline-text-2" id="text-org8eaa0f2">
+<div id="outline-container-orgfb31eea" class="outline-2">
+<h2 id="orgfb31eea">参考资料</h2>
+<div class="outline-text-2" id="text-orgfb31eea">
 <ol class="org-ol">
 <li>
 <a href="https://open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1428r0.pdf">open std - paper p1428</a><br>

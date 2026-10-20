@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -143,9 +190,9 @@ leetcode算法题第29道，难度为medium。从题目描述上来看，这道�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgf2ef3aa" class="outline-2">
-<h2 id="orgf2ef3aa">Description</h2>
-<div class="outline-text-2" id="text-orgf2ef3aa">
+<div id="outline-container-org411d4ad" class="outline-2">
+<h2 id="org411d4ad">Description</h2>
+<div class="outline-text-2" id="text-org411d4ad">
 <p>
 Given two integers dividend and divisor, divide two integers without using multiplication, division and mod operator.<br>
 Return the quotient after dividing dividend by divisor.<br>
@@ -180,13 +227,13 @@ Output: -2
 </div>
 </div>
 
-<div id="outline-container-org808bd5d" class="outline-2">
-<h2 id="org808bd5d">Solution</h2>
-<div class="outline-text-2" id="text-org808bd5d">
+<div id="outline-container-org29da542" class="outline-2">
+<h2 id="org29da542">Solution</h2>
+<div class="outline-text-2" id="text-org29da542">
 </div>
-<div id="outline-container-org62d710e" class="outline-3">
-<h3 id="org62d710e">Approach 1 brute force</h3>
-<div class="outline-text-3" id="text-org62d710e">
+<div id="outline-container-orgab002f1" class="outline-3">
+<h3 id="orgab002f1">Approach 1 brute force</h3>
+<div class="outline-text-3" id="text-orgab002f1">
 <p>
 使用暴力解法，将被除数减去除数，记录被除数可被减去的次数。这种方法必定能够得到结果，只是耗时很多，提交leetcode的结果为超时。<br></p>
 
@@ -294,9 +341,9 @@ Output: -2
 </div>
 </div>
 
-<div id="outline-container-org952e663" class="outline-3">
-<h3 id="org952e663">Approach 2 bit move</h3>
-<div class="outline-text-3" id="text-org952e663">
+<div id="outline-container-orgdbdd523" class="outline-3">
+<h3 id="orgdbdd523">Approach 2 bit move</h3>
+<div class="outline-text-3" id="text-orgdbdd523">
 <p>
 这个答案从leetcode的discuss中找到的，使用位操作的方法完成。<br>
 举一个例子，在计算 <code>10/3</code> 时，可以将10分解为 3*2<sup>1</sup> + 3*2<sup>0</sup> + 1，而每次向左移位代表着数值上扩大两倍，这样就能够通过移位操作将除数成倍放大。这实际上是借助按位左移的数值特性使用了精简版的乘法操作。<br></p>
@@ -323,9 +370,9 @@ Output: -2
 </div>
 </div>
 
-<div id="outline-container-org36170f5" class="outline-3">
-<h3 id="org36170f5">Approach 3 bit move reversed</h3>
-<div class="outline-text-3" id="text-org36170f5">
+<div id="outline-container-org4fa8d5b" class="outline-3">
+<h3 id="org4fa8d5b">Approach 3 bit move reversed</h3>
+<div class="outline-text-3" id="text-org4fa8d5b">
 <p>
 这个方法是从leetcode的submission提取出来的sample，是耗时最短的解法之一。<br>
 我之前都是以除数为操作对象的，而这个方法使用被除数作为操作对象。这相当于使用从大到小的方向进行除数的搜索。这个解法使用无符号数对中间结果进行存储，这样就不需要提高数据的宽度了。<br></p>
@@ -361,9 +408,9 @@ Output: -2
 </div>
 
 
-<div id="outline-container-org503e3fa" class="outline-2">
-<h2 id="org503e3fa">Reference</h2>
-<div class="outline-text-2" id="text-org503e3fa">
+<div id="outline-container-org2b5157e" class="outline-2">
+<h2 id="org2b5157e">Reference</h2>
+<div class="outline-text-2" id="text-org2b5157e">
 <ul class="org-ul">
 <li>
 <a href="https://en.cppreference.com/w/cpp/types/integer">cppreference.com integer types</a><br>

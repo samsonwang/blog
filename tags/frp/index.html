@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html prefix="og: http://ogp.me/ns#" lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="x-ua-compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Posts about frp | Hack Note</title>
+<meta name="theme-color" content="#04519b">
+<meta name="generator" content="Nikola (getnikola.com)">
+<link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
+      if (theme === 'dark') {
+        activate(dark, light, 'dark');
+      } else {
+        activate(light, dark, 'light');
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
+<link rel="canonical" href="https://samsonwang.github.io/blog/tags/frp/">
+<link rel="icon" href="/blog/favicon.ico" sizes="64x64">
+<link rel="alternate" type="application/rss+xml" title="RSS for tag frp" hreflang="en" href="/blog/tags/frp.xml">
+</head>
+<body>
+  <header class="site-header nav-custom"><div class="wrapper">
+      <a class="site-title" rel="author" href="/blog/">Hack Note</a>
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
+        </label>
+        <div class="trigger">
+          
+            <a class="page-link" href="/blog/">Home</a>
+            <a class="page-link" href="/blog/archive/">Archive</a>
+            <a class="page-link" href="/blog/tags/">Tags</a>
+            <a class="page-link" href="/blog/about/">About</a>
+
+        </div>
+      </nav>
+</div>
+  </header><main class="page-content" aria-label="Content"><div class="wrapper">
+
+    
+
+    
+<article class="tag-page"><header><h1>Posts about frp</h1>
+        <div class="metadata">
+            
+                <p class="feedlink">
+                        
+            <a href="/blog/tags/frp.xml" hreflang="en" type="application/rss+xml">RSS feed</a>
+
+                </p>
+
+        </div>
+        
+
+    </header><ul class="archive-list">
+<li>
+<time class="date" datetime="2026-10-19T22:18:42+08:00">Oct 19, 2026</time><a href="/blog/posts/2026/frp-tips/" class="title">frp使用技巧</a><a></a>
+</li>
+        </ul></article>
+</div>
+  </main><footer class="site-footer h-card"><div class="wrapper">
+      <div class="footer-col-wrapper">
+
+        <div class="footer-col">
+          <p class="site-desc">Personal handnote on software development</p>
+        </div>
+
+        <div class="footer-col">
+          <div class="p-name">Samson Wang</div>
+          <div class="copyright">Copyright 2026, all rights reserved.</div>
+          <div class="social-links">
+            <ul class="social-media-list">
+<li><a rel="me" href="/blog/rss.xml">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#rss"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://github.com/samsonwang">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#github"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://twitter.com/samsonwangcn">
+                <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#twitter"></use></svg></a></li>
+              <li><a rel="nofollow" href="https://facebook.com/samsonwangcn">
+                 <svg class="svg-icon grey"><use href="/blog/assets/svg/social-icons.svg#facebook"></use></svg></a></li>
+            </ul>
+</div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </footer><div id="scroll-top" title="back to top">
+  <div id="scroll-top-arrow"></div>
+  <div id="scroll-top-stick"></div>
+</div>
+
+
+      <script src="/blog/assets/js/lazyload.min.js"></script><script src="/blog/assets/js/minima.min.js"></script><!-- Google Analytics - Global site tag (gtag.js) --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-108507797-1"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-108507797-1');
+</script>
+</body>
+</html>

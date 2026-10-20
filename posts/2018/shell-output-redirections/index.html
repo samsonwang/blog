@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -141,17 +188,17 @@
       
     <time class="dt-published" datetime="2018-07-26T10:02:41+08:00" itemprop="datePublished">Jul 26, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orgf4aff15" class="outline-2">
-<h2 id="orgf4aff15">引言</h2>
-<div class="outline-text-2" id="text-orgf4aff15">
+    <div id="outline-container-orgd4221c3" class="outline-2">
+<h2 id="orgd4221c3">引言</h2>
+<div class="outline-text-2" id="text-orgd4221c3">
 <p>
 在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf1656d0" class="outline-2">
-<h2 id="orgf1656d0">使用尖括号完成重定向</h2>
-<div class="outline-text-2" id="text-orgf1656d0">
+<div id="outline-container-org4ad58a4" class="outline-2">
+<h2 id="org4ad58a4">使用尖括号完成重定向</h2>
+<div class="outline-text-2" id="text-org4ad58a4">
 <p>
 示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span>&gt;<span class="w"> </span>ls-output.txt
@@ -160,25 +207,25 @@
 可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
 </div>
 
-<div id="outline-container-orga5d346f" class="outline-3">
-<h3 id="orga5d346f">重定向 <code>stdout</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-orga5d346f">
+<div id="outline-container-org09e7dd2" class="outline-3">
+<h3 id="org09e7dd2">重定向 <code>stdout</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org09e7dd2">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">1</span>&gt;<span class="w"> </span>ls-output.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org7ea0c1e" class="outline-3">
-<h3 id="org7ea0c1e">重定向 <code>stderr</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org7ea0c1e">
+<div id="outline-container-org98c62b7" class="outline-3">
+<h3 id="org98c62b7">重定向 <code>stderr</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org98c62b7">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>ls-error.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org64eb875" class="outline-3">
-<h3 id="org64eb875">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
-<div class="outline-text-3" id="text-org64eb875">
+<div id="outline-container-orgbbfa1cb" class="outline-3">
+<h3 id="orgbbfa1cb">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
+<div class="outline-text-3" id="text-orgbbfa1cb">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span>ls-output-and-error.txt
 </pre></div>
 <p>
@@ -188,9 +235,9 @@
 </div>
 </div>
 
-<div id="outline-container-org7c5cadf" class="outline-3">
-<h3 id="org7c5cadf">将程序的输出丢掉</h3>
-<div class="outline-text-3" id="text-org7c5cadf">
+<div id="outline-container-org446d325" class="outline-3">
+<h3 id="org446d325">将程序的输出丢掉</h3>
+<div class="outline-text-3" id="text-org446d325">
 <p>
 可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
 <div class="highlight"><pre><span></span>program<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
@@ -198,9 +245,9 @@
 </div>
 </div>
 
-<div id="outline-container-org3f1ad29" class="outline-3">
-<h3 id="org3f1ad29">将输出追加到指定文件尾部</h3>
-<div class="outline-text-3" id="text-org3f1ad29">
+<div id="outline-container-org1a30454" class="outline-3">
+<h3 id="org1a30454">将输出追加到指定文件尾部</h3>
+<div class="outline-text-3" id="text-org1a30454">
 <p>
 使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="nb">test</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>file-output.txt
@@ -209,9 +256,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgec5677d" class="outline-2">
-<h2 id="orgec5677d">使用管道完成重定向</h2>
-<div class="outline-text-2" id="text-orgec5677d">
+<div id="outline-container-orgee62497" class="outline-2">
+<h2 id="orgee62497">使用管道完成重定向</h2>
+<div class="outline-text-2" id="text-orgee62497">
 <p>
 使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
 <div class="highlight"><pre><span></span>ls<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>&lt;pattern&gt;

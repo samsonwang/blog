@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -150,9 +197,9 @@ Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orga470b01" class="outline-2">
-<h2 id="orga470b01">基础概念</h2>
-<div class="outline-text-2" id="text-orga470b01">
+<div id="outline-container-org60938da" class="outline-2">
+<h2 id="org60938da">基础概念</h2>
+<div class="outline-text-2" id="text-org60938da">
 <p>
 Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌入到C++程序中，C++代码借助Pyhton解释器完成对Python代码的调用。<br></p>
 
@@ -161,9 +208,9 @@ Python代码中调用C++代码以实现数据交互和运行速度提升，实�
 </div>
 </div>
 
-<div id="outline-container-orgf936552" class="outline-2">
-<h2 id="orgf936552">实现方案的选择</h2>
-<div class="outline-text-2" id="text-orgf936552">
+<div id="outline-container-orgb115657" class="outline-2">
+<h2 id="orgb115657">实现方案的选择</h2>
+<div class="outline-text-2" id="text-orgb115657">
 <p>
 C++和Python混合编程的解决方法有很多，需要根据需求和实际情况综合考虑来选择适合的方案。<br></p>
 
@@ -172,9 +219,9 @@ C++和Python混合编程的解决方法有很多，需要根据需求和实际�
 </div>
 </div>
 
-<div id="outline-container-orgf944985" class="outline-2">
-<h2 id="orgf944985">编译器的选择</h2>
-<div class="outline-text-2" id="text-orgf944985">
+<div id="outline-container-orgda826e9" class="outline-2">
+<h2 id="orgda826e9">编译器的选择</h2>
+<div class="outline-text-2" id="text-orgda826e9">
 <p>
 在选择C++编译器时需要考虑Python的版本和Qt的版本。Python和Qt都有官方发布的二进制文件，最好选用与官方发版时相同的编译环境，这样可以省去自行编译的麻烦。<br></p>
 
@@ -189,9 +236,9 @@ C++和Python混合编程的解决方法有很多，需要根据需求和实际�
 </div>
 </div>
 
-<div id="outline-container-org5ea934a" class="outline-2">
-<h2 id="org5ea934a">Qt和Python的版本</h2>
-<div class="outline-text-2" id="text-org5ea934a">
+<div id="outline-container-org7cf4b6f" class="outline-2">
+<h2 id="org7cf4b6f">Qt和Python的版本</h2>
+<div class="outline-text-2" id="text-org7cf4b6f">
 <p>
 32/64bit：在windows下，Qt和Python都有32位和64位版本的库文件，使用时要统一。<br></p>
 
@@ -203,24 +250,24 @@ debug/release：这个与开发调试有关，Python默认安装时只包含rele
 </div>
 </div>
 
-<div id="outline-container-org96fd6c7" class="outline-2">
-<h2 id="org96fd6c7">性能损耗</h2>
-<div class="outline-text-2" id="text-org96fd6c7">
+<div id="outline-container-org735384e" class="outline-2">
+<h2 id="org735384e">性能损耗</h2>
+<div class="outline-text-2" id="text-org735384e">
 <p>
 Python和C++交叉编程是有性能损耗的，如果这是一个对运行速度比较敏感的模块，尽量选择那些损耗较小的实现方案。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3a6af4f" class="outline-2">
-<h2 id="org3a6af4f">实现方案</h2>
-<div class="outline-text-2" id="text-org3a6af4f">
+<div id="outline-container-org091a341" class="outline-2">
+<h2 id="org091a341">实现方案</h2>
+<div class="outline-text-2" id="text-org091a341">
 <p>
 下面是我尝试过的一些方案，以及这些方案给我的感受。<br></p>
 </div>
 
-<div id="outline-container-org84e1ae5" class="outline-3">
-<h3 id="org84e1ae5"><a href="https://docs.python.org/3/c-api/">CPython</a></h3>
-<div class="outline-text-3" id="text-org84e1ae5">
+<div id="outline-container-orga09640f" class="outline-3">
+<h3 id="orga09640f"><a href="https://docs.python.org/3/c-api/">CPython</a></h3>
+<div class="outline-text-3" id="text-orga09640f">
 <p>
 这是Python官方的标准方案，实际上后来的其他方案也大都是基于这个方案进行开发的。<br>
 优点：全方位精细化的控制，文档和教程比较详细，没有额外的依赖。<br>
@@ -228,9 +275,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 </div>
 
-<div id="outline-container-org6c9e0b7" class="outline-3">
-<h3 id="org6c9e0b7"><a href="https://www.boost.org/doc/libs/1_66_0/libs/python/doc/html/index.html">Boost.Python</a></h3>
-<div class="outline-text-3" id="text-org6c9e0b7">
+<div id="outline-container-org1bba707" class="outline-3">
+<h3 id="org1bba707"><a href="https://www.boost.org/doc/libs/1_66_0/libs/python/doc/html/index.html">Boost.Python</a></h3>
+<div class="outline-text-3" id="text-org1bba707">
 <p>
 这是Boost库的一部分，提供了C++与Python的交叉编程很好支持。<br>
 优点：对众多编译器都有很好的兼容，是一个比较成熟的方案。<br>
@@ -238,9 +285,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 </div>
 
-<div id="outline-container-orge26c25d" class="outline-3">
-<h3 id="orge26c25d"><a href="http://www.swig.org/">SWIG</a></h3>
-<div class="outline-text-3" id="text-orge26c25d">
+<div id="outline-container-org3fb8209" class="outline-3">
+<h3 id="org3fb8209"><a href="http://www.swig.org/">SWIG</a></h3>
+<div class="outline-text-3" id="text-org3fb8209">
 <p>
 支持C/C++与多种编程语言进行交叉编程的解决方案。<br>
 优点：同时支持多种编程语言，如C#等等。<br>
@@ -248,9 +295,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 </div>
 
-<div id="outline-container-org7e20e36" class="outline-3">
-<h3 id="org7e20e36"><a href="https://pybind11.readthedocs.io/en/stable/index.html">pybind11</a></h3>
-<div class="outline-text-3" id="text-org7e20e36">
+<div id="outline-container-orgd6b7230" class="outline-3">
+<h3 id="orgd6b7230"><a href="https://pybind11.readthedocs.io/en/stable/index.html">pybind11</a></h3>
+<div class="outline-text-3" id="text-orgd6b7230">
 <p>
 大量使用C++11的新特性，代码风格与Boost.Python很相似。<br>
 优点：轻量级，只有头文件，无需引入其他二进制库文件依赖。<br>
@@ -260,9 +307,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 
 
-<div id="outline-container-orgcd566e8" class="outline-2">
-<h2 id="orgcd566e8">参考资料</h2>
-<div class="outline-text-2" id="text-orgcd566e8">
+<div id="outline-container-orgb571012" class="outline-2">
+<h2 id="orgb571012">参考资料</h2>
+<div class="outline-text-2" id="text-orgb571012">
 <ul class="org-ul">
 <li>
 <a href="https://docs.microsoft.com/en-us/visualstudio/python/working-with-c-cpp-python-in-visual-studio">microsoft docs - working with cpp and python in visual studio</a><br>

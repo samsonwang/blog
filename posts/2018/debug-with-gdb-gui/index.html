@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -135,9 +182,9 @@ gdb是linux下很强大的调试工具，它使用命令行进行交互。相比
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org1ef8ab8" class="outline-2">
-<h2 id="org1ef8ab8">TUI</h2>
-<div class="outline-text-2" id="text-org1ef8ab8">
+<div id="outline-container-orgea749a4" class="outline-2">
+<h2 id="orgea749a4">TUI</h2>
+<div class="outline-text-2" id="text-orgea749a4">
 <p>
 gdb内置了TUI作为图形化的调试界面。TUI的全称是Text User Interface，TUI基于 <i>curses</i> 库，这使它能够在命令行中有更生动的展示效果。<br>
 TUI有两个显示区，一个是拥有更直观显示效果的TUI模式，另一个是标准的gdb命令行模式。TUI模式显示区用于展现源码信息，汇编信息，寄存器信息。<br></p>
@@ -167,9 +214,9 @@ tui reg prev  # 显示上一组寄存器
 </div>
 </div>
 
-<div id="outline-container-org214b0cb" class="outline-2">
-<h2 id="org214b0cb">cgdb</h2>
-<div class="outline-text-2" id="text-org214b0cb">
+<div id="outline-container-orgead813f" class="outline-2">
+<h2 id="orgead813f">cgdb</h2>
+<div class="outline-text-2" id="text-orgead813f">
 <p>
 cgdb是第三方开发的基于 <i>curses</i> 的轻量级gdb前端。与TUI相似，cgdb的展示窗口也有两种模式。cgdb还提供一些额外的特性：源码高亮显示，模仿vi的按键方式。<br></p>
 
@@ -184,9 +231,9 @@ cgdb的官方介绍 <a href="https://cgdb.github.io/">https://cgdb.github.io/</a
 </div>
 </div>
 
-<div id="outline-container-org7aed26d" class="outline-2">
-<h2 id="org7aed26d">EMACS gud mode</h2>
-<div class="outline-text-2" id="text-org7aed26d">
+<div id="outline-container-org57f0be2" class="outline-2">
+<h2 id="org57f0be2">EMACS gud mode</h2>
+<div class="outline-text-2" id="text-org57f0be2">
 <p>
 作为同样属于GNU的emacs，它提供了 <code>gud mode</code> 作为gdb的前端。这也是我目前在使用的工具链。借助emacs的强大可定制性， <code>gud mode</code> 支持对图形化界面进行深度定制。对于一般用户，推荐通过设置 <code>gdb-many-windows</code> 为 <code>t</code> 得到一份默认的多窗口调试界面。<br></p>
 
@@ -208,9 +255,9 @@ cgdb的官方介绍 <a href="https://cgdb.github.io/">https://cgdb.github.io/</a
 </div>
 
 
-<div id="outline-container-org1fa22b6" class="outline-2">
-<h2 id="org1fa22b6">参考资料</h2>
-<div class="outline-text-2" id="text-org1fa22b6">
+<div id="outline-container-org4d30cdc" class="outline-2">
+<h2 id="org4d30cdc">参考资料</h2>
+<div class="outline-text-2" id="text-org4d30cdc">
 <ul class="org-ul">
 <li>
 <a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_chapter/gdb_19.html">gdb tui manual</a><br>

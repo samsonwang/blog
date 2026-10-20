@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -151,9 +198,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 
     </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org75673d2" class="outline-2">
-<h2 id="org75673d2">什么是位域</h2>
-<div class="outline-text-2" id="text-org75673d2">
+    <div id="outline-container-orgc9ce0f0" class="outline-2">
+<h2 id="orgc9ce0f0">什么是位域</h2>
+<div class="outline-text-2" id="text-orgc9ce0f0">
 <p>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">维基百科</a> 给出了以下解释<br></p>
 <blockquote>
@@ -182,9 +229,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgd7d2e0d" class="outline-2">
-<h2 id="orgd7d2e0d">位域的语法</h2>
-<div class="outline-text-2" id="text-orgd7d2e0d">
+<div id="outline-container-orgd5a402b" class="outline-2">
+<h2 id="orgd5a402b">位域的语法</h2>
+<div class="outline-text-2" id="text-orgd5a402b">
 <p>
 下面就是位域的语法格式。<br></p>
 <div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">size</span>
@@ -231,9 +278,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org62f91df" class="outline-3">
-<h3 id="org62f91df">在 <code>size</code> 取0时如何理解</h3>
-<div class="outline-text-3" id="text-org62f91df">
+<div id="outline-container-orgd81d872" class="outline-3">
+<h3 id="orgd81d872">在 <code>size</code> 取0时如何理解</h3>
+<div class="outline-text-3" id="text-orgd81d872">
 <p>
 对于 <code>size</code> 取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。<br>
 如下所示，定义了如下几种情况。<br></p>
@@ -318,10 +365,10 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org95c0110" class="outline-3">
-<h3 id="org95c0110">
+<div id="outline-container-orgcf6bb7d" class="outline-3">
+<h3 id="orgcf6bb7d">
 <code>struct</code> 与 <code>class</code> 关键字</h3>
-<div class="outline-text-3" id="text-org95c0110">
+<div class="outline-text-3" id="text-orgcf6bb7d">
 <p>
 多数例子都是以 <code>struct</code> 作为位域的组织标识，在C++中能否使用 <code>class</code> 作为位域的标识符呢？<br>
 经过测试，是可以使用 <code>class</code> 关键字的，但是需要注意 <code>class</code> 的默认访问控制属性为 <code>private</code> 。<br></p>
@@ -330,9 +377,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org20c872f" class="outline-2">
-<h2 id="org20c872f">位域的常见应用场景</h2>
-<div class="outline-text-2" id="text-org20c872f">
+<div id="outline-container-orgab0062e" class="outline-2">
+<h2 id="orgab0062e">位域的常见应用场景</h2>
+<div class="outline-text-2" id="text-orgab0062e">
 <p>
 为什么要使用位域？位域适合那些情况？<br></p>
 
@@ -345,18 +392,18 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org687329b" class="outline-2">
-<h2 id="org687329b">C++中的位操作接口</h2>
-<div class="outline-text-2" id="text-org687329b">
+<div id="outline-container-org3c095dc" class="outline-2">
+<h2 id="org3c095dc">C++中的位操作接口</h2>
+<div class="outline-text-2" id="text-org3c095dc">
 <p>
 C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接口提供了指定比特位数据的操作接口。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org56ea54d" class="outline-2">
-<h2 id="org56ea54d">参考资料</h2>
-<div class="outline-text-2" id="text-org56ea54d">
+<div id="outline-container-org0fb8d3e" class="outline-2">
+<h2 id="org0fb8d3e">参考资料</h2>
+<div class="outline-text-2" id="text-org0fb8d3e">
 <ul class="org-ul">
 <li>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">wikipedia - bit field</a><br>

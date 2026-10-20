@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -153,9 +200,9 @@ union {
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgb4e5aa5" class="outline-2">
-<h2 id="orgb4e5aa5">位域的内存布局</h2>
-<div class="outline-text-2" id="text-orgb4e5aa5">
+<div id="outline-container-orgb111921" class="outline-2">
+<h2 id="orgb111921">位域的内存布局</h2>
+<div class="outline-text-2" id="text-orgb111921">
 <p>
 观察以下代码段，思考程序可能的输出内容。<br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
@@ -199,9 +246,9 @@ The order of allocation of bit-fields within a unit (high-order to low-order or 
 </div>
 
 
-<div id="outline-container-orgbee7c73" class="outline-2">
-<h2 id="orgbee7c73">结构体的内存布局</h2>
-<div class="outline-text-2" id="text-orgbee7c73">
+<div id="outline-container-org714eb2f" class="outline-2">
+<h2 id="org714eb2f">结构体的内存布局</h2>
+<div class="outline-text-2" id="text-org714eb2f">
 <p>
 观察以下代码段，思考程序可能的输出内容。<br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
@@ -248,9 +295,9 @@ The size of a union is sufficient to contain the largest of its members. The val
 </div>
 
 
-<div id="outline-container-orga05ba6c" class="outline-2">
-<h2 id="orga05ba6c">参考资料</h2>
-<div class="outline-text-2" id="text-orga05ba6c">
+<div id="outline-container-org3a16687" class="outline-2">
+<h2 id="org3a16687">参考资料</h2>
+<div class="outline-text-2" id="text-org3a16687">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/19376426/order-of-fields-when-using-a-bit-field-in-c">stackoverflow - order of fields when using bit field</a><br>

@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -151,17 +198,17 @@ Nonstatic M">
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgaef6b85" class="outline-2">
-<h2 id="orgaef6b85">第4章 Function 语意学 （the semantics of function）</h2>
-<div class="outline-text-2" id="text-orgaef6b85">
+<div id="outline-container-org3226d30" class="outline-2">
+<h2 id="org3226d30">第4章 Function 语意学 （the semantics of function）</h2>
+<div class="outline-text-2" id="text-org3226d30">
 </div>
-<div id="outline-container-orgdad41dc" class="outline-3">
-<h3 id="orgdad41dc">4.1 Member 的各种调用方式</h3>
-<div class="outline-text-3" id="text-orgdad41dc">
+<div id="outline-container-orgfbb1498" class="outline-3">
+<h3 id="orgfbb1498">4.1 Member 的各种调用方式</h3>
+<div class="outline-text-3" id="text-orgfbb1498">
 </div>
-<div id="outline-container-orge80ad47" class="outline-4">
-<h4 id="orge80ad47">Nonstatic Member Functions（非静态成员函数）</h4>
-<div class="outline-text-4" id="text-orge80ad47">
+<div id="outline-container-org70921bd" class="outline-4">
+<h4 id="org70921bd">Nonstatic Member Functions（非静态成员函数）</h4>
+<div class="outline-text-4" id="text-org70921bd">
 <p>
 C++ 的设计准则之一就是：nonstatic member function 至少必须和一版的nonmember function有相同的效率。<br></p>
 
@@ -170,9 +217,9 @@ C++ 的设计准则之一就是：nonstatic member function 至少必须和一�
 </div>
 </div>
 
-<div id="outline-container-org1da4c6b" class="outline-4">
-<h4 id="org1da4c6b">名称的特殊处理（name mangling）</h4>
-<div class="outline-text-4" id="text-org1da4c6b">
+<div id="outline-container-org4ee7767" class="outline-4">
+<h4 id="org4ee7767">名称的特殊处理（name mangling）</h4>
+<div class="outline-text-4" id="text-org4ee7767">
 <p>
 一版而言，member的名称前面汇被加上 class 名称，行程独一无二的命名。<br></p>
 
@@ -187,9 +234,9 @@ C++ 的设计准则之一就是：nonstatic member function 至少必须和一�
 </div>
 </div>
 
-<div id="outline-container-orgb389873" class="outline-4">
-<h4 id="orgb389873">virtual member functions（虚拟成员函数）</h4>
-<div class="outline-text-4" id="text-orgb389873">
+<div id="outline-container-orgf16b073" class="outline-4">
+<h4 id="orgf16b073">virtual member functions（虚拟成员函数）</h4>
+<div class="outline-text-4" id="text-orgf16b073">
 <p>
 使用指针调用虚函数会从虚函数表找到对应的虚函数地址，使用该虚函数地址完成函数的调用。<br></p>
 
@@ -198,9 +245,9 @@ C++ 的设计准则之一就是：nonstatic member function 至少必须和一�
 </div>
 </div>
 
-<div id="outline-container-org6d51cef" class="outline-4">
-<h4 id="org6d51cef">static member functions（静态成员函数）</h4>
-<div class="outline-text-4" id="text-org6d51cef">
+<div id="outline-container-orgd0b0d52" class="outline-4">
+<h4 id="orgd0b0d52">static member functions（静态成员函数）</h4>
+<div class="outline-text-4" id="text-orgd0b0d52">
 <p>
 静态成员函数的特性：<br></p>
 <ol class="org-ol">
@@ -235,9 +282,9 @@ static member function 由于缺乏 this 指针，因此差不多等同于 nonme
 </div>
 </div>
 
-<div id="outline-container-org338040c" class="outline-3">
-<h3 id="org338040c">4.2 virtual member function (虚拟成员函数)</h3>
-<div class="outline-text-3" id="text-org338040c">
+<div id="outline-container-orgf556380" class="outline-3">
+<h3 id="orgf556380">4.2 virtual member function (虚拟成员函数)</h3>
+<div class="outline-text-3" id="text-orgf556380">
 <p>
 为了支持 virtual function 机制，必须首先能够对于多态对象有某种形式的“执行期判断法（runtime type resolution）”。在添加这些特性时，必定会增加类空间的负担，还需要考虑到对C语言的兼容性。<br></p>
 
@@ -289,9 +336,9 @@ static member function 由于缺乏 this 指针，因此差不多等同于 nonme
 在一个单一继承体系中，virtual function 机制的行为十分良好，不但有效而且很容易塑造出模型来，但是在多重继承和虚拟继承之中，对 virtual functions 的支持就没有那么美好了。<br></p>
 </div>
 
-<div id="outline-container-org67e7e03" class="outline-4">
-<h4 id="org67e7e03">多重继承下的 virtual functions</h4>
-<div class="outline-text-4" id="text-org67e7e03">
+<div id="outline-container-orge6ce7dd" class="outline-4">
+<h4 id="orge6ce7dd">多重继承下的 virtual functions</h4>
+<div class="outline-text-4" id="text-orge6ce7dd">
 <p>
 在多重继承中支持 virtual functions，其复杂度围绕在第二个及后继的 base class 身上，以及“必须在执行期调整 this 指针”这一点。<br></p>
 
@@ -327,9 +374,9 @@ Thunk 技术允许 virtual table slot 继续内含一个简单的指针，因此
 </div>
 </div>
 
-<div id="outline-container-org58d9fc7" class="outline-4">
-<h4 id="org58d9fc7">虚继承下的 virtual function</h4>
-<div class="outline-text-4" id="text-org58d9fc7">
+<div id="outline-container-org82f6aa5" class="outline-4">
+<h4 id="org82f6aa5">虚继承下的 virtual function</h4>
+<div class="outline-text-4" id="text-org82f6aa5">
 <p>
 在虚拟继承中，也需要调整 this 指针，至于在虚拟继承的情况下要消除 thunks，一般而言已经被证明是一项高难度技术。<br></p>
 
@@ -343,9 +390,9 @@ Thunk 技术允许 virtual table slot 继续内含一个简单的指针，因此
 </div>
 
 
-<div id="outline-container-orgba5782b" class="outline-3">
-<h3 id="orgba5782b">4.3 函数的效能</h3>
-<div class="outline-text-3" id="text-orgba5782b">
+<div id="outline-container-orgb227819" class="outline-3">
+<h3 id="orgb227819">4.3 函数的效能</h3>
+<div class="outline-text-3" id="text-orgb227819">
 <p>
 本章节主要针对前文中分析的各种函数调用情况，编写代码进行测试，并对实验结果进行了分析。<br></p>
 
@@ -361,9 +408,9 @@ Thunk 技术允许 virtual table slot 继续内含一个简单的指针，因此
 </div>
 
 
-<div id="outline-container-org6886c80" class="outline-3">
-<h3 id="org6886c80">4.4 指向 member function 的指针 （pointer to member functions）</h3>
-<div class="outline-text-3" id="text-org6886c80">
+<div id="outline-container-org4e12960" class="outline-3">
+<h3 id="org4e12960">4.4 指向 member function 的指针 （pointer to member functions）</h3>
+<div class="outline-text-3" id="text-org4e12960">
 <p>
 由前文的论述中可以得知，取一个 nonstatic data member 的地址，得到的结果是该 member 在 class 布局中的 byte 位置（再加1）.可以想象它是一个不完整的值，需要被绑定于某个 class object 的地址上，才能够被存取。<br></p>
 
@@ -375,9 +422,9 @@ Thunk 技术允许 virtual table slot 继续内含一个简单的指针，因此
 </div>
 
 
-<div id="outline-container-org481f0bf" class="outline-4">
-<h4 id="org481f0bf">支持“指向 virtual member function”的指针</h4>
-<div class="outline-text-4" id="text-org481f0bf">
+<div id="outline-container-org36d4ab8" class="outline-4">
+<h4 id="org36d4ab8">支持“指向 virtual member function”的指针</h4>
+<div class="outline-text-4" id="text-org36d4ab8">
 <p>
 注意下面的程序片段：<br></p>
 <div class="highlight"><pre><span></span><span class="kt">float</span><span class="w"> </span><span class="p">(</span><span class="n">Point</span><span class="o">::*</span><span class="n">pmf</span><span class="p">)()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Point</span><span class="o">::</span><span class="n">z</span><span class="p">;</span>
@@ -404,9 +451,9 @@ Thunk 技术允许 virtual table slot 继续内含一个简单的指针，因此
 </div>
 </div>
 
-<div id="outline-container-org91ca437" class="outline-4">
-<h4 id="org91ca437">多重继承下，指向 member function 的指针</h4>
-<div class="outline-text-4" id="text-org91ca437">
+<div id="outline-container-org58e2e9e" class="outline-4">
+<h4 id="org58e2e9e">多重继承下，指向 member function 的指针</h4>
+<div class="outline-text-4" id="text-org58e2e9e">
 <p>
 为了让指向 member function 的指针也能够支持多重继承和虚拟继承，Stroustrup设计了下面一个结构体：<br></p>
 <div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">__mptr</span><span class="w"> </span><span class="p">{</span>
@@ -446,9 +493,9 @@ Thunk 技术允许 virtual table slot 继续内含一个简单的指针，因此
 </div>
 </div>
 
-<div id="outline-container-org3e92d24" class="outline-4">
-<h4 id="org3e92d24">“指向 member function 的指针”的效率</h4>
-<div class="outline-text-4" id="text-org3e92d24">
+<div id="outline-container-org24ec9e2" class="outline-4">
+<h4 id="org24ec9e2">“指向 member function 的指针”的效率</h4>
+<div class="outline-text-4" id="text-org24ec9e2">
 <p>
 本节测试了函数经由一以方式调用的效率：<br></p>
 <ol class="org-ol">
@@ -468,9 +515,9 @@ Thunk 技术允许 virtual table slot 继续内含一个简单的指针，因此
 </div>
 
 
-<div id="outline-container-org12b4d45" class="outline-3">
-<h3 id="org12b4d45">4.5 inline functions</h3>
-<div class="outline-text-3" id="text-org12b4d45">
+<div id="outline-container-org94c499f" class="outline-3">
+<h3 id="org94c499f">4.5 inline functions</h3>
+<div class="outline-text-3" id="text-org94c499f">
 <p>
 处理一个 inline 函数，有两个阶段：<br></p>
 <ol class="org-ol">
@@ -483,9 +530,9 @@ Thunk 技术允许 virtual table slot 继续内含一个简单的指针，因此
 大部分编译器厂商（UNIX和PC都有）似乎认为不值得在 inline 支持技术上做详细的讨论，通常你必须进入到汇编器（assembler）中才能看到是否真的实现了 inline。<br></p>
 </div>
 
-<div id="outline-container-org62fc0da" class="outline-4">
-<h4 id="org62fc0da">形式参数（formal argument）</h4>
-<div class="outline-text-4" id="text-org62fc0da">
+<div id="outline-container-org424d91d" class="outline-4">
+<h4 id="org424d91d">形式参数（formal argument）</h4>
+<div class="outline-text-4" id="text-org424d91d">
 <p>
 在 inline 拓展期间，每一个形式参数都会被对应的实际参数取代。其副作用为，不可以只是简单地塞入程序中出现的每一个形式参数，因为这将导致对于时间参数的多次求值操作（evaluation）。<br></p>
 
@@ -532,9 +579,9 @@ Thunk 技术允许 virtual table slot 继续内含一个简单的指针，因此
 </div>
 </div>
 
-<div id="outline-container-org1d79dac" class="outline-4">
-<h4 id="org1d79dac">局部变量（local variables）</h4>
-<div class="outline-text-4" id="text-org1d79dac">
+<div id="outline-container-orgdc05d47" class="outline-4">
+<h4 id="orgdc05d47">局部变量（local variables）</h4>
+<div class="outline-text-4" id="text-orgdc05d47">
 <p>
 如果在 inline 定义中加入一个局部变量，会怎样：<br></p>
 <div class="highlight"><pre><span></span><span class="kr">inline</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">min</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>

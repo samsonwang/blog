@@ -10,8 +10,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -32,6 +32,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -48,12 +62,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -72,6 +112,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -127,6 +174,44 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Jan 18, 2024</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2024/guassian-function-in-image-processing/">高斯函数在图像处理中的应用 </a>
+    </h3>
+
+    <p>
+高斯模糊是一种常见图像模糊算法。本文介绍其算法原理和在图像处理中的操作细节。<br></p>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Nov 08, 2023</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2023/database-data-model/">数据库使用的数据模型</a>
+    </h3>
+
+    <p>
+根据数据库所使用的数据模型来划分，数据库可以分为层次数据库、网状数据库、关系数据库。<br>
+它们分别对应数据库的三种数据模型：层次模型，网状模型，关系模型。<br>
+目前最常用的也就是关系型数据库。<br></p>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Oct 18, 2023</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2023/ood-principles/">面向对象设计中的五大原则</a>
+    </h3>
+
+    <p>
+最近在看软考资料，正好遇到了一个与面向对象设计有关的题目，把五大原则拿出来好好复习一下。将五大原则分别是单一职责原则、开闭原则、里式替换换则、接口隔离原则、依赖倒转原则，将它们的英文首字母取出来就能组成单词 <code>SOLID</code> ，这些原则的主要宗旨是使软件维护和软件拓展变得更加容易。<br></p>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Aug 22, 2023</span>
     <h3>
       <a class="post-link" href="/blog/posts/2023/cpp_signed_subscript/">在C++中使用有符号数作为容器下标</a>
@@ -236,42 +321,6 @@
 
     <p>
 我们会检查空指针来判断指针是否有效。一直以来，在申请动态内存后，我都会习惯性地检查得到的指针是否为空，但是查阅了一些资料后发现这个操作是多余的。<br></p>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Jun 11, 2021</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2021/get-runtime-dll-path/">在运行时获取动态库的路径</a>
-    </h3>
-
-    <p>
-最近在开发一个动态库，这个动态库需要在运行时动态地加载另一个动态库。在库发布时会同时提供这两个动态库。库的使用者会主动加载第一个动态库，问题出现在第一个动态库加载第二个动态库时，如何确定第二个动态库的位置。<br></p>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">May 28, 2021</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2021/cpp-header-include-sequence/">C++头文件的引用顺序</a>
-    </h3>
-
-    <p>
-一般在C++开发中，会使用头文件（ <code>.h/hpp</code> ）和源文件（ <code>.cpp/cxx</code> ）将函数的声明和实现分开。当需要使用某个函数时，将声明函数所在的头文件引用进来即可。在较复杂的项目中会引用很多头文件，这些头文件可能来自于标准库、操作系统相关库、第三方库和自身项目。在实际开发过程中，多个头文件的引用顺序通常并不会有很大的影响；但是从编码风格和项目维护等方面考虑，头文件的引用顺序确是值得注意的。<br></p>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Dec 31, 2020</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2020/chinese-garbled-text-demo/">常见的中文乱码示例</a>
-    </h3>
-
-    <p>
-中文乱码通常是由字符集不匹配导致的。例如，以utf-8字符集保存的文本以gbk方式打开就会出现乱码。有网友将常见的乱码情况总结成了表格，我将其保存下来，以后再遇到乱码时查阅起来就更加方便了。<br></p>
 
   </li>
 

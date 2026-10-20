@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -152,13 +199,13 @@ redis的string是字节流（sequence of bytes），是二进制安全的，它�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orge9e117a" class="outline-2">
-<h2 id="orge9e117a">
+<div id="outline-container-org33d90d6" class="outline-2">
+<h2 id="org33d90d6">
 <span class="section-number-2">1</span> redis 数据类型</h2>
 <div class="outline-text-2" id="text-1">
 </div>
-<div id="outline-container-orgd8210dc" class="outline-3">
-<h3 id="orgd8210dc">
+<div id="outline-container-orgdc8c1cc" class="outline-3">
+<h3 id="orgdc8c1cc">
 <span class="section-number-3">1.1</span> string 类型</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -177,8 +224,8 @@ string 类型的更多操作命令详见 <a href="https://www.tutorialspoint.com
 </div>
 </div>
 
-<div id="outline-container-orgdd6e428" class="outline-3">
-<h3 id="orgdd6e428">
+<div id="outline-container-org64ef918" class="outline-3">
+<h3 id="org64ef918">
 <span class="section-number-3">1.2</span> hash 类型</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -202,8 +249,8 @@ hash 类型的更多操作命令详见 <a href="https://www.tutorialspoint.com/r
 </div>
 </div>
 
-<div id="outline-container-orgbae092c" class="outline-3">
-<h3 id="orgbae092c">
+<div id="outline-container-org881096e" class="outline-3">
+<h3 id="org881096e">
 <span class="section-number-3">1.3</span> list 类型</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -229,8 +276,8 @@ list 类型的更多操作命令详见 <a href="https://www.tutorialspoint.com/r
 </div>
 </div>
 
-<div id="outline-container-orgf815ba2" class="outline-3">
-<h3 id="orgf815ba2">
+<div id="outline-container-org4b4124a" class="outline-3">
+<h3 id="org4b4124a">
 <span class="section-number-3">1.4</span> set 类型</h3>
 <div class="outline-text-3" id="text-1-4">
 <p>
@@ -258,8 +305,8 @@ set 类型的更多操作命令详见 <a href="https://www.tutorialspoint.com/re
 </div>
 </div>
 
-<div id="outline-container-org17d4d6f" class="outline-3">
-<h3 id="org17d4d6f">
+<div id="outline-container-orgcb747db" class="outline-3">
+<h3 id="orgcb747db">
 <span class="section-number-3">1.5</span> sorted set 类型</h3>
 <div class="outline-text-3" id="text-1-5">
 <p>
@@ -288,13 +335,13 @@ sorted set 类型的更多操作命令详见 <a href="https://www.tutorialspoint
 </div>
 </div>
 
-<div id="outline-container-org924c58c" class="outline-2">
-<h2 id="org924c58c">
+<div id="outline-container-orgcaa7f95" class="outline-2">
+<h2 id="orgcaa7f95">
 <span class="section-number-2">2</span> redis 实用功能</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-org750eea9" class="outline-3">
-<h3 id="org750eea9">
+<div id="outline-container-org5b13616" class="outline-3">
+<h3 id="org5b13616">
 <span class="section-number-3">2.1</span> HyperLogLog 集合计数</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -317,8 +364,8 @@ HyperLogLog 的更多操作命令详见 <a href="https://www.tutorialspoint.com/
 </div>
 </div>
 
-<div id="outline-container-org18fce6e" class="outline-3">
-<h3 id="org18fce6e">
+<div id="outline-container-org3d32d84" class="outline-3">
+<h3 id="org3d32d84">
 <span class="section-number-3">2.2</span> Publish Subscribe 消息队列</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -352,8 +399,8 @@ PubSub 的更多操作命令详见 <a href="https://www.tutorialspoint.com/redis
 </div>
 </div>
 
-<div id="outline-container-org11017a1" class="outline-3">
-<h3 id="org11017a1">
+<div id="outline-container-orgc891aac" class="outline-3">
+<h3 id="orgc891aac">
 <span class="section-number-3">2.3</span> Transaction 事务</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
@@ -385,8 +432,8 @@ transaction 的更多操作命令详见 <a href="https://www.tutorialspoint.com/
 </div>
 </div>
 
-<div id="outline-container-org4612604" class="outline-3">
-<h3 id="org4612604">
+<div id="outline-container-org2282324" class="outline-3">
+<h3 id="org2282324">
 <span class="section-number-3">2.4</span> Scripting 脚本编程</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
@@ -407,13 +454,13 @@ scripting 的更多操作命令详见 <a href="https://www.tutorialspoint.com/re
 </div>
 </div>
 
-<div id="outline-container-org715a6fb" class="outline-2">
-<h2 id="org715a6fb">
+<div id="outline-container-org654c493" class="outline-2">
+<h2 id="org654c493">
 <span class="section-number-2">3</span> 使用辅助命令</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-orgabe64a5" class="outline-3">
-<h3 id="orgabe64a5">
+<div id="outline-container-orgcc37907" class="outline-3">
+<h3 id="orgcc37907">
 <span class="section-number-3">3.1</span> connection 相关命令</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -432,8 +479,8 @@ connection 的更多操作命令详见 <a href="https://www.tutorialspoint.com/r
 </div>
 </div>
 
-<div id="outline-container-org98541df" class="outline-3">
-<h3 id="org98541df">
+<div id="outline-container-orgad22cdb" class="outline-3">
+<h3 id="orgad22cdb">
 <span class="section-number-3">3.2</span> server 相关命令</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -459,13 +506,13 @@ server 的更多操作命令详见 <a href="https://www.tutorialspoint.com/redis
 </div>
 </div>
 
-<div id="outline-container-org1054f83" class="outline-2">
-<h2 id="org1054f83">
+<div id="outline-container-org0edf2ea" class="outline-2">
+<h2 id="org0edf2ea">
 <span class="section-number-2">4</span> 高级用法</h2>
 <div class="outline-text-2" id="text-4">
 </div>
-<div id="outline-container-orgd752186" class="outline-3">
-<h3 id="orgd752186">
+<div id="outline-container-org3f7f495" class="outline-3">
+<h3 id="org3f7f495">
 <span class="section-number-3">4.1</span> 备份数据库</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
@@ -488,8 +535,8 @@ OK
 </div>
 </div>
 
-<div id="outline-container-orgce43d55" class="outline-3">
-<h3 id="orgce43d55">
+<div id="outline-container-org6ee458c" class="outline-3">
+<h3 id="org6ee458c">
 <span class="section-number-3">4.2</span> 设置连接密码</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
@@ -515,8 +562,8 @@ OK
 </div>
 </div>
 
-<div id="outline-container-orgcda27f5" class="outline-3">
-<h3 id="orgcda27f5">
+<div id="outline-container-orgea72e21" class="outline-3">
+<h3 id="orgea72e21">
 <span class="section-number-3">4.3</span> 性能测试</h3>
 <div class="outline-text-3" id="text-4-3">
 <p>
@@ -548,8 +595,8 @@ MSET<span class="w"> </span><span class="o">(</span><span class="m">10</span><sp
 </div>
 </div>
 
-<div id="outline-container-org6e95353" class="outline-3">
-<h3 id="org6e95353">
+<div id="outline-container-orgc7a46b3" class="outline-3">
+<h3 id="orgc7a46b3">
 <span class="section-number-3">4.4</span> 客户端链接</h3>
 <div class="outline-text-3" id="text-4-4">
 <p>
@@ -574,8 +621,8 @@ MSET<span class="w"> </span><span class="o">(</span><span class="m">10</span><sp
 </div>
 </div>
 
-<div id="outline-container-org0b24a57" class="outline-3">
-<h3 id="org0b24a57">
+<div id="outline-container-orge8d6027" class="outline-3">
+<h3 id="orge8d6027">
 <span class="section-number-3">4.5</span> 流水线</h3>
 <div class="outline-text-3" id="text-4-5">
 <p>
@@ -603,8 +650,8 @@ redis
 </div>
 </div>
 
-<div id="outline-container-org9c61373" class="outline-3">
-<h3 id="org9c61373">
+<div id="outline-container-orgc52d02c" class="outline-3">
+<h3 id="orgc52d02c">
 <span class="section-number-3">4.6</span> 数据库分区</h3>
 <div class="outline-text-3" id="text-4-6">
 <p>
@@ -637,8 +684,8 @@ redis
 </div>
 
 
-<div id="outline-container-org388cd82" class="outline-2">
-<h2 id="org388cd82">
+<div id="outline-container-org48d11e0" class="outline-2">
+<h2 id="org48d11e0">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">

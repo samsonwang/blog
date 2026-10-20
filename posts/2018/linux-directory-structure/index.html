@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -168,29 +215,29 @@ bin是binary的缩写，这个目录存放使用者最经常使用的命令
       
     <time class="dt-published" datetime="2017-12-15T17:12:25+08:00" itemprop="datePublished">Dec 15, 2017</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orgfa53b61" class="outline-2">
-<h2 id="orgfa53b61">Linux系统的目录结构以及各个目录的作用</h2>
-<div class="outline-text-2" id="text-orgfa53b61">
+    <div id="outline-container-org1f6590e" class="outline-2">
+<h2 id="org1f6590e">Linux系统的目录结构以及各个目录的作用</h2>
+<div class="outline-text-2" id="text-org1f6590e">
 </div>
-<div id="outline-container-org10875d9" class="outline-3">
-<h3 id="org10875d9"><code>/bin</code></h3>
-<div class="outline-text-3" id="text-org10875d9">
+<div id="outline-container-org38c9108" class="outline-3">
+<h3 id="org38c9108"><code>/bin</code></h3>
+<div class="outline-text-3" id="text-org38c9108">
 <p>
 bin是binary的缩写，这个目录存放使用者最经常使用的命令<br></p>
 </div>
 </div>
 
-<div id="outline-container-org1d5da8e" class="outline-3">
-<h3 id="org1d5da8e"><code>/boot</code></h3>
-<div class="outline-text-3" id="text-org1d5da8e">
+<div id="outline-container-orgc7ab50f" class="outline-3">
+<h3 id="orgc7ab50f"><code>/boot</code></h3>
+<div class="outline-text-3" id="text-orgc7ab50f">
 <p>
 这里存放的是启动linux时使用的一些核心文件<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd907829" class="outline-3">
-<h3 id="orgd907829"><code>/etc</code></h3>
-<div class="outline-text-3" id="text-orgd907829">
+<div id="outline-container-org3246657" class="outline-3">
+<h3 id="org3246657"><code>/etc</code></h3>
+<div class="outline-text-3" id="text-org3246657">
 <p>
 这个目录用来存放系统管理所需要的配置文件和子目录<br></p>
 
@@ -198,97 +245,97 @@ bin是binary的缩写，这个目录存放使用者最经常使用的命令<br><
 </div>
 </div>
 
-<div id="outline-container-org71ced21" class="outline-3">
-<h3 id="org71ced21"><code>/dev</code></h3>
-<div class="outline-text-3" id="text-org71ced21">
+<div id="outline-container-org6248124" class="outline-3">
+<h3 id="org6248124"><code>/dev</code></h3>
+<div class="outline-text-3" id="text-org6248124">
 <p>
 设备文件，这目录下是所有Linux的外部设备。在Linux中设备和文件是用同种方法访问的<br></p>
 </div>
 </div>
 
-<div id="outline-container-org9912925" class="outline-3">
-<h3 id="org9912925"><code>/home</code></h3>
-<div class="outline-text-3" id="text-org9912925">
+<div id="outline-container-org19abcb9" class="outline-3">
+<h3 id="org19abcb9"><code>/home</code></h3>
+<div class="outline-text-3" id="text-org19abcb9">
 <p>
 普通用户的主目录<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orge7d0a19" class="outline-3">
-<h3 id="orge7d0a19"><code>/lib</code></h3>
-<div class="outline-text-3" id="text-orge7d0a19">
+<div id="outline-container-org83c484d" class="outline-3">
+<h3 id="org83c484d"><code>/lib</code></h3>
+<div class="outline-text-3" id="text-org83c484d">
 <p>
 这个目录存放这系统最基本的动态链接共享库<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org5961ce4" class="outline-3">
-<h3 id="org5961ce4"><code>/lost+found</code></h3>
-<div class="outline-text-3" id="text-org5961ce4">
+<div id="outline-container-org5b89134" class="outline-3">
+<h3 id="org5b89134"><code>/lost+found</code></h3>
+<div class="outline-text-3" id="text-org5b89134">
 <p>
 这个目录平时的空的，当系统不正常关机后，这里就成了一些无家可归文件的避难所。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org8662af8" class="outline-3">
-<h3 id="org8662af8"><code>/mnt</code></h3>
-<div class="outline-text-3" id="text-org8662af8">
+<div id="outline-container-org380ff17" class="outline-3">
+<h3 id="org380ff17"><code>/mnt</code></h3>
+<div class="outline-text-3" id="text-org380ff17">
 <p>
 这个目录是空的，系统提供这个目录是让用户临时挂载别的文件系统。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3e318cd" class="outline-3">
-<h3 id="org3e318cd"><code>/proc</code></h3>
-<div class="outline-text-3" id="text-org3e318cd">
+<div id="outline-container-orga7dee03" class="outline-3">
+<h3 id="orga7dee03"><code>/proc</code></h3>
+<div class="outline-text-3" id="text-orga7dee03">
 <p>
 这个目录是一个虚拟的目录，它是系统内存的映射，我们可以通过访问这个目录来获取系统信息。也就是说这个目录的内容不再硬盘上而是在内存里。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org052bf4e" class="outline-3">
-<h3 id="org052bf4e"><code>/root</code></h3>
-<div class="outline-text-3" id="text-org052bf4e">
+<div id="outline-container-org9582d51" class="outline-3">
+<h3 id="org9582d51"><code>/root</code></h3>
+<div class="outline-text-3" id="text-org9582d51">
 <p>
 系统管理员（也叫超级用户）的主目录<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org4f1ce49" class="outline-3">
-<h3 id="org4f1ce49"><code>/sbin</code></h3>
-<div class="outline-text-3" id="text-org4f1ce49">
+<div id="outline-container-orgef03ab6" class="outline-3">
+<h3 id="orgef03ab6"><code>/sbin</code></h3>
+<div class="outline-text-3" id="text-orgef03ab6">
 <p>
 s代表超级用户（super user）,也就是说这里存放的是系统管理员使用的管理程序。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org598b135" class="outline-3">
-<h3 id="org598b135"><code>/tmp</code></h3>
-<div class="outline-text-3" id="text-org598b135">
+<div id="outline-container-org8e73901" class="outline-3">
+<h3 id="org8e73901"><code>/tmp</code></h3>
+<div class="outline-text-3" id="text-org8e73901">
 <p>
 存放临时文件<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org6b73c8c" class="outline-3">
-<h3 id="org6b73c8c"><code>/var</code></h3>
-<div class="outline-text-3" id="text-org6b73c8c">
+<div id="outline-container-orgad34310" class="outline-3">
+<h3 id="orgad34310"><code>/var</code></h3>
+<div class="outline-text-3" id="text-orgad34310">
 <p>
 这个目录中存放这哪些不断在扩充着的东西，为了保持 <code>/usr</code> 的相对稳定性，那些经常被修改的目录可以放在这个目录下。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org5094662" class="outline-3">
-<h3 id="org5094662"><code>/usr</code></h3>
-<div class="outline-text-3" id="text-org5094662">
+<div id="outline-container-org9be3736" class="outline-3">
+<h3 id="org9be3736"><code>/usr</code></h3>
+<div class="outline-text-3" id="text-org9be3736">
 <p>
 这是最庞大的目录，我们要用到的应用程序和文件几乎都存放在这个目录下<br></p>
 </div>

@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -145,10 +192,10 @@ char 类型的符号特性
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgf1a8958" class="outline-2">
-<h2 id="orgf1a8958">
+<div id="outline-container-org236b614" class="outline-2">
+<h2 id="org236b614">
 <code>char</code> 类型的符号特性</h2>
-<div class="outline-text-2" id="text-orgf1a8958">
+<div class="outline-text-2" id="text-org236b614">
 <p>
 最近在移植一个数据压缩算法时遇到这样的问题：原始代码是在x86架构的Windows操作系统上运行的，移植目标是ARM架构的Linux操作系统，在移植后发现某个解压缩算法的处理结果不正确。<br></p>
 
@@ -177,9 +224,9 @@ The type <code>char</code> , <code>signed char</code> and <code>unsigned char</c
 </div>
 
 
-<div id="outline-container-org4fc411b" class="outline-2">
-<h2 id="org4fc411b">使用 <code>uint8_t</code> 表示单字节无符号整数</h2>
-<div class="outline-text-2" id="text-org4fc411b">
+<div id="outline-container-org7fccbfa" class="outline-2">
+<h2 id="org7fccbfa">使用 <code>uint8_t</code> 表示单字节无符号整数</h2>
+<div class="outline-text-2" id="text-org7fccbfa">
 <p>
 通常，当我们把 <code>char</code> 作为字符类型使用时并不需要考虑它的符号特性，因为字符类型变量存储的ASCII码在显示时会转化为英文字母。这时， <code>char</code> 是有符号的或无符号的并不影响它所存储的ASCII码。<br></p>
 
@@ -189,9 +236,9 @@ The type <code>char</code> , <code>signed char</code> and <code>unsigned char</c
 </div>
 
 
-<div id="outline-container-orgd8c1cf8" class="outline-2">
-<h2 id="orgd8c1cf8">相关的编译器选项</h2>
-<div class="outline-text-2" id="text-orgd8c1cf8">
+<div id="outline-container-orgd8dd19b" class="outline-2">
+<h2 id="orgd8dd19b">相关的编译器选项</h2>
+<div class="outline-text-2" id="text-orgd8dd19b">
 <p>
 gcc 提供了 <code>-fsigned-char</code> 和 <code>-funsigned-char</code> 编译选项，用于指定 <code>char</code> 类型的默认符号特性。但是大多数情况下并不推荐使用使用这两个参数。因为修改后可能在极端情况下破坏调用约定（call conversion）和应用程序二进制接口（ABI, application binary interface）。<br></p>
 
@@ -204,9 +251,9 @@ msvc 提供了 <code>/J</code> 参数，用于将默认的 <code>char</code> 类
 </div>
 
 
-<div id="outline-container-org1a86fd7" class="outline-2">
-<h2 id="org1a86fd7">参考资料</h2>
-<div class="outline-text-2" id="text-org1a86fd7">
+<div id="outline-container-org0c1dbee" class="outline-2">
+<h2 id="org0c1dbee">参考资料</h2>
+<div class="outline-text-2" id="text-org0c1dbee">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/46463064/what-causes-a-char-to-be-signed-or-unsigned-when-using-gcc">stackoverflow - char signed or unsigned</a><br>

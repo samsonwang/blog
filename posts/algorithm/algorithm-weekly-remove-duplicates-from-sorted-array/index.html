@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -147,9 +194,9 @@ leetcode算法题第26道，难度为easy，这是非常基础的一道题。<br
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org0680acd" class="outline-2">
-<h2 id="org0680acd">Description</h2>
-<div class="outline-text-2" id="text-org0680acd">
+<div id="outline-container-orgf1dea0d" class="outline-2">
+<h2 id="orgf1dea0d">Description</h2>
+<div class="outline-text-2" id="text-orgf1dea0d">
 <p>
 Given a sorted array nums, remove the duplicates <b>in-place</b> such that each element appear only once and return the new length.<br></p>
 
@@ -205,13 +252,13 @@ for (int i = 0; i &lt; len; i++) {
 </div>
 </div>
 
-<div id="outline-container-orgb96431a" class="outline-2">
-<h2 id="orgb96431a">Solution</h2>
-<div class="outline-text-2" id="text-orgb96431a">
+<div id="outline-container-org9b57b85" class="outline-2">
+<h2 id="org9b57b85">Solution</h2>
+<div class="outline-text-2" id="text-org9b57b85">
 </div>
-<div id="outline-container-org59a1e66" class="outline-3">
-<h3 id="org59a1e66">Approach 1</h3>
-<div class="outline-text-3" id="text-org59a1e66">
+<div id="outline-container-orge62bdf5" class="outline-3">
+<h3 id="orge62bdf5">Approach 1</h3>
+<div class="outline-text-3" id="text-orge62bdf5">
 <p>
 这到题难度不高，方法也很容易想到，下面就是我的解法。容易看出时间复杂度为O(n)。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">removeDuplicates</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -233,9 +280,9 @@ for (int i = 0; i &lt; len; i++) {
 </div>
 </div>
 
-<div id="outline-container-orgc6d1878" class="outline-3">
-<h3 id="orgc6d1878">Approach 2</h3>
-<div class="outline-text-3" id="text-orgc6d1878">
+<div id="outline-container-org97ba10a" class="outline-3">
+<h3 id="org97ba10a">Approach 2</h3>
+<div class="outline-text-3" id="text-org97ba10a">
 <p>
 在我的答案AC后，我查看了下别人的提交记录，结果真的让我十分意外， <code>unique</code> 这个接口我还是不熟练。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">removeDuplicates</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>

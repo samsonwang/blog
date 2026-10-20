@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -145,9 +192,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgdffb0ab" class="outline-2">
-<h2 id="orgdffb0ab">路由</h2>
-<div class="outline-text-2" id="text-orgdffb0ab">
+<div id="outline-container-org93a06fd" class="outline-2">
+<h2 id="org93a06fd">路由</h2>
+<div class="outline-text-2" id="text-org93a06fd">
 <p>
 路由器（router）的作用是连接多个逻辑上分开的网络，逻辑网络是代表一个单独的网络或者一个子网。当数据从一个子网传输到另一个子网时，可通过路由器的路由功能来完成。路由器工作在OSI参考模型第三层网络层。路由器通过动态维护路由表来反映当前的网络拓扑，并通过网络上其他路由器交换路由和链路信息来维护路由表。<br></p>
 
@@ -159,17 +206,17 @@
 </div>
 </div>
 
-<div id="outline-container-org7295037" class="outline-2">
-<h2 id="org7295037">调制解调器</h2>
-<div class="outline-text-2" id="text-org7295037">
+<div id="outline-container-org7cac45d" class="outline-2">
+<h2 id="org7cac45d">调制解调器</h2>
+<div class="outline-text-2" id="text-org7cac45d">
 <p>
 调制解调器（modem）的作用是将计算机的数字信号转换为可沿对电话线传送的模拟信号，而这些模拟信号又可被线路另一端的另一个调制解调器接收，并译成计算机可懂的语言。modem这个名字是modulator（调制器）与demodulator（解调器）的简称。这是一个比较老的概念了，以前的网络提供商通过电话线传输数据，现在大多数直接光线入户，也就省去了调制解调器了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org83d8da0" class="outline-2">
-<h2 id="org83d8da0">交换机</h2>
-<div class="outline-text-2" id="text-org83d8da0">
+<div id="outline-container-org2e8bf95" class="outline-2">
+<h2 id="org2e8bf95">交换机</h2>
+<div class="outline-text-2" id="text-org2e8bf95">
 <p>
 交换机工作在OSI参考模型的链路层。交换机内部会在每个端口成功连接时，通过将MAC地址和端口对应，形成一张MAC表。在今后的通讯中，发往该MAC地址的数据包将仅送往其对应的端口，而不是所有的端口。因此，交换机可用于划分数据链路层广播，即冲突域；但它不能划分网络层广播，即广播域。<br></p>
 
@@ -181,9 +228,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgb9ebce9" class="outline-2">
-<h2 id="orgb9ebce9">参考资料</h2>
-<div class="outline-text-2" id="text-orgb9ebce9">
+<div id="outline-container-org3b6ce33" class="outline-2">
+<h2 id="org3b6ce33">参考资料</h2>
+<div class="outline-text-2" id="text-org3b6ce33">
 <ul class="org-ul">
 <li>
 <a href="https://www.howtogeek.com/234233/whats-the-difference-between-a-modem-and-a-router/">howtogeek.com - difference between modem and router</a><br>

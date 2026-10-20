@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -175,8 +222,8 @@ string
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgac24cf6" class="outline-2">
-<h2 id="orgac24cf6">
+<div id="outline-container-orge8b7f9b" class="outline-2">
+<h2 id="orge8b7f9b">
 <span class="section-number-2">1</span> 简介</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -291,8 +338,8 @@ redis 常用的类型主要是 String、List、Hash、Set、ZSet 这5种。<br><
 </div>
 
 
-<div id="outline-container-org7bd169d" class="outline-2">
-<h2 id="org7bd169d">
+<div id="outline-container-orgc1b96d4" class="outline-2">
+<h2 id="orgc1b96d4">
 <span class="section-number-2">2</span> redis 的底层存储对象 redisObject</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -354,8 +401,8 @@ redis 所有的数据结构类型<br></p>
 </div>
 
 
-<div id="outline-container-orgf06efbd" class="outline-2">
-<h2 id="orgf06efbd">
+<div id="outline-container-org852749b" class="outline-2">
+<h2 id="org852749b">
 <span class="section-number-2">3</span> string 类型</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -378,8 +425,8 @@ raw：大于39个字节的字符串<br></p>
 </div>
 
 
-<div id="outline-container-org16d0a7f" class="outline-2">
-<h2 id="org16d0a7f">
+<div id="outline-container-org76c8561" class="outline-2">
+<h2 id="org76c8561">
 <span class="section-number-2">4</span> list 类型</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -403,8 +450,8 @@ List对象的底层实现是quicklist（快速列表，是ziplist 压缩列表 �
 </div>
 
 
-<div id="outline-container-org017725f" class="outline-2">
-<h2 id="org017725f">
+<div id="outline-container-orgd007534" class="outline-2">
+<h2 id="orgd007534">
 <span class="section-number-2">5</span> hash 类型</h2>
 <div class="outline-text-2" id="text-5">
 <p>
@@ -424,8 +471,8 @@ hashtable哈希表可以实现O(1)复杂度的读写操作，因此效率很高�
 </div>
 
 
-<div id="outline-container-org8d00ba7" class="outline-2">
-<h2 id="org8d00ba7">
+<div id="outline-container-org6bde220" class="outline-2">
+<h2 id="org6bde220">
 <span class="section-number-2">6</span> set 类型</h2>
 <div class="outline-text-2" id="text-6">
 <p>
@@ -445,8 +492,8 @@ Set集合对象的底层实现可以是intset（整数集合）或者hashtable�
 </div>
 
 
-<div id="outline-container-org11d826e" class="outline-2">
-<h2 id="org11d826e">
+<div id="outline-container-orgffd00b1" class="outline-2">
+<h2 id="orgffd00b1">
 <span class="section-number-2">7</span> sorted set 类型</h2>
 <div class="outline-text-2" id="text-7">
 <p>
@@ -465,8 +512,8 @@ ZSet有序集合对象底层实现可以是ziplist（压缩列表）或者skipli
 </div>
 
 
-<div id="outline-container-orgf43d301" class="outline-2">
-<h2 id="orgf43d301">
+<div id="outline-container-orgf22a643" class="outline-2">
+<h2 id="orgf22a643">
 <span class="section-number-2">8</span> 参考资料</h2>
 <div class="outline-text-2" id="text-8">
 <ul class="org-ul">

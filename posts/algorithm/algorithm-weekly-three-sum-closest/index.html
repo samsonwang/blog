@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -132,9 +179,9 @@ Given an array nums of n integers and an integer target, find three integers in 
       
     <time class="dt-published" datetime="2018-09-16T16:44:14+08:00" itemprop="datePublished">Sep 16, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org03e2850" class="outline-2">
-<h2 id="org03e2850">Description</h2>
-<div class="outline-text-2" id="text-org03e2850">
+    <div id="outline-container-org21b0206" class="outline-2">
+<h2 id="org21b0206">Description</h2>
+<div class="outline-text-2" id="text-org21b0206">
 <p>
 Given an array nums of n integers and an integer target, find three integers in nums such that the sum is closest to target. Return the sum of the three integers. You may assume that each input would have exactly one solution.<br></p>
 
@@ -150,13 +197,13 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 </div>
 </div>
 
-<div id="outline-container-orgfff8444" class="outline-2">
-<h2 id="orgfff8444">Solution</h2>
-<div class="outline-text-2" id="text-orgfff8444">
+<div id="outline-container-org95e84c5" class="outline-2">
+<h2 id="org95e84c5">Solution</h2>
+<div class="outline-text-2" id="text-org95e84c5">
 </div>
-<div id="outline-container-org90c1a1e" class="outline-3">
-<h3 id="org90c1a1e">Approach 1</h3>
-<div class="outline-text-3" id="text-org90c1a1e">
+<div id="outline-container-org07e0748" class="outline-3">
+<h3 id="org07e0748">Approach 1</h3>
+<div class="outline-text-3" id="text-org07e0748">
 <p>
 这道题与之前的“3Sum”十分类似，做起来思路是非常相似的，最容易想到的就是暴力解法，穷举出所有的组合，进而找出最接近的。<br></p>
 
@@ -190,9 +237,9 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 </div>
 </div>
 
-<div id="outline-container-org6687866" class="outline-3">
-<h3 id="org6687866">Approach 2</h3>
-<div class="outline-text-3" id="text-org6687866">
+<div id="outline-container-org5e97a12" class="outline-3">
+<h3 id="org5e97a12">Approach 2</h3>
+<div class="outline-text-3" id="text-org5e97a12">
 <p>
 套用之前“3Sum”的O(n<sup>2</sup>)解法，下面的解法也是很容易想到的。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">threeSumClosest</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">target</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -240,9 +287,9 @@ The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
 </div>
 </div>
 
-<div id="outline-container-org760edd6" class="outline-2">
-<h2 id="org760edd6">Reference</h2>
-<div class="outline-text-2" id="text-org760edd6">
+<div id="outline-container-orgba1e3c7" class="outline-2">
+<h2 id="orgba1e3c7">Reference</h2>
+<div class="outline-text-2" id="text-orgba1e3c7">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/3sum/description/">leetcode 3 Sum</a><br>

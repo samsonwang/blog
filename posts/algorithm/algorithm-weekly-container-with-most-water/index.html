@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -132,9 +179,9 @@ Given n non-negative integers a1, a2, …, an , where each represents a point at
       
     <time class="dt-published" datetime="2018-08-29T11:36:33+08:00" itemprop="datePublished">Aug 29, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orgd49d1b9" class="outline-2">
-<h2 id="orgd49d1b9">Description</h2>
-<div class="outline-text-2" id="text-orgd49d1b9">
+    <div id="outline-container-orgf7b6a12" class="outline-2">
+<h2 id="orgf7b6a12">Description</h2>
+<div class="outline-text-2" id="text-orgf7b6a12">
 <p>
 Given n non-negative integers a1, a2, …, an , where each represents a point at coordinate (i, ai). n vertical lines are drawn such that the two endpoints of line i is at (i, ai) and (i, 0). Find two lines, which together with x-axis forms a container, such that the container contains the most water.<br></p>
 
@@ -151,13 +198,13 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgac7b014" class="outline-2">
-<h2 id="orgac7b014">Solution</h2>
-<div class="outline-text-2" id="text-orgac7b014">
+<div id="outline-container-org16d3467" class="outline-2">
+<h2 id="org16d3467">Solution</h2>
+<div class="outline-text-2" id="text-org16d3467">
 </div>
-<div id="outline-container-org235baf1" class="outline-3">
-<h3 id="org235baf1">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org235baf1">
+<div id="outline-container-org61f0060" class="outline-3">
+<h3 id="org61f0060">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org61f0060">
 <p>
 暴力解法是最容易想到的解法了，然而暴力解法肯定不是本题的意图。<br></p>
 
@@ -183,9 +230,9 @@ Output: 49<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge3b2c2e" class="outline-3">
-<h3 id="orge3b2c2e">Approach 2</h3>
-<div class="outline-text-3" id="text-orge3b2c2e">
+<div id="outline-container-orge639950" class="outline-3">
+<h3 id="orge639950">Approach 2</h3>
+<div class="outline-text-3" id="text-orge639950">
 <p>
 我在leetcode上看到这样一种解法，这种解法从逻辑和形式上看上不复杂，但是我的疑问在是否有严密的数学推导和论证。<br></p>
 
@@ -228,9 +275,9 @@ We starts with the widest container, <code>l = 0</code> and <code>r = n - 1</cod
 </div>
 </div>
 
-<div id="outline-container-org3da7a99" class="outline-2">
-<h2 id="org3da7a99">Reference</h2>
-<div class="outline-text-2" id="text-org3da7a99">
+<div id="outline-container-orgfd4b8a8" class="outline-2">
+<h2 id="orgfd4b8a8">Reference</h2>
+<div class="outline-text-2" id="text-orgfd4b8a8">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/container-with-most-water/solution/">leetcode problem solution</a><br>

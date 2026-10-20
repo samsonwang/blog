@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -152,9 +199,9 @@ global是一个源代码标签索引系统，它的特点如下：
 
     </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orgdf13222" class="outline-2">
-<h2 id="orgdf13222">1 引言</h2>
-<div class="outline-text-2" id="text-orgdf13222">
+    <div id="outline-container-org7a137a7" class="outline-2">
+<h2 id="org7a137a7">1 引言</h2>
+<div class="outline-text-2" id="text-org7a137a7">
 <p>
 本文主要针对emacs中的global的配置和使用方法做了简要介绍。global是代码标签化索引工具，能够在许多源码中快速定位函数的实现位置。我主要使用global来辅助代码跳转；还有一种用法是用来辅助代码补全，目前正在研究中。<br></p>
 
@@ -162,9 +209,9 @@ global是一个源代码标签索引系统，它的特点如下：
 </div>
 </div>
 
-<div id="outline-container-org29ea501" class="outline-2">
-<h2 id="org29ea501">2 GNU Global相关介绍</h2>
-<div class="outline-text-2" id="text-org29ea501">
+<div id="outline-container-org05d4243" class="outline-2">
+<h2 id="org05d4243">2 GNU Global相关介绍</h2>
+<div class="outline-text-2" id="text-org05d4243">
 <p>
 global是一个源代码标签索引系统，它的特点如下：<br></p>
 <ul class="org-ul">
@@ -181,9 +228,9 @@ global的内置解析器能够完成C, C++, Yacc, Java, PHP4和汇编的语法�
 </div>
 </div>
 
-<div id="outline-container-org8f1a3e5" class="outline-2">
-<h2 id="org8f1a3e5">3 GNU Global基本用法</h2>
-<div class="outline-text-2" id="text-org8f1a3e5">
+<div id="outline-container-org1620c77" class="outline-2">
+<h2 id="org1620c77">3 GNU Global基本用法</h2>
+<div class="outline-text-2" id="text-org1620c77">
 <p>
 直接在源文件的根目录中运行gtags，就会生成索引文件。<br></p>
 <ul class="org-ul">
@@ -199,9 +246,9 @@ global的内置解析器能够完成C, C++, Yacc, Java, PHP4和汇编的语法�
 </div>
 </div>
 
-<div id="outline-container-org2d726c8" class="outline-2">
-<h2 id="org2d726c8">4 GNU Global高级用法</h2>
-<div class="outline-text-2" id="text-org2d726c8">
+<div id="outline-container-orge618c0a" class="outline-2">
+<h2 id="orge618c0a">4 GNU Global高级用法</h2>
+<div class="outline-text-2" id="text-orge618c0a">
 <p>
 高级用法主要涉及对系统的头文件目录中的文件进行索引。<br>
 系统头文件目录通常来说是只读的，而且我们也不希望产生的临时文件污染系统头文件目录。可以通过修改 <code>MAKEOBJDIRPREFIX</code> 和 <code>GTAGSLIBPATH</code> 等环境变量实现。但是目前我还没有研究出来正确的使用方法。<br>
@@ -212,18 +259,18 @@ global的内置解析器能够完成C, C++, Yacc, Java, PHP4和汇编的语法�
 </div>
 </div>
 
-<div id="outline-container-org6dccfb9" class="outline-2">
-<h2 id="org6dccfb9">5 Windows下的Global使用技巧</h2>
-<div class="outline-text-2" id="text-org6dccfb9">
+<div id="outline-container-orgb0ebd07" class="outline-2">
+<h2 id="orgb0ebd07">5 Windows下的Global使用技巧</h2>
+<div class="outline-text-2" id="text-orgb0ebd07">
 <p>
 对于unix系统来说，一般通过自带的包管理器完成global的安装，这时global是能够直接从命令行调用的。而对于windows系统来说，我下载的是软件压缩包，在解压后需要将可执行文件的目录加入到系统环境变量 <code>PATH</code> 中。这样就能够通过任意一个命令行工具调用global。<br>
 同理，后续在emacs中的使用也方便很多。我之前也尝试过使用lisp调用 <code>setenv</code> 接口将global运行目录添加到环境变量中，但是并不奏效。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3a5fe2c" class="outline-2">
-<h2 id="org3a5fe2c">6 在emacs中使用global</h2>
-<div class="outline-text-2" id="text-org3a5fe2c">
+<div id="outline-container-org36da6cf" class="outline-2">
+<h2 id="org36da6cf">6 在emacs中使用global</h2>
+<div class="outline-text-2" id="text-org36da6cf">
 <p>
 global作为GNU系列软件，已经为emacs提供了插件，在软件发布时的压缩包中就能找到，文件名为 <code>gtags.el</code> 。但是，我推荐使用helm gtags作为global的交互接口。<br></p>
 

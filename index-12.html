@@ -10,8 +10,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -32,6 +32,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -48,12 +62,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -72,6 +112,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -127,6 +174,53 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Apr 11, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2018/fifo-pipe-unix-domain-socket/">Linux下的FIFO、pipe、unix domain socket漫谈</a>
+    </h3>
+
+    <p>
+在做Linux开发时，经常会接触 <code>管道</code> 、 <code>AF_UNIX</code> 等相关词汇，为了弄清他们之间的关系，查阅了一些资料，将结果整理并记录下来。<br></p>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Apr 03, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2018/debug-with-gdb-on-linux-2/">Linux下使用gdb的调试技巧（2）</a>
+    </h3>
+
+    <p>
+本文重点介绍在gdb模式下的常用命令。<br></p>
+
+  </li>
+
+
+  <li>
+    <span class="post-meta">Apr 03, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2018/change-linux-timezone-with-cli/">使用命令行修改Linux系统的时区</a>
+    </h3>
+
+    <p>
+<b>系统时区目录</b> 系统支持时区的配置文件存放在 <code>/usr/share/zoneinfo/</code> 目录下，可以进入到该目录下查看和搜索目标时区的相关配置文件。<br></p>
+
+<p>
+<b>时区配置文件</b> Linux系统的当前时区配置文件存放在 <code>/etc/localtime</code> , 可以将时区配置文件拷贝到该位置下，也可以建立一个软连接指向系统时区目录中的配置文件。<br></p>
+
+<p>
+<b>操作示例</b> 以将系统的时区改为中国时间为例，以下操作先将旧的时区配置文件删掉，然后建立新的时区配置文件的符号链接。<br></p>
+<div class="highlight"><pre><span></span>rm /etc/localtime
+ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+</pre></div>
+<p>
+完成以上操作后，可以执行 <code>date</code> 命令查看修改效果。<br></p>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Mar 28, 2018</span>
     <h3>
       <a class="post-link" href="/blog/posts/2018/linux-command-examples-netstat/">Linux常用命令行指令 - netstat</a>
@@ -157,41 +251,41 @@
     <p>
 tcpdump常用于网络抓包，能够将抓取的包保存下来，这样就能进一步深入分析。抓包保存的文件可以使用tcpdump进行查看，也可以借助第三方软件（如wireshark）进行辅助分析。<br></p>
 
-<div id="outline-container-orgac5092a" class="outline-2">
-<h2 id="orgac5092a">1. 抓取指定网络设备上的包</h2>
-<div class="outline-text-2" id="text-orgac5092a">
+<div id="outline-container-org3fd5f4f" class="outline-2">
+<h2 id="org3fd5f4f">1. 抓取指定网络设备上的包</h2>
+<div class="outline-text-2" id="text-org3fd5f4f">
 <p>
 抓取网卡eth0上的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orga1b3d4f" class="outline-2">
-<h2 id="orga1b3d4f">2. 限制抓包的数量</h2>
-<div class="outline-text-2" id="text-orga1b3d4f">
+<div id="outline-container-orga8ed934" class="outline-2">
+<h2 id="orga8ed934">2. 限制抓包的数量</h2>
+<div class="outline-text-2" id="text-orga8ed934">
 <p>
 只抓取5个包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -c 5 -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org04e5a29" class="outline-2">
-<h2 id="org04e5a29">3. 将抓取的包以ASCII的方式打印出来</h2>
-<div class="outline-text-2" id="text-org04e5a29">
+<div id="outline-container-org5796d55" class="outline-2">
+<h2 id="org5796d55">3. 将抓取的包以ASCII的方式打印出来</h2>
+<div class="outline-text-2" id="text-org5796d55">
 <div class="highlight"><pre><span></span>tcpdump -A -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org6183eea" class="outline-2">
-<h2 id="org6183eea">4. 将抓取的包以十六进制的方式打印出来</h2>
-<div class="outline-text-2" id="text-org6183eea">
+<div id="outline-container-org708b4c3" class="outline-2">
+<h2 id="org708b4c3">4. 将抓取的包以十六进制的方式打印出来</h2>
+<div class="outline-text-2" id="text-org708b4c3">
 <div class="highlight"><pre><span></span>tcpdump -XX -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org16f33fc" class="outline-2">
-<h2 id="org16f33fc">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
-<div class="outline-text-2" id="text-org16f33fc">
+<div id="outline-container-org841ce15" class="outline-2">
+<h2 id="org841ce15">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
+<div class="outline-text-2" id="text-org841ce15">
 <p>
 增加 <code>-t</code> 参数能够将抓取到的包中的时间以方便阅读的形式打印出来，使用 <code>-tttt</code> 参数能够将包中的时间戳以更详细的方式打印出来。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -t -i eth0
@@ -199,23 +293,23 @@ tcpdump -tttt -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orga2862cc" class="outline-2">
-<h2 id="orga2862cc">6. 将抓取的包写入到文件中</h2>
-<div class="outline-text-2" id="text-orga2862cc">
+<div id="outline-container-org533ee0f" class="outline-2">
+<h2 id="org533ee0f">6. 将抓取的包写入到文件中</h2>
+<div class="outline-text-2" id="text-org533ee0f">
 <div class="highlight"><pre><span></span>tcpdump -w netdump.pcap -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgf38e673" class="outline-2">
-<h2 id="orgf38e673">7. 读取抓到的包</h2>
-<div class="outline-text-2" id="text-orgf38e673">
+<div id="outline-container-orgfe71ab6" class="outline-2">
+<h2 id="orgfe71ab6">7. 读取抓到的包</h2>
+<div class="outline-text-2" id="text-orgfe71ab6">
 <div class="highlight"><pre><span></span>tcpdump -r netdump.pcap
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgb06eceb" class="outline-2">
-<h2 id="orgb06eceb">8. 在抓到的包中显示ip地址</h2>
-<div class="outline-text-2" id="text-orgb06eceb">
+<div id="outline-container-org0fa9740" class="outline-2">
+<h2 id="org0fa9740">8. 在抓到的包中显示ip地址</h2>
+<div class="outline-text-2" id="text-org0fa9740">
 <p>
 增加 <code>-n</code> 参数不会解析主机名，增加 <code>-nn</code> 参数不会解析主机名和端口名<br></p>
 <div class="highlight"><pre><span></span>tcpdump -n -i eth0
@@ -223,16 +317,16 @@ tcpdump -nn -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org0dd3656" class="outline-2">
-<h2 id="org0dd3656">9. 以绝对值显示包的ISN号</h2>
-<div class="outline-text-2" id="text-org0dd3656">
+<div id="outline-container-org2eeaf3e" class="outline-2">
+<h2 id="org2eeaf3e">9. 以绝对值显示包的ISN号</h2>
+<div class="outline-text-2" id="text-org2eeaf3e">
 <div class="highlight"><pre><span></span>tcpdump -S -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org30fb9a7" class="outline-2">
-<h2 id="org30fb9a7">10. 对抓取到的包显示更详细的信息</h2>
-<div class="outline-text-2" id="text-org30fb9a7">
+<div id="outline-container-orga245a0b" class="outline-2">
+<h2 id="orga245a0b">10. 对抓取到的包显示更详细的信息</h2>
+<div class="outline-text-2" id="text-orga245a0b">
 <p>
 参数 <code>-v</code> 是verbose的缩写，以下命令表示对抓取到的包显示更详细的信息。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -v -i eth0
@@ -241,9 +335,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org72f6171" class="outline-2">
-<h2 id="org72f6171">11. 对抓到的包进行协议类型过滤</h2>
-<div class="outline-text-2" id="text-org72f6171">
+<div id="outline-container-org29e3515" class="outline-2">
+<h2 id="org29e3515">11. 对抓到的包进行协议类型过滤</h2>
+<div class="outline-text-2" id="text-org29e3515">
 <p>
 支持的协议类型有：fddi, tr, wlan, ip, ip6, arp, rarp, decnet, tcp, udp<br>
 以下命令只会抓取网卡eth0上的arp包<br></p>
@@ -251,9 +345,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgb5f12fb" class="outline-2">
-<h2 id="orgb5f12fb">12. 在抓包时对包进行大小过滤</h2>
-<div class="outline-text-2" id="text-orgb5f12fb">
+<div id="outline-container-org7abf185" class="outline-2">
+<h2 id="org7abf185">12. 在抓包时对包进行大小过滤</h2>
+<div class="outline-text-2" id="text-org7abf185">
 <p>
 下面的命令会分别抓取大于1024字节和小于1024字节的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0 greater 1024
@@ -261,16 +355,16 @@ tcpdump -i eth0 less 1024
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org73f84c0" class="outline-2">
-<h2 id="org73f84c0">13. 抓取指定端口上的包</h2>
-<div class="outline-text-2" id="text-org73f84c0">
+<div id="outline-container-orgf545191" class="outline-2">
+<h2 id="orgf545191">13. 抓取指定端口上的包</h2>
+<div class="outline-text-2" id="text-orgf545191">
 <div class="highlight"><pre><span></span>tcpdump -i eth0 port 22
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org5b71a9c" class="outline-2">
-<h2 id="org5b71a9c">14. 抓取发往指定目的和端口上包</h2>
-<div class="outline-text-2" id="text-org5b71a9c">
+<div id="outline-container-org40713d0" class="outline-2">
+<h2 id="org40713d0">14. 抓取发往指定目的和端口上包</h2>
+<div class="outline-text-2" id="text-org40713d0">
 <p>
 可以使用 <code>and</code> 和 <code>or</code> 对过滤条件进行组合以实现精确的抓包。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -w net_dump.pcap -i eth0 dst 10.181.140.216 and port 22
@@ -278,9 +372,9 @@ tcpdump -i eth0 less 1024
 </div>
 </div>
 
-<div id="outline-container-org2d288ef" class="outline-2">
-<h2 id="org2d288ef">常用tcpdump命令示例</h2>
-<div class="outline-text-2" id="text-org2d288ef">
+<div id="outline-container-org80ddcd9" class="outline-2">
+<h2 id="org80ddcd9">常用tcpdump命令示例</h2>
+<div class="outline-text-2" id="text-org80ddcd9">
 <div class="highlight"><pre><span></span>tcpdump –i any 'port 8888'
 tcpdump –i any 'tcp port 8888'
 tcpdump –i any 'tcp src port 8888'
@@ -290,9 +384,9 @@ tcpdump -i any 'src host 127.0.0.1 and tcp src port 12345' -XX -nn -vv
 </div>
 </div>
 
-<div id="outline-container-org8370170" class="outline-2">
-<h2 id="org8370170">参考资料</h2>
-<div class="outline-text-2" id="text-org8370170">
+<div id="outline-container-org8820242" class="outline-2">
+<h2 id="org8820242">参考资料</h2>
+<div class="outline-text-2" id="text-org8820242">
 <ul class="org-ul">
 <li>
 <a href="https://danielmiessler.com/study/tcpdump/">danielmiessler.com tcpdump</a><br>
@@ -331,25 +425,25 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 <p>
 下面就给出了几种常见的用法，需要注意的是有些指令需要root权限执行。<br></p>
 
-<div id="outline-container-org2c416de" class="outline-2">
-<h2 id="org2c416de">1. 查看打开指定文件的进程</h2>
-<div class="outline-text-2" id="text-org2c416de">
+<div id="outline-container-org1e88ecc" class="outline-2">
+<h2 id="org1e88ecc">1. 查看打开指定文件的进程</h2>
+<div class="outline-text-2" id="text-org1e88ecc">
 <div class="highlight"><pre><span></span>lsof /var/syslog.log
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org5d720cd" class="outline-2">
-<h2 id="org5d720cd">2. 查看指定目录下打开的文件</h2>
-<div class="outline-text-2" id="text-org5d720cd">
+<div id="outline-container-orgf655fbc" class="outline-2">
+<h2 id="orgf655fbc">2. 查看指定目录下打开的文件</h2>
+<div class="outline-text-2" id="text-orgf655fbc">
 <div class="highlight"><pre><span></span>lsof +D /home/
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org7610b00" class="outline-2">
-<h2 id="org7610b00">3. 查看以指定进程名所有打开的文件</h2>
-<div class="outline-text-2" id="text-org7610b00">
+<div id="outline-container-org1229bd5" class="outline-2">
+<h2 id="org1229bd5">3. 查看以指定进程名所有打开的文件</h2>
+<div class="outline-text-2" id="text-org1229bd5">
 <p>
 使用 <code>-c</code> 命令能够查看指定进程名使用的文件，允许在一个命令行指令中使用多个 <code>-c</code> 参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -c procname
@@ -357,9 +451,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org728673a" class="outline-2">
-<h2 id="org728673a">4. 查看使用指定挂载点的进程</h2>
-<div class="outline-text-2" id="text-org728673a">
+<div id="outline-container-orgb0f50ca" class="outline-2">
+<h2 id="orgb0f50ca">4. 查看使用指定挂载点的进程</h2>
+<div class="outline-text-2" id="text-orgb0f50ca">
 <p>
 在停止挂载某个目录时，系统会告诉我们“设备资源繁忙”，所以我们需要找出使用挂载点的程序，终止这些进程，解除目录的占用状态。<br></p>
 <div class="highlight"><pre><span></span>lsof /home
@@ -371,9 +465,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org43415e8" class="outline-2">
-<h2 id="org43415e8">5. 查看指定用户打开的文件</h2>
-<div class="outline-text-2" id="text-org43415e8">
+<div id="outline-container-org5d090a5" class="outline-2">
+<h2 id="org5d090a5">5. 查看指定用户打开的文件</h2>
+<div class="outline-text-2" id="text-org5d090a5">
 <div class="highlight"><pre><span></span>lsof -u username
 </pre></div>
 <p>
@@ -383,17 +477,17 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org81e07d0" class="outline-2">
-<h2 id="org81e07d0">6. 查看指定进程打开的文件</h2>
-<div class="outline-text-2" id="text-org81e07d0">
+<div id="outline-container-orgf87400a" class="outline-2">
+<h2 id="orgf87400a">6. 查看指定进程打开的文件</h2>
+<div class="outline-text-2" id="text-orgf87400a">
 <div class="highlight"><pre><span></span>lsof -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org7ee1946" class="outline-2">
-<h2 id="org7ee1946">7. 终止属于某个用户的所有进程</h2>
-<div class="outline-text-2" id="text-org7ee1946">
+<div id="outline-container-orgbef4a44" class="outline-2">
+<h2 id="orgbef4a44">7. 终止属于某个用户的所有进程</h2>
+<div class="outline-text-2" id="text-orgbef4a44">
 <div class="highlight"><pre><span></span>kill `lsof -t -u username`
 </pre></div>
 <p>
@@ -403,9 +497,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orgd49ad6e" class="outline-2">
-<h2 id="orgd49ad6e">8. 让结果同时满足多个选项</h2>
-<div class="outline-text-2" id="text-orgd49ad6e">
+<div id="outline-container-orgae6b03a" class="outline-2">
+<h2 id="orgae6b03a">8. 让结果同时满足多个选项</h2>
+<div class="outline-text-2" id="text-orgae6b03a">
 <p>
 默认情况下，多个参数是以或（or）进行操作的，可以使用 <code>-a</code> 选项让结果同时满足多个参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -a -u username -c procname
@@ -413,9 +507,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org897dc75" class="outline-2">
-<h2 id="org897dc75">9. 让命令重复执行</h2>
-<div class="outline-text-2" id="text-org897dc75">
+<div id="outline-container-orgda6529f" class="outline-2">
+<h2 id="orgda6529f">9. 让命令重复执行</h2>
+<div class="outline-text-2" id="text-orgda6529f">
 <p>
 可以使用 <code>-r</code> 参数让命令重复执行。以下命令会每隔5s执行一次，每次的执行结果会用 “====” 分割开。<br></p>
 <div class="highlight"><pre><span></span>lsof -u username -c procname -a -r5
@@ -423,9 +517,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org6f06dcd" class="outline-2">
-<h2 id="org6f06dcd">10. 列出所有的网络连接</h2>
-<div class="outline-text-2" id="text-org6f06dcd">
+<div id="outline-container-org609ad87" class="outline-2">
+<h2 id="org609ad87">10. 列出所有的网络连接</h2>
+<div class="outline-text-2" id="text-org609ad87">
 <div class="highlight"><pre><span></span>lsof -i
 </pre></div>
 <p>
@@ -439,33 +533,33 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org06bfd69" class="outline-2">
-<h2 id="org06bfd69">11. 列出指定进程使用的网络连接</h2>
-<div class="outline-text-2" id="text-org06bfd69">
+<div id="outline-container-org7d14ddb" class="outline-2">
+<h2 id="org7d14ddb">11. 列出指定进程使用的网络连接</h2>
+<div class="outline-text-2" id="text-org7d14ddb">
 <div class="highlight"><pre><span></span>lsof -i -a -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgfacb2e9" class="outline-2">
-<h2 id="orgfacb2e9">12. 查看指定端口上的监听</h2>
-<div class="outline-text-2" id="text-orgfacb2e9">
+<div id="outline-container-orge9eb809" class="outline-2">
+<h2 id="orge9eb809">12. 查看指定端口上的监听</h2>
+<div class="outline-text-2" id="text-orge9eb809">
 <div class="highlight"><pre><span></span>lsof -i :portid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org301270a" class="outline-2">
-<h2 id="org301270a">13. 列出所有tcp和udp连接</h2>
-<div class="outline-text-2" id="text-org301270a">
+<div id="outline-container-orgcade1da" class="outline-2">
+<h2 id="orgcade1da">13. 列出所有tcp和udp连接</h2>
+<div class="outline-text-2" id="text-orgcade1da">
 <div class="highlight"><pre><span></span>lsof -i tcp; lsof -i udp
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgbd7dc7a" class="outline-2">
-<h2 id="orgbd7dc7a">14. 列出所有的网络文件系统</h2>
-<div class="outline-text-2" id="text-orgbd7dc7a">
+<div id="outline-container-orgcb54cae" class="outline-2">
+<h2 id="orgcb54cae">14. 列出所有的网络文件系统</h2>
+<div class="outline-text-2" id="text-orgcb54cae">
 <p>
 网络文件系统（network file system）<br></p>
 <div class="highlight"><pre><span></span>lsof -N -u username
@@ -667,17 +761,17 @@ Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式�
     <p>
 在某些时候，为了绕过网络封锁，在使用git时需要借助代理完成相关网络操作。<br></p>
 
-<div id="outline-container-orgdb76993" class="outline-2">
-<h2 id="orgdb76993">一个可用的VPN代理是先决条件</h2>
-<div class="outline-text-2" id="text-orgdb76993">
+<div id="outline-container-orga38328b" class="outline-2">
+<h2 id="orga38328b">一个可用的VPN代理是先决条件</h2>
+<div class="outline-text-2" id="text-orga38328b">
 <p>
 关于VPN的架设就不在此讨论了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org5670d8c" class="outline-2">
-<h2 id="org5670d8c">将repo的链接由ssh改为为https</h2>
-<div class="outline-text-2" id="text-org5670d8c">
+<div id="outline-container-orge17edfe" class="outline-2">
+<h2 id="orge17edfe">将repo的链接由ssh改为为https</h2>
+<div class="outline-text-2" id="text-orge17edfe">
 <p>
 已经使用https的repo跳过此步骤。<br>
 本教程需要通过https（http）的方式使用代理，所以如果现有的repo是使用ssh方式clone到本地的，需要修改其为https方式。<br>
@@ -688,9 +782,9 @@ Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式�
 </div>
 </div>
 
-<div id="outline-container-org3fa89fb" class="outline-2">
-<h2 id="org3fa89fb">设置git使用代理</h2>
-<div class="outline-text-2" id="text-org3fa89fb">
+<div id="outline-container-org3c889af" class="outline-2">
+<h2 id="org3c889af">设置git使用代理</h2>
+<div class="outline-text-2" id="text-org3c889af">
 <p>
 将git配置为使用socks5代理，以socks5的ip和端口是 <code>127.0.0.1:1080</code> 为例。<br></p>
 <div class="highlight"><pre><span></span>git config --global http.proxy 'socks5://127.0.0.1:1080'
@@ -699,9 +793,9 @@ git config --global https.proxy 'socks5://127.0.0.1:1080'
 </div>
 </div>
 
-<div id="outline-container-orgdcd61c1" class="outline-2">
-<h2 id="orgdcd61c1">将登录信息缓存下来</h2>
-<div class="outline-text-2" id="text-orgdcd61c1">
+<div id="outline-container-org64b7809" class="outline-2">
+<h2 id="org64b7809">将登录信息缓存下来</h2>
+<div class="outline-text-2" id="text-org64b7809">
 <p>
 使用https时，在向远程仓库进行推送（git push）时会要求验证用户名和密码，由于每次都输入验证信息是十分繁琐的，考虑将验证信息缓存下来。<br></p>
 <div class="highlight"><pre><span></span>git config --global credential.helper cache
@@ -713,9 +807,9 @@ git默认会将密码缓存15分钟，在这期间进行的操作是不需要再
 </div>
 </div>
 
-<div id="outline-container-org0ef3712" class="outline-2">
-<h2 id="org0ef3712">将登陆信息保存下来</h2>
-<div class="outline-text-2" id="text-org0ef3712">
+<div id="outline-container-org6afe221" class="outline-2">
+<h2 id="org6afe221">将登陆信息保存下来</h2>
+<div class="outline-text-2" id="text-org6afe221">
 <p>
 也可以考虑将用户名和密码永久保存下来，这样就不需要再次进行密码验证了。<br><b>注意:</b> 使用这种配置会将明文的账户和密码保存在 <code>~/.git-cretidentials</code> 文件中，所以仅推荐在个人电脑中使用这个配置。<br></p>
 <div class="highlight"><pre><span></span>git config --global credential.helper store
@@ -723,9 +817,9 @@ git默认会将密码缓存15分钟，在这期间进行的操作是不需要再
 </div>
 </div>
 
-<div id="outline-container-orgcd3fa1e" class="outline-2">
-<h2 id="orgcd3fa1e">参考资料</h2>
-<div class="outline-text-2" id="text-orgcd3fa1e">
+<div id="outline-container-org8620f9f" class="outline-2">
+<h2 id="org8620f9f">参考资料</h2>
+<div class="outline-text-2" id="text-org8620f9f">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-on-github">stackoverflow question</a><br>
@@ -748,27 +842,27 @@ git默认会将密码缓存15分钟，在这期间进行的操作是不需要再
     <p>
 在开发windows应用程序时，经常会遇到win32、mfc、atl的函数。下面就对三种API（或者说是开发框架）进行了总结。<br></p>
 
-<div id="outline-container-org1dbecf2" class="outline-2">
-<h2 id="org1dbecf2">Win32开发框架</h2>
-<div class="outline-text-2" id="text-org1dbecf2">
+<div id="outline-container-orgc5b0af4" class="outline-2">
+<h2 id="orgc5b0af4">Win32开发框架</h2>
+<div class="outline-text-2" id="text-orgc5b0af4">
 <p>
 win32开发框架是最基础的函数接口，更接近操作系统底层。<br>
 使用Win32接口的优点是程序的依赖最小，生成的可执行文件的体积也最小。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org1509251" class="outline-2">
-<h2 id="org1509251">MFC开发框架</h2>
-<div class="outline-text-2" id="text-org1509251">
+<div id="outline-container-orge1ab242" class="outline-2">
+<h2 id="orge1ab242">MFC开发框架</h2>
+<div class="outline-text-2" id="text-orge1ab242">
 <p>
 MFC是Microsoft Foundation Class的缩写，将win32的相关接口按照OOP的思想封装了起来，目的是提供一个快速开发原生应用的框架。<br>
 使用MFC开发的程序体型略显臃肿，而且MFC也比较陈旧了，并不推荐使用MFC进行开发。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgad96372" class="outline-2">
-<h2 id="orgad96372">ATL开发框架</h2>
-<div class="outline-text-2" id="text-orgad96372">
+<div id="outline-container-org5e8c8c2" class="outline-2">
+<h2 id="org5e8c8c2">ATL开发框架</h2>
+<div class="outline-text-2" id="text-org5e8c8c2">
 <p>
 ATL是Active Template Library的缩写，是针对COM组件的开发实现的一套开发框架。ATL简化了ActiveX COM组件的开发。<br></p>
 </div>
@@ -801,161 +895,6 @@ ATL是Active Template Library的缩写，是针对COM组件的开发实现的一
 在windows平台上使用grep和find指令时，需要借助仿linux环境中的程序完成，如cygwin中的程序。<br>
 需要将程序的路径添加到系统环境变量path中，并且为了覆盖windows系统自带的find命令，需要将该路径放在系统find路径之前。<br>
 tips： 对于安装了 <code>git bash</code> 的同学，直接将其中的 <code>mingw64\bin</code> 的绝对路径加入系统path中即可。<br></p>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Feb 05, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/shadowsock-server-setup-guide/">ss服务器的配置指南</a>
-    </h3>
-
-    <p>
-租一个服务器自己搭建梯子是科学上网方便稳定快捷的好方法。<br>
-本文主要是自己部署vpn服务端的笔记，作为备忘留存下来。<br></p>
-
-<div id="outline-container-org32f8325" class="outline-2">
-<h2 id="org32f8325">安装ss服务程序</h2>
-<div class="outline-text-2" id="text-org32f8325">
-<p>
-安装环境为CentOS7, 需要使用python的包管理工具pip完成对ss-server的安装。<br></p>
-<div class="highlight"><pre><span></span>sudo yum install m2crypto python-setuptools
-sudo easy_install pip
-sudo pip install shadowsocks
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-orge420eaa" class="outline-2">
-<h2 id="orge420eaa">配置ss服务器</h2>
-<div class="outline-text-2" id="text-orge420eaa">
-<p>
-<b>配置文件示例</b> :<br>
-这份配置中使用了多个端口作供ss-server使用<br></p>
-<div class="highlight"><pre><span></span>{
-    "server":"your-server-ip",
-    "local_address":"127.0.0.1",
-    "local_port":1080,
-    "port_password":
-    {
-	"32366":"shadowsocks",
-	"32367":"shadowsocks",
-	"32368":"shadowsocks",
-	"32369":"shadowsocks",
-	"52369":"shadowsocks"
-    },
-    "timeout":300,
-    "method":"aes-256-cfb",
-    "fast_open": false
-}
-</pre></div>
-
-
-<p>
-<b>启动脚本示例</b> :<br>
-直接在命令行直接输入指令也能够完成ss服务的启动和停止，使用脚本只是为了方便一些。<br></p>
-<div class="highlight"><pre><span></span>#!/bin/bash
-ss_start()
-{
-  ssserver -c /root/shadowsocks/shadowsocks.json -d start
-}
-ss_stop()
-{
-  ssserver -c /root/shadowsocks/shadowsocks.json -d stop
-}
-# shell script main
-if [ "$#" -eq "0" ]; then
-  ss_start
-else
-  case "$1" in
-  start)
-    ss_start
-    exit;;
-  stop)
-    ss_stop
-    exit;;
-  esac
-fi
-</pre></div>
-
-<p>
-<b>增加系统启动项</b><br>
-可以将启动脚本加入系统启动项，这样就能够保证在每次reboot后，服务都能自动开启。<br></p>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Jan 19, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/git-cheatsheet/">常用git操作备忘</a>
-    </h3>
-
-    <p>
-对常用指令进行总结，方便以后遇到相同情况时查阅。<br></p>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Jan 17, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/emacs-find-replace-string-in-directory/">使用emacs查找替换指定目录所有文件中字符串</a>
-    </h3>
-
-    <p>
-本文主要介绍在emacs中对一个目录中的很多文件进行字符串查找和替换操作的方法。参考了 <a href="http://ergoemacs.org/emacs/blog.html">XahLee</a> 的教程后，在此记录做个备份。<br></p>
-<div id="outline-container-org83100de" class="outline-2">
-<h2 id="org83100de">操作步骤</h2>
-<div class="outline-text-2" id="text-org83100de">
-<p>
-<b>进入dired模式</b> ： 我的快捷键配置为 <code>C-x d</code>, 也可以使用 <code>M-x &lt;dired&gt;</code> .<br><b>标记需要查找的文件</b> ： 在进入dired模式后，对需要操作的文件或目录进行操作。<br></p>
-<ul class="org-ul">
-<li>
-<code>m</code> 对光标所在的文件或目录进行标记<br>
-</li>
-<li>
-<code>u</code> 对光标所在的文件或目录取消标记<br>
-</li>
-<li>
-<code>U</code> 取消所有标记<br>
-</li>
-</ul>
-<p>
-可以通过 <code>M-x &lt;dired-mark-files-regexp&gt;</code> 使用正则表达式完成批量文件增加标记。<br><b>批量查找</b> ： 使用 <code>M-x &lt;dired-do-query-replace-regexp&gt;</code> 进行查找替换。在有 <code>grep</code> 的支持时（linux环境下或windows环境中增加了类似cygwin的程序），也可以使用 <code>&lt;dired-do-find-regexp-and-replace&gt;</code> 进行文本查找替换。<br><b>查找结果</b> ： 在查找结果中使用如下快捷键完成操作<br></p>
-<ul class="org-ul">
-<li>
-<code>y</code> 对当前记录执行替换操作<br>
-</li>
-<li>
-<code>n</code> 跳过当前记录<br>
-</li>
-<li>
-<code>C-g</code> 停止本次查找替换操作<br>
-</li>
-<li>
-<code>!</code> 同意本文件中的查找替换操作<br>
-</li>
-<li>
-<code>N</code> 跳过本文件中的查找替换操作<br>
-</li>
-<li>
-<code>Y</code> 同意本次所有的查找替换操作<br>
-</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-org425a585" class="outline-2">
-<h2 id="org425a585">相关技巧</h2>
-<div class="outline-text-2" id="text-org425a585">
-<p>
-如果需要批量查找(不进行替换)，可以在dired模式中 <code>M-x &lt;dired-do-search&gt;</code> 进行查找，对于查找结果使用 <code>M-x tags-loop-continue</code> 进行逐条浏览。<br></p>
-</div>
-</div>
 
   </li>
 

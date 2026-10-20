@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -143,17 +190,17 @@ MapReduce的深层概念远比两个函数来得复杂，它是一个编">
       
     <time class="dt-published" datetime="2018-08-20T10:09:10+08:00" itemprop="datePublished">Aug 20, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org837a691" class="outline-2">
-<h2 id="org837a691">序言</h2>
-<div class="outline-text-2" id="text-org837a691">
+    <div id="outline-container-org050c9b1" class="outline-2">
+<h2 id="org050c9b1">序言</h2>
+<div class="outline-text-2" id="text-org050c9b1">
 <p>
 对于mapreduce的兴趣起源于我最近在学习javascript时遇到了map和reduce函数。使用这两个函数进行数据处理时，总感觉思路有一点奇特，理解起来需要绕一个弯子。之前在学python时，也看到过这两个函数，但是当时没有在意，现在我觉得我有必要对这两个函数做一个深入的研究了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org77263fb" class="outline-2">
-<h2 id="org77263fb">什么是MapReduce</h2>
-<div class="outline-text-2" id="text-org77263fb">
+<div id="outline-container-org7ff3bfe" class="outline-2">
+<h2 id="org7ff3bfe">什么是MapReduce</h2>
+<div class="outline-text-2" id="text-org7ff3bfe">
 <p>
 MapReduce的深层概念远比两个函数来得复杂，它是一个编程模型，主要用于解决大数据处理问题。使用这种模式编写的程序是可并行的（parallelized）并适用于大型计算机集群。运行时由系统自动对输入数据进行分割、协调多机器间的计算任务、进行异常处理、管理机器间的内部通信。这样，没有并行计算和分布式系统相关经验的开发人员也能够借助大型分布式系统进行数据处理了。<br></p>
 
@@ -169,9 +216,9 @@ MapReduce是面向大数据并行处理的计算模型、框架和平台，它�
 </div>
 </div>
 
-<div id="outline-container-org150549d" class="outline-2">
-<h2 id="org150549d">map和reduce</h2>
-<div class="outline-text-2" id="text-org150549d">
+<div id="outline-container-org3c64d1d" class="outline-2">
+<h2 id="org3c64d1d">map和reduce</h2>
+<div class="outline-text-2" id="text-org3c64d1d">
 <p>
 <b>从编程语言的角度上来说</b><br>
 map操作会接收到两个参数，一个列表和一个变换过程，其功能是将这个变换过程映射到每一个列表成员上，从而得到一个新的列表。<br>
@@ -190,9 +237,9 @@ reduce操作也会接收到两个参数，一个列表和一个变换过程，�
 </div>
 </div>
 
-<div id="outline-container-orga16d94a" class="outline-2">
-<h2 id="orga16d94a">并行计算与大数据</h2>
-<div class="outline-text-2" id="text-orga16d94a">
+<div id="outline-container-org72d32e3" class="outline-2">
+<h2 id="org72d32e3">并行计算与大数据</h2>
+<div class="outline-text-2" id="text-org72d32e3">
 <p>
 mapreduce模型给并行计算带来了革命性的影响，它是目前为止最成功、最广为接受和最易于使用的大数据并行处理技术。<br></p>
 
@@ -223,9 +270,9 @@ mapreduce最初由google提出，并开发出了如下产品<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgfbd3bc9" class="outline-2">
-<h2 id="orgfbd3bc9">参考资料</h2>
-<div class="outline-text-2" id="text-orgfbd3bc9">
+<div id="outline-container-org20e2475" class="outline-2">
+<h2 id="org20e2475">参考资料</h2>
+<div class="outline-text-2" id="text-org20e2475">
 <ul class="org-ul">
 <li>
 <a href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf">google mapreduce paper</a><br>

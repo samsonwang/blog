@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -142,9 +189,9 @@ private:
       
     <time class="dt-published" datetime="2018-09-04T23:37:37+08:00" itemprop="datePublished">Sep 04, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org60526cf" class="outline-2">
-<h2 id="org60526cf">引言</h2>
-<div class="outline-text-2" id="text-org60526cf">
+    <div id="outline-container-org65f870c" class="outline-2">
+<h2 id="org65f870c">引言</h2>
+<div class="outline-text-2" id="text-org65f870c">
 <p>
 这篇文章的起因是出于对于 <code>C++</code> 饿汉单例模式代码的一些疑问，查阅了一些资料。在仔细研究后，我发现在一些基础概念的理解还是存在偏差。<br>
 下面请看这样的一段代码，能看出其中有那些不太“正常”的语句么。<br></p>
@@ -166,9 +213,9 @@ private:
 </div>
 </div>
 
-<div id="outline-container-org6254510" class="outline-2">
-<h2 id="org6254510">私有静态成员的初始化</h2>
-<div class="outline-text-2" id="text-org6254510">
+<div id="outline-container-org2e5e258" class="outline-2">
+<h2 id="org2e5e258">私有静态成员的初始化</h2>
+<div class="outline-text-2" id="text-org2e5e258">
 <p>
 上面的代码是饿汉单例模式的 <code>C++</code> 的实现，在没有查阅资料之前，我对其中私有静态成员变量的初始化存疑。主要有以下两点：<br></p>
 <ul class="org-ul">
@@ -212,9 +259,9 @@ The static data member <code>run_chain</code> of class process is defined in glo
 </div>
 </div>
 
-<div id="outline-container-org53af735" class="outline-2">
-<h2 id="org53af735">私有构造函数</h2>
-<div class="outline-text-2" id="text-org53af735">
+<div id="outline-container-org5e3bc9e" class="outline-2">
+<h2 id="org5e3bc9e">私有构造函数</h2>
+<div class="outline-text-2" id="text-org5e3bc9e">
 <p>
 在查阅资料时，我发现 Peter 的 <a href="https://stackoverflow.com/a/41361967">描述</a> 纠正了我对私有构造函数的一些看法。<br></p>
 <blockquote>
@@ -226,9 +273,9 @@ The point of a <code>private</code> constructor is not preventing object constru
 </div>
 </div>
 
-<div id="outline-container-org6b226e8" class="outline-2">
-<h2 id="org6b226e8">参考资料</h2>
-<div class="outline-text-2" id="text-org6b226e8">
+<div id="outline-container-org981f14f" class="outline-2">
+<h2 id="org981f14f">参考资料</h2>
+<div class="outline-text-2" id="text-org981f14f">
 <ul class="org-ul">
 <li>
 <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf">ISO C++11 standard</a><br>

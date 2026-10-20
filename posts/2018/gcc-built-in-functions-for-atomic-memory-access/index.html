@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -144,8 +191,8 @@
 
     </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-orge807930" class="outline-2">
-<h2 id="orge807930">
+    <div id="outline-container-org72c885b" class="outline-2">
+<h2 id="org72c885b">
 <span class="section-number-2">1</span> 原子化操作</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -159,8 +206,8 @@
 </div>
 
 
-<div id="outline-container-org6cc589f" class="outline-2">
-<h2 id="org6cc589f">
+<div id="outline-container-org627e6ee" class="outline-2">
+<h2 id="org627e6ee">
 <span class="section-number-2">2</span> GCC函数接口</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -174,8 +221,8 @@ In most cases, these builtins are considered a full barrier. That is, no memory 
 在大多数情况下，这些内建函数是完全内存屏障（full barrier）的，以上摘自 GCC Manual。<br></p>
 </div>
 
-<div id="outline-container-org60f6f5c" class="outline-3">
-<h3 id="org60f6f5c">
+<div id="outline-container-org958f637" class="outline-3">
+<h3 id="org958f637">
 <span class="section-number-3">2.1</span> 先取值并进行对应操作</h3>
 <div class="outline-text-3" id="text-2-1">
 <div class="highlight"><pre><span></span><span class="n">type</span><span class="w"> </span><span class="n">__sync_fetch_and_add</span><span class="w"> </span><span class="p">(</span><span class="n">type</span><span class="w"> </span><span class="o">*</span><span class="n">ptr</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span>
@@ -198,8 +245,8 @@ In most cases, these builtins are considered a full barrier. That is, no memory 
 </div>
 </div>
 
-<div id="outline-container-org42208ff" class="outline-3">
-<h3 id="org42208ff">
+<div id="outline-container-org4af0741" class="outline-3">
+<h3 id="org4af0741">
 <span class="section-number-3">2.2</span> 直接操作并返回最终结果</h3>
 <div class="outline-text-3" id="text-2-2">
 <div class="highlight"><pre><span></span><span class="n">type</span><span class="w"> </span><span class="n">__sync_add_and_fetch</span><span class="w"> </span><span class="p">(</span><span class="n">type</span><span class="w"> </span><span class="o">*</span><span class="n">ptr</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span>
@@ -222,8 +269,8 @@ In most cases, these builtins are considered a full barrier. That is, no memory 
 </div>
 </div>
 
-<div id="outline-container-orgfaeb364" class="outline-3">
-<h3 id="orgfaeb364">
+<div id="outline-container-orgfa15836" class="outline-3">
+<h3 id="orgfa15836">
 <span class="section-number-3">2.3</span> 比较并交换</h3>
 <div class="outline-text-3" id="text-2-3">
 <div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">__sync_bool_compare_and_swap</span><span class="w"> </span><span class="p">(</span><span class="n">type</span><span class="w"> </span><span class="o">*</span><span class="n">ptr</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="n">oldval</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="n">newval</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span>
@@ -234,8 +281,8 @@ In most cases, these builtins are considered a full barrier. That is, no memory 
 </div>
 
 
-<div id="outline-container-org26cb5c0" class="outline-2">
-<h2 id="org26cb5c0">
+<div id="outline-container-orgde87f12" class="outline-2">
+<h2 id="orgde87f12">
 <span class="section-number-2">3</span> 内存屏障（Memory Barrier）</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -248,8 +295,8 @@ In most cases, these builtins are considered a full barrier. That is, no memory 
 内存屏障的典型应用场景是多设备之间的共享内存的底层机器码。这些代码包括原始同步机制、多核系统上的无锁数据结构、与计算机硬件交互的设备驱动。内存屏障对于无锁编程（lock-free）来说是十分重要的。<br></p>
 </div>
 
-<div id="outline-container-org32d9f9c" class="outline-3">
-<h3 id="org32d9f9c">
+<div id="outline-container-org8fe534f" class="outline-3">
+<h3 id="org8fe534f">
 <span class="section-number-3">3.1</span> 内存屏障的分类</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -272,8 +319,8 @@ In most cases, these builtins are considered a full barrier. That is, no memory 
 </div>
 </div>
 
-<div id="outline-container-org78e81fe" class="outline-3">
-<h3 id="org78e81fe">
+<div id="outline-container-org291c402" class="outline-3">
+<h3 id="org291c402">
 <span class="section-number-3">3.2</span> 内存屏障与volatile关键字</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -286,8 +333,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 
 
-<div id="outline-container-orgd5526e3" class="outline-2">
-<h2 id="orgd5526e3">
+<div id="outline-container-orgebdcc8c" class="outline-2">
+<h2 id="orgebdcc8c">
 <span class="section-number-2">4</span> 操作原子化能够解决多进程访问共享内存的问题吗？</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -296,8 +343,8 @@ volatile关键字值能通知编译器生成的输出码从内存中重新读取
 </div>
 
 
-<div id="outline-container-org4352b27" class="outline-2">
-<h2 id="org4352b27">
+<div id="outline-container-orga1afec8" class="outline-2">
+<h2 id="orga1afec8">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">

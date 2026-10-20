@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -158,41 +205,41 @@ tcpdump -c 5 -i eth0
     <p>
 tcpdump常用于网络抓包，能够将抓取的包保存下来，这样就能进一步深入分析。抓包保存的文件可以使用tcpdump进行查看，也可以借助第三方软件（如wireshark）进行辅助分析。<br></p>
 
-<div id="outline-container-orgac5092a" class="outline-2">
-<h2 id="orgac5092a">1. 抓取指定网络设备上的包</h2>
-<div class="outline-text-2" id="text-orgac5092a">
+<div id="outline-container-org3fd5f4f" class="outline-2">
+<h2 id="org3fd5f4f">1. 抓取指定网络设备上的包</h2>
+<div class="outline-text-2" id="text-org3fd5f4f">
 <p>
 抓取网卡eth0上的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orga1b3d4f" class="outline-2">
-<h2 id="orga1b3d4f">2. 限制抓包的数量</h2>
-<div class="outline-text-2" id="text-orga1b3d4f">
+<div id="outline-container-orga8ed934" class="outline-2">
+<h2 id="orga8ed934">2. 限制抓包的数量</h2>
+<div class="outline-text-2" id="text-orga8ed934">
 <p>
 只抓取5个包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -c 5 -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org04e5a29" class="outline-2">
-<h2 id="org04e5a29">3. 将抓取的包以ASCII的方式打印出来</h2>
-<div class="outline-text-2" id="text-org04e5a29">
+<div id="outline-container-org5796d55" class="outline-2">
+<h2 id="org5796d55">3. 将抓取的包以ASCII的方式打印出来</h2>
+<div class="outline-text-2" id="text-org5796d55">
 <div class="highlight"><pre><span></span>tcpdump -A -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org6183eea" class="outline-2">
-<h2 id="org6183eea">4. 将抓取的包以十六进制的方式打印出来</h2>
-<div class="outline-text-2" id="text-org6183eea">
+<div id="outline-container-org708b4c3" class="outline-2">
+<h2 id="org708b4c3">4. 将抓取的包以十六进制的方式打印出来</h2>
+<div class="outline-text-2" id="text-org708b4c3">
 <div class="highlight"><pre><span></span>tcpdump -XX -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org16f33fc" class="outline-2">
-<h2 id="org16f33fc">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
-<div class="outline-text-2" id="text-org16f33fc">
+<div id="outline-container-org841ce15" class="outline-2">
+<h2 id="org841ce15">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
+<div class="outline-text-2" id="text-org841ce15">
 <p>
 增加 <code>-t</code> 参数能够将抓取到的包中的时间以方便阅读的形式打印出来，使用 <code>-tttt</code> 参数能够将包中的时间戳以更详细的方式打印出来。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -t -i eth0
@@ -200,23 +247,23 @@ tcpdump -tttt -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orga2862cc" class="outline-2">
-<h2 id="orga2862cc">6. 将抓取的包写入到文件中</h2>
-<div class="outline-text-2" id="text-orga2862cc">
+<div id="outline-container-org533ee0f" class="outline-2">
+<h2 id="org533ee0f">6. 将抓取的包写入到文件中</h2>
+<div class="outline-text-2" id="text-org533ee0f">
 <div class="highlight"><pre><span></span>tcpdump -w netdump.pcap -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgf38e673" class="outline-2">
-<h2 id="orgf38e673">7. 读取抓到的包</h2>
-<div class="outline-text-2" id="text-orgf38e673">
+<div id="outline-container-orgfe71ab6" class="outline-2">
+<h2 id="orgfe71ab6">7. 读取抓到的包</h2>
+<div class="outline-text-2" id="text-orgfe71ab6">
 <div class="highlight"><pre><span></span>tcpdump -r netdump.pcap
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgb06eceb" class="outline-2">
-<h2 id="orgb06eceb">8. 在抓到的包中显示ip地址</h2>
-<div class="outline-text-2" id="text-orgb06eceb">
+<div id="outline-container-org0fa9740" class="outline-2">
+<h2 id="org0fa9740">8. 在抓到的包中显示ip地址</h2>
+<div class="outline-text-2" id="text-org0fa9740">
 <p>
 增加 <code>-n</code> 参数不会解析主机名，增加 <code>-nn</code> 参数不会解析主机名和端口名<br></p>
 <div class="highlight"><pre><span></span>tcpdump -n -i eth0
@@ -224,16 +271,16 @@ tcpdump -nn -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org0dd3656" class="outline-2">
-<h2 id="org0dd3656">9. 以绝对值显示包的ISN号</h2>
-<div class="outline-text-2" id="text-org0dd3656">
+<div id="outline-container-org2eeaf3e" class="outline-2">
+<h2 id="org2eeaf3e">9. 以绝对值显示包的ISN号</h2>
+<div class="outline-text-2" id="text-org2eeaf3e">
 <div class="highlight"><pre><span></span>tcpdump -S -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org30fb9a7" class="outline-2">
-<h2 id="org30fb9a7">10. 对抓取到的包显示更详细的信息</h2>
-<div class="outline-text-2" id="text-org30fb9a7">
+<div id="outline-container-orga245a0b" class="outline-2">
+<h2 id="orga245a0b">10. 对抓取到的包显示更详细的信息</h2>
+<div class="outline-text-2" id="text-orga245a0b">
 <p>
 参数 <code>-v</code> 是verbose的缩写，以下命令表示对抓取到的包显示更详细的信息。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -v -i eth0
@@ -242,9 +289,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org72f6171" class="outline-2">
-<h2 id="org72f6171">11. 对抓到的包进行协议类型过滤</h2>
-<div class="outline-text-2" id="text-org72f6171">
+<div id="outline-container-org29e3515" class="outline-2">
+<h2 id="org29e3515">11. 对抓到的包进行协议类型过滤</h2>
+<div class="outline-text-2" id="text-org29e3515">
 <p>
 支持的协议类型有：fddi, tr, wlan, ip, ip6, arp, rarp, decnet, tcp, udp<br>
 以下命令只会抓取网卡eth0上的arp包<br></p>
@@ -252,9 +299,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgb5f12fb" class="outline-2">
-<h2 id="orgb5f12fb">12. 在抓包时对包进行大小过滤</h2>
-<div class="outline-text-2" id="text-orgb5f12fb">
+<div id="outline-container-org7abf185" class="outline-2">
+<h2 id="org7abf185">12. 在抓包时对包进行大小过滤</h2>
+<div class="outline-text-2" id="text-org7abf185">
 <p>
 下面的命令会分别抓取大于1024字节和小于1024字节的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0 greater 1024
@@ -262,16 +309,16 @@ tcpdump -i eth0 less 1024
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org73f84c0" class="outline-2">
-<h2 id="org73f84c0">13. 抓取指定端口上的包</h2>
-<div class="outline-text-2" id="text-org73f84c0">
+<div id="outline-container-orgf545191" class="outline-2">
+<h2 id="orgf545191">13. 抓取指定端口上的包</h2>
+<div class="outline-text-2" id="text-orgf545191">
 <div class="highlight"><pre><span></span>tcpdump -i eth0 port 22
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org5b71a9c" class="outline-2">
-<h2 id="org5b71a9c">14. 抓取发往指定目的和端口上包</h2>
-<div class="outline-text-2" id="text-org5b71a9c">
+<div id="outline-container-org40713d0" class="outline-2">
+<h2 id="org40713d0">14. 抓取发往指定目的和端口上包</h2>
+<div class="outline-text-2" id="text-org40713d0">
 <p>
 可以使用 <code>and</code> 和 <code>or</code> 对过滤条件进行组合以实现精确的抓包。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -w net_dump.pcap -i eth0 dst 10.181.140.216 and port 22
@@ -279,9 +326,9 @@ tcpdump -i eth0 less 1024
 </div>
 </div>
 
-<div id="outline-container-org2d288ef" class="outline-2">
-<h2 id="org2d288ef">常用tcpdump命令示例</h2>
-<div class="outline-text-2" id="text-org2d288ef">
+<div id="outline-container-org80ddcd9" class="outline-2">
+<h2 id="org80ddcd9">常用tcpdump命令示例</h2>
+<div class="outline-text-2" id="text-org80ddcd9">
 <div class="highlight"><pre><span></span>tcpdump –i any 'port 8888'
 tcpdump –i any 'tcp port 8888'
 tcpdump –i any 'tcp src port 8888'
@@ -291,9 +338,9 @@ tcpdump -i any 'src host 127.0.0.1 and tcp src port 12345' -XX -nn -vv
 </div>
 </div>
 
-<div id="outline-container-org8370170" class="outline-2">
-<h2 id="org8370170">参考资料</h2>
-<div class="outline-text-2" id="text-org8370170">
+<div id="outline-container-org8820242" class="outline-2">
+<h2 id="org8820242">参考资料</h2>
+<div class="outline-text-2" id="text-org8820242">
 <ul class="org-ul">
 <li>
 <a href="https://danielmiessler.com/study/tcpdump/">danielmiessler.com tcpdump</a><br>

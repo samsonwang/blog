@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -143,17 +190,17 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgc67ddef" class="outline-2">
-<h2 id="orgc67ddef">遇到的问题</h2>
-<div class="outline-text-2" id="text-orgc67ddef">
+<div id="outline-container-org5b80fea" class="outline-2">
+<h2 id="org5b80fea">遇到的问题</h2>
+<div class="outline-text-2" id="text-org5b80fea">
 <p>
 在调试一个程序时发现在某个函数中能够正确地读到结构体成员变量值，在另一个函数中读到的却是错误的值。我刚开始遇到这个问题非常诧异，因为在同一个程序中读取的是同一个结构体对象，出现这样的现象是非常奇怪的。最终排查后发现是由两个函数中的结构体内存布局差异导致的。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org8f8b426" class="outline-2">
-<h2 id="org8f8b426">注意 <code>pragma pack</code> 的作用域</h2>
-<div class="outline-text-2" id="text-org8f8b426">
+<div id="outline-container-orgb5da589" class="outline-2">
+<h2 id="orgb5da589">注意 <code>pragma pack</code> 的作用域</h2>
+<div class="outline-text-2" id="text-orgb5da589">
 <p>
 下面就是将结构体对齐方式修改为4字节的例子：<br></p>
 
@@ -171,9 +218,9 @@
 </div>
 </div>
 
-<div id="outline-container-org6eed626" class="outline-2">
-<h2 id="org6eed626">一个简单的例子</h2>
-<div class="outline-text-2" id="text-org6eed626">
+<div id="outline-container-org5c86dc1" class="outline-2">
+<h2 id="org5c86dc1">一个简单的例子</h2>
+<div class="outline-text-2" id="text-org5c86dc1">
 <p>
 在本节展示的是一个头文件引用顺序对结构体字节对齐大小的影响。<br></p>
 
@@ -222,9 +269,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgf9a0f49" class="outline-2">
-<h2 id="orgf9a0f49">避免这样的情况</h2>
-<div class="outline-text-2" id="text-orgf9a0f49">
+<div id="outline-container-org450ae0a" class="outline-2">
+<h2 id="org450ae0a">避免这样的情况</h2>
+<div class="outline-text-2" id="text-org450ae0a">
 <p>
 组合使用 <code>pragma pack(push)</code> 和 <code>pragma push(pop)</code> 即可将字节对齐大小的调整限定在一个范围内，写法如下。<br></p>
 
@@ -238,9 +285,9 @@
 </div>
 </div>
 
-<div id="outline-container-org2f7d83a" class="outline-2">
-<h2 id="org2f7d83a">写在后面</h2>
-<div class="outline-text-2" id="text-org2f7d83a">
+<div id="outline-container-org4bed35f" class="outline-2">
+<h2 id="org4bed35f">写在后面</h2>
+<div class="outline-text-2" id="text-org4bed35f">
 <p>
 大部分时候，我们都不需要也应该避免修改结构体的字节对齐方式，因为修改默认值可能导致代码运行效率下降。<br></p>
 

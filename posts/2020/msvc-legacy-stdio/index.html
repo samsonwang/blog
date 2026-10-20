@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -147,18 +194,18 @@ windows系统的向下兼容性一直是做的比较好的，一些老旧软件�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgfa4b985" class="outline-2">
-<h2 id="orgfa4b985">链接旧版本库时遇到的问题</h2>
-<div class="outline-text-2" id="text-orgfa4b985">
+<div id="outline-container-org538ee27" class="outline-2">
+<h2 id="org538ee27">链接旧版本库时遇到的问题</h2>
+<div class="outline-text-2" id="text-org538ee27">
 <p>
 有个库是由MSVC2008编译的，我在MSVC2017中使用这个库进行链接时出现错误，提示我缺少一些函数（如： <code>sprintf</code> 、 <code>_snprintf</code> 、 <code>__iob_func</code> 等）。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org86b4d89" class="outline-2">
-<h2 id="org86b4d89">为什么会出现这个问题</h2>
-<div class="outline-text-2" id="text-org86b4d89">
+<div id="outline-container-orgd6d3781" class="outline-2">
+<h2 id="orgd6d3781">为什么会出现这个问题</h2>
+<div class="outline-text-2" id="text-orgd6d3781">
 <p>
 在查阅了一些资料后发现，从MSVC2015开始，微软修改了C运行时库（C runtime），将其拆分为Universal CRT( <code>ucrtbase</code> ) 和 VC Runtime Library ( <code>vcruntime</code> )。其中，UCRT包含大部分的标准功能，VCRT包含与编译相关的功能（如异常处理等内部功能）。一些函数从UCRT中删掉了，导致链接时无法找到对应的符号（unresolved external symbol）。下面是微软官方的原文。<br></p>
 
@@ -178,18 +225,18 @@ For the CRT, mixing-and-matching was never supported, but it often just worked, 
 </div>
 
 
-<div id="outline-container-org0487ca5" class="outline-2">
-<h2 id="org0487ca5">官方推荐的解决方案</h2>
-<div class="outline-text-2" id="text-org0487ca5">
+<div id="outline-container-org8f3fd04" class="outline-2">
+<h2 id="org8f3fd04">官方推荐的解决方案</h2>
+<div class="outline-text-2" id="text-org8f3fd04">
 <p>
 微软在MSVC2015后提供了 <code>legacy_stdio_definitions.lib</code> 库，能够提供大部分缺失的链接符号（symbol）。但仍有一些无法提供兼容的链接符号，如一些函数定义 <code>__iob_func</code> 或导出的数据 <code>__imp___iob</code> 、 <code>__imp___pctype</code> 、 <code>__imp___mb_cur_max</code> 。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orga2564c6" class="outline-2">
-<h2 id="orga2564c6">那 <code>__iob_func</code> 怎么处理呢？</h2>
-<div class="outline-text-2" id="text-orga2564c6">
+<div id="outline-container-orgf01d01c" class="outline-2">
+<h2 id="orgf01d01c">那 <code>__iob_func</code> 怎么处理呢？</h2>
+<div class="outline-text-2" id="text-orgf01d01c">
 <p>
 微软官方没有提供 <code>__iob_func</code> 的适配方案，但是我找到了另外的方法，即可以自己实现一个同名函数。<br></p>
 
@@ -245,9 +292,9 @@ MSVC2008中的 <code>FILE</code> 结构体定义：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org2f72074" class="outline-2">
-<h2 id="org2f72074">参考资料</h2>
-<div class="outline-text-2" id="text-org2f72074">
+<div id="outline-container-org80f75a5" class="outline-2">
+<h2 id="org80f75a5">参考资料</h2>
+<div class="outline-text-2" id="text-org80f75a5">
 <ul class="org-ul">
 <li>
 <a href="https://docs.microsoft.com/en-us/cpp/porting/overview-of-potential-upgrade-issues-visual-cpp">microsoft docs - potential upgrade issues</a><br>

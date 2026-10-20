@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -138,9 +185,9 @@ Given "bbbbb", the answe'>
       
     <time class="dt-published" datetime="2018-08-02T11:43:14+08:00" itemprop="datePublished">Aug 02, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org9392fa2" class="outline-2">
-<h2 id="org9392fa2">Description</h2>
-<div class="outline-text-2" id="text-org9392fa2">
+    <div id="outline-container-orgbab244f" class="outline-2">
+<h2 id="orgbab244f">Description</h2>
+<div class="outline-text-2" id="text-orgbab244f">
 <p>
 Given a string, find the length of the longest substring without repeating characters.<br></p>
 
@@ -155,16 +202,16 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 </div>
 
-<div id="outline-container-org3bc9671" class="outline-2">
-<h2 id="org3bc9671">Solution</h2>
-<div class="outline-text-2" id="text-org3bc9671">
+<div id="outline-container-orgf507105" class="outline-2">
+<h2 id="orgf507105">Solution</h2>
+<div class="outline-text-2" id="text-orgf507105">
 <p>
 好久没刷算法题了，手有点生，没有什么思路，下面的答案是看过提示之后才写出来的。<br></p>
 </div>
 
-<div id="outline-container-orgbefd459" class="outline-3">
-<h3 id="orgbefd459">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-orgbefd459">
+<div id="outline-container-org353db02" class="outline-3">
+<h3 id="org353db02">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org353db02">
 <p>
 将所有的子串都穷举出来，并对它们进行判断，就能够得到最长子串的长度。这个算法很显然需要耗费很长时间。<br>
 需要注意的是： C++20中才支持 <code>std::set::contains</code> 这个接口（根据cppreference.com）。<br></p>
@@ -209,9 +256,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-org5a047b0" class="outline-3">
-<h3 id="org5a047b0">Approach 2 滑动窗口</h3>
-<div class="outline-text-3" id="text-org5a047b0">
+<div id="outline-container-orga0b5b74" class="outline-3">
+<h3 id="orga0b5b74">Approach 2 滑动窗口</h3>
+<div class="outline-text-3" id="text-orga0b5b74">
 <p>
 滑动窗口的概念在字符串处理问题中十分常用，保持子串的左端点不动，不断拓展右侧端点，就能穷举出所有满足条件的子串。<br>
 需要注意的是这句话： <code>lengthMax = max(lengthMax, int(j-i+1));</code><br></p>
@@ -254,9 +301,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-org2412904" class="outline-3">
-<h3 id="org2412904">Approach 3 优化的滑动窗口</h3>
-<div class="outline-text-3" id="text-org2412904">
+<div id="outline-container-org82e9b3b" class="outline-3">
+<h3 id="org82e9b3b">Approach 3 优化的滑动窗口</h3>
+<div class="outline-text-3" id="text-org82e9b3b">
 <p>
 使用 <code>map</code> 对字母出现的位置进行记录，这样在出现相同字母时，就能够从上一次出现的位置向后开始寻找。<br>
 需要注意句话 <code>it-&gt;second+1&gt;=i</code> , 需要对位置加1后再比较，这样才能保证 <code>i</code> 的坐标计算正确。<br></p>

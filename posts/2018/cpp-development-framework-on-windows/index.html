@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -152,27 +199,27 @@ MFC是Microsoft Foundation Class的缩写，将win3">
     <p>
 在开发windows应用程序时，经常会遇到win32、mfc、atl的函数。下面就对三种API（或者说是开发框架）进行了总结。<br></p>
 
-<div id="outline-container-org1dbecf2" class="outline-2">
-<h2 id="org1dbecf2">Win32开发框架</h2>
-<div class="outline-text-2" id="text-org1dbecf2">
+<div id="outline-container-orgc5b0af4" class="outline-2">
+<h2 id="orgc5b0af4">Win32开发框架</h2>
+<div class="outline-text-2" id="text-orgc5b0af4">
 <p>
 win32开发框架是最基础的函数接口，更接近操作系统底层。<br>
 使用Win32接口的优点是程序的依赖最小，生成的可执行文件的体积也最小。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org1509251" class="outline-2">
-<h2 id="org1509251">MFC开发框架</h2>
-<div class="outline-text-2" id="text-org1509251">
+<div id="outline-container-orge1ab242" class="outline-2">
+<h2 id="orge1ab242">MFC开发框架</h2>
+<div class="outline-text-2" id="text-orge1ab242">
 <p>
 MFC是Microsoft Foundation Class的缩写，将win32的相关接口按照OOP的思想封装了起来，目的是提供一个快速开发原生应用的框架。<br>
 使用MFC开发的程序体型略显臃肿，而且MFC也比较陈旧了，并不推荐使用MFC进行开发。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgad96372" class="outline-2">
-<h2 id="orgad96372">ATL开发框架</h2>
-<div class="outline-text-2" id="text-orgad96372">
+<div id="outline-container-org5e8c8c2" class="outline-2">
+<h2 id="org5e8c8c2">ATL开发框架</h2>
+<div class="outline-text-2" id="text-org5e8c8c2">
 <p>
 ATL是Active Template Library的缩写，是针对COM组件的开发实现的一套开发框架。ATL简化了ActiveX COM组件的开发。<br></p>
 </div>

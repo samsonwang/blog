@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -156,16 +203,16 @@ std::time_t time(std::time_t* arg);
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orge3fc148" class="outline-2">
-<h2 id="orge3fc148">
+<div id="outline-container-orge898888" class="outline-2">
+<h2 id="orge898888">
 <span class="section-number-2">1</span> 获取当前系统的时间</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 在C++中用于表示时间的数据结构有： <code>time_t</code> ， <code>struct tm</code> ， <code>struct timeval</code> ， <code>struct timespec</code> 等。<br></p>
 </div>
 
-<div id="outline-container-org110deac" class="outline-3">
-<h3 id="org110deac">
+<div id="outline-container-org0d8de9d" class="outline-3">
+<h3 id="org0d8de9d">
 <span class="section-number-3">1.1</span> 获取 <code>time_t</code> 格式的时间</h3>
 <div class="outline-text-3" id="text-1-1">
 <div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">time_t</span><span class="w"> </span><span class="nf">time</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">time_t</span><span class="o">*</span><span class="w"> </span><span class="n">arg</span><span class="p">);</span>
@@ -177,8 +224,8 @@ std::time_t time(std::time_t* arg);
 </div>
 
 
-<div id="outline-container-orgc6d9ba9" class="outline-3">
-<h3 id="orgc6d9ba9">
+<div id="outline-container-org806d02d" class="outline-3">
+<h3 id="org806d02d">
 <span class="section-number-3">1.2</span> 获取 <code>struct tm</code> 格式的时间</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -208,8 +255,8 @@ std::time_t time(std::time_t* arg);
 </div>
 
 
-<div id="outline-container-org7a6e1cb" class="outline-3">
-<h3 id="org7a6e1cb">
+<div id="outline-container-org28e0cdc" class="outline-3">
+<h3 id="org28e0cdc">
 <span class="section-number-3">1.3</span> 获取 <code>struct timeval</code> 格式的时间</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -258,8 +305,8 @@ std::time_t time(std::time_t* arg);
 
 
 
-<div id="outline-container-org6430607" class="outline-3">
-<h3 id="org6430607">
+<div id="outline-container-orge937b51" class="outline-3">
+<h3 id="orge937b51">
 <span class="section-number-3">1.4</span> 获取 <code>struct timespec</code> 格式的时间</h3>
 <div class="outline-text-3" id="text-1-4">
 <p>
@@ -279,13 +326,13 @@ std::time_t time(std::time_t* arg);
 </div>
 
 
-<div id="outline-container-org06f5056" class="outline-2">
-<h2 id="org06f5056">
+<div id="outline-container-org860613e" class="outline-2">
+<h2 id="org860613e">
 <span class="section-number-2">2</span> 时间形式的转换</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-orgf5a29a3" class="outline-3">
-<h3 id="orgf5a29a3">
+<div id="outline-container-org8318128" class="outline-3">
+<h3 id="org8318128">
 <span class="section-number-3">2.1</span> <code>std::time_t</code> 与 <code>std::tm</code> ( <code>struct tm</code> )转换</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
@@ -311,8 +358,8 @@ std::time_t time(std::time_t* arg);
 </div>
 
 
-<div id="outline-container-org9c52f03" class="outline-3">
-<h3 id="org9c52f03">
+<div id="outline-container-org5d2e472" class="outline-3">
+<h3 id="org5d2e472">
 <span class="section-number-3">2.2</span> <code>std::time_t</code> 与字符串转换</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
@@ -326,8 +373,8 @@ std::time_t time(std::time_t* arg);
 </div>
 
 
-<div id="outline-container-org5853165" class="outline-3">
-<h3 id="org5853165">
+<div id="outline-container-orgca14b5a" class="outline-3">
+<h3 id="orgca14b5a">
 <span class="section-number-3">2.3</span> <code>std::tm</code> 与字符串转换</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
@@ -350,8 +397,8 @@ std::time_t time(std::time_t* arg);
 
 
 
-<div id="outline-container-org9a5dfff" class="outline-2">
-<h2 id="org9a5dfff">
+<div id="outline-container-org2fd139d" class="outline-2">
+<h2 id="org2fd139d">
 <span class="section-number-2">3</span> 计算时间间隔</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -363,8 +410,8 @@ std::time_t time(std::time_t* arg);
 </div>
 
 
-<div id="outline-container-orgd27546a" class="outline-2">
-<h2 id="orgd27546a">
+<div id="outline-container-org94c4f92" class="outline-2">
+<h2 id="org94c4f92">
 <span class="section-number-2">4</span> C++11风格的时钟接口</h2>
 <div class="outline-text-2" id="text-4">
 <p>
@@ -384,8 +431,8 @@ C++11中提供了 <code>std::chrono</code> 库，丰富了与时间相关的函�
 
 
 
-<div id="outline-container-org048aadc" class="outline-2">
-<h2 id="org048aadc">
+<div id="outline-container-org3106e6c" class="outline-2">
+<h2 id="org3106e6c">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">

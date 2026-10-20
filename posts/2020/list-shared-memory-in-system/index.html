@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -144,9 +191,9 @@ Linux系统
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orga95972b" class="outline-2">
-<h2 id="orga95972b">Linux系统</h2>
-<div class="outline-text-2" id="text-orga95972b">
+<div id="outline-container-orgbb09eaf" class="outline-2">
+<h2 id="orgbb09eaf">Linux系统</h2>
+<div class="outline-text-2" id="text-orgbb09eaf">
 <p>
 使用 ipcs 能够查看系统中进程间交互所使用的共享资源。这个命令不仅能够查看共享内存信息，还能够查看Linux系统的消息队列（message queue）和信号量（semaphore）。<br></p>
 
@@ -154,9 +201,9 @@ Linux系统
 这个软件一般是随系统附带安装好的，直接在shell中输入命令即可使用。<br></p>
 </div>
 
-<div id="outline-container-orgc948fe1" class="outline-3">
-<h3 id="orgc948fe1">查看所有的共享内存信息</h3>
-<div class="outline-text-3" id="text-orgc948fe1">
+<div id="outline-container-orgd623cd6" class="outline-3">
+<h3 id="orgd623cd6">查看所有的共享内存信息</h3>
+<div class="outline-text-3" id="text-orgd623cd6">
 <div class="highlight"><pre><span></span>ipcs<span class="w"> </span>-m
 </pre></div>
 
@@ -165,9 +212,9 @@ Linux系统
 </div>
 </div>
 
-<div id="outline-container-org9251197" class="outline-3">
-<h3 id="org9251197">查看某个共享内存信息</h3>
-<div class="outline-text-3" id="text-org9251197">
+<div id="outline-container-org92079c1" class="outline-3">
+<h3 id="org92079c1">查看某个共享内存信息</h3>
+<div class="outline-text-3" id="text-org92079c1">
 <div class="highlight"><pre><span></span>ipcs<span class="w"> </span>-m<span class="w"> </span>-i<span class="w"> </span>&lt;shmid&gt;
 </pre></div>
 
@@ -177,9 +224,9 @@ Linux系统
 </div>
 
 
-<div id="outline-container-org52eb1ec" class="outline-3">
-<h3 id="org52eb1ec">查看系统对共享内存的限制</h3>
-<div class="outline-text-3" id="text-org52eb1ec">
+<div id="outline-container-orgf9486ef" class="outline-3">
+<h3 id="orgf9486ef">查看系统对共享内存的限制</h3>
+<div class="outline-text-3" id="text-orgf9486ef">
 <div class="highlight"><pre><span></span>ipcs<span class="w"> </span>-m<span class="w"> </span>-l
 </pre></div>
 
@@ -189,9 +236,9 @@ Linux系统
 </div>
 
 
-<div id="outline-container-org5588a7c" class="outline-3">
-<h3 id="org5588a7c">以列表的格式展示共享内存的详细信息</h3>
-<div class="outline-text-3" id="text-org5588a7c">
+<div id="outline-container-orgb39831c" class="outline-3">
+<h3 id="orgb39831c">以列表的格式展示共享内存的详细信息</h3>
+<div class="outline-text-3" id="text-orgb39831c">
 <div class="highlight"><pre><span></span>ipcs<span class="w"> </span>-m<span class="w"> </span>-c
 </pre></div>
 
@@ -210,9 +257,9 @@ Linux系统
 
 
 
-<div id="outline-container-org4c97f51" class="outline-2">
-<h2 id="org4c97f51">Windows系统</h2>
-<div class="outline-text-2" id="text-org4c97f51">
+<div id="outline-container-org794cdf2" class="outline-2">
+<h2 id="org794cdf2">Windows系统</h2>
+<div class="outline-text-2" id="text-org794cdf2">
 <p>
 在Windows下可以借助accesschk程序获取共享内存信息，但是需要自己对结果进行筛选和分析，不如Linux那样方便。<br></p>
 
@@ -235,9 +282,9 @@ accesschk并不是windows的自带软件，需要额外下载，下载地址见�
 
 
 
-<div id="outline-container-org3c9870e" class="outline-2">
-<h2 id="org3c9870e">参考资料</h2>
-<div class="outline-text-2" id="text-org3c9870e">
+<div id="outline-container-org453bae4" class="outline-2">
+<h2 id="org453bae4">参考资料</h2>
+<div class="outline-text-2" id="text-org453bae4">
 <ul class="org-ul">
 <li>
 <a href="https://www.geeksforgeeks.org/ipcs-command-linux-examples/">geeksforgeeks - ipcs example</a><br>

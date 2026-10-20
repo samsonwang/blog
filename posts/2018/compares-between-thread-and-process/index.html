@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -141,9 +188,9 @@
 
     </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org3f32255" class="outline-2">
-<h2 id="org3f32255">进程与线程之间有什么区别</h2>
-<div class="outline-text-2" id="text-org3f32255">
+    <div id="outline-container-org6dfcf32" class="outline-2">
+<h2 id="org6dfcf32">进程与线程之间有什么区别</h2>
+<div class="outline-text-2" id="text-org6dfcf32">
 <p>
 进程（process）是指在系统中正在运行的一个应用程序，是系统资源分配的基本单位，在内存中有其完备的数据空间和代码空间，拥有完整的虚拟空间地址。一个进程所拥有的数据和变量只属于它自己。<br></p>
 
@@ -154,9 +201,9 @@
 进程和线程都具有就绪、阻塞和运行三种基本状态。<br></p>
 </div>
 
-<div id="outline-container-org7637c58" class="outline-3">
-<h3 id="org7637c58">联系</h3>
-<div class="outline-text-3" id="text-org7637c58">
+<div id="outline-container-org03601bb" class="outline-3">
+<h3 id="org03601bb">联系</h3>
+<div class="outline-text-3" id="text-org03601bb">
 <ul class="org-ul">
 <li>一个进程至少拥有一个线程(主线程)，也可以拥有多个线程<br>
 </li>
@@ -170,18 +217,18 @@
 </div>
 </div>
 
-<div id="outline-container-org9722882" class="outline-3">
-<h3 id="org9722882">区别</h3>
-<div class="outline-text-3" id="text-org9722882">
+<div id="outline-container-orgcaeed92" class="outline-3">
+<h3 id="orgcaeed92">区别</h3>
+<div class="outline-text-3" id="text-orgcaeed92">
 <p>
 系统开销：在创建或撤消进程时，由于系统都要为之分配和回收资源，导致系统的开销明显大于创建或撤消线程时的开销<br>
 资源管理：进程有独立的地址空间，一个进程崩溃后，在保护模式下不会对其它进程产生影响，而线程只是一个进程中的不同执行路径。线程有自己的堆栈和局部变量，但线程之间没有单独的地址空间，一个线程死掉就等于整个进程死掉，所以多进程的程序要比多线程的程序健壮，但在进程切换时，耗费资源较大，效率要差一些。但对于一些要求同时进行并且又要共享某些变量的并发操作，只能用线程，不能用进程。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3c19d7e" class="outline-3">
-<h3 id="org3c19d7e">通信方式</h3>
-<div class="outline-text-3" id="text-org3c19d7e">
+<div id="outline-container-org7a2ec97" class="outline-3">
+<h3 id="org7a2ec97">通信方式</h3>
+<div class="outline-text-3" id="text-org7a2ec97">
 <p>
 进程间通信主要包括管道、系统IPC(包括消息队列，信号量，共享存储)、SOCKET，具体说明参考linux进程间通信方式。进程间通信其实是指分属于不同进程的线程之间的通讯，所以进程间的通信方法同样适用于线程间的通信。但对于同一进程的不同线程来说，使用全局变量进行通信效率会更高。<br></p>
 </div>
@@ -189,9 +236,9 @@
 </div>
 
 
-<div id="outline-container-org1b2893d" class="outline-2">
-<h2 id="org1b2893d">什么情况下适合使用线程</h2>
-<div class="outline-text-2" id="text-org1b2893d">
+<div id="outline-container-orgb081c1c" class="outline-2">
+<h2 id="orgb081c1c">什么情况下适合使用线程</h2>
+<div class="outline-text-2" id="text-orgb081c1c">
 <p>
 线程相对于进程的优势：<br></p>
 <ul class="org-ul">
@@ -216,9 +263,9 @@
 </div>
 
 
-<div id="outline-container-org5a63270" class="outline-2">
-<h2 id="org5a63270">什么情况下适合使用进程</h2>
-<div class="outline-text-2" id="text-org5a63270">
+<div id="outline-container-org99d7b47" class="outline-2">
+<h2 id="org99d7b47">什么情况下适合使用进程</h2>
+<div class="outline-text-2" id="text-org99d7b47">
 <p>
 进程相对于线程的优势：<br></p>
 <ul class="org-ul">
@@ -235,9 +282,9 @@
 </div>
 
 
-<div id="outline-container-org0f81c68" class="outline-2">
-<h2 id="org0f81c68">参考资料</h2>
-<div class="outline-text-2" id="text-org0f81c68">
+<div id="outline-container-org7e38dbf" class="outline-2">
+<h2 id="org7e38dbf">参考资料</h2>
+<div class="outline-text-2" id="text-org7e38dbf">
 <ul class="org-ul">
 <li>
 <a href="https://www.backblaze.com/blog/whats-the-diff-programs-processes-and-threads/">backblaze.com - difference between process and thread</a><br>

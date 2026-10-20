@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -72,6 +112,13 @@
 
   apply();
 
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
+
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
     if (btn) { btn.addEventListener('click', cycle); }
@@ -87,7 +134,7 @@
     </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2026/handle-app-crash-on-windows/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
-<link rel="prev" href="/blog/posts/2025/linux-driver-dev-tips/" title="Linux 驱动开发笔记" type="text/html">
+<link rel="prev" href="/blog/posts/2025/opencv-lut/" title="opencv中LUT函数效率更高的原因" type="text/html">
 <link rel="next" href="/blog/posts/2026/calligrahpy-practice-202608/" title="2026年8月书法练习记录" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
@@ -146,9 +193,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgd83dca4" class="outline-2">
-<h2 id="orgd83dca4">确定是否真的是软件异常退出</h2>
-<div class="outline-text-2" id="text-orgd83dca4">
+<div id="outline-container-org5a00071" class="outline-2">
+<h2 id="org5a00071">确定是否真的是软件异常退出</h2>
+<div class="outline-text-2" id="text-org5a00071">
 <p>
 有些时候进程可能是卡住了，例如驱动程序错误导致进程卡在操作硬件设备的接口中，导致进程无法正常完成其预定的功能。<br></p>
 
@@ -166,9 +213,9 @@
 </div>
 
 
-<div id="outline-container-org6a49dcd" class="outline-2">
-<h2 id="org6a49dcd">生成调试信息文件</h2>
-<div class="outline-text-2" id="text-org6a49dcd">
+<div id="outline-container-orge8991c9" class="outline-2">
+<h2 id="orge8991c9">生成调试信息文件</h2>
+<div class="outline-text-2" id="text-orge8991c9">
 <p>
 在生产环境中排查进程崩溃问题需要在编译程序时就生成调试信息文件（pdb文件）。<br>
 在MSVC中可以直接设置项目属性，或者在 <code>CMakeLists.txt</code> 增加配置项。<br></p>
@@ -182,9 +229,9 @@ endif ()
 </div>
 
 
-<div id="outline-container-org30de650" class="outline-2">
-<h2 id="org30de650">在程序中设置捕获崩溃时的异常信息文件</h2>
-<div class="outline-text-2" id="text-org30de650">
+<div id="outline-container-org18d2f39" class="outline-2">
+<h2 id="org18d2f39">在程序中设置捕获崩溃时的异常信息文件</h2>
+<div class="outline-text-2" id="text-org18d2f39">
 <p>
 可以在程序中添加对异常信息的捕获，但是需要注意的是有可能会失效，有时候遇到比较严重的错误会导致进程无法成功生成异常信息文件。<br></p>
 
@@ -267,9 +314,9 @@ endif ()
 </div>
 
 
-<div id="outline-container-org63c7955" class="outline-2">
-<h2 id="org63c7955">使用Windows Error Reporting机制捕获程序异常</h2>
-<div class="outline-text-2" id="text-org63c7955">
+<div id="outline-container-org1d3a91f" class="outline-2">
+<h2 id="org1d3a91f">使用Windows Error Reporting机制捕获程序异常</h2>
+<div class="outline-text-2" id="text-org1d3a91f">
 <p>
 WER是Windwos系统自带的功能，但是WER默认会捕获系统中所有的进程异常退出，也支持通过修改配置来精细地控制捕获的规则。<br></p>
 
@@ -282,9 +329,9 @@ WER是Windwos系统自带的功能，但是WER默认会捕获系统中所有的�
 </div>
 
 
-<div id="outline-container-org260a95a" class="outline-2">
-<h2 id="org260a95a">使用procdump捕获程序异常</h2>
-<div class="outline-text-2" id="text-org260a95a">
+<div id="outline-container-orgd455d20" class="outline-2">
+<h2 id="orgd455d20">使用procdump捕获程序异常</h2>
+<div class="outline-text-2" id="text-orgd455d20">
 <p>
 procdump是Windows官方提供的调试工具，可以捕获指定进程的异常。<br></p>
 
@@ -324,8 +371,8 @@ procdump是Windows官方提供的调试工具，可以捕获指定进程的异�
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/blog/posts/2025/linux-driver-dev-tips/" rel="prev">Previous post
-        <br><span>Linux 驱动开发笔记</span>
+      <a href="/blog/posts/2025/opencv-lut/" rel="prev">Previous post
+        <br><span>opencv中LUT函数效率更高的原因</span>
       </a>
     </li>
     <li class="next">

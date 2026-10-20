@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -144,9 +191,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgfc014bb" class="outline-2">
-<h2 id="orgfc014bb">使用Qt库的方案</h2>
-<div class="outline-text-2" id="text-orgfc014bb">
+<div id="outline-container-orgdd1fb9a" class="outline-2">
+<h2 id="orgdd1fb9a">使用Qt库的方案</h2>
+<div class="outline-text-2" id="text-orgdd1fb9a">
 <p>
 可以使用Qt库的 <code>QWidget::raise()</code> 这个接口来置顶窗口。但是在Windows系统上，将窗口置顶显示这个操作是受限制的，在后台运行的程序并不能随意将自己的窗口置于顶层。需要借助 <code>AllowSetForegroundWindow()</code> 接口将置顶窗口权限移交至后台程序，后台程序才允许将自己的窗口置于顶层。<br></p>
 
@@ -215,9 +262,9 @@
 </div>
 </div>
 
-<div id="outline-container-org6f9f753" class="outline-2">
-<h2 id="org6f9f753">使用Win32接口的方案</h2>
-<div class="outline-text-2" id="text-org6f9f753">
+<div id="outline-container-org4af7a09" class="outline-2">
+<h2 id="org4af7a09">使用Win32接口的方案</h2>
+<div class="outline-text-2" id="text-org4af7a09">
 <p>
 可以使用Win32接口 <code>FindWindow</code> 找到窗口对应的句柄，通过窗口句柄将界面带到前面。这个窗口句柄允许是非本进程的。<br></p>
 
@@ -226,9 +273,9 @@
 </div>
 </div>
 
-<div id="outline-container-org2c4d6ce" class="outline-2">
-<h2 id="org2c4d6ce">参考资料</h2>
-<div class="outline-text-2" id="text-org2c4d6ce">
+<div id="outline-container-org6b7ad58" class="outline-2">
+<h2 id="org6b7ad58">参考资料</h2>
+<div class="outline-text-2" id="text-org6b7ad58">
 <ul class="org-ul">
 <li>
 <a href="https://github.com/itay-grudev/SingleApplication">github - qt SingleApplication</a><br>

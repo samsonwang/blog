@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -151,9 +198,9 @@ C++中的delete关键字用于释放动态申请的内存，是使用频率非�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org14e0dd5" class="outline-2">
-<h2 id="org14e0dd5">释放 <code>new</code> 关键字申请的数组</h2>
-<div class="outline-text-2" id="text-org14e0dd5">
+<div id="outline-container-org69fd227" class="outline-2">
+<h2 id="org69fd227">释放 <code>new</code> 关键字申请的数组</h2>
+<div class="outline-text-2" id="text-org69fd227">
 <div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">pArray</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">int</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
 </pre></div>
 <p>
@@ -168,18 +215,18 @@ C++中的delete关键字用于释放动态申请的内存，是使用频率非�
 </div>
 
 
-<div id="outline-container-org3f7d2cb" class="outline-2">
-<h2 id="org3f7d2cb">使用 <code>delete</code> 关键字释放 <code>void*</code> 类型的指针</h2>
-<div class="outline-text-2" id="text-org3f7d2cb">
+<div id="outline-container-orgb1f0def" class="outline-2">
+<h2 id="orgb1f0def">使用 <code>delete</code> 关键字释放 <code>void*</code> 类型的指针</h2>
+<div class="outline-text-2" id="text-orgb1f0def">
 <p>
 一般来讲， <code>delete</code> 在释放内存时会同时调用对象的析构函数。所以，使用 <code>delete</code> 释放 <code>void*</code> 指针时，是能够释放该指针所指内存的。但由于没有执行析构函数，所以有潜在的资源泄漏风险，并不推荐这种写法。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgf539fae" class="outline-2">
-<h2 id="orgf539fae">参考资料</h2>
-<div class="outline-text-2" id="text-orgf539fae">
+<div id="outline-container-org20d74ee" class="outline-2">
+<h2 id="org20d74ee">参考资料</h2>
+<div class="outline-text-2" id="text-org20d74ee">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/941832/is-it-safe-to-delete-a-void-pointer">stackoverflow.com - is it safe to delete a void pointer</a><br>

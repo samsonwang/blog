@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -72,6 +112,13 @@
 
   apply();
 
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
+
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
     if (btn) { btn.addEventListener('click', cycle); }
@@ -87,7 +134,7 @@
     </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2025/opencv-morph/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
-<link rel="prev" href="/blog/posts/2025/opencv-image-filters/" title="opencv的中值滤波和双边滤波" type="text/html">
+<link rel="prev" href="/blog/posts/2025/opencv-image-thresholding/" title="opencv图像二值化" type="text/html">
 <link rel="next" href="/blog/posts/2025/linux-driver-dev-tips/" title="Linux 驱动开发笔记" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
@@ -161,9 +208,9 @@
 本节的腐蚀和膨胀处理的都是二值化之后的图像，所以也可以称之为二值腐蚀和二值膨胀，与灰度腐蚀和灰度膨胀对应。<br>
 腐蚀和膨胀都是针对白色部分而言的（在二值图像中白色为255）。<br></p>
 
-<div id="outline-container-org3daa0a9" class="outline-2">
-<h2 id="org3daa0a9">腐蚀（erosion）</h2>
-<div class="outline-text-2" id="text-org3daa0a9">
+<div id="outline-container-org4f5661b" class="outline-2">
+<h2 id="org4f5661b">腐蚀（erosion）</h2>
+<div class="outline-text-2" id="text-org4f5661b">
 <p>
 腐蚀是求局部最小值的过程，图像处理后的效果为白色减少、黑色增多。<br></p>
 
@@ -181,9 +228,9 @@
 </div>
 
 
-<div id="outline-container-orgdaad830" class="outline-2">
-<h2 id="orgdaad830">膨胀（dilation）</h2>
-<div class="outline-text-2" id="text-orgdaad830">
+<div id="outline-container-orgb3a6f78" class="outline-2">
+<h2 id="orgb3a6f78">膨胀（dilation）</h2>
+<div class="outline-text-2" id="text-orgb3a6f78">
 <p>
 膨胀是求局部最大值的过程，图像处理后的效果为白色增多、黑色减少。<br></p>
 
@@ -201,9 +248,9 @@
 </div>
 
 
-<div id="outline-container-org36240bb" class="outline-2">
-<h2 id="org36240bb">结构元素（核）的影响</h2>
-<div class="outline-text-2" id="text-org36240bb">
+<div id="outline-container-org9d786e3" class="outline-2">
+<h2 id="org9d786e3">结构元素（核）的影响</h2>
+<div class="outline-text-2" id="text-org9d786e3">
 <p>
 结构元素的形状和大小会显著影响形态学操作的结果：<br>
 目前 opencv 有四种可选的核：矩形，椭圆形，十字形，菱形。<br>
@@ -212,9 +259,9 @@
 </div>
 
 
-<div id="outline-container-org8d14b8e" class="outline-2">
-<h2 id="org8d14b8e">腐蚀和膨胀的测试代码</h2>
-<div class="outline-text-2" id="text-org8d14b8e">
+<div id="outline-container-orga8d449f" class="outline-2">
+<h2 id="orga8d449f">腐蚀和膨胀的测试代码</h2>
+<div class="outline-text-2" id="text-orga8d449f">
 <p>
 下面是一段测试程序，用于演示腐蚀和膨胀的效果、不同核的处理效果。<br></p>
 
@@ -281,18 +328,18 @@
 </div>
 
 
-<div id="outline-container-org1308a98" class="outline-2">
-<h2 id="org1308a98">开运算（opening）</h2>
-<div class="outline-text-2" id="text-org1308a98">
+<div id="outline-container-org40fafcc" class="outline-2">
+<h2 id="org40fafcc">开运算（opening）</h2>
+<div class="outline-text-2" id="text-org40fafcc">
 <p>
 线腐蚀后膨胀，用于消除小物体和毛刺<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org3a2f27e" class="outline-2">
-<h2 id="org3a2f27e">闭运算（closing）</h2>
-<div class="outline-text-2" id="text-org3a2f27e">
+<div id="outline-container-orgc8554fd" class="outline-2">
+<h2 id="orgc8554fd">闭运算（closing）</h2>
+<div class="outline-text-2" id="text-orgc8554fd">
 <p>
 先膨胀后腐蚀，用于填充小孔和连接断裂<br></p>
 
@@ -312,8 +359,8 @@
     </li>
   </ul></article><ul class="post-pager hidden-print">
 <li class="previous">
-      <a href="/blog/posts/2025/opencv-image-filters/" rel="prev">Previous post
-        <br><span>opencv的中值滤波和双边滤波</span>
+      <a href="/blog/posts/2025/opencv-image-thresholding/" rel="prev">Previous post
+        <br><span>opencv图像二值化</span>
       </a>
     </li>
     <li class="next">

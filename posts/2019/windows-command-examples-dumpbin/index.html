@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 <link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
 <script>
 (function () {
@@ -31,6 +31,20 @@
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -47,12 +61,38 @@
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -71,6 +111,13 @@
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');
@@ -154,18 +201,18 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orga9222f2" class="outline-2">
-<h2 id="orga9222f2">简介</h2>
-<div class="outline-text-2" id="text-orga9222f2">
+<div id="outline-container-org6842901" class="outline-2">
+<h2 id="org6842901">简介</h2>
+<div class="outline-text-2" id="text-org6842901">
 <p>
 dumpbin常用于查看可执行程序和动态库文件，这类文件有个正式的名称Microsoft COFF，COFF全称为Common Object File Format。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgffabf6f" class="outline-2">
-<h2 id="orgffabf6f">查看动态库中的导出函数接口</h2>
-<div class="outline-text-2" id="text-orgffabf6f">
+<div id="outline-container-org400e3f6" class="outline-2">
+<h2 id="org400e3f6">查看动态库中的导出函数接口</h2>
+<div class="outline-text-2" id="text-org400e3f6">
 <p>
 使用以下命令能够查看动态库的导出函数，可以用于辅助检查动态库是否正确地生成了指定名称的接口。<br></p>
 <div class="highlight"><pre><span></span>dumpbin /exports xxx.dll
@@ -174,9 +221,9 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
 </div>
 
 
-<div id="outline-container-org9867302" class="outline-2">
-<h2 id="org9867302">查看程序或动态库是32位还是64位的</h2>
-<div class="outline-text-2" id="text-org9867302">
+<div id="outline-container-orgf84b45c" class="outline-2">
+<h2 id="orgf84b45c">查看程序或动态库是32位还是64位的</h2>
+<div class="outline-text-2" id="text-orgf84b45c">
 <p>
 使用以下命令能够查看COFF文件的头信息，在头信息中包含机器架构信息，从而可以得知是文件是32位还是64位的。<br></p>
 <div class="highlight"><pre><span></span>dumpbin /headers xxxx.dll
@@ -185,9 +232,9 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
 </div>
 
 
-<div id="outline-container-orga5146ef" class="outline-2">
-<h2 id="orga5146ef">查看程序所依赖的动态库</h2>
-<div class="outline-text-2" id="text-orga5146ef">
+<div id="outline-container-org6fdef04" class="outline-2">
+<h2 id="org6fdef04">查看程序所依赖的动态库</h2>
+<div class="outline-text-2" id="text-org6fdef04">
 <p>
 使用以下命令能够查看文件所依赖的动态库信息，执行后会将依赖动态库名称列出来。<br></p>
 <div class="highlight"><pre><span></span>dumpbin /dependents xxx.dll
@@ -196,9 +243,9 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
 </div>
 
 
-<div id="outline-container-orga26fcc9" class="outline-2">
-<h2 id="orga26fcc9">查看静态库中的函数</h2>
-<div class="outline-text-2" id="text-orga26fcc9">
+<div id="outline-container-org7c09de7" class="outline-2">
+<h2 id="org7c09de7">查看静态库中的函数</h2>
+<div class="outline-text-2" id="text-org7c09de7">
 <p>
 使用以下命令能够查看静态库所包含的链接信息，用于辅助检查链接错误。<br></p>
 <div class="highlight"><pre><span></span>dumpbin /linkermember xxx.lib
@@ -209,9 +256,9 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
 </div>
 
 
-<div id="outline-container-orgbfb5c46" class="outline-2">
-<h2 id="orgbfb5c46">参考资料</h2>
-<div class="outline-text-2" id="text-orgbfb5c46">
+<div id="outline-container-org9fc076c" class="outline-2">
+<h2 id="org9fc076c">参考资料</h2>
+<div class="outline-text-2" id="text-org9fc076c">
 <ul class="org-ul">
 <li>
 <a href="https://docs.microsoft.com/en-us/cpp/build/reference/dumpbin-reference">microsoft docs - dumpbin reference</a><br>
