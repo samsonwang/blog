@@ -103,20 +103,25 @@ lang="${lang}">
 
 <%def name="html_stylesheets()">
 ## 亮色与暗色是两张完整样式表，靠 media 属性互斥启用（见 theme_toggle_script）。
+## 初始 media 必须写成 prefers-color-scheme 查询，不能写 media="not all"：
+## media 不匹配的样式表不进渲染阻塞集合（Chrome 干脆不下载），
+## 等脚本把 media 改成 all 时浏览器才开始请求，这段空窗里两张主表都不生效，
+## 页面就会先渲染成一坨裸 HTML，Ctrl+F5（绕过缓存）时尤其明显。
+## 写成系统配色查询后，解析阶段就能确定该用哪张，它能正常阻塞首帧渲染。
 %if use_bundles:
   %if use_cdn:
-    <link href="/assets/css/all.css" id="theme-css-light" rel="stylesheet" type="text/css">
+    <link href="/assets/css/all.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
   %else:
-    <link href="/assets/css/all-nocdn.css" id="theme-css-light" rel="stylesheet" type="text/css">
+    <link href="/assets/css/all-nocdn.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
   %endif
-    <link href="/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+    <link href="/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
 %else:
   %if use_cdn:
-    <link href="https://cdn.jsdelivr.net/gh/samsonwang/blog@master/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css"></link>
-    <link href="https://cdn.jsdelivr.net/gh/samsonwang/blog@master/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all"></link>
+    <link href="https://cdn.jsdelivr.net/gh/samsonwang/blog@master/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)"></link>
+    <link href="https://cdn.jsdelivr.net/gh/samsonwang/blog@master/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)"></link>
   %else:
-    <link href="/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
-    <link href="/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+    <link href="/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css" media="(prefers-color-scheme: light)">
+    <link href="/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="(prefers-color-scheme: dark)">
   %endif
 
     ## code.css 由 Nikola 负责生成
@@ -147,8 +152,9 @@ lang="${lang}">
 </%def>
 
 <%def name="theme_toggle_script()">
-    ## 配色模式脚本：必须在样式表之后执行，先把正确的样式表启用，再做任何绘制，
-    ## 否则暗色用户会先看到一帧白底。
+    ## 配色模式脚本：紧随样式表之后执行，赶在首次绘制前把该用的那张表打开。
+    ## 首帧本身靠 link 的 prefers-color-scheme 查询兜住，这里只处理「用户手动选的
+    ## 配色与系统不一致」这种 CSS 表达不了的情况。
     <script>
 (function () {
   var KEY = 'minima-color-mode';
@@ -168,6 +174,20 @@ lang="${lang}">
     return mode;
   }
 
+  // 样式表是否真的可用于渲染。加载失败时 link.sheet 仍然存在，
+  // 只是读 cssRules 会抛 SecurityError，所以不能只看 sheet 在不在。
+  // 跨域（走 CDN）时同样读不到规则，只能靠 load 事件留下的标记。
+  var loaded = { light: false, dark: false };
+  var bindOnce = false;
+
+  function isUsable(link, key) {
+    if (loaded[key]) { return true; }
+    try {
+      return !!(link.sheet && link.sheet.cssRules && link.sheet.cssRules.length);
+    } catch (e) {
+      return false;
+    }
+  }
   function syncButton() {
     var btn = document.getElementById('theme-toggle');
     if (!btn) { return; }
@@ -184,12 +204,38 @@ lang="${lang}">
     var light = document.getElementById('theme-css-light');
     var dark = document.getElementById('theme-css-dark');
     if (light && dark) {
+      // 记下哪张表真正加载成功过，供 isUsable 判断
+      if (!bindOnce) {
+        bindOnce = true;
+        light.addEventListener('load', function () { loaded.light = true; });
+        dark.addEventListener('load', function () { loaded.dark = true; });
+      }
+
+      // 目标样式表可能还没下载（系统配色与用户所选不一致，或系统刚切换过）：
+      // 在它可用之前不能先关掉正在生效的那张，否则两张都不生效，页面会裸一下。
+      var activate = function (target, other, key) {
+        var off = function () { other.media = 'not all'; };
+        if (isUsable(target, key)) {
+          if (target.media !== 'all') { target.media = 'all'; }
+          off();
+          return;
+        }
+        // 慢网络下先让另一张继续生效，等目标表真到了再切过去
+        target.addEventListener('load', function () {
+          clearTimeout(bail);
+          if (isUsable(target, key)) { off(); }
+        }, { once: true });
+        // 目标表彻底拿不到（产物缺文件、CDN 挂了）：退回另一张，宁可配色不符也不要白页
+        var bail = setTimeout(function () {
+          if (!isUsable(target, key)) { other.media = 'all'; }
+        }, 2000);
+        if (target.media !== 'all') { target.media = 'all'; }
+      };
+
       if (theme === 'dark') {
-        dark.media = 'all';
-        light.media = 'not all';
+        activate(dark, light, 'dark');
       } else {
-        light.media = 'all';
-        dark.media = 'not all';
+        activate(light, dark, 'light');
       }
     }
 
@@ -208,6 +254,13 @@ lang="${lang}">
   }
 
   apply();
+
+  // 首帧不参与底色过渡：等两帧后再放开，避免首次加载时颜色「渐变」出来。
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      root.setAttribute('data-theme-ready', '');
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('theme-toggle');

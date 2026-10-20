@@ -1,0 +1,241 @@
+#+BEGIN_COMMENT
+.. title: opencv中LUT函数效率更高的原因
+.. slug: opencv-lut
+.. date: 2025-08-22 16:04:05 UTC+08:00
+.. tags: opencv
+.. category: opencv
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil
+
+#+TITLE: opencv中LUT函数效率更高的原因
+
+LUT 快不是「查表比算术快」这么一句空话，而是三件事叠在一起——把每个像素的一次运算换成了常驻 L1 的一次内存读；src 和 dst 都是严格顺序的流式访问，硬件预取器全程满负荷；再叠上 OpenCV 的后端分派和多线程。而最有意思的一点是，OpenCV 在 x86 上主动放弃了向量化，因为实测算下来 gather 比标量还慢。
+
+{{{TEASER_END}}}
+
+** LUT 把什么换成了什么
+
+单通道 8 位输入、8 位输出的核心循环就三行：
+
+#+BEGIN_SRC C++
+for (int i = 0; i < n; ++i)
+    dst[i] = lut[src[i]];
+#+END_SRC
+
+原来每个像素要做的事（gamma 的 pow、对比度的乘加、伪彩色的三分支判断）现在在建表的时候一次性做完 256 次。像素数从 200 万次运算降到 200 万次查表，而查表的表只有 256 字节。
+
+这个替换有两个前提，缺一不可：
+
+1. 映射只依赖像素值本身，不依赖坐标、不依赖邻域。带位置信息的晕影、自适应阈值都没法预先建表。
+2. 输入的值域必须小。8 位只有 256 种取值，表就是 256 项；16 位是 65536 项，表的大小立刻从 256 字节涨到 128 KB。
+
+第二条正是 OpenCV 入口那句断言在管的事：
+
+#+BEGIN_SRC C++
+CV_Assert((lutcn == cn || lutcn == 1) && _lut.isContinuous() &&
+    (((lut_size == 256) && ((depth == CV_8U) || (depth == CV_8S))) ||
+     ((lut_size == 65536) && ((depth == CV_16U) || (depth == CV_16S)))));
+#+END_SRC
+
+三个条件：通道数要么和源一致、要么是 1（一张表给所有通道用）；表必须连续，不能是 ROI 那种带行间隔的视图；表长必须和源深度匹配。CV_32F 的输入走不通，因为那需要 4G 项的表。
+
+顺带一个容易踩的点：输出类型不是由源决定的，而是由表决定的。
+
+#+BEGIN_SRC C++
+_dst.create(src.dims, src.size, CV_MAKETYPE(_lut.depth(), cn));
+#+END_SRC
+
+传一个 CV_32F 的 256 项表，输出就是 CV_32F。做「8 位灰度映射到 0~1 浮点」这类归一化时，这个特性挺好用，比 convertTo 少一遍遍历。
+
+** 源码里的四层分派
+
+cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：
+
+1. OpenCL。目标是 UMat 且表长 256 时走 GPU 上的 lut kernel。
+2. HAL。=cv_hal_lut= 和 =cv_hal_lut16= 这两个钩子，给 IPP、ARM 那边的第三方加速库留的，没接就是空实现。
+3. CPU 分派。getLUTFunc 按源深度和目标深度的组合返回一个函数指针；只有两条热路径会继续走到运行时指令集分派。
+4. 多线程。只有目标像素数过 2^18（26 万）才开 parallel_for_。
+
+第 4 条值得单独看，小图是不开线程的：
+
+#+BEGIN_SRC C++
+if (dst.total() >= (size_t)(1 << 18))
+    parallel_for_(all, body, (double)std::max((size_t)1, dst.total() >> 16));
+else
+    body(all);
+#+END_SRC
+
+分片数是总像素数右移 16 位：100 万像素分 16 片，26 万像素正好卡在 4 片。而 640x480 只有 30 万像素，勉强过线；再小一点就直接单线程跑完。线程唤醒加同步的成本比整张图查一遍表还贵，很多「我调了怎么没变快」的疑问就出在这。
+
+第 3 条的分派表本身也很说明问题。getLUTFunc 里，8U/8S 到 8U、8U 到 16U 这两组走的是 =LUT8u_dispatch= 和 =LUT16u_dispatch= 这两个函数，它们有专用 SIMD 实现；其余所有组合——8U 到 8S、到 16S、到 32S、到 32F、到 64F——全部落到模板 LUT_ 里的标量循环。OpenCV 只优化了真正被大量调用的那两条路。
+
+** SIMD：x86 上唯一划算的指令
+
+这是整个实现里最反直觉的一段。lut.simd.hpp 开头就是一整块注释加宏，直白地写着：x86 上只有 AVX-512 VBMI 的 vpermb 比标量快，AVX2/SSE 的 gather 因为延迟太高，反而更慢。
+
+#+BEGIN_SRC C++
+// VBMI vpermb is the only x86 SIMD path faster than scalar for byte LUT.
+// x86 gather (AVX2/SSE) is slower than scalar due to high gather latency.
+// Non-x86 (NEON, etc.) benefits from v_lut implementation.
+#if CV_AVX_512VBMI
+#define CV_LUT8U_SIMD 1
+#elif (defined(CV_CPU_COMPILE_SSE) || defined(CV_CPU_COMPILE_SSE2) || ... )
+#define CV_LUT8U_SIMD 0
+#elif CV_SIMD || CV_SIMD_SCALABLE
+#define CV_LUT8U_SIMD 1
+#else
+#define CV_LUT8U_SIMD 0
+#endif
+#+END_SRC
+
+换句话说，编译 SSE/AVX2 版本的翻译单元时，这个宏被硬设成 0，根本不生成向量代码；只有到 AVX512_ICL 那一档（带 VBMI）才打开。翻译单元里循环体的写法一模一样，只是被宏切掉了。
+
+为什么 vpermb 行、gather 不行？vpermb 是「拿一个 64 字节寄存器当表，对每个字节下标做 64 路并行重排」，纯寄存器操作，一条指令出 64 个结果。256 项的表要 4 个 64 字节寄存器，靠下标的高 2 位在 4 张表之间选，再掩码混合。而 gather 是从内存里按 16 个下标各取一次，微码把它拆成 16 次独立加载，延迟 10 个周期起步，吞吐还不如标量的三级流水。所以「向量查表」这件事，在 gather 指令上是负优化。
+
+真正的向量路径长这样：
+
+#+BEGIN_SRC C++
+const int nlanes = VTraits<v_uint8>::vlanes();
+for (; i <= total - nlanes; i += nlanes) {
+    v_uint8 idx = vx_load(src + i);
+    v_uint8 result = v_lut(lut, idx);
+    v_store(dst + i, result);
+}
+for (; i < total; i++)
+    dst[i] = lut[src[i]];
+#+END_SRC
+
+注意边界是 total - nlanes，剩下的几个像素必须单独走标量，否则会越界读。这是所有手写 SIMD 的固定结构，也是「SIMD 版本代码量翻倍」的来源。
+
+*** 三通道为什么要先把表拆开
+
+三通道最自然的写法是 lut[src[i]*3 + k]，但这样表是交错的，一个 vpermb 只能对一张连续的表做重排。OpenCV 的做法是先花 256 次把交错表拆成三张独立的 256 字节表，主循环就变成「解交织、三次单表查表、再交织」：
+
+#+BEGIN_SRC C++
+for (; i <= total - nlanes*3; i += nlanes*3) {
+    v_uint8 r, g, b;
+    v_load_deinterleave(src + i, r, g, b);
+    r = v_lut(lut0, r);
+    g = v_lut(lut1, g);
+    b = v_lut(lut2, b);
+    v_store_interleave(dst + i, r, g, b);
+}
+#+END_SRC
+
+解交织和再交织在硬件上只是几条 shuffle，比三次跨步 gather 便宜得多。这个「预处理一次数据结构、换取主循环规整」的思路很通用：主循环跑了几十万次，建表只跑 256 次，怎么算都划算。
+
+*** 16 位表拆高低字节
+
+8U 源配 16U 表时，表是 256 个 ushort。OpenCV 没有去找 16 位的查表指令，而是把每个 ushort 拆成低字节表和高字节表，做两次字节查表，再用 zip 拼回去：
+
+#+BEGIN_SRC C++
+uchar lut_lo[256], lut_hi[256];
+for (int j = 0; j < 256; j++) {
+    lut_lo[j] = (uchar)(lut[j]);
+    lut_hi[j] = (uchar)(lut[j] >> 8);
+}
+// 主循环里：
+v_uint8 lo = v_lut(lut_lo, idx);
+v_uint8 hi = v_lut(lut_hi, idx);
+v_zip(lo, hi, res0, res1);   // [l0,h0,l1,h1,...]
+#+END_SRC
+
+小端序刚好让 [lo, hi] 的排列等于一个 ushort 的内存布局，所以 zip 完直接改写类型存回去就是对的。这个技巧在别的场合也用得上，比如 8 位灰度拼 RGB565。
+
+** 缓存：它凭什么对 cache 友好
+
+前面讲的是指令，这一层才是「为什么它天然快」的主因。
+
+- 表极小，且反复命中。8 位单表 256 字节，三通道拆开也就 768 字节。x86 的 L1 数据缓存是 32~48 KB，一张表连 1% 都占不到。整个循环里那张表被读几十万次，除了第一次以外全部命中 L1，查表那次 load 的延迟只有 4~5 个周期，跟一次算术差不多。
+- 源和目标是严格递增的顺序流。没有跨步、没有随机跳转，硬件预取器对递增模式的识别率接近 100%，等于内存延迟被完全隐藏。此时瓶颈是内存带宽，不是延迟，而带宽是这种循环唯一无法避免的成本。
+- 不产生中间 Mat。整条路径只在最后写一遍 dst，没有临时缓冲，也就没有额外的分配和一次多余的读写往返。相比之下，先 =src.clone()= 再原地处理、最后拷回去，内存流量直接翻三倍。
+- 分块单位是「平面」，不是「整张图」。对非连续的 Mat（比如从大图上切出来的 ROI），NAryMatIterator 按平面推进，len 取当次连续段的长度：
+
+#+BEGIN_SRC C++
+const Mat* arrays[] = {&src, &dst, 0};
+uchar* ptrs[2] = {};
+NAryMatIterator it(arrays, ptrs);
+int len = (int)it.size;
+for (size_t i = 0; i < it.nplanes; i++, ++it)
+    func_(ptrs[0], lut_.ptr(), ptrs[1], len, cn, lutcn);
+#+END_SRC
+
+这一手是很多人手写代码会漏掉的：ROI 的 Mat 每行之间是有间隔的（step 大于 cols），直接按 cols*rows 当成连续内存遍历会读到错误的数据，而在 Debug 下还看不出来，因为它只是读到了别的行。OpenCV 把「可能不连续」这件事统一交给迭代器，所以调用方永远不用关心。
+
+** 那手写循环为什么慢
+
+说实话：如果手写的是裸指针、连续内存、一行 for、开 -O3，那它和 LUT 的标量路径性能是一样的，差距只在多线程。真正慢的是下面几种写法：
+
+#+BEGIN_SRC C++
+// 慢 1：每个像素一次 at 调用，边界检查和坐标计算都不肯白给
+for (int y = 0; y < img.rows; y++)
+    for (int x = 0; x < img.cols; x++)
+        img.at<uchar>(y, x) = lut[img.at<uchar>(y, x)];
+
+// 慢 2：每次循环都重新算一遍映射函数
+for (int i = 0; i < n; i++)
+    dst[i] = saturate_cast<uchar>(std::pow(src[i] / 255.0, gamma) * 255);
+
+// 慢 3：制造中间副本
+Mat tmp = src.clone();
+for (...) tmp[i] = ...;
+tmp.copyTo(dst);
+#+END_SRC
+
+第一种是把 at 的便利当成免费的；第二种是把该建表的事做了 200 万次，pow 一次几十个周期，比查表慢两个数量级；第三种多了一次全图分配加两次内存往返。这三种和 cv::LUT 的差距都是数量级的，而且跟 SIMD 一点关系都没有——先把自己的循环写对，再谈指令。
+
+另外 cv::LUT 是同类型时就地安全的（8U 到 8U，src 和 dst 传同一个 Mat）：它是逐字节读一个写一个，同一个下标先读后写，不存在别名问题。所以没必要 clone。
+
+想自己量一遍的话，别用 clock 掐单次，噪声比信号大：
+
+#+BEGIN_SRC C++
+cv::TickMeter tm;
+tm.start();
+for (int k = 0; k < 100; ++k)
+    cv::LUT(src, lut, dst);
+tm.stop();
+std::cout << tm.getTimeMilli() / 100 << " ms/iter" << endl;
+#+END_SRC
+
+** 自己写代码怎么让缓存友好
+
+按投入产出排序，前三条的收益比后面所有加起来都大：
+
+1. 能查表的一律建表。只依赖像素值的映射，先算 256 项，再扫一遍图。这条是数量级的差别，其他都是百分比。
+2. 遍历顺序跟内存布局一致。Mat 是行优先，就按行、按递增下标扫。按列扫等于每读一个字节换一条 cache line。
+3. 取行首指针，别在两层循环里用 at。一次 ptr(y) 拿到行首，内层循环就是纯粹的地址递增，编译器敢把它展开、敢做向量化。
+4. 能就地就地。dst 和 src 复用同一块内存，省一次分配、省一遍内存往返。前提是算法允许（逐点映射都允许）。
+5. 分块时把块宽对齐到 64 字节的倍数。卷积、滤波这类必须分块的算法，块宽对齐能避免每个块首尾各碎一条 cache line。
+6. 逐通道处理就先 split。三通道交错时，同一个通道的相邻像素隔了 3 字节，一行 1920 像素的图横跨 5760 字节，等于每次扫都跨越 cache line 边界。先 split 成三个单通道 Mat，每张的扫描都是完全连续的。
+7. 小图别开多线程。低于 20 万像素老实单线程，阈值可以照抄 OpenCV 的 2^18。
+
+** 什么时候不该用 LUT
+
+- 16 位输入的 65536 项表。ushort 表是 128 KB，直接溢出 L1，命中 L2 甚至 L3，一次查表就是 10~40 个周期。原来那几个算术周期反而更便宜，这时候 LUT 是负优化。除非表在循环里有极高复用率，否则别碰。
+- 映射依赖坐标或邻域。自适应阈值、晕影、导向滤波这类，没法预先建表。
+- 需要高精度中间结果。LUT 的输出精度在建表那一刻就定死了，8 位表就是 8 位量化。如果后面还要做浮点累加，损失已经发生了。
+- 映射本身就是一次线性变换。直接用 =convertTo= 或者手写乘加更划算，它们不占 load 端口，比查表还快。
+
+** 踩坑清单
+
+- 表必须连续。从大 Mat 里切出来的 ROI 再 reshape 成 256x1，往往不连续，断言直接抛异常。老老实实 =clone()= 或者 copyTo 到一个独立的 Mat。
+- 输出深度由表决定，不由 dst 决定。想要 CV_32F 输出就构造 CV_32F 的 256 项表。
+- lutcn 只能是 1 或者等于源通道数。三通道配 256x1x3 的表，每个通道可以有不同映射；配 256x1 就是三通道共用一张。注意表的通道顺序是「每个像素连续三个」，不是按通道平面排列的。
+- CV_8S 也能用，但索引是按 uint8 解释的。源码里 8S 源被强转成 uint8_t，所以 -1 实际查到的是 255 那一项。做有符号映射前先想清楚这个循环绕回。
+- 小图不会走多线程。别指望 cv::LUT 在 640x480 上比手写循环快多少。
+- x86 上别指望编译器自动向量化查表。GCC 和 MSVC 都不会把 dst[i] = lut[src[i]] 变成 vpermb，最多展开成几条标量 load。想快只能手写 intrinsic，或者指望目标机有 AVX512VBMI。
+- OpenCV 只给两条组合做了专用实现。8 位源到 8U、到 16U 是 SIMD 的，8U 到 32F 走的是标量模板。拿 cv::LUT 和手写循环比性能前，先确认自己比的是哪一条路。
+
+** 参考链接
+
+- [[https://github.com/opencv/opencv/blob/4.x/modules/core/src/lut.cpp][modules/core/src/lut.cpp]]：入口、断言、HAL/OpenCL 分派、多线程
+- [[https://github.com/opencv/opencv/blob/4.x/modules/core/src/lut.simd.hpp][modules/core/src/lut.simd.hpp]]：SIMD 实现与 =v_lut= 的启用条件
+- [[https://github.com/opencv/opencv/blob/4.x/modules/core/src/lut.dispatch.cpp][modules/core/src/lut.dispatch.cpp]]：运行时指令集分派
+- [[https://github.com/opencv/opencv/blob/4.x/modules/core/src/hal_replacement.hpp][modules/core/src/hal-replacement.hpp]]： =cv_hal_lut= 钩子声明
+
+
+（全文完）
