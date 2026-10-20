@@ -1,0 +1,117 @@
+## -*- coding: utf-8 -*-
+
+## Disqus 懒加载：页面里只放一个「加载评论」占位块，用户点击后才创建
+## #disqus_thread 并注入 embed.js，所以打开文章时不会向 disqus.com 发任何请求。
+##
+## 本文件覆盖 Nikola base 主题的同名模板
+## （nikola/data/themes/base/templates/comments_helper_disqus.tmpl），
+## 由 comments_helper.tmpl 按 COMMENT_SYSTEM 的值选择。
+##
+## 和原版相比有三处改动：
+##   1. comment_form 只输出占位块 + 点击后才注入 embed.js；
+##   2. 配置值统一走 _js() 序列化，标题里出现 </script> 也不会截断脚本
+##      （原版直接用 json.dumps，遇到 </script> 会把后面的代码当文本吐出来）；
+##   3. comment_link_script（count.js）不再随页面加载 —— 主题里没有任何
+##      显示评论数的地方，这个请求纯属浪费；页面里真出现 data-disqus-identifier
+##      元素时，comment_form 的脚本会在加载评论后按需补上。
+
+<%!
+import json
+
+
+def _js(value):
+    """把 Python 值序列化成可以安全内联进 <script> 的 JS 字面量。"""
+    return json.dumps(value).replace('</', '<\\/')
+%>
+
+
+<%def name="comment_form(url, title, identifier)">
+%if comment_system_id:
+    <div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      ## 没脚本时占位块不该出现（点了也没用），样式里靠这个标记放行
+      document.documentElement.setAttribute('data-js', '1');
+
+      var CFG = {
+        shortname: ${_js(comment_system_id)},
+        %if url:
+        url: ${_js(url)},
+        %endif
+        title: ${_js(title)},
+        identifier: ${_js(identifier)},
+        lang: ${_js('es_ES' if lang == 'es' else lang)}
+      };
+
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        ## 先换成 Disqus 的挂载点，再塞脚本；顺序反了 embed.js 找不到容器
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        ## Disqus 在 embed.js 执行时读这些全局量，必须在 append 之前赋值，
+        ## 其中 identifier 必须和改造前一致，否则老评论会挂到新线程上
+        window.disqus_shortname = CFG.shortname;
+        %if url:
+        window.disqus_url = CFG.url;
+        %endif
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        ## 评论数脚本只在页面里真的有评论数元素时才需要（也就是 comment_link
+        ## 输出的那些带 data-disqus-identifier 的链接）；主题目前没有显示评论数
+        ## 的地方，所以默认不会发这个请求
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      ## 带 #disqus_thread 锚点进来的（评论之类的直接链接）直接展开，省一次点击
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script>
+%endif
+</%def>
+
+
+<%def name="comment_link(link, identifier)">
+    %if comment_system_id:
+    <a href="${link}#disqus_thread" data-disqus-identifier="${identifier}">${messages("Comments")}</a>
+    %endif
+</%def>
+
+
+<%def name="comment_link_script()">
+##
+## 故意留空：评论数脚本改由 comment_form 在评论加载后注入，
+## 详见文件头的说明。
+##
+</%def>

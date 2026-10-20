@@ -1,0 +1,121 @@
+/*
+ * 暗色模式切换按钮。
+ *
+ * 亮色主题来自 minima.min.css，暗色主题来自 minima-dark.min.css，
+ * 两张样式表通过 media 属性互斥启用，具体逻辑见 base_helper.tmpl 里的内联脚本。
+ * 这里是两套主题共用的部分：按钮外观、移动端位置、图片降亮。
+ */
+
+/* 让浏览器原生控件（滚动条、表单控件）跟随当前主题 */
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* ---------------- 按钮本体 ---------------- */
+
+.theme-toggle {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  color: #e8e8e8;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: color .2s ease, border-color .2s ease, background-color .2s ease;
+}
+
+.theme-toggle:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .6);
+  background-color: rgba(255, 255, 255, .1);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid #8ec3ff;
+  outline-offset: 2px;
+}
+
+.theme-toggle .tt-icon {
+  display: none;
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  pointer-events: none;
+}
+
+/* 三个图标只显示当前模式对应的那个 */
+html[data-mode="auto"] .theme-toggle .tt-auto,
+html[data-mode="light"] .theme-toggle .tt-light,
+html[data-mode="dark"] .theme-toggle .tt-dark {
+  display: block;
+}
+
+/* 没有脚本就没有 data-mode，此时按钮点了也没用，直接不占位 */
+html:not([data-mode]) .theme-toggle {
+  display: none;
+}
+
+/* ---------------- 摆放位置 ---------------- */
+
+/* 移动端：导航折叠成一个图标按钮，主题按钮浮在汉堡图标左侧 */
+@media screen and (max-width: 600px) {
+  .site-nav .theme-toggle {
+    float: right;
+    margin: 3px 6px 0 0;
+  }
+}
+
+/* 桌面端：导航变成一行链接，用 flex 排到链接右侧 */
+@media screen and (min-width: 600px) {
+  .site-nav {
+    display: flex;
+    align-items: center;
+  }
+
+  .site-nav .trigger {
+    order: 1;
+  }
+
+  .site-nav .theme-toggle {
+    order: 2;
+    flex: 0 0 auto;
+    margin-left: 16px;
+  }
+}
+
+/* ---------------- 暗色下的细节修正 ---------------- */
+
+/* 白色底图的截图在暗页面上太扎眼，轻微压暗即可，别压成灰块 */
+html[data-theme="dark"] img {
+  filter: brightness(.88) contrast(1.03);
+}
+
+html[data-theme="dark"] ::selection {
+  background-color: rgba(127, 176, 232, .3);
+  color: #f2f6fa;
+}
+
+/* 切换时给底色一个过渡，避免整页颜色硬跳 */
+body {
+  transition: background-color .25s ease, color .25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body,
+  .theme-toggle {
+    transition: none;
+  }
+}

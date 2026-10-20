@@ -1,0 +1,21 @@
+name: home-blog
+
+services:
+  site:
+    build:
+      context: .
+    image: home-blog-nikola:latest
+    container_name: blog-nikola
+    # 只有 Linux 宿主（或 rootless docker）才需要关心：让容器内 uid 与挂载文件属主一致，
+    # 一般写宿主当前用户的 id -u / id -g，例如 1000:1000，改完需重建镜像以外的配置重启即可
+    # user: "1000:1000"
+    working_dir: /site
+    volumes:
+      # 注意：相对路径按本 compose 文件所在目录（docker/）解析，所以仓库根目录是 ..
+      - ..:/site
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      # 只为 nikola serve / nikola auto 的本地预览
+      - "8000:8000"
+    restart: unless-stopped

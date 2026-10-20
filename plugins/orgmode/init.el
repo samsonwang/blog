@@ -161,6 +161,12 @@ contextual information."
   "Export the body only of the input file and write it to
 specified location."
   (with-current-buffer (find-file infile)
-    (org-macro-replace-all nikola-macro-templates)
-    (org-html-export-as-html nil nil t t)
-    (write-file outfile nil)))
+    ;; org-macro-replace-all 会就地改写 buffer（delete-region + insert），
+    ;; 而 find-file 在文件「看起来不可写」时会把 buffer 置成只读
+    ;; （容器里 bind mount 的权限映射经常触发），于是报
+    ;; (buffer-read-only #<buffer xxx.org>)。
+    ;; 这里只改内存里的副本、最终写的是 outfile，所以放开只读是安全的。
+    (let ((inhibit-read-only t))
+      (org-macro-replace-all nikola-macro-templates)
+      (org-html-export-as-html nil nil t t)
+      (write-file outfile nil))))
