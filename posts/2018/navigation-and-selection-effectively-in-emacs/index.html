@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/navigation-and-selection-effectively-in-emacs/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/shell-output-redirections/" title="shell的输出重定向" type="text/html">
@@ -37,7 +112,9 @@ Gaurab Paul的 一篇博文 给了我很大的启发，他详细地介绍了emac
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -62,8 +139,8 @@ Gaurab Paul的 一篇博文 给了我很大的启发，他详细地介绍了emac
       
     <time class="dt-published" datetime="2018-07-30T11:14:41+08:00" itemprop="datePublished">Jul 30, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org087f9c6" class="outline-2">
-<h2 id="org087f9c6">
+    <div id="outline-container-org593f367" class="outline-2">
+<h2 id="org593f367">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -78,8 +155,8 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-org7e323ac" class="outline-2">
-<h2 id="org7e323ac">
+<div id="outline-container-org20c48f4" class="outline-2">
+<h2 id="org20c48f4">
 <span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -91,13 +168,13 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-orgf3ae106" class="outline-2">
-<h2 id="orgf3ae106">
+<div id="outline-container-org16f045e" class="outline-2">
+<h2 id="org16f045e">
 <span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-orgc9a8bad" class="outline-3">
-<h3 id="orgc9a8bad">
+<div id="outline-container-orgb1df201" class="outline-3">
+<h3 id="orgb1df201">
 <span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -142,8 +219,8 @@ Point and mark interchanged
 </div>
 </div>
 
-<div id="outline-container-orgb8ff687" class="outline-3">
-<h3 id="orgb8ff687">
+<div id="outline-container-org379b134" class="outline-3">
+<h3 id="org379b134">
 <span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -181,8 +258,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org871cf8e" class="outline-3">
-<h3 id="org871cf8e">
+<div id="outline-container-org22665e7" class="outline-3">
+<h3 id="org22665e7">
 <span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
 </h3>
 <div class="outline-text-3" id="text-3-3">
@@ -196,16 +273,16 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org79c05d8" class="outline-2">
-<h2 id="org79c05d8">
+<div id="outline-container-org5cc5cde" class="outline-2">
+<h2 id="org5cc5cde">
 <span class="section-number-2">4</span> 其他插件支持</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
 </div>
 
-<div id="outline-container-orgde4afdf" class="outline-3">
-<h3 id="orgde4afdf">
+<div id="outline-container-org9521b30" class="outline-3">
+<h3 id="org9521b30">
 <span class="section-number-3">4.1</span> helm swoop</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
@@ -219,8 +296,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org37abf6d" class="outline-3">
-<h3 id="org37abf6d">
+<div id="outline-container-orga33b0a3" class="outline-3">
+<h3 id="orga33b0a3">
 <span class="section-number-3">4.2</span> avy</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
@@ -236,8 +313,8 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org4f11bb1" class="outline-2">
-<h2 id="org4f11bb1">
+<div id="outline-container-org5bda2ff" class="outline-2">
+<h2 id="org5bda2ff">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -271,26 +348,65 @@ interface FooProps {}
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2018/navigation-and-selection-effectively-in-emacs/",
-        disqus_title="\u63d0\u9ad8emacs\u4e2d\u6d4f\u89c8\u548c\u9009\u62e9\u64cd\u4f5c\u6548\u7387\u7684\u6280\u5de7",
-        disqus_identifier="_cache/posts/2018/navigation-and-selection-effectively-in-emacs.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2018/navigation-and-selection-effectively-in-emacs/",
+        title: "\u63d0\u9ad8emacs\u4e2d\u6d4f\u89c8\u548c\u9009\u62e9\u64cd\u4f5c\u6548\u7387\u7684\u6280\u5de7",
+        identifier: "_cache/posts/2018/navigation-and-selection-effectively-in-emacs.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

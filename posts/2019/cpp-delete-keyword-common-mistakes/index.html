@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/cpp-delete-keyword-common-mistakes/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2019/bit-field-and-union-type/" title="位域与联合体的内存布局" type="text/html">
@@ -44,7 +119,9 @@ pArray = nullptr;
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -74,9 +151,9 @@ C++中的delete关键字用于释放动态申请的内存，是使用频率非�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org5364741" class="outline-2">
-<h2 id="org5364741">释放 <code>new</code> 关键字申请的数组</h2>
-<div class="outline-text-2" id="text-org5364741">
+<div id="outline-container-org14e0dd5" class="outline-2">
+<h2 id="org14e0dd5">释放 <code>new</code> 关键字申请的数组</h2>
+<div class="outline-text-2" id="text-org14e0dd5">
 <div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">pArray</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">int</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
 </pre></div>
 <p>
@@ -91,18 +168,18 @@ C++中的delete关键字用于释放动态申请的内存，是使用频率非�
 </div>
 
 
-<div id="outline-container-org47e9496" class="outline-2">
-<h2 id="org47e9496">使用 <code>delete</code> 关键字释放 <code>void*</code> 类型的指针</h2>
-<div class="outline-text-2" id="text-org47e9496">
+<div id="outline-container-org3f7d2cb" class="outline-2">
+<h2 id="org3f7d2cb">使用 <code>delete</code> 关键字释放 <code>void*</code> 类型的指针</h2>
+<div class="outline-text-2" id="text-org3f7d2cb">
 <p>
 一般来讲， <code>delete</code> 在释放内存时会同时调用对象的析构函数。所以，使用 <code>delete</code> 释放 <code>void*</code> 指针时，是能够释放该指针所指内存的。但由于没有执行析构函数，所以有潜在的资源泄漏风险，并不推荐这种写法。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgb72dfaa" class="outline-2">
-<h2 id="orgb72dfaa">参考资料</h2>
-<div class="outline-text-2" id="text-orgb72dfaa">
+<div id="outline-container-orgf539fae" class="outline-2">
+<h2 id="orgf539fae">参考资料</h2>
+<div class="outline-text-2" id="text-orgf539fae">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/941832/is-it-safe-to-delete-a-void-pointer">stackoverflow.com - is it safe to delete a void pointer</a><br>
@@ -131,26 +208,65 @@ C++中的delete关键字用于释放动态申请的内存，是使用频率非�
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2019/cpp-delete-keyword-common-mistakes/",
-        disqus_title="C++\u4e2ddelete\u5173\u952e\u5b57\u5e38\u89c1\u9519\u8bef",
-        disqus_identifier="_cache/posts/2019/cpp-delete-keyword-common-mistakes.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2019/cpp-delete-keyword-common-mistakes/",
+        title: "C++\u4e2ddelete\u5173\u952e\u5b57\u5e38\u89c1\u9519\u8bef",
+        identifier: "_cache/posts/2019/cpp-delete-keyword-common-mistakes.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

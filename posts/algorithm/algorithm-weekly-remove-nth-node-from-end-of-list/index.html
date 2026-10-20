@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-remove-nth-node-from-end-of-list/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/internet-protocol/" title="IP协议（RFC791）" type="text/html">
@@ -46,7 +121,9 @@ A">
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -76,9 +153,9 @@ leetcode算法题第19道，难度为medium，考察链表的基本操作。<br>
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org510a919" class="outline-2">
-<h2 id="org510a919">Description</h2>
-<div class="outline-text-2" id="text-org510a919">
+<div id="outline-container-orgc85c2f5" class="outline-2">
+<h2 id="orgc85c2f5">Description</h2>
+<div class="outline-text-2" id="text-orgc85c2f5">
 <p>
 Given a linked list, remove the n-th node from the end of list and return its head.<br></p>
 
@@ -98,13 +175,13 @@ Given n will always be valid.<br></p>
 </div>
 </div>
 
-<div id="outline-container-org70cd2ff" class="outline-2">
-<h2 id="org70cd2ff">Solution</h2>
-<div class="outline-text-2" id="text-org70cd2ff">
+<div id="outline-container-org8fc5cdd" class="outline-2">
+<h2 id="org8fc5cdd">Solution</h2>
+<div class="outline-text-2" id="text-org8fc5cdd">
 </div>
-<div id="outline-container-org1f0f651" class="outline-3">
-<h3 id="org1f0f651">Approach 1 Reverse List</h3>
-<div class="outline-text-3" id="text-org1f0f651">
+<div id="outline-container-org482e619" class="outline-3">
+<h3 id="org482e619">Approach 1 Reverse List</h3>
+<div class="outline-text-3" id="text-org482e619">
 <p>
 这道题是比较基础的一道题，我的思路是将链表翻转，这样就将题目转换为删去正数第n个元素。但是这种方法需要将链表翻转两次，所以从效率上来讲并不好，而且需要注意的边界条件还挺多，在这里仅作为参考思路。<br></p>
 <div class="highlight"><pre><span></span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="nf">reverseList</span><span class="p">(</span><span class="n">ListNode</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -163,9 +240,9 @@ Given n will always be valid.<br></p>
 </div>
 
 
-<div id="outline-container-org9183c37" class="outline-3">
-<h3 id="org9183c37">Approach 2 Two pass algorithm</h3>
-<div class="outline-text-3" id="text-org9183c37">
+<div id="outline-container-orgef4a994" class="outline-3">
+<h3 id="orgef4a994">Approach 2 Two pass algorithm</h3>
+<div class="outline-text-3" id="text-orgef4a994">
 <p>
 这个解法是在leetcode的solution解析中看到的，解法的意图是将问题转化为删去正数第 <code>l-n+1</code> 个节点。其中 <code>l</code> 为链表的长度，这个是容易获得的。<br></p>
 
@@ -232,9 +309,9 @@ Given n will always be valid.<br></p>
 </div>
 
 
-<div id="outline-container-org235e9c4" class="outline-3">
-<h3 id="org235e9c4">Approach 3 One pass algorithm</h3>
-<div class="outline-text-3" id="text-org235e9c4">
+<div id="outline-container-org7cf8f9f" class="outline-3">
+<h3 id="org7cf8f9f">Approach 3 One pass algorithm</h3>
+<div class="outline-text-3" id="text-org7cf8f9f">
 <p>
 上面的解法能够优化为使用一轮循环。需要使用两个指针，第一个指针指向第 <code>n+1</code> 个节点，第二个指针指向第一个节点，这样两个指针就间隔 <code>n</code> 个节点了。同时将两个节点后移，在第一个指针到达尾部时，第二个指针所指的下一个节点就是需要删除的节点。<br>
 下面就是实现代码，截取自leetcode，使用java编写。<br></p>
@@ -263,18 +340,18 @@ Given n will always be valid.<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf0e4abd" class="outline-2">
-<h2 id="orgf0e4abd">Extras</h2>
-<div class="outline-text-2" id="text-orgf0e4abd">
+<div id="outline-container-org0b9f4e0" class="outline-2">
+<h2 id="org0b9f4e0">Extras</h2>
+<div class="outline-text-2" id="text-org0b9f4e0">
 <p>
 现在所有的方法都介绍到了，很明显，第三种方法的效率是最高的（操作次数最少）。这是在题目限定 <code>n</code> 一定有合理取值的情况下。如果 <code>n</code> 的取值有可能无效呢？这时就需要在每次指针操作时加以判断。再者，需要制定 <code>n</code> 取值无效时的策略，在取值无效时放弃本次删除操作，也可以删去与 <code>n</code> 距离最接近的节点。 <code>n</code> 的取值可能过小或过大。在 <code>n</code> 过小时（负数或0），可将 <code>n</code> 设定为1，这种情况对以上三种解法的影响是相同的。在 <code>n</code> 过大时，可以将 <code>n</code> 设定为 <code>l</code> ，这样第三种解法效率优势就会丢失，第一种和第二种解法受到的影响相对较小。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org1bdf879" class="outline-2">
-<h2 id="org1bdf879">Reference</h2>
-<div class="outline-text-2" id="text-org1bdf879">
+<div id="outline-container-org94f78bc" class="outline-2">
+<h2 id="org94f78bc">Reference</h2>
+<div class="outline-text-2" id="text-org94f78bc">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/remove-nth-node-from-end-of-list/solution/">leetcode 19 solution</a><br>
@@ -309,26 +386,65 @@ Given n will always be valid.<br></p>
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-remove-nth-node-from-end-of-list/",
-        disqus_title="\u6bcf\u5468\u7b97\u6cd5\uff1a\u5220\u53bb\u5355\u5411\u94fe\u8868\u5012\u6570\u7b2cn\u4e2a\u8282\u70b9",
-        disqus_identifier="_cache/posts/algorithm/algorithm-weekly-remove-nth-node-from-end-of-list.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-remove-nth-node-from-end-of-list/",
+        title: "\u6bcf\u5468\u7b97\u6cd5\uff1a\u5220\u53bb\u5355\u5411\u94fe\u8868\u5012\u6570\u7b2cn\u4e2a\u8282\u70b9",
+        identifier: "_cache/posts/algorithm/algorithm-weekly-remove-nth-node-from-end-of-list.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

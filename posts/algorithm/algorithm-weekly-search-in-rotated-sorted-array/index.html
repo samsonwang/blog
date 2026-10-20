@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-search-in-rotated-sorted-array/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/brief-intro-to-gateway/" title="网关简介" type="text/html">
@@ -37,7 +112,9 @@ Suppose an array sorted in ascending order is rotated at some pivot unknown to y
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -67,9 +144,9 @@ leetcode第33道，难度为medium，数组搜索问题，是二分查找的升�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org3f2d37a" class="outline-2">
-<h2 id="org3f2d37a">Description</h2>
-<div class="outline-text-2" id="text-org3f2d37a">
+<div id="outline-container-org63629a1" class="outline-2">
+<h2 id="org63629a1">Description</h2>
+<div class="outline-text-2" id="text-org63629a1">
 <p>
 Suppose an array sorted in ascending order is rotated at some pivot unknown to you beforehand.<br>
 (i.e., [0,1,2,4,5,6,7] might become [4,5,6,7,0,1,2]).<br></p>
@@ -98,13 +175,13 @@ Output: -1
 </div>
 </div>
 
-<div id="outline-container-orgbfb9ec4" class="outline-2">
-<h2 id="orgbfb9ec4">Solution</h2>
-<div class="outline-text-2" id="text-orgbfb9ec4">
+<div id="outline-container-org5bba84a" class="outline-2">
+<h2 id="org5bba84a">Solution</h2>
+<div class="outline-text-2" id="text-org5bba84a">
 </div>
-<div id="outline-container-org4a08203" class="outline-3">
-<h3 id="org4a08203">Apporach 1 recursive</h3>
-<div class="outline-text-3" id="text-org4a08203">
+<div id="outline-container-org4e3eb42" class="outline-3">
+<h3 id="org4e3eb42">Apporach 1 recursive</h3>
+<div class="outline-text-3" id="text-org4e3eb42">
 <p>
 通过题目的要求，不难想到需要使用二分查找，只是在二分查找时，需要注意在数组中间会出现转折点。我的方法是使用递归，将数组分割成为多段，其中每段都是不具有拐点的。这样就能用常规的二分查找法进行搜索了。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">binarySearch</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">right</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -183,9 +260,9 @@ Output: -1
 </div>
 </div>
 
-<div id="outline-container-orgb8cc237" class="outline-3">
-<h3 id="orgb8cc237">Approach 2</h3>
-<div class="outline-text-3" id="text-orgb8cc237">
+<div id="outline-container-orga1f8203" class="outline-3">
+<h3 id="orga1f8203">Approach 2</h3>
+<div class="outline-text-3" id="text-orga1f8203">
 <p>
 这种解法截取自solution sample中最快的那一档。直接在循环中查找求解，这样的解法简练很多。<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">nums</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">target</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -235,26 +312,65 @@ Output: -1
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-search-in-rotated-sorted-array/",
-        disqus_title="\u6bcf\u5468\u7b97\u6cd5\uff1a\u641c\u7d22\u6709\u5e8f\u7684\u56de\u73af\u6570\u7ec4",
-        disqus_identifier="_cache/posts/algorithm/algorithm-weekly-search-in-rotated-sorted-array.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-search-in-rotated-sorted-array/",
+        title: "\u6bcf\u5468\u7b97\u6cd5\uff1a\u641c\u7d22\u6709\u5e8f\u7684\u56de\u73af\u6570\u7ec4",
+        identifier: "_cache/posts/algorithm/algorithm-weekly-search-in-rotated-sorted-array.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

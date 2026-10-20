@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2020/windows-system32-and-syswow64/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2020/how-to-implement-a-timer/" title="如何实现一个定时器" type="text/html">
@@ -44,7 +119,9 @@
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -74,9 +151,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orge8f23a2" class="outline-2">
-<h2 id="orge8f23a2">为什么System32目录存放的是64位程序</h2>
-<div class="outline-text-2" id="text-orge8f23a2">
+<div id="outline-container-orgca67682" class="outline-2">
+<h2 id="orgca67682">为什么System32目录存放的是64位程序</h2>
+<div class="outline-text-2" id="text-orgca67682">
 <p>
 从目录的名字上来看，这确实非常令人迷惑，也并不符合逻辑。<br></p>
 
@@ -85,9 +162,9 @@
 </div>
 </div>
 
-<div id="outline-container-org9492bf8" class="outline-2">
-<h2 id="org9492bf8">为什么32位程序能够跑在64位操作系统上</h2>
-<div class="outline-text-2" id="text-org9492bf8">
+<div id="outline-container-orgd72e720" class="outline-2">
+<h2 id="orgd72e720">为什么32位程序能够跑在64位操作系统上</h2>
+<div class="outline-text-2" id="text-orgd72e720">
 <p>
 众所周知，Windows系统的兼容性做的是非常好的，几年前的32位的程序大部分都能直接在64位系统上运行。当32位程序在64位操作系统上运行时，操作系统会模拟出一个32位的运行环境。程序所需要的32位运行时动态库也同样有一份在64位系统中，它们存放在SysWOW64目录下。当32位程序尝试调用System32目录中的程序或动态库时，会被重定向到SysWOW64目录中。<br></p>
 
@@ -96,9 +173,9 @@
 </div>
 </div>
 
-<div id="outline-container-org87a5cd6" class="outline-2">
-<h2 id="org87a5cd6">如何通过32位程序启动64位的System32程序</h2>
-<div class="outline-text-2" id="text-org87a5cd6">
+<div id="outline-container-org76e4980" class="outline-2">
+<h2 id="org76e4980">如何通过32位程序启动64位的System32程序</h2>
+<div class="outline-text-2" id="text-org76e4980">
 <p>
 有些时候，我们确实需要在32位程序中启动64位的系统程序，是否能绕过系统的重定向呢？<br></p>
 
@@ -110,9 +187,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgbdce356" class="outline-2">
-<h2 id="orgbdce356">其他小技巧</h2>
-<div class="outline-text-2" id="text-orgbdce356">
+<div id="outline-container-org2e09717" class="outline-2">
+<h2 id="org2e09717">其他小技巧</h2>
+<div class="outline-text-2" id="text-org2e09717">
 <p>
 使用 <code>%windir%</code> 环境变量代替 <code>C:\Windows</code> 。大部分情况下操作系统被安装到C盘，但有些时候可能被安装到了其他盘符的磁盘上，使用 <code>%windir%</code> 是更加稳妥的方法。另外，还可以使用Windows提供的 <code>GetWindowsDirectory</code> 函数接口。<br></p>
 
@@ -141,9 +218,9 @@ CommonProgramW6432=%CommonProgramFiles%
 
 
 
-<div id="outline-container-org4b28191" class="outline-2">
-<h2 id="org4b28191">参考资料</h2>
-<div class="outline-text-2" id="text-org4b28191">
+<div id="outline-container-orgc71a9b4" class="outline-2">
+<h2 id="orgc71a9b4">参考资料</h2>
+<div class="outline-text-2" id="text-orgc71a9b4">
 <ul class="org-ul">
 <li>
 <a href="https://docs.microsoft.com/en-us/windows/win32/winprog64/running-32-bit-applications">microsoft docs - running 32 bit applications</a><br>
@@ -198,26 +275,65 @@ CommonProgramW6432=%CommonProgramFiles%
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2020/windows-system32-and-syswow64/",
-        disqus_title="Windows\u5e73\u53f0\u4e0bSystem32\u548cSysWOW64\u6587\u4ef6\u5939",
-        disqus_identifier="_cache/posts/2020/windows-system32-and-syswow64.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2020/windows-system32-and-syswow64/",
+        title: "Windows\u5e73\u53f0\u4e0bSystem32\u548cSysWOW64\u6587\u4ef6\u5939",
+        identifier: "_cache/posts/2020/windows-system32-and-syswow64.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

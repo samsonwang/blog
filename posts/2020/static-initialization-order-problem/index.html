@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2020/static-initialization-order-problem/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2020/cpp-access-container-by-iterator-or-position/" title="使用迭代器和下标访问C++容器的比较" type="text/html">
@@ -37,7 +112,9 @@
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -71,9 +148,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org81a52bf" class="outline-2">
-<h2 id="org81a52bf">静态初始化顺序</h2>
-<div class="outline-text-2" id="text-org81a52bf">
+<div id="outline-container-org0634bae" class="outline-2">
+<h2 id="org0634bae">静态初始化顺序</h2>
+<div class="outline-text-2" id="text-org0634bae">
 <p>
 静态初始化顺序问题的英文名称是 static initialization order problem，这个问题所涉及到的对象有：类域中的静态变量、文件中的和命名空间中的（全局）变量。<br></p>
 
@@ -94,9 +171,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-org7b83ccb" class="outline-2">
-<h2 id="org7b83ccb">使用指针的单例模式</h2>
-<div class="outline-text-2" id="text-org7b83ccb">
+<div id="outline-container-org74f5515" class="outline-2">
+<h2 id="org74f5515">使用指针的单例模式</h2>
+<div class="outline-text-2" id="text-org74f5515">
 <p>
 使用单例模式能够解决全局变量初始化问题。在单例模式中通常会有个静态函数用于返回单例类（class）的对象（object）的引用，这样就保证了在使用这个单例对象时该对象肯定是被初始化了的。<br></p>
 
@@ -115,9 +192,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-org171412c" class="outline-2">
-<h2 id="org171412c">使用对象的单例模式</h2>
-<div class="outline-text-2" id="text-org171412c">
+<div id="outline-container-orgd78d778" class="outline-2">
+<h2 id="orgd78d778">使用对象的单例模式</h2>
+<div class="outline-text-2" id="text-orgd78d778">
 <p>
 直接使用静态的类对象就能够避免内存泄漏问题。与使用对象指针的写法不同，静态变量在程序退出前一定会销毁，其析构函数一定会被调用。示例代码如下所示。<br></p>
 
@@ -133,9 +210,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-org8b0aa1a" class="outline-2">
-<h2 id="org8b0aa1a">终极形式的单例模式</h2>
-<div class="outline-text-2" id="text-org8b0aa1a">
+<div id="outline-container-orgdbbc19e" class="outline-2">
+<h2 id="orgdbbc19e">终极形式的单例模式</h2>
+<div class="outline-text-2" id="text-orgdbbc19e">
 <p>
 那么是否有一种单例模式的范例能够同时解决内存泄漏问题和析构顺序问题呢？答案是有的，只不过写法稍微复杂，并且存在一定的性能损失。示例代码如下：<br></p>
 
@@ -203,9 +280,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-org35c8177" class="outline-2">
-<h2 id="org35c8177">总结</h2>
-<div class="outline-text-2" id="text-org35c8177">
+<div id="outline-container-org8edb5ab" class="outline-2">
+<h2 id="org8edb5ab">总结</h2>
+<div class="outline-text-2" id="text-org8edb5ab">
 <p>
 下面对这几种方案进行了比较：<br></p>
 
@@ -237,9 +314,9 @@ The nightmare scenario occurs when there is an order dependency between initiali
 </div>
 
 
-<div id="outline-container-org6931076" class="outline-2">
-<h2 id="org6931076">参考资料</h2>
-<div class="outline-text-2" id="text-org6931076">
+<div id="outline-container-orgaa326bf" class="outline-2">
+<h2 id="orgaa326bf">参考资料</h2>
+<div class="outline-text-2" id="text-orgaa326bf">
 <ul class="org-ul">
 <li>
 <a href="http://www.cs.technion.ac.il/users/yechiel/c++-faq/static-init-order-on-first-use.html">C++ FAQs - static init order on first use</a><br>
@@ -279,26 +356,65 @@ The nightmare scenario occurs when there is an order dependency between initiali
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2020/static-initialization-order-problem/",
-        disqus_title="\u9759\u6001\u521d\u59cb\u5316\u987a\u5e8f\u95ee\u9898",
-        disqus_identifier="_cache/posts/2020/static-initialization-order-problem.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2020/static-initialization-order-problem/",
+        title: "\u9759\u6001\u521d\u59cb\u5316\u987a\u5e8f\u95ee\u9898",
+        identifier: "_cache/posts/2020/static-initialization-order-problem.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

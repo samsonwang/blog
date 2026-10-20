@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/linux-command-examples-lsof/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/differences-among-overload-override-and-hide/" title="重载、覆盖和隐藏的区别" type="text/html">
@@ -52,7 +127,9 @@ lsof +D /home/
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -83,25 +160,25 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 <p>
 下面就给出了几种常见的用法，需要注意的是有些指令需要root权限执行。<br></p>
 
-<div id="outline-container-org21cc78d" class="outline-2">
-<h2 id="org21cc78d">1. 查看打开指定文件的进程</h2>
-<div class="outline-text-2" id="text-org21cc78d">
+<div id="outline-container-org2c416de" class="outline-2">
+<h2 id="org2c416de">1. 查看打开指定文件的进程</h2>
+<div class="outline-text-2" id="text-org2c416de">
 <div class="highlight"><pre><span></span>lsof /var/syslog.log
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org268b52d" class="outline-2">
-<h2 id="org268b52d">2. 查看指定目录下打开的文件</h2>
-<div class="outline-text-2" id="text-org268b52d">
+<div id="outline-container-org5d720cd" class="outline-2">
+<h2 id="org5d720cd">2. 查看指定目录下打开的文件</h2>
+<div class="outline-text-2" id="text-org5d720cd">
 <div class="highlight"><pre><span></span>lsof +D /home/
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgd9d2348" class="outline-2">
-<h2 id="orgd9d2348">3. 查看以指定进程名所有打开的文件</h2>
-<div class="outline-text-2" id="text-orgd9d2348">
+<div id="outline-container-org7610b00" class="outline-2">
+<h2 id="org7610b00">3. 查看以指定进程名所有打开的文件</h2>
+<div class="outline-text-2" id="text-org7610b00">
 <p>
 使用 <code>-c</code> 命令能够查看指定进程名使用的文件，允许在一个命令行指令中使用多个 <code>-c</code> 参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -c procname
@@ -109,9 +186,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orgeb1ecd7" class="outline-2">
-<h2 id="orgeb1ecd7">4. 查看使用指定挂载点的进程</h2>
-<div class="outline-text-2" id="text-orgeb1ecd7">
+<div id="outline-container-org728673a" class="outline-2">
+<h2 id="org728673a">4. 查看使用指定挂载点的进程</h2>
+<div class="outline-text-2" id="text-org728673a">
 <p>
 在停止挂载某个目录时，系统会告诉我们“设备资源繁忙”，所以我们需要找出使用挂载点的程序，终止这些进程，解除目录的占用状态。<br></p>
 <div class="highlight"><pre><span></span>lsof /home
@@ -123,9 +200,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orgce649a3" class="outline-2">
-<h2 id="orgce649a3">5. 查看指定用户打开的文件</h2>
-<div class="outline-text-2" id="text-orgce649a3">
+<div id="outline-container-org43415e8" class="outline-2">
+<h2 id="org43415e8">5. 查看指定用户打开的文件</h2>
+<div class="outline-text-2" id="text-org43415e8">
 <div class="highlight"><pre><span></span>lsof -u username
 </pre></div>
 <p>
@@ -135,17 +212,17 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orgaed2c2e" class="outline-2">
-<h2 id="orgaed2c2e">6. 查看指定进程打开的文件</h2>
-<div class="outline-text-2" id="text-orgaed2c2e">
+<div id="outline-container-org81e07d0" class="outline-2">
+<h2 id="org81e07d0">6. 查看指定进程打开的文件</h2>
+<div class="outline-text-2" id="text-org81e07d0">
 <div class="highlight"><pre><span></span>lsof -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgf5c15af" class="outline-2">
-<h2 id="orgf5c15af">7. 终止属于某个用户的所有进程</h2>
-<div class="outline-text-2" id="text-orgf5c15af">
+<div id="outline-container-org7ee1946" class="outline-2">
+<h2 id="org7ee1946">7. 终止属于某个用户的所有进程</h2>
+<div class="outline-text-2" id="text-org7ee1946">
 <div class="highlight"><pre><span></span>kill `lsof -t -u username`
 </pre></div>
 <p>
@@ -155,9 +232,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org223d22b" class="outline-2">
-<h2 id="org223d22b">8. 让结果同时满足多个选项</h2>
-<div class="outline-text-2" id="text-org223d22b">
+<div id="outline-container-orgd49ad6e" class="outline-2">
+<h2 id="orgd49ad6e">8. 让结果同时满足多个选项</h2>
+<div class="outline-text-2" id="text-orgd49ad6e">
 <p>
 默认情况下，多个参数是以或（or）进行操作的，可以使用 <code>-a</code> 选项让结果同时满足多个参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -a -u username -c procname
@@ -165,9 +242,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org861d00a" class="outline-2">
-<h2 id="org861d00a">9. 让命令重复执行</h2>
-<div class="outline-text-2" id="text-org861d00a">
+<div id="outline-container-org897dc75" class="outline-2">
+<h2 id="org897dc75">9. 让命令重复执行</h2>
+<div class="outline-text-2" id="text-org897dc75">
 <p>
 可以使用 <code>-r</code> 参数让命令重复执行。以下命令会每隔5s执行一次，每次的执行结果会用 “====” 分割开。<br></p>
 <div class="highlight"><pre><span></span>lsof -u username -c procname -a -r5
@@ -175,9 +252,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org6cdd5fb" class="outline-2">
-<h2 id="org6cdd5fb">10. 列出所有的网络连接</h2>
-<div class="outline-text-2" id="text-org6cdd5fb">
+<div id="outline-container-org6f06dcd" class="outline-2">
+<h2 id="org6f06dcd">10. 列出所有的网络连接</h2>
+<div class="outline-text-2" id="text-org6f06dcd">
 <div class="highlight"><pre><span></span>lsof -i
 </pre></div>
 <p>
@@ -191,33 +268,33 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org3ba1bdd" class="outline-2">
-<h2 id="org3ba1bdd">11. 列出指定进程使用的网络连接</h2>
-<div class="outline-text-2" id="text-org3ba1bdd">
+<div id="outline-container-org06bfd69" class="outline-2">
+<h2 id="org06bfd69">11. 列出指定进程使用的网络连接</h2>
+<div class="outline-text-2" id="text-org06bfd69">
 <div class="highlight"><pre><span></span>lsof -i -a -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org31b812c" class="outline-2">
-<h2 id="org31b812c">12. 查看指定端口上的监听</h2>
-<div class="outline-text-2" id="text-org31b812c">
+<div id="outline-container-orgfacb2e9" class="outline-2">
+<h2 id="orgfacb2e9">12. 查看指定端口上的监听</h2>
+<div class="outline-text-2" id="text-orgfacb2e9">
 <div class="highlight"><pre><span></span>lsof -i :portid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org400b5a0" class="outline-2">
-<h2 id="org400b5a0">13. 列出所有tcp和udp连接</h2>
-<div class="outline-text-2" id="text-org400b5a0">
+<div id="outline-container-org301270a" class="outline-2">
+<h2 id="org301270a">13. 列出所有tcp和udp连接</h2>
+<div class="outline-text-2" id="text-org301270a">
 <div class="highlight"><pre><span></span>lsof -i tcp; lsof -i udp
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org524e7df" class="outline-2">
-<h2 id="org524e7df">14. 列出所有的网络文件系统</h2>
-<div class="outline-text-2" id="text-org524e7df">
+<div id="outline-container-orgbd7dc7a" class="outline-2">
+<h2 id="orgbd7dc7a">14. 列出所有的网络文件系统</h2>
+<div class="outline-text-2" id="text-orgbd7dc7a">
 <p>
 网络文件系统（network file system）<br></p>
 <div class="highlight"><pre><span></span>lsof -N -u username
@@ -248,26 +325,65 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2018/linux-command-examples-lsof/",
-        disqus_title="Linux\u5e38\u7528\u547d\u4ee4\u884c\u6307\u4ee4 - lsof",
-        disqus_identifier="_cache/posts/2018/linux-command-examples-lsof.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2018/linux-command-examples-lsof/",
+        title: "Linux\u5e38\u7528\u547d\u4ee4\u884c\u6307\u4ee4 - lsof",
+        identifier: "_cache/posts/2018/linux-command-examples-lsof.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

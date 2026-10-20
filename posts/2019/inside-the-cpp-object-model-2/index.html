@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/inside-the-cpp-object-model-2/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2019/inside-the-cpp-object-model-1/" title="深入探索C++内存模型（1）" type="text/html">
@@ -36,7 +111,9 @@
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -66,13 +143,13 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org9f5300d" class="outline-2">
-<h2 id="org9f5300d">第二章 构造函数语意学 （the semantics of constructors）</h2>
-<div class="outline-text-2" id="text-org9f5300d">
+<div id="outline-container-org821d4fc" class="outline-2">
+<h2 id="org821d4fc">第二章 构造函数语意学 （the semantics of constructors）</h2>
+<div class="outline-text-2" id="text-org821d4fc">
 </div>
-<div id="outline-container-orga689bf3" class="outline-3">
-<h3 id="orga689bf3">2.1 default constructor 的构建操作</h3>
-<div class="outline-text-3" id="text-orga689bf3">
+<div id="outline-container-org12a98bf" class="outline-3">
+<h3 id="org12a98bf">2.1 default constructor 的构建操作</h3>
+<div class="outline-text-3" id="text-org12a98bf">
 <p>
 关键词 <code>explicit</code> 之所以被导入这个语言，就是为了提供给程序员一种方法，使他们能够制止“单一参数的 constructor ”被当作一个 conversion 运算符。<br></p>
 
@@ -81,26 +158,26 @@
 只有在编译器需要的时候，才会合成默认构造函数（default constructor）。此外，被合成出来的 constructor 只执行编译器所需的行动。<br></p>
 </div>
 
-<div id="outline-container-org2d16c6b" class="outline-4">
-<h4 id="org2d16c6b">带有 default constructor 的 member class object</h4>
-<div class="outline-text-4" id="text-org2d16c6b">
+<div id="outline-container-org4193145" class="outline-4">
+<h4 id="org4193145">带有 default constructor 的 member class object</h4>
+<div class="outline-text-4" id="text-org4193145">
 <p>
 如果一个 class 没有任何 constructor，但它内含一个有 default constructor 的 member object，那么这个 class 的 implicit default constructor 就是 “nontrivial” ，编译器需要为此 class 合成出一个 default constructor。不过这个合成操作只有在 constructor 真正需要被调用时才会发生。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org85734c9" class="outline-4">
-<h4 id="org85734c9">带有 default constructor 的 base class</h4>
-<div class="outline-text-4" id="text-org85734c9">
+<div id="outline-container-org98dcbcd" class="outline-4">
+<h4 id="org98dcbcd">带有 default constructor 的 base class</h4>
+<div class="outline-text-4" id="text-org98dcbcd">
 <p>
 如果一个没有任何 constructor 的 class 派生自一个“带有 default constructor”的 base class，那么这个 derived class 的 default constructor 会被视为 nontrivial，因此需要被合成出来。它将调用上一层 base classes 的 default consturctor（根据他们的声明顺序）。对于一个后继派生的class而言，这个合成的 constructor 和一个 “被明确提供的 default constructor” 没有什么异常。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgbf1f828" class="outline-4">
-<h4 id="orgbf1f828">带有 virtual function 的 class</h4>
-<div class="outline-text-4" id="text-orgbf1f828">
+<div id="outline-container-org9f34d2d" class="outline-4">
+<h4 id="org9f34d2d">带有 virtual function 的 class</h4>
+<div class="outline-text-4" id="text-org9f34d2d">
 <p>
 另有两种情况，也需要合成出 default constructor：<br></p>
 <ol class="org-ol">
@@ -123,18 +200,18 @@
 </div>
 
 
-<div id="outline-container-org087a7c1" class="outline-4">
-<h4 id="org087a7c1">带有 virtual base class 的 class</h4>
-<div class="outline-text-4" id="text-org087a7c1">
+<div id="outline-container-orga7fcddf" class="outline-4">
+<h4 id="orga7fcddf">带有 virtual base class 的 class</h4>
+<div class="outline-text-4" id="text-orga7fcddf">
 <p>
 virtual base class 的实现方法在不同的编译器之间有极大的差异。然而，每一种实现方法的共通点在于必须使 virtual base class 在其每一个 derived class object 中的位置能够于执行期准备妥当。（书中举出了cfront编译器的做法：在derived class object 的每一个 virtual base classes 安插一个指针。）对于 class 所定义的每一个 constructor，编译器会安插那些“允许每一个 virtual base class 的执行期存取操作”的代码。如果 class 没有声明任何 constructors，编译器必须为它合成一个 default constructor。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org516fb12" class="outline-4">
-<h4 id="org516fb12">总结</h4>
-<div class="outline-text-4" id="text-org516fb12">
+<div id="outline-container-org58cfa85" class="outline-4">
+<h4 id="org58cfa85">总结</h4>
+<div class="outline-text-4" id="text-org58cfa85">
 <p>
 有四种情况，会导致“编译器必须为未声明 constructor 的 class 合成一个 default constructor”。C++ Standard 把那些合成物称为 implicit nontrivial default constructors。被合成出来的 constructor 只能满足编译器（而非程序）的需要。<br></p>
 
@@ -156,9 +233,9 @@ C++新手一般有两个常见的误解：<br></p>
 </div>
 
 
-<div id="outline-container-org86206c0" class="outline-3">
-<h3 id="org86206c0">2.2 copy constructor 的构建操作</h3>
-<div class="outline-text-3" id="text-org86206c0">
+<div id="outline-container-org9c05082" class="outline-3">
+<h3 id="org9c05082">2.2 copy constructor 的构建操作</h3>
+<div class="outline-text-3" id="text-org9c05082">
 <p>
 有三种情况，会以一个 object 的内容作为另一个 class object 的初值：<br></p>
 <ol class="org-ol">
@@ -171,9 +248,9 @@ C++新手一般有两个常见的误解：<br></p>
 </ol>
 </div>
 
-<div id="outline-container-orgc41c189" class="outline-4">
-<h4 id="orgc41c189">default memberwise initialization</h4>
-<div class="outline-text-4" id="text-orgc41c189">
+<div id="outline-container-org6954d83" class="outline-4">
+<h4 id="org6954d83">default memberwise initialization</h4>
+<div class="outline-text-4" id="text-org6954d83">
 <p>
 如果 class 没有提供一个 explicit copy constructor 时，当 class object 以“相同 class 的另一个 object”作为初值时，其内部都是以所谓的 default memberwise initialization 手法完成的，也就是把每一个内建的或派生的 data member 的值，从某个 object 拷贝一份到另一个 object 身上，不过它并不会拷贝其中的 member class object，而是以递归的方式施行 memberwise initialization。<br></p>
 
@@ -182,9 +259,9 @@ C++新手一般有两个常见的误解：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org586b639" class="outline-4">
-<h4 id="org586b639">bitwise copy semantics （位逐次拷贝）</h4>
-<div class="outline-text-4" id="text-org586b639">
+<div id="outline-container-org2a7db2f" class="outline-4">
+<h4 id="org2a7db2f">bitwise copy semantics （位逐次拷贝）</h4>
+<div class="outline-text-4" id="text-org2a7db2f">
 <p>
 一个 class 不展现出 “bitwise copy semantics” 的四种情况：<br></p>
 <ol class="org-ol">
@@ -202,9 +279,9 @@ C++新手一般有两个常见的误解：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4ef5524" class="outline-4">
-<h4 id="org4ef5524">重新设定 virtual table 的指针</h4>
-<div class="outline-text-4" id="text-org4ef5524">
+<div id="outline-container-orge67dd5f" class="outline-4">
+<h4 id="orge67dd5f">重新设定 virtual table 的指针</h4>
+<div class="outline-text-4" id="text-orge67dd5f">
 <p>
 虚函数表的相关初始化要在构造函数中完成，如果编译器对于新产生的 class object 的 vptr 不能正确地设置到其初值，将导致可怕的后果。因此，当编译器导入一个 vptr 到 class 之中时，该 class 就不再展现 bitwise semantics 了。现在，编译器需要需要合成出一个 copy constructor，以求将 vptr 适当地初始化。<br></p>
 
@@ -213,9 +290,9 @@ C++新手一般有两个常见的误解：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org645f27e" class="outline-4">
-<h4 id="org645f27e">处理 virtual base class subobject</h4>
-<div class="outline-text-4" id="text-org645f27e">
+<div id="outline-container-org570984b" class="outline-4">
+<h4 id="org570984b">处理 virtual base class subobject</h4>
+<div class="outline-text-4" id="text-org570984b">
 <p>
 一个 class object 如果以另一个 object 作为初值，而后者有一个 virtual base class subobject， 那么也会使“bitwise copy semantics”失效。<br></p>
 
@@ -225,9 +302,9 @@ C++新手一般有两个常见的误解：<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgbef467b" class="outline-3">
-<h3 id="orgbef467b">2.3 程序转化语意学（program transformation semantics）</h3>
-<div class="outline-text-3" id="text-orgbef467b">
+<div id="outline-container-org701271c" class="outline-3">
+<h3 id="org701271c">2.3 程序转化语意学（program transformation semantics）</h3>
+<div class="outline-text-3" id="text-org701271c">
 <p>
 在 class object 的初始化定义语句会经历两个阶段的程序转换：<br></p>
 <ol class="org-ol">
@@ -238,9 +315,9 @@ C++新手一般有两个常见的误解：<br></p>
 </ol>
 </div>
 
-<div id="outline-container-org535487e" class="outline-4">
-<h4 id="org535487e">返回值的初始化（return value initialization）</h4>
-<div class="outline-text-4" id="text-org535487e">
+<div id="outline-container-org0ad327b" class="outline-4">
+<h4 id="org0ad327b">返回值的初始化（return value initialization）</h4>
+<div class="outline-text-4" id="text-org0ad327b">
 <p>
 编译器层面的优化操作，有时候被称为 named return value（NRV）优化。<br></p>
 
@@ -276,9 +353,9 @@ C++新手一般有两个常见的误解：<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgbb48d5a" class="outline-4">
-<h4 id="orgbb48d5a">摘要</h4>
-<div class="outline-text-4" id="text-orgbb48d5a">
+<div id="outline-container-org0d3dd04" class="outline-4">
+<h4 id="org0d3dd04">摘要</h4>
+<div class="outline-text-4" id="text-org0d3dd04">
 <p>
 copy constructor 的应用，迫使编译器多多稍稍对你的程序代码做部分转化。尤其是当一个函数以传值（by value）的方式传回一个 class object，而该 class 有一个 copy constructor（不论时明确定义出来的，或是合成的）时。这将导致深奥的程序转化（不论在函数的定义或使用上）。<br>
 此外编译器也将 copy constructor 的调用操作优化，以一个额外的第一参数（数值被直接存放于其中）取代 NRV。<br></p>
@@ -287,9 +364,9 @@ copy constructor 的应用，迫使编译器多多稍稍对你的程序代码做
 </div>
 
 
-<div id="outline-container-org4a992b8" class="outline-3">
-<h3 id="org4a992b8">2.4 成员们的初始化队伍（member initialization list）</h3>
-<div class="outline-text-3" id="text-org4a992b8">
+<div id="outline-container-orgc394522" class="outline-3">
+<h3 id="orgc394522">2.4 成员们的初始化队伍（member initialization list）</h3>
+<div class="outline-text-3" id="text-orgc394522">
 <p>
 下列情况中，为了让你的程序能够被顺利编译，你必须使用 member initialization list:<br></p>
 <ol class="org-ol">
@@ -344,26 +421,65 @@ copy constructor 的应用，迫使编译器多多稍稍对你的程序代码做
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2019/inside-the-cpp-object-model-2/",
-        disqus_title="\u6df1\u5165\u63a2\u7d22C++\u5185\u5b58\u6a21\u578b\uff082\uff09",
-        disqus_identifier="_cache/posts/2019/inside-the-cpp-object-model-2.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2019/inside-the-cpp-object-model-2/",
+        title: "\u6df1\u5165\u63a2\u7d22C++\u5185\u5b58\u6a21\u578b\uff082\uff09",
+        identifier: "_cache/posts/2019/inside-the-cpp-object-model-2.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

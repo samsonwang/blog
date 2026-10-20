@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2025/opencv-morph/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2025/opencv-image-filters/" title="opencv的中值滤波和双边滤波" type="text/html">
@@ -50,7 +125,9 @@
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -84,9 +161,9 @@
 本节的腐蚀和膨胀处理的都是二值化之后的图像，所以也可以称之为二值腐蚀和二值膨胀，与灰度腐蚀和灰度膨胀对应。<br>
 腐蚀和膨胀都是针对白色部分而言的（在二值图像中白色为255）。<br></p>
 
-<div id="outline-container-orgbfc8039" class="outline-2">
-<h2 id="orgbfc8039">腐蚀（erosion）</h2>
-<div class="outline-text-2" id="text-orgbfc8039">
+<div id="outline-container-org3daa0a9" class="outline-2">
+<h2 id="org3daa0a9">腐蚀（erosion）</h2>
+<div class="outline-text-2" id="text-org3daa0a9">
 <p>
 腐蚀是求局部最小值的过程，图像处理后的效果为白色减少、黑色增多。<br></p>
 
@@ -104,9 +181,9 @@
 </div>
 
 
-<div id="outline-container-orgcf62635" class="outline-2">
-<h2 id="orgcf62635">膨胀（dilation）</h2>
-<div class="outline-text-2" id="text-orgcf62635">
+<div id="outline-container-orgdaad830" class="outline-2">
+<h2 id="orgdaad830">膨胀（dilation）</h2>
+<div class="outline-text-2" id="text-orgdaad830">
 <p>
 膨胀是求局部最大值的过程，图像处理后的效果为白色增多、黑色减少。<br></p>
 
@@ -124,9 +201,9 @@
 </div>
 
 
-<div id="outline-container-org4b20c63" class="outline-2">
-<h2 id="org4b20c63">结构元素（核）的影响</h2>
-<div class="outline-text-2" id="text-org4b20c63">
+<div id="outline-container-org36240bb" class="outline-2">
+<h2 id="org36240bb">结构元素（核）的影响</h2>
+<div class="outline-text-2" id="text-org36240bb">
 <p>
 结构元素的形状和大小会显著影响形态学操作的结果：<br>
 目前 opencv 有四种可选的核：矩形，椭圆形，十字形，菱形。<br>
@@ -135,9 +212,9 @@
 </div>
 
 
-<div id="outline-container-orgfaaa1dc" class="outline-2">
-<h2 id="orgfaaa1dc">腐蚀和膨胀的测试代码</h2>
-<div class="outline-text-2" id="text-orgfaaa1dc">
+<div id="outline-container-org8d14b8e" class="outline-2">
+<h2 id="org8d14b8e">腐蚀和膨胀的测试代码</h2>
+<div class="outline-text-2" id="text-org8d14b8e">
 <p>
 下面是一段测试程序，用于演示腐蚀和膨胀的效果、不同核的处理效果。<br></p>
 
@@ -204,18 +281,18 @@
 </div>
 
 
-<div id="outline-container-orgd3f705c" class="outline-2">
-<h2 id="orgd3f705c">开运算（opening）</h2>
-<div class="outline-text-2" id="text-orgd3f705c">
+<div id="outline-container-org1308a98" class="outline-2">
+<h2 id="org1308a98">开运算（opening）</h2>
+<div class="outline-text-2" id="text-org1308a98">
 <p>
 线腐蚀后膨胀，用于消除小物体和毛刺<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org11807ae" class="outline-2">
-<h2 id="org11807ae">闭运算（closing）</h2>
-<div class="outline-text-2" id="text-org11807ae">
+<div id="outline-container-org3a2f27e" class="outline-2">
+<h2 id="org3a2f27e">闭运算（closing）</h2>
+<div class="outline-text-2" id="text-org3a2f27e">
 <p>
 先膨胀后腐蚀，用于填充小孔和连接断裂<br></p>
 
@@ -245,26 +322,65 @@
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2025/opencv-morph/",
-        disqus_title="opencv\u4e2d\u7684\u56fe\u50cf\u5f62\u6001\u5b66\u5904\u7406",
-        disqus_identifier="_cache/posts/2025/opencv-morph.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2025/opencv-morph/",
+        title: "opencv\u4e2d\u7684\u56fe\u50cf\u5f62\u6001\u5b66\u5904\u7406",
+        identifier: "_cache/posts/2025/opencv-morph.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

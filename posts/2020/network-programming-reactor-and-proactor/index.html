@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2020/network-programming-reactor-and-proactor/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2020/debug-qt-ole-error/" title="Qt程序中OLE错误的调试记录" type="text/html">
@@ -39,7 +114,9 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -69,9 +146,9 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgb95482b" class="outline-2">
-<h2 id="orgb95482b">Reactor模式简介</h2>
-<div class="outline-text-2" id="text-orgb95482b">
+<div id="outline-container-org2a0c3da" class="outline-2">
+<h2 id="org2a0c3da">Reactor模式简介</h2>
+<div class="outline-text-2" id="text-org2a0c3da">
 <p>
 Reactor模式是一种事件驱动的设计模式，用于处理多输入源的并发服务请求。D.C.shmidt提出了Reactor模式，并在他的ACE框架中广泛使用了该设计模式。<br>
 服务处理者（service handler）将接收到的服务请求同步地（synchronously）分发（demultiplex）给每个请求处理者（request handler）。<br>
@@ -79,16 +156,16 @@ Reactor模式是一种事件驱动的设计模式，用于处理多输入源的�
 </div>
 </div>
 
-<div id="outline-container-orge0d7564" class="outline-2">
-<h2 id="orge0d7564">Reactor模式的优缺点</h2>
-<div class="outline-text-2" id="text-orge0d7564">
+<div id="outline-container-orgb5f72dd" class="outline-2">
+<h2 id="orgb5f72dd">Reactor模式的优缺点</h2>
+<div class="outline-text-2" id="text-orgb5f72dd">
 <p>
 这一节通过剖析Reactor模式的优缺点，详细地介绍了Reactor模式的设计思想。其中，英文内容节选自 DC.Shmidt 的论文，中文内容为我的翻译和总结。<br></p>
 </div>
 
-<div id="outline-container-org10fd976" class="outline-3">
-<h3 id="org10fd976">优点</h3>
-<div class="outline-text-3" id="text-org10fd976">
+<div id="outline-container-org85801e4" class="outline-3">
+<h3 id="org85801e4">优点</h3>
+<div class="outline-text-3" id="text-org85801e4">
 <ul class="org-ul">
 <li>关注点分离：将服务请求分发机制与具体的服务请求处理分离开，以实现代码的复用和解耦合。<br>
 </li>
@@ -127,9 +204,9 @@ Provides coarse-grained concurrency control: The Reactor pattern serializes the 
 </div>
 </div>
 
-<div id="outline-container-org3e78fb1" class="outline-3">
-<h3 id="org3e78fb1">缺点</h3>
-<div class="outline-text-3" id="text-org3e78fb1">
+<div id="outline-container-org3ae10b6" class="outline-3">
+<h3 id="org3ae10b6">缺点</h3>
+<div class="outline-text-3" id="text-org3ae10b6">
 <ul class="org-ul">
 <li>有限的应用场景：Recator模式只有操作系统支持描述符（handle）时才最有效率。<br>
 </li>
@@ -160,29 +237,29 @@ Hard to debug: Applications written with the Reactor pattern can be hard to debu
 </div>
 </div>
 
-<div id="outline-container-org7df4754" class="outline-2">
-<h2 id="org7df4754">使用Reactor模式的网络通信库</h2>
-<div class="outline-text-2" id="text-org7df4754">
+<div id="outline-container-org6df05a9" class="outline-2">
+<h2 id="org6df05a9">使用Reactor模式的网络通信库</h2>
+<div class="outline-text-2" id="text-org6df05a9">
 <p>
 libevent库的设计中就使用了Reactor模式，这个库的使用教程和示例代码在它的官方网站上很容易找到。libevent库解决了不同操作系统IO复用器有差别的问题，能够在具体的系统上选用最合适的系统接口，并为库的使用者抽象出了一套统一的应用接口。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org13bd2fa" class="outline-2">
-<h2 id="org13bd2fa">Proactor模式简介</h2>
-<div class="outline-text-2" id="text-org13bd2fa">
+<div id="outline-container-org250b9a2" class="outline-2">
+<h2 id="org250b9a2">Proactor模式简介</h2>
+<div class="outline-text-2" id="text-org250b9a2">
 <p>
 Proactor模式与Reactor模式相似，也是一种事件驱动的设计模式。与Reactor不同是，Proactor在分发请求时使用的是异步IO，所以需要为异步IO预先申请存储数据的缓存空间，并要指定异步IO完成是调用的回调函数。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge8d99af" class="outline-2">
-<h2 id="orge8d99af">Proactor模式的优缺点</h2>
-<div class="outline-text-2" id="text-orge8d99af">
+<div id="outline-container-org4167da7" class="outline-2">
+<h2 id="org4167da7">Proactor模式的优缺点</h2>
+<div class="outline-text-2" id="text-org4167da7">
 </div>
-<div id="outline-container-org60a0074" class="outline-3">
-<h3 id="org60a0074">优点</h3>
-<div class="outline-text-3" id="text-org60a0074">
+<div id="outline-container-orgd920875" class="outline-3">
+<h3 id="orgd920875">优点</h3>
+<div class="outline-text-3" id="text-orgd920875">
 <ul class="org-ul">
 <li>关注点分离：这点与Reactor模式相同，事件分发框架提供事件调度的逻辑，具体的事件处理函数无需关注调度策略。<br>
 </li>
@@ -199,9 +276,9 @@ Proactor模式与Reactor模式相似，也是一种事件驱动的设计模式�
 </ul>
 </div>
 </div>
-<div id="outline-container-org19bfa2b" class="outline-3">
-<h3 id="org19bfa2b">缺点</h3>
-<div class="outline-text-3" id="text-org19bfa2b">
+<div id="outline-container-org4ad8939" class="outline-3">
+<h3 id="org4ad8939">缺点</h3>
+<div class="outline-text-3" id="text-org4ad8939">
 <ul class="org-ul">
 <li>无法控制事件顺序：这也是异步操作的特性，每个IO操作都由操作系统完成，相互并行的，无法控制顺序。<br>
 </li>
@@ -214,17 +291,17 @@ Proactor模式与Reactor模式相似，也是一种事件驱动的设计模式�
 </div>
 </div>
 
-<div id="outline-container-org75afcf1" class="outline-2">
-<h2 id="org75afcf1">使用Proactor模式的网络通信库</h2>
-<div class="outline-text-2" id="text-org75afcf1">
+<div id="outline-container-orgcb3fade" class="outline-2">
+<h2 id="orgcb3fade">使用Proactor模式的网络通信库</h2>
+<div class="outline-text-2" id="text-orgcb3fade">
 <p>
 Boost库的ASIO使用的Proactor模式，它同时提供同步操作接口和异步操作接口。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org5119013" class="outline-2">
-<h2 id="org5119013">参考资料</h2>
-<div class="outline-text-2" id="text-org5119013">
+<div id="outline-container-orgd4a7e80" class="outline-2">
+<h2 id="orgd4a7e80">参考资料</h2>
+<div class="outline-text-2" id="text-orgd4a7e80">
 <ul class="org-ul">
 <li>
 <a href="https://en.wikipedia.org/wiki/Reactor_pattern">wikipedia - reactor pattern</a><br>
@@ -271,26 +348,65 @@ Boost库的ASIO使用的Proactor模式，它同时提供同步操作接口和异
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2020/network-programming-reactor-and-proactor/",
-        disqus_title="\u7f51\u7edc\u7f16\u7a0b\u4e2d\u7684Reactor\u548cProactor\u6a21\u5f0f",
-        disqus_identifier="_cache/posts/2020/network-programming-reactor-and-proactor.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2020/network-programming-reactor-and-proactor/",
+        title: "\u7f51\u7edc\u7f16\u7a0b\u4e2d\u7684Reactor\u548cProactor\u6a21\u5f0f",
+        identifier: "_cache/posts/2020/network-programming-reactor-and-proactor.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/cpp-python-hybird-programming/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2019/linux-process-and-subprocess/" title="Tips on Linux Process and Subprocess" type="text/html">
@@ -39,7 +114,9 @@ Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -73,9 +150,9 @@ Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org97ca3c9" class="outline-2">
-<h2 id="org97ca3c9">基础概念</h2>
-<div class="outline-text-2" id="text-org97ca3c9">
+<div id="outline-container-orga470b01" class="outline-2">
+<h2 id="orga470b01">基础概念</h2>
+<div class="outline-text-2" id="text-orga470b01">
 <p>
 Python程序嵌入到C++程序中，需要把Python解释器（interpreter）嵌入到C++程序中，C++代码借助Pyhton解释器完成对Python代码的调用。<br></p>
 
@@ -84,9 +161,9 @@ Python代码中调用C++代码以实现数据交互和运行速度提升，实�
 </div>
 </div>
 
-<div id="outline-container-org9e49f09" class="outline-2">
-<h2 id="org9e49f09">实现方案的选择</h2>
-<div class="outline-text-2" id="text-org9e49f09">
+<div id="outline-container-orgf936552" class="outline-2">
+<h2 id="orgf936552">实现方案的选择</h2>
+<div class="outline-text-2" id="text-orgf936552">
 <p>
 C++和Python混合编程的解决方法有很多，需要根据需求和实际情况综合考虑来选择适合的方案。<br></p>
 
@@ -95,9 +172,9 @@ C++和Python混合编程的解决方法有很多，需要根据需求和实际�
 </div>
 </div>
 
-<div id="outline-container-orgccd38e5" class="outline-2">
-<h2 id="orgccd38e5">编译器的选择</h2>
-<div class="outline-text-2" id="text-orgccd38e5">
+<div id="outline-container-orgf944985" class="outline-2">
+<h2 id="orgf944985">编译器的选择</h2>
+<div class="outline-text-2" id="text-orgf944985">
 <p>
 在选择C++编译器时需要考虑Python的版本和Qt的版本。Python和Qt都有官方发布的二进制文件，最好选用与官方发版时相同的编译环境，这样可以省去自行编译的麻烦。<br></p>
 
@@ -112,9 +189,9 @@ C++和Python混合编程的解决方法有很多，需要根据需求和实际�
 </div>
 </div>
 
-<div id="outline-container-orga4f6349" class="outline-2">
-<h2 id="orga4f6349">Qt和Python的版本</h2>
-<div class="outline-text-2" id="text-orga4f6349">
+<div id="outline-container-org5ea934a" class="outline-2">
+<h2 id="org5ea934a">Qt和Python的版本</h2>
+<div class="outline-text-2" id="text-org5ea934a">
 <p>
 32/64bit：在windows下，Qt和Python都有32位和64位版本的库文件，使用时要统一。<br></p>
 
@@ -126,24 +203,24 @@ debug/release：这个与开发调试有关，Python默认安装时只包含rele
 </div>
 </div>
 
-<div id="outline-container-orga756591" class="outline-2">
-<h2 id="orga756591">性能损耗</h2>
-<div class="outline-text-2" id="text-orga756591">
+<div id="outline-container-org96fd6c7" class="outline-2">
+<h2 id="org96fd6c7">性能损耗</h2>
+<div class="outline-text-2" id="text-org96fd6c7">
 <p>
 Python和C++交叉编程是有性能损耗的，如果这是一个对运行速度比较敏感的模块，尽量选择那些损耗较小的实现方案。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org2eb3943" class="outline-2">
-<h2 id="org2eb3943">实现方案</h2>
-<div class="outline-text-2" id="text-org2eb3943">
+<div id="outline-container-org3a6af4f" class="outline-2">
+<h2 id="org3a6af4f">实现方案</h2>
+<div class="outline-text-2" id="text-org3a6af4f">
 <p>
 下面是我尝试过的一些方案，以及这些方案给我的感受。<br></p>
 </div>
 
-<div id="outline-container-org7fca3fc" class="outline-3">
-<h3 id="org7fca3fc"><a href="https://docs.python.org/3/c-api/">CPython</a></h3>
-<div class="outline-text-3" id="text-org7fca3fc">
+<div id="outline-container-org84e1ae5" class="outline-3">
+<h3 id="org84e1ae5"><a href="https://docs.python.org/3/c-api/">CPython</a></h3>
+<div class="outline-text-3" id="text-org84e1ae5">
 <p>
 这是Python官方的标准方案，实际上后来的其他方案也大都是基于这个方案进行开发的。<br>
 优点：全方位精细化的控制，文档和教程比较详细，没有额外的依赖。<br>
@@ -151,9 +228,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 </div>
 
-<div id="outline-container-org74bb6ba" class="outline-3">
-<h3 id="org74bb6ba"><a href="https://www.boost.org/doc/libs/1_66_0/libs/python/doc/html/index.html">Boost.Python</a></h3>
-<div class="outline-text-3" id="text-org74bb6ba">
+<div id="outline-container-org6c9e0b7" class="outline-3">
+<h3 id="org6c9e0b7"><a href="https://www.boost.org/doc/libs/1_66_0/libs/python/doc/html/index.html">Boost.Python</a></h3>
+<div class="outline-text-3" id="text-org6c9e0b7">
 <p>
 这是Boost库的一部分，提供了C++与Python的交叉编程很好支持。<br>
 优点：对众多编译器都有很好的兼容，是一个比较成熟的方案。<br>
@@ -161,9 +238,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 </div>
 
-<div id="outline-container-org0b94bdd" class="outline-3">
-<h3 id="org0b94bdd"><a href="http://www.swig.org/">SWIG</a></h3>
-<div class="outline-text-3" id="text-org0b94bdd">
+<div id="outline-container-orge26c25d" class="outline-3">
+<h3 id="orge26c25d"><a href="http://www.swig.org/">SWIG</a></h3>
+<div class="outline-text-3" id="text-orge26c25d">
 <p>
 支持C/C++与多种编程语言进行交叉编程的解决方案。<br>
 优点：同时支持多种编程语言，如C#等等。<br>
@@ -171,9 +248,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 </div>
 
-<div id="outline-container-orge8a2af1" class="outline-3">
-<h3 id="orge8a2af1"><a href="https://pybind11.readthedocs.io/en/stable/index.html">pybind11</a></h3>
-<div class="outline-text-3" id="text-orge8a2af1">
+<div id="outline-container-org7e20e36" class="outline-3">
+<h3 id="org7e20e36"><a href="https://pybind11.readthedocs.io/en/stable/index.html">pybind11</a></h3>
+<div class="outline-text-3" id="text-org7e20e36">
 <p>
 大量使用C++11的新特性，代码风格与Boost.Python很相似。<br>
 优点：轻量级，只有头文件，无需引入其他二进制库文件依赖。<br>
@@ -183,9 +260,9 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
 </div>
 
 
-<div id="outline-container-orgf222baa" class="outline-2">
-<h2 id="orgf222baa">参考资料</h2>
-<div class="outline-text-2" id="text-orgf222baa">
+<div id="outline-container-orgcd566e8" class="outline-2">
+<h2 id="orgcd566e8">参考资料</h2>
+<div class="outline-text-2" id="text-orgcd566e8">
 <ul class="org-ul">
 <li>
 <a href="https://docs.microsoft.com/en-us/visualstudio/python/working-with-c-cpp-python-in-visual-studio">microsoft docs - working with cpp and python in visual studio</a><br>
@@ -225,26 +302,65 @@ Python和C++交叉编程是有性能损耗的，如果这是一个对运行速�
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2019/cpp-python-hybird-programming/",
-        disqus_title="C++(Qt)\u548cPython\u6df7\u5408\u7f16\u7a0b\u7684\u4e00\u4e9b\u7ecf\u9a8c\u4e4b\u8c08",
-        disqus_identifier="_cache/posts/2019/cpp-python-hybird-programming.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2019/cpp-python-hybird-programming/",
+        title: "C++(Qt)\u548cPython\u6df7\u5408\u7f16\u7a0b\u7684\u4e00\u4e9b\u7ecf\u9a8c\u4e4b\u8c08",
+        identifier: "_cache/posts/2019/cpp-python-hybird-programming.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

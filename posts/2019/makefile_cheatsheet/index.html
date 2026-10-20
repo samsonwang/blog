@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/makefile_cheatsheet/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2019/redis-fundamental/" title="redis基础" type="text/html">
@@ -46,7 +121,9 @@ out.">
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -76,9 +153,9 @@ out.">
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgb287e15" class="outline-2">
-<h2 id="orgb287e15">变量与赋值</h2>
-<div class="outline-text-2" id="text-orgb287e15">
+<div id="outline-container-org98858ac" class="outline-2">
+<h2 id="org98858ac">变量与赋值</h2>
+<div class="outline-text-2" id="text-org98858ac">
 <div class="highlight"><pre><span></span><span class="nv">uglify</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">$(</span>uglify<span class="k">)</span><span class="w">        </span><span class="c1"># lazy assignment</span>
 <span class="nv">compressor</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">$(</span>uglify<span class="k">)</span><span class="w">   </span><span class="c1"># immediate assignment</span>
 <span class="nv">prefix</span><span class="w"> </span><span class="o">?=</span><span class="w"> </span>/usr/local<span class="w">      </span><span class="c1"># safe assignment</span>
@@ -86,9 +163,9 @@ out.">
 </div>
 </div>
 
-<div id="outline-container-org9e2176f" class="outline-2">
-<h2 id="org9e2176f">特殊变量</h2>
-<div class="outline-text-2" id="text-org9e2176f">
+<div id="outline-container-org27d9f58" class="outline-2">
+<h2 id="org27d9f58">特殊变量</h2>
+<div class="outline-text-2" id="text-org27d9f58">
 <div class="highlight"><pre><span></span><span class="nf">out.o</span><span class="o">:</span><span class="w"> </span><span class="n">src</span>.<span class="n">c</span> <span class="n">src</span>.<span class="n">h</span>
 <span class="w">  </span><span class="nv">$@</span><span class="w">   </span><span class="c1"># "out.o" (target)</span>
 <span class="w">  </span>$&lt;<span class="w">   </span><span class="c1"># "src.c" (first prerequisite)</span>
@@ -107,9 +184,9 @@ out.">
 </div>
 </div>
 
-<div id="outline-container-orgba4541c" class="outline-2">
-<h2 id="orgba4541c">命令前缀</h2>
-<div class="outline-text-2" id="text-orgba4541c">
+<div id="outline-container-org02b661a" class="outline-2">
+<h2 id="org02b661a">命令前缀</h2>
+<div class="outline-text-2" id="text-org02b661a">
 <p>
 <code>-</code> Ignore errors<br><code>@</code> Don’t print command<br><code>+</code> Run even if Make is in ‘don’t execute’ mode<br></p>
 
@@ -122,9 +199,9 @@ out.">
 </div>
 </div>
 
-<div id="outline-container-org66c9cfd" class="outline-2">
-<h2 id="org66c9cfd">文件相关操作</h2>
-<div class="outline-text-2" id="text-org66c9cfd">
+<div id="outline-container-org941711f" class="outline-2">
+<h2 id="org941711f">文件相关操作</h2>
+<div class="outline-text-2" id="text-org941711f">
 <p>
 列举所有文件<br></p>
 <div class="highlight"><pre><span></span><span class="nv">js_files</span><span class="w">  </span><span class="o">:=</span><span class="w"> </span><span class="k">$(</span>wildcard<span class="w"> </span>test/*.js<span class="k">)</span>
@@ -150,9 +227,9 @@ out.">
 </div>
 </div>
 
-<div id="outline-container-org3187a98" class="outline-2">
-<h2 id="org3187a98">构建操作（编译目标文件）</h2>
-<div class="outline-text-2" id="text-org3187a98">
+<div id="outline-container-org7bd9528" class="outline-2">
+<h2 id="org7bd9528">构建操作（编译目标文件）</h2>
+<div class="outline-text-2" id="text-org7bd9528">
 <div class="highlight"><pre><span></span><span class="nf">%.o</span><span class="o">:</span><span class="w"> </span>%.<span class="n">c</span>
 <span class="w">  </span>ffmpeg<span class="w"> </span>-i<span class="w"> </span>$&lt;<span class="w"> </span>&gt;<span class="w"> </span><span class="nv">$@</span><span class="w">   </span><span class="c1"># Input and output</span>
 <span class="w">  </span>foo<span class="w"> </span>$^
@@ -160,17 +237,17 @@ out.">
 </div>
 </div>
 
-<div id="outline-container-org0b39f6c" class="outline-2">
-<h2 id="org0b39f6c">引入其他 makefile 文件</h2>
-<div class="outline-text-2" id="text-org0b39f6c">
+<div id="outline-container-org5caf92e" class="outline-2">
+<h2 id="org5caf92e">引入其他 makefile 文件</h2>
+<div class="outline-text-2" id="text-org5caf92e">
 <div class="highlight"><pre><span></span><span class="cp">-include foo.make</span>
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org4c349d4" class="outline-2">
-<h2 id="org4c349d4">make 命令选项</h2>
-<div class="outline-text-2" id="text-org4c349d4">
+<div id="outline-container-orge3de77f" class="outline-2">
+<h2 id="orge3de77f">make 命令选项</h2>
+<div class="outline-text-2" id="text-orge3de77f">
 <div class="highlight"><pre><span></span>make
 <span class="w">  </span>-e,<span class="w"> </span>--environment-overrides
 <span class="w">  </span>-B,<span class="w"> </span>--always-make
@@ -181,9 +258,9 @@ out.">
 </div>
 </div>
 
-<div id="outline-container-orgb3bcae2" class="outline-2">
-<h2 id="orgb3bcae2">条件判断</h2>
-<div class="outline-text-2" id="text-orgb3bcae2">
+<div id="outline-container-org735227a" class="outline-2">
+<h2 id="org735227a">条件判断</h2>
+<div class="outline-text-2" id="text-org735227a">
 <div class="highlight"><pre><span></span><span class="nf">foo</span><span class="o">:</span><span class="w"> </span><span class="k">$(</span><span class="nv">objects</span><span class="k">)</span>
 <span class="cp">ifeq ($(CC),gcc)</span>
 <span class="w">	</span><span class="k">$(</span>CC<span class="k">)</span><span class="w"> </span>-o<span class="w"> </span>foo<span class="w"> </span><span class="k">$(</span>objects<span class="k">)</span><span class="w"> </span><span class="k">$(</span>libs_for_gcc<span class="k">)</span>
@@ -194,9 +271,9 @@ out.">
 </div>
 </div>
 
-<div id="outline-container-org97b58ba" class="outline-2">
-<h2 id="org97b58ba">递归</h2>
-<div class="outline-text-2" id="text-org97b58ba">
+<div id="outline-container-org899fe2f" class="outline-2">
+<h2 id="org899fe2f">递归</h2>
+<div class="outline-text-2" id="text-org899fe2f">
 <div class="highlight"><pre><span></span><span class="nf">deploy</span><span class="o">:</span>
 <span class="w">  </span><span class="k">$(</span>MAKE<span class="k">)</span><span class="w"> </span>deploy2
 </pre></div>
@@ -204,9 +281,9 @@ out.">
 </div>
 
 
-<div id="outline-container-org4b98432" class="outline-2">
-<h2 id="org4b98432">参考资料</h2>
-<div class="outline-text-2" id="text-org4b98432">
+<div id="outline-container-org6c78835" class="outline-2">
+<h2 id="org6c78835">参考资料</h2>
+<div class="outline-text-2" id="text-org6c78835">
 <ul class="org-ul">
 <li>
 <a href="https://devhints.io/makefile">devhints.io - makefile</a><br>
@@ -238,26 +315,65 @@ out.">
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2019/makefile_cheatsheet/",
-        disqus_title="Makefile \u8981\u70b9\u5907\u5fd8",
-        disqus_identifier="_cache/posts/2019/makefile_cheatsheet.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2019/makefile_cheatsheet/",
+        title: "Makefile \u8981\u70b9\u5907\u5fd8",
+        identifier: "_cache/posts/2019/makefile_cheatsheet.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

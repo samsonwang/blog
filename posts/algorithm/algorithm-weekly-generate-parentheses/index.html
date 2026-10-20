@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-generate-parentheses/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/router-modem-and-switch/" title="路由、调制解调器和交换机" type="text/html">
@@ -38,7 +113,9 @@ Given n pairs of parentheses, write a function to generate all combinations of w
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -68,9 +145,9 @@ leetcode 算法题第22道，难度为medium，对指定数量的括号进行排
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org4ac930b" class="outline-2">
-<h2 id="org4ac930b">Description</h2>
-<div class="outline-text-2" id="text-org4ac930b">
+<div id="outline-container-orgadae744" class="outline-2">
+<h2 id="orgadae744">Description</h2>
+<div class="outline-text-2" id="text-orgadae744">
 <p>
 Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.<br>
 For example, given <i>n</i> = 3, a solution set is:<br></p>
@@ -89,13 +166,13 @@ For example, given <i>n</i> = 3, a solution set is:<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgf520add" class="outline-2">
-<h2 id="orgf520add">Solution</h2>
-<div class="outline-text-2" id="text-orgf520add">
+<div id="outline-container-org822a04a" class="outline-2">
+<h2 id="org822a04a">Solution</h2>
+<div class="outline-text-2" id="text-org822a04a">
 </div>
-<div id="outline-container-org9df714d" class="outline-3">
-<h3 id="org9df714d">Approach 1 DP</h3>
-<div class="outline-text-3" id="text-org9df714d">
+<div id="outline-container-orgded4950" class="outline-3">
+<h3 id="orgded4950">Approach 1 DP</h3>
+<div class="outline-text-3" id="text-orgded4950">
 <p>
 这是我想到的方法，按照DP解法的思想，将 <code>n</code> 分解为 （1 和 <code>n-1</code> ）、（2 和 <code>n-2</code> ）以及（ <code>i</code> 和 <code>n-i</code> ），再将分解后的两部分进行前后组合。这样，解决 <code>n</code> 的情况需要依赖于 <code>n-1</code> 的情况，依此递推，最终需要解决的问题得以简化为只有一个括号的情况。<br></p>
 
@@ -161,9 +238,9 @@ For example, given <i>n</i> = 3, a solution set is:<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb282c73" class="outline-3">
-<h3 id="orgb282c73">Approach 2 Brute Force</h3>
-<div class="outline-text-3" id="text-orgb282c73">
+<div id="outline-container-org8169e60" class="outline-3">
+<h3 id="org8169e60">Approach 2 Brute Force</h3>
+<div class="outline-text-3" id="text-org8169e60">
 <p>
 大部分的算法题都能够使用暴力解法，这道题也不例外。下面的代码截取自leetcode的solution解析，使用java编写。<br></p>
 
@@ -222,9 +299,9 @@ For example, given <i>n</i> = 3, a solution set is:<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd62c197" class="outline-3">
-<h3 id="orgd62c197">Approach 3 Backtracking</h3>
-<div class="outline-text-3" id="text-orgd62c197">
+<div id="outline-container-org6ca6439" class="outline-3">
+<h3 id="org6ca6439">Approach 3 Backtracking</h3>
+<div class="outline-text-3" id="text-org6ca6439">
 <p>
 针对上一种算法，如果将左右括号的数量记录下来，就能够在追加新的括号的时候加以判断，保证每个追加加的括号都是合理的。<br></p>
 
@@ -253,9 +330,9 @@ For example, given <i>n</i> = 3, a solution set is:<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4beac9e" class="outline-3">
-<h3 id="org4beac9e">Approach 4 Closure Number</h3>
-<div class="outline-text-3" id="text-org4beac9e">
+<div id="outline-container-org504b9ec" class="outline-3">
+<h3 id="org504b9ec">Approach 4 Closure Number</h3>
+<div class="outline-text-3" id="text-org504b9ec">
 <p>
 这个解法也来自于leetcode的solution解析，它在形式上与我的 approach 1 十分相似，但是这里的组合方式能够保证不包含重复的结果，这个规律找的更加有技巧性。<br></p>
 
@@ -282,9 +359,9 @@ For example, given <i>n</i> = 3, a solution set is:<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3520506" class="outline-2">
-<h2 id="org3520506">Reference</h2>
-<div class="outline-text-2" id="text-org3520506">
+<div id="outline-container-org5b6e95f" class="outline-2">
+<h2 id="org5b6e95f">Reference</h2>
+<div class="outline-text-2" id="text-org5b6e95f">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/generate-parentheses/solution/">leetcode solution analysis</a><br>
@@ -322,26 +399,65 @@ For example, given <i>n</i> = 3, a solution set is:<br></p>
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-generate-parentheses/",
-        disqus_title="\u6bcf\u5468\u7b97\u6cd5\uff1a\u751f\u6210\u6709\u6548\u7684\u62ec\u53f7\u7ec4\u5408",
-        disqus_identifier="_cache/posts/algorithm/algorithm-weekly-generate-parentheses.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-generate-parentheses/",
+        title: "\u6bcf\u5468\u7b97\u6cd5\uff1a\u751f\u6210\u6709\u6548\u7684\u62ec\u53f7\u7ec4\u5408",
+        identifier: "_cache/posts/algorithm/algorithm-weekly-generate-parentheses.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

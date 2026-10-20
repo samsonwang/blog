@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/sorting-algorithm/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/smart-pointers-in-cpp/" title="C++中的智能指针" type="text/html">
@@ -44,7 +119,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -74,9 +151,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org896f8ff" class="outline-2">
-<h2 id="org896f8ff">冒泡排序</h2>
-<div class="outline-text-2" id="text-org896f8ff">
+<div id="outline-container-org86144da" class="outline-2">
+<h2 id="org86144da">冒泡排序</h2>
+<div class="outline-text-2" id="text-org86144da">
 <p>
 从头开始依次对相邻的两个数字比较大小并进行交换，对于 <code>n</code> 个数字，最多只需要进行 <code>n-1</code> 次交换。<br>
 代码示例：<br></p>
@@ -98,9 +175,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-org630c6da" class="outline-2">
-<h2 id="org630c6da">插入排序</h2>
-<div class="outline-text-2" id="text-org630c6da">
+<div id="outline-container-org4e16cda" class="outline-2">
+<h2 id="org4e16cda">插入排序</h2>
+<div class="outline-text-2" id="text-org4e16cda">
 <p>
 从第二个元素开始，将该元素插入到已排序数字列的和合适位置。<br>
 代码示例：<br></p>
@@ -128,9 +205,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-orgc1b5435" class="outline-2">
-<h2 id="orgc1b5435">选择排序</h2>
-<div class="outline-text-2" id="text-orgc1b5435">
+<div id="outline-container-org0062f7c" class="outline-2">
+<h2 id="org0062f7c">选择排序</h2>
+<div class="outline-text-2" id="text-org0062f7c">
 <p>
 以从小到大排序为例，选择排序每次从剩下未排序的数字列中选出最小的数字，将其放在已排序数字列的尾部。<br>
 代码示例：<br></p>
@@ -154,9 +231,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-orgf064f4a" class="outline-2">
-<h2 id="orgf064f4a">归并排序</h2>
-<div class="outline-text-2" id="text-orgf064f4a">
+<div id="outline-container-orgb9bba6f" class="outline-2">
+<h2 id="orgb9bba6f">归并排序</h2>
+<div class="outline-text-2" id="text-orgb9bba6f">
 <p>
 将数字列分不断划分为多个较小的数字列，对较小的数字列按照顺序进行归并，最终实现归并后的数字列是有序的。<br>
 归并排序体现了分治法的思想。归并排序的实现有两种：递归方式和非递归方式。<br></p>
@@ -262,9 +339,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-org711e793" class="outline-2">
-<h2 id="org711e793">快速排序</h2>
-<div class="outline-text-2" id="text-org711e793">
+<div id="outline-container-orgb657fa4" class="outline-2">
+<h2 id="orgb657fa4">快速排序</h2>
+<div class="outline-text-2" id="text-orgb657fa4">
 <p>
 快速排序与归并排序比较相似，它们都会对所排序的数字列进行分割，对分割后的子数字列进行排序，对排序后的子数字列进行归并。二者的区别在于分割子数字列的方式，快速排序会根据选取的轴点对数字列进行划分，归并排序总会对数字列进行等分。<br></p>
 
@@ -299,13 +376,13 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-orgaf3d9d8" class="outline-2">
-<h2 id="orgaf3d9d8">排序算法的性能指标</h2>
-<div class="outline-text-2" id="text-orgaf3d9d8">
+<div id="outline-container-org51fa9cc" class="outline-2">
+<h2 id="org51fa9cc">排序算法的性能指标</h2>
+<div class="outline-text-2" id="text-org51fa9cc">
 </div>
-<div id="outline-container-org4a7f705" class="outline-3">
-<h3 id="org4a7f705">时间复杂度</h3>
-<div class="outline-text-3" id="text-org4a7f705">
+<div id="outline-container-org379ce7c" class="outline-3">
+<h3 id="org379ce7c">时间复杂度</h3>
+<div class="outline-text-3" id="text-org379ce7c">
 <p>
 算法的时间复杂度就是算法的运行速度，是算法性能的重要指标。<br></p>
 
@@ -367,9 +444,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-org177ce2e" class="outline-3">
-<h3 id="org177ce2e">空间复杂度</h3>
-<div class="outline-text-3" id="text-org177ce2e">
+<div id="outline-container-orge00a3b6" class="outline-3">
+<h3 id="orge00a3b6">空间复杂度</h3>
+<div class="outline-text-3" id="text-orge00a3b6">
 <p>
 算法的空间复杂度表示算法运行时需要的内存空间。<br></p>
 
@@ -409,9 +486,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-org23248d9" class="outline-3">
-<h3 id="org23248d9">稳定性</h3>
-<div class="outline-text-3" id="text-org23248d9">
+<div id="outline-container-org9716d78" class="outline-3">
+<h3 id="org9716d78">稳定性</h3>
+<div class="outline-text-3" id="text-org9716d78">
 <p>
 算法的稳定性主要指相同的元素在排序后，它们的相对位置能够保持不变。<br>
 稳定的排序算法：冒泡排序，插入排序，归并排序<br>
@@ -421,13 +498,13 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-org5a7998d" class="outline-2">
-<h2 id="org5a7998d">相似排序算法的比较</h2>
-<div class="outline-text-2" id="text-org5a7998d">
+<div id="outline-container-org7c934f2" class="outline-2">
+<h2 id="org7c934f2">相似排序算法的比较</h2>
+<div class="outline-text-2" id="text-org7c934f2">
 </div>
-<div id="outline-container-orgf7c2e07" class="outline-3">
-<h3 id="orgf7c2e07">插入排序和选择排序</h3>
-<div class="outline-text-3" id="text-orgf7c2e07">
+<div id="outline-container-org9726f0e" class="outline-3">
+<h3 id="org9726f0e">插入排序和选择排序</h3>
+<div class="outline-text-3" id="text-org9726f0e">
 <p>
 插入排序是稳定的算法，而选择排序是不稳定的算法。<br>
 在最理想情况下，插入排序的时间复杂度为 <code>O(n)</code> ，选择排序的时间复杂度为 <code>O(n^2)</code> 。<br></p>
@@ -435,9 +512,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 
 
-<div id="outline-container-orgf5d3216" class="outline-3">
-<h3 id="orgf5d3216">归并排序和快速排序</h3>
-<div class="outline-text-3" id="text-orgf5d3216">
+<div id="outline-container-org4c000ee" class="outline-3">
+<h3 id="org4c000ee">归并排序和快速排序</h3>
+<div class="outline-text-3" id="text-org4c000ee">
 <p>
 归并排序是稳定的算法，而一般的快速排序是不稳定的算法，也存在以稳定的快速排序算法。<br>
 在最坏情况下，归并排序的时间复杂度为 <code>O(nlogn)</code> ，快速排序的时间复杂度为 <code>O(n^2)</code> 。<br>
@@ -446,9 +523,9 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
 </div>
 </div>
 
-<div id="outline-container-orgf08bc31" class="outline-2">
-<h2 id="orgf08bc31">参考资料</h2>
-<div class="outline-text-2" id="text-orgf08bc31">
+<div id="outline-container-org894ae87" class="outline-2">
+<h2 id="org894ae87">参考资料</h2>
+<div class="outline-text-2" id="text-org894ae87">
 <ul class="org-ul">
 <li>
 <a href="https://en.wikipedia.org/wiki/Sorting_algorithm">wikipedia - sorting algorithm</a><br>
@@ -483,26 +560,65 @@ void bubble_sort(vector&lt;int&gt;&amp; nums) {
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2018/sorting-algorithm/",
-        disqus_title="\u5e38\u89c1\u6392\u5e8f\u7b97\u6cd5\u603b\u7ed3",
-        disqus_identifier="_cache/posts/2018/sorting-algorithm.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2018/sorting-algorithm/",
+        title: "\u5e38\u89c1\u6392\u5e8f\u7b97\u6cd5\u603b\u7ed3",
+        identifier: "_cache/posts/2018/sorting-algorithm.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

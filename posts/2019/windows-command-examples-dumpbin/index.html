@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/windows-command-examples-dumpbin/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2019/gnu-private-guard-cheatsheet/" title="gpg操作备忘" type="text/html">
@@ -47,7 +122,9 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -77,18 +154,18 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org021a807" class="outline-2">
-<h2 id="org021a807">简介</h2>
-<div class="outline-text-2" id="text-org021a807">
+<div id="outline-container-orga9222f2" class="outline-2">
+<h2 id="orga9222f2">简介</h2>
+<div class="outline-text-2" id="text-orga9222f2">
 <p>
 dumpbin常用于查看可执行程序和动态库文件，这类文件有个正式的名称Microsoft COFF，COFF全称为Common Object File Format。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgd5e4c01" class="outline-2">
-<h2 id="orgd5e4c01">查看动态库中的导出函数接口</h2>
-<div class="outline-text-2" id="text-orgd5e4c01">
+<div id="outline-container-orgffabf6f" class="outline-2">
+<h2 id="orgffabf6f">查看动态库中的导出函数接口</h2>
+<div class="outline-text-2" id="text-orgffabf6f">
 <p>
 使用以下命令能够查看动态库的导出函数，可以用于辅助检查动态库是否正确地生成了指定名称的接口。<br></p>
 <div class="highlight"><pre><span></span>dumpbin /exports xxx.dll
@@ -97,9 +174,9 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
 </div>
 
 
-<div id="outline-container-org2bdfc20" class="outline-2">
-<h2 id="org2bdfc20">查看程序或动态库是32位还是64位的</h2>
-<div class="outline-text-2" id="text-org2bdfc20">
+<div id="outline-container-org9867302" class="outline-2">
+<h2 id="org9867302">查看程序或动态库是32位还是64位的</h2>
+<div class="outline-text-2" id="text-org9867302">
 <p>
 使用以下命令能够查看COFF文件的头信息，在头信息中包含机器架构信息，从而可以得知是文件是32位还是64位的。<br></p>
 <div class="highlight"><pre><span></span>dumpbin /headers xxxx.dll
@@ -108,9 +185,9 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
 </div>
 
 
-<div id="outline-container-org5fbeb31" class="outline-2">
-<h2 id="org5fbeb31">查看程序所依赖的动态库</h2>
-<div class="outline-text-2" id="text-org5fbeb31">
+<div id="outline-container-orga5146ef" class="outline-2">
+<h2 id="orga5146ef">查看程序所依赖的动态库</h2>
+<div class="outline-text-2" id="text-orga5146ef">
 <p>
 使用以下命令能够查看文件所依赖的动态库信息，执行后会将依赖动态库名称列出来。<br></p>
 <div class="highlight"><pre><span></span>dumpbin /dependents xxx.dll
@@ -119,9 +196,9 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
 </div>
 
 
-<div id="outline-container-org09fb49e" class="outline-2">
-<h2 id="org09fb49e">查看静态库中的函数</h2>
-<div class="outline-text-2" id="text-org09fb49e">
+<div id="outline-container-orga26fcc9" class="outline-2">
+<h2 id="orga26fcc9">查看静态库中的函数</h2>
+<div class="outline-text-2" id="text-orga26fcc9">
 <p>
 使用以下命令能够查看静态库所包含的链接信息，用于辅助检查链接错误。<br></p>
 <div class="highlight"><pre><span></span>dumpbin /linkermember xxx.lib
@@ -132,9 +209,9 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
 </div>
 
 
-<div id="outline-container-orgde47f3d" class="outline-2">
-<h2 id="orgde47f3d">参考资料</h2>
-<div class="outline-text-2" id="text-orgde47f3d">
+<div id="outline-container-orgbfb5c46" class="outline-2">
+<h2 id="orgbfb5c46">参考资料</h2>
+<div class="outline-text-2" id="text-orgbfb5c46">
 <ul class="org-ul">
 <li>
 <a href="https://docs.microsoft.com/en-us/cpp/build/reference/dumpbin-reference">microsoft docs - dumpbin reference</a><br>
@@ -166,26 +243,65 @@ dumpbin常用于查看可执行程序和动态库文件，这类文件有个正�
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2019/windows-command-examples-dumpbin/",
-        disqus_title="Windows\u5e38\u7528\u547d\u4ee4\u884c\u6307\u4ee4dumpbin",
-        disqus_identifier="_cache/posts/2019/windows-command-examples-dumpbin.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2019/windows-command-examples-dumpbin/",
+        title: "Windows\u5e38\u7528\u547d\u4ee4\u884c\u6307\u4ee4dumpbin",
+        identifier: "_cache/posts/2019/windows-command-examples-dumpbin.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

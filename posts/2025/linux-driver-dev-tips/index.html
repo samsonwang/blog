@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2025/linux-driver-dev-tips/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2025/opencv-morph/" title="opencv中的图像形态学处理" type="text/html">
@@ -47,7 +122,9 @@ MODULE_DESCRIPTION("pcie device driver");
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -81,9 +158,9 @@ MODULE_DESCRIPTION("pcie device driver");
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org74b3f1b" class="outline-2">
-<h2 id="org74b3f1b">驱动程序的形式</h2>
-<div class="outline-text-2" id="text-org74b3f1b">
+<div id="outline-container-orgae5e841" class="outline-2">
+<h2 id="orgae5e841">驱动程序的形式</h2>
+<div class="outline-text-2" id="text-orgae5e841">
 <p>
 编译好之后的的文件名为 <code>*.ko</code> 。<br></p>
 
@@ -104,18 +181,18 @@ MODULE_DESCRIPTION("pcie device driver");
 </div>
 
 
-<div id="outline-container-org84247e7" class="outline-2">
-<h2 id="org84247e7">安装卸载驱动程序</h2>
-<div class="outline-text-2" id="text-org84247e7">
+<div id="outline-container-org550d5b7" class="outline-2">
+<h2 id="org550d5b7">安装卸载驱动程序</h2>
+<div class="outline-text-2" id="text-org550d5b7">
 <p>
 安装驱动程序使用 <code>insmod</code> 命令；查看已经安装的驱动使用 <code>lsmod</code> 命令；卸载驱动程序使用 <code>rmmod</code> 命令。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org5bc43ee" class="outline-2">
-<h2 id="org5bc43ee">调试驱动程序</h2>
-<div class="outline-text-2" id="text-org5bc43ee">
+<div id="outline-container-org19b940d" class="outline-2">
+<h2 id="org19b940d">调试驱动程序</h2>
+<div class="outline-text-2" id="text-org19b940d">
 <p>
 在驱动中输出调试信息使用 <code>printk</code> 接口。查看驱动的调试信息使用 <code>dmesg</code> 命令。<br></p>
 
@@ -137,9 +214,9 @@ MODULE_DESCRIPTION("pcie device driver");
 </div>
 
 
-<div id="outline-container-org96f1b26" class="outline-2">
-<h2 id="org96f1b26">查看指定的PCI设备</h2>
-<div class="outline-text-2" id="text-org96f1b26">
+<div id="outline-container-org014eaad" class="outline-2">
+<h2 id="org014eaad">查看指定的PCI设备</h2>
+<div class="outline-text-2" id="text-org014eaad">
 <p>
 使用 lspci 能够查看系统中所有的PCI设备，在开发驱动时会指定查看某个硬件id设备的详细信息，可以使用如下的命令。<br></p>
 <div class="highlight"><pre><span></span>lspci -d&lt;vendor&gt;:&lt;device&gt; -vvv
@@ -148,9 +225,9 @@ MODULE_DESCRIPTION("pcie device driver");
 </div>
 
 
-<div id="outline-container-orgc7bd9f0" class="outline-2">
-<h2 id="orgc7bd9f0">内核态与用户态的交互有哪些解决方案</h2>
-<div class="outline-text-2" id="text-orgc7bd9f0">
+<div id="outline-container-orgcace20b" class="outline-2">
+<h2 id="orgcace20b">内核态与用户态的交互有哪些解决方案</h2>
+<div class="outline-text-2" id="text-orgcace20b">
 <ul class="org-ul">
 <li>a. 系统调用（同步）：<br>
 设备文件使用 <code>read()</code> / <code>poll()</code> / <code>select()</code><br>
@@ -189,9 +266,9 @@ MODULE_DESCRIPTION("pcie device driver");
 </div>
 
 
-<div id="outline-container-org2f4c8c9" class="outline-2">
-<h2 id="org2f4c8c9">分两步处理的中断响应</h2>
-<div class="outline-text-2" id="text-org2f4c8c9">
+<div id="outline-container-org43afcb0" class="outline-2">
+<h2 id="org43afcb0">分两步处理的中断响应</h2>
+<div class="outline-text-2" id="text-org43afcb0">
 <p>
 与Windows系统的驱动程序处理中断的思路类似，先在中断处理函数中记录收到的中断信息（避免长时间阻塞中断），再在后续的流程中处理后续的中断信息。<br>
 在Linux系统中，创建了一个 <code>kthread</code> 来处理收到的中断信息，类似于用户态中的线程。通过 <code>struct completion</code> 实现中断处理函数唤醒中断处理线程。<br></p>
@@ -223,9 +300,9 @@ MODULE_DESCRIPTION("pcie device driver");
 </div>
 
 
-<div id="outline-container-orgb95a066" class="outline-2">
-<h2 id="orgb95a066">内核模块中的C语言标准</h2>
-<div class="outline-text-2" id="text-orgb95a066">
+<div id="outline-container-orgbfeac7e" class="outline-2">
+<h2 id="orgbfeac7e">内核模块中的C语言标准</h2>
+<div class="outline-text-2" id="text-orgbfeac7e">
 <p>
 在编写 Linux 内核模块时，并不能完全使用C99标准，因为 Linux 内核并不完全遵循C99。<br>
 Linux 内核使用的是 GNU C(GCC) 的一个子集，支持部分C99特性。<br></p>
@@ -265,9 +342,9 @@ Linux 内核使用的是 GNU C(GCC) 的一个子集，支持部分C99特性。<b
 </div>
 
 
-<div id="outline-container-org027cbe7" class="outline-2">
-<h2 id="org027cbe7">Process Context 和 Interrupt Context</h2>
-<div class="outline-text-2" id="text-org027cbe7">
+<div id="outline-container-org87ac591" class="outline-2">
+<h2 id="org87ac591">Process Context 和 Interrupt Context</h2>
+<div class="outline-text-2" id="text-org87ac591">
 <p>
 在内核开发中有两个重要的概念：程序上下文、中断上下文。<br></p>
 
@@ -312,26 +389,65 @@ Linux 内核使用的是 GNU C(GCC) 的一个子集，支持部分C99特性。<b
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2025/linux-driver-dev-tips/",
-        disqus_title="Linux \u9a71\u52a8\u5f00\u53d1\u7b14\u8bb0",
-        disqus_identifier="_cache/posts/2025/linux-driver-dev-tips.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2025/linux-driver-dev-tips/",
+        title: "Linux \u9a71\u52a8\u5f00\u53d1\u7b14\u8bb0",
+        identifier: "_cache/posts/2025/linux-driver-dev-tips.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

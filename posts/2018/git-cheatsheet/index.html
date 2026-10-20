@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/git-cheatsheet/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/emacs-find-replace-string-in-directory/" title="使用emacs查找替换指定目录所有文件中字符串" type="text/html">
@@ -42,7 +117,9 @@
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -76,37 +153,37 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org795e9c4" class="outline-2">
-<h2 id="org795e9c4">1 撤销与回退相关</h2>
-<div class="outline-text-2" id="text-org795e9c4">
+<div id="outline-container-org0721c14" class="outline-2">
+<h2 id="org0721c14">1 撤销与回退相关</h2>
+<div class="outline-text-2" id="text-org0721c14">
 </div>
-<div id="outline-container-org6248ede" class="outline-3">
-<h3 id="org6248ede">1.1 修正最近的提交消息</h3>
-<div class="outline-text-3" id="text-org6248ede">
+<div id="outline-container-orga976028" class="outline-3">
+<h3 id="orga976028">1.1 修正最近的提交消息</h3>
+<div class="outline-text-3" id="text-orga976028">
 <p>
 <b>情景</b> ：在最近的一次提交（ <code>git commit</code> ）中输入的信息有误，并且这次提交没有被推送（ <code>git push</code> ）到远程仓库。<br><b>方法</b> ： <code>git commit --amend</code> 或 <code>git commit --amend -m "correct_message"</code><br><b>说明</b> ： <code>git commit --amend</code> 会使用一个新的提交更新并替换最近的一次提交，如果有在临时区域（staged）的修改，也会合并提交；如果有新的提交信息，则会一并提交。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org3d73009" class="outline-3">
-<h3 id="org3d73009">1.2 撤销本地变更</h3>
-<div class="outline-text-3" id="text-org3d73009">
+<div id="outline-container-org6a1e1bd" class="outline-3">
+<h3 id="org6a1e1bd">1.2 撤销本地变更</h3>
+<div class="outline-text-3" id="text-org6a1e1bd">
 <p>
 <b>情景</b> ：当无意中修改了一个文件，想要回退这个文件的修改时。<br><b>方法</b> ： <code>git checkout -- &lt;filename&gt;</code><br><b>说明</b> ：这条指令会把该文件回退到某个git记录中的版本，git默认会回退到 <code>HEAD</code> 版本。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgbfbf71f" class="outline-3">
-<h3 id="orgbfbf71f">1.3 重置本地修改</h3>
-<div class="outline-text-3" id="text-orgbfbf71f">
+<div id="outline-container-org4fea151" class="outline-3">
+<h3 id="org4fea151">1.3 重置本地修改</h3>
+<div class="outline-text-3" id="text-org4fea151">
 <p>
 <b>情景</b> ：已经进行了多次提交，但是没有推送到版本库中，希望撤销这些提交。<br><b>方法</b> ： <code>git reset &lt;last good SHA&gt;</code> 或 <code>git reset --hard &lt;last good SHA&gt;</code><br><b>说明</b> ： <code>git reset</code> 会把本地代码恢复到没有提交（ <code>git commit</code> ）的状态，做出的修改会保留。 <code>git reset --hard</code> 会把这些修改丢弃掉。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0e1316e" class="outline-3">
-<h3 id="org0e1316e">1.4 恢复被重置的本地修改</h3>
-<div class="outline-text-3" id="text-org0e1316e">
+<div id="outline-container-org7c3d626" class="outline-3">
+<h3 id="org7c3d626">1.4 恢复被重置的本地修改</h3>
+<div class="outline-text-3" id="text-org7c3d626">
 <p>
 <b>情景</b> ：在按照1.3中操作后，想恢复重置以前的状态。<br><b>方法</b> ： <code>git reflog</code> 后执行 <code>git reset</code> 或 <code>git checkout</code><br><b>说明</b> ： <code>git reflog</code> 会呈现所有提交过的历史，是一个十分实用的功能。<br></p>
 </div>
@@ -114,13 +191,13 @@
 </div>
 
 
-<div id="outline-container-orgeae5bb9" class="outline-2">
-<h2 id="orgeae5bb9">2 分支操作相关</h2>
-<div class="outline-text-2" id="text-orgeae5bb9">
+<div id="outline-container-org621b533" class="outline-2">
+<h2 id="org621b533">2 分支操作相关</h2>
+<div class="outline-text-2" id="text-org621b533">
 </div>
-<div id="outline-container-orge53a95c" class="outline-3">
-<h3 id="orge53a95c">2.1 创建一个本地分支并推送到远端</h3>
-<div class="outline-text-3" id="text-orge53a95c">
+<div id="outline-container-org2c6cb51" class="outline-3">
+<h3 id="org2c6cb51">2.1 创建一个本地分支并推送到远端</h3>
+<div class="outline-text-3" id="text-org2c6cb51">
 <p>
 <b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git branch branch_name
@@ -129,9 +206,9 @@ git push origin branch_name
 </div>
 </div>
 
-<div id="outline-container-org426fc6a" class="outline-3">
-<h3 id="org426fc6a">2.2 在本地创建一个远程分支</h3>
-<div class="outline-text-3" id="text-org426fc6a">
+<div id="outline-container-orgc405d12" class="outline-3">
+<h3 id="orgc405d12">2.2 在本地创建一个远程分支</h3>
+<div class="outline-text-3" id="text-orgc405d12">
 <p>
 <b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git fetch origin
@@ -140,9 +217,9 @@ git checkout -b branch_name origin/branch_name
 </div>
 </div>
 
-<div id="outline-container-org677a674" class="outline-3">
-<h3 id="org677a674">2.3 下载远程分支到本地</h3>
-<div class="outline-text-3" id="text-org677a674">
+<div id="outline-container-orgddcbe9e" class="outline-3">
+<h3 id="orgddcbe9e">2.3 下载远程分支到本地</h3>
+<div class="outline-text-3" id="text-orgddcbe9e">
 <p>
 在第一次下载远程分支时，创建与远程分支同名的本地分支，并跟踪(track)到远程分支。<br><b>方法</b> :<br></p>
 <div class="highlight"><pre><span></span>git checkout -t origin/branch_name
@@ -150,9 +227,9 @@ git checkout -b branch_name origin/branch_name
 </div>
 </div>
 
-<div id="outline-container-orgb054d68" class="outline-3">
-<h3 id="orgb054d68">2.4 在分支上进行进度迁移</h3>
-<div class="outline-text-3" id="text-orgb054d68">
+<div id="outline-container-org90740d5" class="outline-3">
+<h3 id="org90740d5">2.4 在分支上进行进度迁移</h3>
+<div class="outline-text-3" id="text-org90740d5">
 <p>
 <b>情景</b> ： 进行了几次提交后，发现自己正在错误的分支上干活。<br><b>方法</b> ：<br></p>
 <div class="highlight"><pre><span></span>git branch feature
@@ -166,21 +243,21 @@ git checkout feature
 </div>
 
 
-<div id="outline-container-org2dbce6c" class="outline-2">
-<h2 id="org2dbce6c">3 git submodule 相关操作</h2>
-<div class="outline-text-2" id="text-org2dbce6c">
+<div id="outline-container-org734987d" class="outline-2">
+<h2 id="org734987d">3 git submodule 相关操作</h2>
+<div class="outline-text-2" id="text-org734987d">
 </div>
-<div id="outline-container-org99a1d89" class="outline-3">
-<h3 id="org99a1d89">3.1 向当前repo中增加一个submodule</h3>
-<div class="outline-text-3" id="text-org99a1d89">
+<div id="outline-container-orgbb3d586" class="outline-3">
+<h3 id="orgbb3d586">3.1 向当前repo中增加一个submodule</h3>
+<div class="outline-text-3" id="text-orgbb3d586">
 <div class="highlight"><pre><span></span>git submoudle add &lt;module url&gt; &lt;local path&gt;
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org5cae07b" class="outline-3">
-<h3 id="org5cae07b">3.2 初始化submodule</h3>
-<div class="outline-text-3" id="text-org5cae07b">
+<div id="outline-container-org508dcd1" class="outline-3">
+<h3 id="org508dcd1">3.2 初始化submodule</h3>
+<div class="outline-text-3" id="text-org508dcd1">
 <p>
 在将一个具有submodule的repo拉取到本地以后需要对submodule进行初始化<br></p>
 <div class="highlight"><pre><span></span>git submodule init
@@ -188,9 +265,9 @@ git checkout feature
 </div>
 </div>
 
-<div id="outline-container-org957021f" class="outline-3">
-<h3 id="org957021f">3.3 更新submodule</h3>
-<div class="outline-text-3" id="text-org957021f">
+<div id="outline-container-org233bc95" class="outline-3">
+<h3 id="org233bc95">3.3 更新submodule</h3>
+<div class="outline-text-3" id="text-org233bc95">
 <p>
 在开发中可以直接进入submodule的目录对每一个submodule执行更新操作，也可以使用命令统一完成submodule的更新操作。<br></p>
 <div class="highlight"><pre><span></span>git submodule update
@@ -198,9 +275,9 @@ git checkout feature
 </div>
 </div>
 
-<div id="outline-container-org24c6cf6" class="outline-3">
-<h3 id="org24c6cf6">3.4 删掉submodule</h3>
-<div class="outline-text-3" id="text-org24c6cf6">
+<div id="outline-container-org9e4fa5f" class="outline-3">
+<h3 id="org9e4fa5f">3.4 删掉submodule</h3>
+<div class="outline-text-3" id="text-org9e4fa5f">
 <p>
 对于不需要的submodule，可以将其删掉。<br></p>
 <div class="highlight"><pre><span></span>git submodule rm &lt;local/path&gt;
@@ -210,9 +287,9 @@ git checkout feature
 </div>
 
 
-<div id="outline-container-org499ee19" class="outline-2">
-<h2 id="org499ee19">4 终端配置</h2>
-<div class="outline-text-2" id="text-org499ee19">
+<div id="outline-container-orgc555b10" class="outline-2">
+<h2 id="orgc555b10">4 终端配置</h2>
+<div class="outline-text-2" id="text-orgc555b10">
 <p>
 使用命令简称方便操作，可以将以下配置加入到 <code>.bashrc</code> 中。<br></p>
 <div class="highlight"><pre><span></span># git related
@@ -233,21 +310,21 @@ alias gpl='git pull'
 </div>
 
 
-<div id="outline-container-org04eb7a3" class="outline-2">
-<h2 id="org04eb7a3">5 缓存登录密码</h2>
-<div class="outline-text-2" id="text-org04eb7a3">
+<div id="outline-container-org356be39" class="outline-2">
+<h2 id="org356be39">5 缓存登录密码</h2>
+<div class="outline-text-2" id="text-org356be39">
 </div>
-<div id="outline-container-org24e431b" class="outline-3">
-<h3 id="org24e431b">3.1 保存登录密码</h3>
-<div class="outline-text-3" id="text-org24e431b">
+<div id="outline-container-orgcb8540e" class="outline-3">
+<h3 id="orgcb8540e">3.1 保存登录密码</h3>
+<div class="outline-text-3" id="text-orgcb8540e">
 <p>
 当我们不想重复输入密码时可以将密码保存<br></p>
 </div>
 </div>
 
-<div id="outline-container-org914862a" class="outline-3">
-<h3 id="org914862a">3.2 删除保存的密码</h3>
-<div class="outline-text-3" id="text-org914862a">
+<div id="outline-container-org9b81a3e" class="outline-3">
+<h3 id="org9b81a3e">3.2 删除保存的密码</h3>
+<div class="outline-text-3" id="text-org9b81a3e">
 <p>
 当需要更新密码时，需要从系统中删掉旧的密码否则<br></p>
 </div>
@@ -274,26 +351,65 @@ alias gpl='git pull'
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2018/git-cheatsheet/",
-        disqus_title="\u5e38\u7528git\u64cd\u4f5c\u5907\u5fd8",
-        disqus_identifier="_cache/posts/2018/git-cheatsheet.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2018/git-cheatsheet/",
+        title: "\u5e38\u7528git\u64cd\u4f5c\u5907\u5fd8",
+        identifier: "_cache/posts/2018/git-cheatsheet.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

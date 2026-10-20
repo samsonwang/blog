@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/linux-command-examples-nc/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/linux-command-examples-lsof/" title="Linux常用命令行指令 - lsof" type="text/html">
@@ -54,7 +129,9 @@ nc 会默认以TCP协议运行，可以增加 -u 参数转换">
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -88,9 +165,9 @@ nc 会默认以TCP协议运行，可以增加 -u 参数转换">
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org37a8342" class="outline-2">
-<h2 id="org37a8342">1. 基本 <code>C/S</code> 模型</h2>
-<div class="outline-text-2" id="text-org37a8342">
+<div id="outline-container-org6a1c2db" class="outline-2">
+<h2 id="org6a1c2db">1. 基本 <code>C/S</code> 模型</h2>
+<div class="outline-text-2" id="text-org6a1c2db">
 <p>
 作为服务端建立监听<br></p>
 <div class="highlight"><pre><span></span>nc<span class="w"> </span>-l<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span><span class="m">8060</span>
@@ -109,9 +186,9 @@ nc 会默认以TCP协议运行，可以增加 -u 参数转换">
 </div>
 </div>
 
-<div id="outline-container-orgeebb554" class="outline-2">
-<h2 id="orgeebb554">2. 文件传输</h2>
-<div class="outline-text-2" id="text-orgeebb554">
+<div id="outline-container-orgb152db1" class="outline-2">
+<h2 id="orgb152db1">2. 文件传输</h2>
+<div class="outline-text-2" id="text-orgb152db1">
 <p>
 模拟客户端向服务端传输文件的示例代码如下，同理，也可以模拟服务端向客户端发送文件。<br></p>
 <div class="highlight"><pre><span></span>nc<span class="w"> </span>-l<span class="w"> </span><span class="m">1234</span><span class="w">  </span>&gt;<span class="w"> </span>filename.out
@@ -120,9 +197,9 @@ nc<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </spa
 </div>
 </div>
 
-<div id="outline-container-org58e1e00" class="outline-2">
-<h2 id="org58e1e00">3. 连接远程系统</h2>
-<div class="outline-text-2" id="text-org58e1e00">
+<div id="outline-container-org9ef31ba" class="outline-2">
+<h2 id="org9ef31ba">3. 连接远程系统</h2>
+<div class="outline-text-2" id="text-org9ef31ba">
 <p>
 已连接http服务器为例，在作为客户端连接以后，可以向服务器发送 <code>GET /HTTP/1.1</code> 来获取网站的主页。<br>
 示例代码如下<br></p>
@@ -131,9 +208,9 @@ nc<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </spa
 </div>
 </div>
 
-<div id="outline-container-org7c5c60f" class="outline-2">
-<h2 id="org7c5c60f">4. 简易代理</h2>
-<div class="outline-text-2" id="text-org7c5c60f">
+<div id="outline-container-orgb01f243" class="outline-2">
+<h2 id="orgb01f243">4. 简易代理</h2>
+<div class="outline-text-2" id="text-orgb01f243">
 <p>
 将nc命令嵌套使用，可以将一个端口中的数据转发到目的ip和端口。<br></p>
 <div class="highlight"><pre><span></span>ncat<span class="w"> </span>-l<span class="w"> </span><span class="m">8080</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>ncat<span class="w"> </span><span class="m">192</span>.168.1.200<span class="w"> </span><span class="m">80</span>
@@ -146,9 +223,9 @@ ncat<span class="w"> </span>-l<span class="w"> </span><span class="m">8080</span
 </div>
 </div>
 
-<div id="outline-container-org710e396" class="outline-2">
-<h2 id="org710e396">5. 参考资料</h2>
-<div class="outline-text-2" id="text-org710e396">
+<div id="outline-container-org7923d39" class="outline-2">
+<h2 id="org7923d39">5. 参考资料</h2>
+<div class="outline-text-2" id="text-org7923d39">
 <ul class="org-ul">
 <li>
 <a href="https://www.linuxtechi.com/nc-ncat-command-examples-linux-systems/">linuxtechi.com - 10 useful ncat command examples</a><br>
@@ -191,26 +268,65 @@ ncat<span class="w"> </span>-l<span class="w"> </span><span class="m">8080</span
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2018/linux-command-examples-nc/",
-        disqus_title="Linux\u5e38\u7528\u547d\u4ee4\u884c\u6307\u4ee4 - nc",
-        disqus_identifier="_cache/posts/2018/linux-command-examples-nc.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2018/linux-command-examples-nc/",
+        title: "Linux\u5e38\u7528\u547d\u4ee4\u884c\u6307\u4ee4 - nc",
+        identifier: "_cache/posts/2018/linux-command-examples-nc.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

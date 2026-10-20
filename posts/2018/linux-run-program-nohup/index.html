@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/linux-run-program-nohup/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/algorithm/algorithm-weekly-search-in-rotated-sorted-array/" title="每周算法：搜索有序的回环数组" type="text/html">
@@ -40,7 +115,9 @@ nohup / setsid / &amp;
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -74,9 +151,9 @@ nohup / setsid / &amp;
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org535b2ad" class="outline-2">
-<h2 id="org535b2ad">nohup / setsid / &amp;</h2>
-<div class="outline-text-2" id="text-org535b2ad">
+<div id="outline-container-org1088000" class="outline-2">
+<h2 id="org1088000">nohup / setsid / &amp;</h2>
+<div class="outline-text-2" id="text-org1088000">
 <p>
 <b>场景：</b><br>
 如果只是临时有一个命令需要长时间运行，什么方法能最简便的保证它在后台稳定运行呢？<br></p>
@@ -92,9 +169,9 @@ hangup 名称的来由<br>
 </blockquote>
 </div>
 
-<div id="outline-container-org2676236" class="outline-3">
-<h3 id="org2676236">1. nohup</h3>
-<div class="outline-text-3" id="text-org2676236">
+<div id="outline-container-org0f471cb" class="outline-3">
+<h3 id="org0f471cb">1. nohup</h3>
+<div class="outline-text-3" id="text-org0f471cb">
 <p>
 nohup 无疑是我们首先想到的办法。顾名思义，nohup 的用途就是让提交的命令忽略 hangup 信号。让我们先来看一下 nohup 的帮助信息：<br></p>
 
@@ -133,9 +210,9 @@ root      3067   984  0 21:06 pts/3    00:00:00 grep 3059
 </div>
 </div>
 
-<div id="outline-container-org7ac8746" class="outline-3">
-<h3 id="org7ac8746">2. setsid</h3>
-<div class="outline-text-3" id="text-org7ac8746">
+<div id="outline-container-orgbde4ce7" class="outline-3">
+<h3 id="orgbde4ce7">2. setsid</h3>
+<div class="outline-text-3" id="text-orgbde4ce7">
 <p>
 nohup 无疑能通过忽略 HUP 信号来使我们的进程避免中途被中断，但如果我们换个角度思考，如果我们的进程不属于接受 HUP 信号的终端的子进程，那么自然也就不会受到 HUP 信号的影响了。setsid 就能帮助我们做到这一点。让我们先来看一下 setsid 的帮助信息：<br></p>
 
@@ -170,9 +247,9 @@ root     31102 29217  0 07:29 pts/4    00:00:00 grep www.ibm.com
 </div>
 </div>
 
-<div id="outline-container-orgc7dd2f7" class="outline-3">
-<h3 id="orgc7dd2f7">3. &amp;</h3>
-<div class="outline-text-3" id="text-orgc7dd2f7">
+<div id="outline-container-orgb359d90" class="outline-3">
+<h3 id="orgb359d90">3. &amp;</h3>
+<div class="outline-text-3" id="text-orgb359d90">
 <p>
 这里还有一个关于 subshell 的小技巧。我们知道，将一个或多个命名包含在“()”中就能让这些命令在子 shell 中运行中，从而扩展出很多有趣的功能，我们现在要讨论的就是其中之一。<br></p>
 
@@ -195,9 +272,9 @@ root     16278 15362  0 14:13 pts/4    00:00:00 grep www.ibm.com
 </div>
 </div>
 
-<div id="outline-container-orge9b4e49" class="outline-2">
-<h2 id="orge9b4e49">disown</h2>
-<div class="outline-text-2" id="text-orge9b4e49">
+<div id="outline-container-org9bc6f4c" class="outline-2">
+<h2 id="org9bc6f4c">disown</h2>
+<div class="outline-text-2" id="text-org9bc6f4c">
 <p>
 <b>场景：</b><br>
 我们已经知道，如果事先在命令前加上 nohup 或者 setsid 就可以避免 HUP 信号的影响。但是如果我们未加任何处理就已经提交了命令，该如何补救才能让它避免 HUP 信号的影响呢？<br></p>
@@ -280,9 +357,9 @@ root      5824  5577  0 10:05 pts/3    00:00:00 grep largeFile2
 </div>
 </div>
 
-<div id="outline-container-org8f9fea8" class="outline-2">
-<h2 id="org8f9fea8">screen</h2>
-<div class="outline-text-2" id="text-org8f9fea8">
+<div id="outline-container-org50f6558" class="outline-2">
+<h2 id="org50f6558">screen</h2>
+<div class="outline-text-2" id="text-org50f6558">
 <p>
 <b>场景：</b><br>
 我们已经知道了如何让进程免受 HUP 信号的影响，但是如果有大量这种命令需要在稳定的后台里运行，如何避免对每条命令都做这样的操作呢？<br></p>
@@ -381,9 +458,9 @@ init─┬─Xvnc
 </div>
 </div>
 
-<div id="outline-container-org231fc04" class="outline-2">
-<h2 id="org231fc04">总结</h2>
-<div class="outline-text-2" id="text-org231fc04">
+<div id="outline-container-orge0dfe67" class="outline-2">
+<h2 id="orge0dfe67">总结</h2>
+<div class="outline-text-2" id="text-orge0dfe67">
 <p>
 现在几种方法已经介绍完毕，我们可以根据不同的场景来选择不同的方案。nohup/setsid 无疑是临时需要时最方便的方法，disown 能帮助我们来事后补救当前已经在运行了的作业，而 screen 则是在大批量操作时不二的选择了。<br></p>
 </div>
@@ -418,26 +495,65 @@ init─┬─Xvnc
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2018/linux-run-program-nohup/",
-        disqus_title="[\u8f6c]Linux \u6280\u5de7\uff1a\u8ba9\u8fdb\u7a0b\u5728\u540e\u53f0\u53ef\u9760\u8fd0\u884c\u7684\u51e0\u79cd\u65b9\u6cd5",
-        disqus_identifier="_cache/posts/2018/linux-run-program-nohup.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2018/linux-run-program-nohup/",
+        title: "[\u8f6c]Linux \u6280\u5de7\uff1a\u8ba9\u8fdb\u7a0b\u5728\u540e\u53f0\u53ef\u9760\u8fd0\u884c\u7684\u51e0\u79cd\u65b9\u6cd5",
+        identifier: "_cache/posts/2018/linux-run-program-nohup.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

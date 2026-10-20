@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/linux-command-examples-tcpdump/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/linux-command-examples-nc/" title="Linux常用命令行指令 - nc" type="text/html">
@@ -53,7 +128,9 @@ tcpdump -c 5 -i eth0
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -81,41 +158,41 @@ tcpdump -c 5 -i eth0
     <p>
 tcpdump常用于网络抓包，能够将抓取的包保存下来，这样就能进一步深入分析。抓包保存的文件可以使用tcpdump进行查看，也可以借助第三方软件（如wireshark）进行辅助分析。<br></p>
 
-<div id="outline-container-org874c518" class="outline-2">
-<h2 id="org874c518">1. 抓取指定网络设备上的包</h2>
-<div class="outline-text-2" id="text-org874c518">
+<div id="outline-container-orgac5092a" class="outline-2">
+<h2 id="orgac5092a">1. 抓取指定网络设备上的包</h2>
+<div class="outline-text-2" id="text-orgac5092a">
 <p>
 抓取网卡eth0上的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org1543766" class="outline-2">
-<h2 id="org1543766">2. 限制抓包的数量</h2>
-<div class="outline-text-2" id="text-org1543766">
+<div id="outline-container-orga1b3d4f" class="outline-2">
+<h2 id="orga1b3d4f">2. 限制抓包的数量</h2>
+<div class="outline-text-2" id="text-orga1b3d4f">
 <p>
 只抓取5个包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -c 5 -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org80cc05d" class="outline-2">
-<h2 id="org80cc05d">3. 将抓取的包以ASCII的方式打印出来</h2>
-<div class="outline-text-2" id="text-org80cc05d">
+<div id="outline-container-org04e5a29" class="outline-2">
+<h2 id="org04e5a29">3. 将抓取的包以ASCII的方式打印出来</h2>
+<div class="outline-text-2" id="text-org04e5a29">
 <div class="highlight"><pre><span></span>tcpdump -A -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org03a8498" class="outline-2">
-<h2 id="org03a8498">4. 将抓取的包以十六进制的方式打印出来</h2>
-<div class="outline-text-2" id="text-org03a8498">
+<div id="outline-container-org6183eea" class="outline-2">
+<h2 id="org6183eea">4. 将抓取的包以十六进制的方式打印出来</h2>
+<div class="outline-text-2" id="text-org6183eea">
 <div class="highlight"><pre><span></span>tcpdump -XX -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org761a655" class="outline-2">
-<h2 id="org761a655">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
-<div class="outline-text-2" id="text-org761a655">
+<div id="outline-container-org16f33fc" class="outline-2">
+<h2 id="org16f33fc">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
+<div class="outline-text-2" id="text-org16f33fc">
 <p>
 增加 <code>-t</code> 参数能够将抓取到的包中的时间以方便阅读的形式打印出来，使用 <code>-tttt</code> 参数能够将包中的时间戳以更详细的方式打印出来。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -t -i eth0
@@ -123,23 +200,23 @@ tcpdump -tttt -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org3758848" class="outline-2">
-<h2 id="org3758848">6. 将抓取的包写入到文件中</h2>
-<div class="outline-text-2" id="text-org3758848">
+<div id="outline-container-orga2862cc" class="outline-2">
+<h2 id="orga2862cc">6. 将抓取的包写入到文件中</h2>
+<div class="outline-text-2" id="text-orga2862cc">
 <div class="highlight"><pre><span></span>tcpdump -w netdump.pcap -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org44d438f" class="outline-2">
-<h2 id="org44d438f">7. 读取抓到的包</h2>
-<div class="outline-text-2" id="text-org44d438f">
+<div id="outline-container-orgf38e673" class="outline-2">
+<h2 id="orgf38e673">7. 读取抓到的包</h2>
+<div class="outline-text-2" id="text-orgf38e673">
 <div class="highlight"><pre><span></span>tcpdump -r netdump.pcap
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org59e68f4" class="outline-2">
-<h2 id="org59e68f4">8. 在抓到的包中显示ip地址</h2>
-<div class="outline-text-2" id="text-org59e68f4">
+<div id="outline-container-orgb06eceb" class="outline-2">
+<h2 id="orgb06eceb">8. 在抓到的包中显示ip地址</h2>
+<div class="outline-text-2" id="text-orgb06eceb">
 <p>
 增加 <code>-n</code> 参数不会解析主机名，增加 <code>-nn</code> 参数不会解析主机名和端口名<br></p>
 <div class="highlight"><pre><span></span>tcpdump -n -i eth0
@@ -147,16 +224,16 @@ tcpdump -nn -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org2a1029e" class="outline-2">
-<h2 id="org2a1029e">9. 以绝对值显示包的ISN号</h2>
-<div class="outline-text-2" id="text-org2a1029e">
+<div id="outline-container-org0dd3656" class="outline-2">
+<h2 id="org0dd3656">9. 以绝对值显示包的ISN号</h2>
+<div class="outline-text-2" id="text-org0dd3656">
 <div class="highlight"><pre><span></span>tcpdump -S -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org27c9814" class="outline-2">
-<h2 id="org27c9814">10. 对抓取到的包显示更详细的信息</h2>
-<div class="outline-text-2" id="text-org27c9814">
+<div id="outline-container-org30fb9a7" class="outline-2">
+<h2 id="org30fb9a7">10. 对抓取到的包显示更详细的信息</h2>
+<div class="outline-text-2" id="text-org30fb9a7">
 <p>
 参数 <code>-v</code> 是verbose的缩写，以下命令表示对抓取到的包显示更详细的信息。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -v -i eth0
@@ -165,9 +242,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org9c6e436" class="outline-2">
-<h2 id="org9c6e436">11. 对抓到的包进行协议类型过滤</h2>
-<div class="outline-text-2" id="text-org9c6e436">
+<div id="outline-container-org72f6171" class="outline-2">
+<h2 id="org72f6171">11. 对抓到的包进行协议类型过滤</h2>
+<div class="outline-text-2" id="text-org72f6171">
 <p>
 支持的协议类型有：fddi, tr, wlan, ip, ip6, arp, rarp, decnet, tcp, udp<br>
 以下命令只会抓取网卡eth0上的arp包<br></p>
@@ -175,9 +252,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgf88be56" class="outline-2">
-<h2 id="orgf88be56">12. 在抓包时对包进行大小过滤</h2>
-<div class="outline-text-2" id="text-orgf88be56">
+<div id="outline-container-orgb5f12fb" class="outline-2">
+<h2 id="orgb5f12fb">12. 在抓包时对包进行大小过滤</h2>
+<div class="outline-text-2" id="text-orgb5f12fb">
 <p>
 下面的命令会分别抓取大于1024字节和小于1024字节的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0 greater 1024
@@ -185,16 +262,16 @@ tcpdump -i eth0 less 1024
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org697cb03" class="outline-2">
-<h2 id="org697cb03">13. 抓取指定端口上的包</h2>
-<div class="outline-text-2" id="text-org697cb03">
+<div id="outline-container-org73f84c0" class="outline-2">
+<h2 id="org73f84c0">13. 抓取指定端口上的包</h2>
+<div class="outline-text-2" id="text-org73f84c0">
 <div class="highlight"><pre><span></span>tcpdump -i eth0 port 22
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgc7635d3" class="outline-2">
-<h2 id="orgc7635d3">14. 抓取发往指定目的和端口上包</h2>
-<div class="outline-text-2" id="text-orgc7635d3">
+<div id="outline-container-org5b71a9c" class="outline-2">
+<h2 id="org5b71a9c">14. 抓取发往指定目的和端口上包</h2>
+<div class="outline-text-2" id="text-org5b71a9c">
 <p>
 可以使用 <code>and</code> 和 <code>or</code> 对过滤条件进行组合以实现精确的抓包。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -w net_dump.pcap -i eth0 dst 10.181.140.216 and port 22
@@ -202,9 +279,9 @@ tcpdump -i eth0 less 1024
 </div>
 </div>
 
-<div id="outline-container-org558cb23" class="outline-2">
-<h2 id="org558cb23">常用tcpdump命令示例</h2>
-<div class="outline-text-2" id="text-org558cb23">
+<div id="outline-container-org2d288ef" class="outline-2">
+<h2 id="org2d288ef">常用tcpdump命令示例</h2>
+<div class="outline-text-2" id="text-org2d288ef">
 <div class="highlight"><pre><span></span>tcpdump –i any 'port 8888'
 tcpdump –i any 'tcp port 8888'
 tcpdump –i any 'tcp src port 8888'
@@ -214,9 +291,9 @@ tcpdump -i any 'src host 127.0.0.1 and tcp src port 12345' -XX -nn -vv
 </div>
 </div>
 
-<div id="outline-container-orga6ba4fe" class="outline-2">
-<h2 id="orga6ba4fe">参考资料</h2>
-<div class="outline-text-2" id="text-orga6ba4fe">
+<div id="outline-container-org8370170" class="outline-2">
+<h2 id="org8370170">参考资料</h2>
+<div class="outline-text-2" id="text-org8370170">
 <ul class="org-ul">
 <li>
 <a href="https://danielmiessler.com/study/tcpdump/">danielmiessler.com tcpdump</a><br>
@@ -254,26 +331,65 @@ tcpdump -i any 'src host 127.0.0.1 and tcp src port 12345' -XX -nn -vv
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2018/linux-command-examples-tcpdump/",
-        disqus_title="Linux\u5e38\u7528\u547d\u4ee4\u884c\u6307\u4ee4 - tcpdump",
-        disqus_identifier="_cache/posts/2018/linux-command-examples-tcpdump.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2018/linux-command-examples-tcpdump/",
+        title: "Linux\u5e38\u7528\u547d\u4ee4\u884c\u6307\u4ee4 - tcpdump",
+        identifier: "_cache/posts/2018/linux-command-examples-tcpdump.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

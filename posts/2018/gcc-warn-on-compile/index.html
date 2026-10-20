@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/gcc-warn-on-compile/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/linux-directory-structure/" title="Linux 系统目录结构" type="text/html">
@@ -44,7 +119,9 @@
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -75,45 +152,45 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org1e4b6e4" class="outline-3">
-<h3 id="org1e4b6e4"><code>-fsyntax-only</code></h3>
-<div class="outline-text-3" id="text-org1e4b6e4">
+<div id="outline-container-org26e5cf5" class="outline-3">
+<h3 id="org26e5cf5"><code>-fsyntax-only</code></h3>
+<div class="outline-text-3" id="text-org26e5cf5">
 <p>
 检查代码中的语法错误，但是不做任何处理，通常用作语法检查。<br>
 在使用这个参数以后，编译器仅仅检查代码中的语法错误并予以提示，并不会生成目标文件。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org321a36a" class="outline-3">
-<h3 id="org321a36a"><code>-w</code></h3>
-<div class="outline-text-3" id="text-org321a36a">
+<div id="outline-container-orgd1676b7" class="outline-3">
+<h3 id="orgd1676b7"><code>-w</code></h3>
+<div class="outline-text-3" id="text-orgd1676b7">
 <p>
 禁止所有的报警信息<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org00c83dc" class="outline-3">
-<h3 id="org00c83dc"><code>-Werror</code></h3>
-<div class="outline-text-3" id="text-org00c83dc">
+<div id="outline-container-org0c3edb2" class="outline-3">
+<h3 id="org0c3edb2"><code>-Werror</code></h3>
+<div class="outline-text-3" id="text-org0c3edb2">
 <p>
 将所有的警告视为错误<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orga9292a5" class="outline-3">
-<h3 id="orga9292a5"><code>-Wfatal-errors</code></h3>
-<div class="outline-text-3" id="text-orga9292a5">
+<div id="outline-container-org98e4a24" class="outline-3">
+<h3 id="org98e4a24"><code>-Wfatal-errors</code></h3>
+<div class="outline-text-3" id="text-org98e4a24">
 <p>
 在出现第一条错误信息停止编译<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-orgddf88bc" class="outline-3">
-<h3 id="orgddf88bc"><code>-Wall</code></h3>
-<div class="outline-text-3" id="text-orgddf88bc">
+<div id="outline-container-orga741939" class="outline-3">
+<h3 id="orga741939"><code>-Wall</code></h3>
+<div class="outline-text-3" id="text-orga741939">
 <p>
 启用以下警告<br></p>
 <pre class="example">
@@ -171,9 +248,9 @@
 </div>
 
 
-<div id="outline-container-org9d90f0a" class="outline-3">
-<h3 id="org9d90f0a"><code>-Wextra</code></h3>
-<div class="outline-text-3" id="text-org9d90f0a">
+<div id="outline-container-org85d049e" class="outline-3">
+<h3 id="org85d049e"><code>-Wextra</code></h3>
+<div class="outline-text-3" id="text-org85d049e">
 <p>
 启用以下警告<br></p>
 <pre class="example">
@@ -197,9 +274,9 @@
 </div>
 
 
-<div id="outline-container-orgbfa1424" class="outline-3">
-<h3 id="orgbfa1424"><code>-Wdelete-incomplete</code></h3>
-<div class="outline-text-3" id="text-orgbfa1424">
+<div id="outline-container-org342a0a5" class="outline-3">
+<h3 id="org342a0a5"><code>-Wdelete-incomplete</code></h3>
+<div class="outline-text-3" id="text-org342a0a5">
 <p>
 (C++ and Objective-C++ only)<br>
 析构一个指向不完整的类型的指针，可能会造成运行时错误未定义行为。<br>
@@ -208,9 +285,9 @@
 </div>
 
 
-<div id="outline-container-org6d0458d" class="outline-3">
-<h3 id="org6d0458d"><code>-Wuseless-cast</code></h3>
-<div class="outline-text-3" id="text-org6d0458d">
+<div id="outline-container-orgfff876f" class="outline-3">
+<h3 id="orgfff876f"><code>-Wuseless-cast</code></h3>
+<div class="outline-text-3" id="text-orgfff876f">
 <p>
 (C++ and Objective-C++ only)<br>
 变量被转换为自身类型。<br></p>
@@ -218,33 +295,33 @@
 </div>
 
 
-<div id="outline-container-org1137abd" class="outline-3">
-<h3 id="org1137abd"><code>-Wduplicated-branches</code></h3>
-<div class="outline-text-3" id="text-org1137abd">
+<div id="outline-container-org4e41511" class="outline-3">
+<h3 id="org4e41511"><code>-Wduplicated-branches</code></h3>
+<div class="outline-text-3" id="text-org4e41511">
 <p>
 用于检查在 <code>if/else</code> 语句中是否存在返回值相同的结果返回值。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgc734911" class="outline-3">
-<h3 id="orgc734911"><code>-Wduplicated-cond</code></h3>
-<div class="outline-text-3" id="text-orgc734911">
+<div id="outline-container-orge9e2ad2" class="outline-3">
+<h3 id="orge9e2ad2"><code>-Wduplicated-cond</code></h3>
+<div class="outline-text-3" id="text-orge9e2ad2">
 <p>
 用于检查在 <code>if/else</code> 语句中存在相同的条件<br></p>
 </div>
 </div>
 
-<div id="outline-container-org53c9622" class="outline-3">
-<h3 id="org53c9622"><code>-Wfloat-equal</code></h3>
-<div class="outline-text-3" id="text-org53c9622">
+<div id="outline-container-orga9884ff" class="outline-3">
+<h3 id="orga9884ff"><code>-Wfloat-equal</code></h3>
+<div class="outline-text-3" id="text-orga9884ff">
 <p>
 检查使用等号比较float相等的情况<br></p>
 </div>
 </div>
 
-<div id="outline-container-org2feb343" class="outline-3">
-<h3 id="org2feb343"><code>-Wformat</code></h3>
-<div class="outline-text-3" id="text-org2feb343">
+<div id="outline-container-org2522ef6" class="outline-3">
+<h3 id="org2522ef6"><code>-Wformat</code></h3>
+<div class="outline-text-3" id="text-org2522ef6">
 <p>
 检查printf相关函数中的格式字符串是否符合与后续的实际参数对应。<br>
 该项检查在 <code>-Wall</code> 中默认开启，可以通过 <code>-Wformat=0</code> 进行关闭。<br></p>
@@ -252,9 +329,9 @@
 </div>
 
 
-<div id="outline-container-org7c931d0" class="outline-2">
-<h2 id="org7c931d0">配置范例</h2>
-<div class="outline-text-2" id="text-org7c931d0">
+<div id="outline-container-orgba92a30" class="outline-2">
+<h2 id="orgba92a30">配置范例</h2>
+<div class="outline-text-2" id="text-orgba92a30">
 <p>
 这里是正在使用的警告相关的参数配置<br></p>
 <div class="highlight"><pre><span></span><span class="c">#编译时的警告信息</span>
@@ -269,9 +346,9 @@
 </div>
 
 
-<div id="outline-container-orgc96a79c" class="outline-2">
-<h2 id="orgc96a79c">参考资料</h2>
-<div class="outline-text-2" id="text-orgc96a79c">
+<div id="outline-container-org60870d7" class="outline-2">
+<h2 id="org60870d7">参考资料</h2>
+<div class="outline-text-2" id="text-org60870d7">
 <p>
 <a href="https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html">gcc online doc - warning options</a><br></p>
 </div>
@@ -297,26 +374,65 @@
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2018/gcc-warn-on-compile/",
-        disqus_title="GCC\u7f16\u8bd1\u65f6\u7684\u8b66\u544a\uff08warn\uff09\u76f8\u5173\u53c2\u6570",
-        disqus_identifier="_cache/posts/2018/gcc-warn-on-compile.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2018/gcc-warn-on-compile/",
+        title: "GCC\u7f16\u8bd1\u65f6\u7684\u8b66\u544a\uff08warn\uff09\u76f8\u5173\u53c2\u6570",
+        identifier: "_cache/posts/2018/gcc-warn-on-compile.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

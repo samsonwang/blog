@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2019/inside-the-cpp-object-model-3/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2019/linux-command-examples-grep-and-find/" title="在Linux终端中进行递归搜索" type="text/html">
@@ -39,7 +114,9 @@
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -69,9 +146,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org5e5f0bd" class="outline-2">
-<h2 id="org5e5f0bd">第三章 Data语意学（the semantics of data）</h2>
-<div class="outline-text-2" id="text-org5e5f0bd">
+<div id="outline-container-org724c635" class="outline-2">
+<h2 id="org724c635">第三章 Data语意学（the semantics of data）</h2>
+<div class="outline-text-2" id="text-org724c635">
 <p>
 一个空的（不含有任何成员变量）class，事实上并不是空的，它有一个隐晦的1byte，那是被编译器安插进去的一个char，这使得这个class的两个objects得以在内存中配置独一无二的地址。<br></p>
 
@@ -88,9 +165,9 @@
 </div>
 
 
-<div id="outline-container-org2778210" class="outline-3">
-<h3 id="org2778210">3.1 Data Member的绑定（the binding of a data member）</h3>
-<div class="outline-text-3" id="text-org2778210">
+<div id="outline-container-org7715911" class="outline-3">
+<h3 id="org7715911">3.1 Data Member的绑定（the binding of a data member）</h3>
+<div class="outline-text-3" id="text-org7715911">
 <p>
 文中介绍的一个古老的语言规则“member rewriting rule”，大意是：一个inline函数实体，在整个 class 声明未被完全看见之前，是不会被评估求值（evaluated）的。<br></p>
 
@@ -127,9 +204,9 @@
 </div>
 
 
-<div id="outline-container-org67d5403" class="outline-3">
-<h3 id="org67d5403">3.2 Data Member 的布局（data member layout）</h3>
-<div class="outline-text-3" id="text-org67d5403">
+<div id="outline-container-org47d10a7" class="outline-3">
+<h3 id="org47d10a7">3.2 Data Member 的布局（data member layout）</h3>
+<div class="outline-text-3" id="text-org47d10a7">
 <p>
 Nonstatic data members 在 class object 中的排列顺序将和其被声明的顺序一样，任何中间介入的 static data members 如 freeList 和 chunkSize 都不会被放进对象布局之中。<br></p>
 
@@ -140,9 +217,9 @@ C++ standard 要求，在同一个 access section（也就是 private、public�
 </div>
 
 
-<div id="outline-container-orgdbf8d9d" class="outline-3">
-<h3 id="orgdbf8d9d">3.3 Data member 的存取</h3>
-<div class="outline-text-3" id="text-orgdbf8d9d">
+<div id="outline-container-orgf4a4074" class="outline-3">
+<h3 id="orgf4a4074">3.3 Data member 的存取</h3>
+<div class="outline-text-3" id="text-orgf4a4074">
 <p>
 思考一个问题，对于如下代码，通过 origin 存取和通过 pt 存取，有什么重大差异吗？<br></p>
 <div class="highlight"><pre><span></span><span class="n">Point3d</span><span class="w"> </span><span class="n">origin</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">pt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">origin</span><span class="p">;</span>
@@ -153,9 +230,9 @@ C++ standard 要求，在同一个 access section（也就是 private、public�
 </div>
 
 
-<div id="outline-container-org7574cac" class="outline-4">
-<h4 id="org7574cac">Static Data Members</h4>
-<div class="outline-text-4" id="text-org7574cac">
+<div id="outline-container-org955c646" class="outline-4">
+<h4 id="org955c646">Static Data Members</h4>
+<div class="outline-text-4" id="text-org955c646">
 <p>
 Static data members，按其字面意义，被编译器提出于 class 之外，并被视为一个global变量（但只在 class 声明范围之内可见）。每一个 static data member 只有一个实体，存放在程序的 data segment 之中，每次程序取用 static member，就会被内部转化为对该唯一的 extern 实体的直接参考操作。<br></p>
 
@@ -177,9 +254,9 @@ Static data members，按其字面意义，被编译器提出于 class 之外，
 </div>
 
 
-<div id="outline-container-orge1d6d6e" class="outline-4">
-<h4 id="orge1d6d6e">Nonstatic Data Members</h4>
-<div class="outline-text-4" id="text-orge1d6d6e">
+<div id="outline-container-org6a06357" class="outline-4">
+<h4 id="org6a06357">Nonstatic Data Members</h4>
+<div class="outline-text-4" id="text-org6a06357">
 <p>
 Nonstatic data members 直接存放在每一个 class object 之中，需要通过明确的（explicit）或暗喻的（implicit） class object 存取它们。常见的Implicit存取方式是使用省略掉的 <code>this</code> 指针对成员变量进行存取。<br></p>
 
@@ -213,9 +290,9 @@ Nonstatic data members 直接存放在每一个 class object 之中，需要通�
 </div>
 
 
-<div id="outline-container-org0feddf3" class="outline-3">
-<h3 id="org0feddf3">3.4 “继承” 与 Data Member</h3>
-<div class="outline-text-3" id="text-org0feddf3">
+<div id="outline-container-org593ee86" class="outline-3">
+<h3 id="org593ee86">3.4 “继承” 与 Data Member</h3>
+<div class="outline-text-3" id="text-org593ee86">
 <p>
 把两个原本独立不相干的 classes 凑成一对“type/subtype”，并带有继承关系，会有一些易犯错误：<br></p>
 <ol class="org-ol">
@@ -248,9 +325,9 @@ class 如果内含一个或多个 virtual base class subobjects，将被分割�
 </div>
 
 
-<div id="outline-container-org28007ce" class="outline-3">
-<h3 id="org28007ce">3.5 对象成员的效率（object member efficiency）</h3>
-<div class="outline-text-3" id="text-org28007ce">
+<div id="outline-container-org4839994" class="outline-3">
+<h3 id="org4839994">3.5 对象成员的效率（object member efficiency）</h3>
+<div class="outline-text-3" id="text-org4839994">
 <p>
 本节包含数个测试，测试聚合（aggregation）、封装（encapsulation）、继承（inheritance）所引发的额外负荷的程度。<br></p>
 
@@ -266,9 +343,9 @@ class 如果内含一个或多个 virtual base class subobjects，将被分割�
 </div>
 
 
-<div id="outline-container-orgc080e3b" class="outline-3">
-<h3 id="orgc080e3b">3.6 指向 data members 的指针（pointer to data members）</h3>
-<div class="outline-text-3" id="text-orgc080e3b">
+<div id="outline-container-org33931ed" class="outline-3">
+<h3 id="org33931ed">3.6 指向 data members 的指针（pointer to data members）</h3>
+<div class="outline-text-3" id="text-org33931ed">
 <p>
 指向 data members 的指针，是一个有点神秘但颇有用处的语言特性。特别是你需要详细调查 class members 的底层布局的话，可以得知 vptr 是放在 class 的起始处或是尾端。另一个用途展现于3.2节，可以用来检测 class 中的 access section 的次序。<br></p>
 
@@ -332,26 +409,65 @@ class 如果内含一个或多个 virtual base class subobjects，将被分割�
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2019/inside-the-cpp-object-model-3/",
-        disqus_title="\u6df1\u5165\u63a2\u7d22C++\u5185\u5b58\u6a21\u578b\uff083\uff09",
-        disqus_identifier="_cache/posts/2019/inside-the-cpp-object-model-3.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2019/inside-the-cpp-object-model-3/",
+        title: "\u6df1\u5165\u63a2\u7d22C++\u5185\u5b58\u6a21\u578b\uff083\uff09",
+        identifier: "_cache/posts/2019/inside-the-cpp-object-model-3.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

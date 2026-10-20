@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2026/read-uwp-app-icon/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2026/qt-msvc-pyside-dev-env/" title="Qt-MSVC-pyside开发环境的搭建" type="text/html">
@@ -31,7 +106,9 @@
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -68,9 +145,9 @@
 <!-- TEASER_END -->
 
 
-<div id="outline-container-org24341f5" class="outline-2">
-<h2 id="org24341f5">先说结论</h2>
-<div class="outline-text-2" id="text-org24341f5">
+<div id="outline-container-org20cad11" class="outline-2">
+<h2 id="org20cad11">先说结论</h2>
+<div class="outline-text-2" id="text-org20cad11">
 <p>
 先把三条路线的结论列出来，后面再逐个展开：<br></p>
 
@@ -94,9 +171,9 @@
 </div>
 
 
-<div id="outline-container-orgf8dbd95" class="outline-2">
-<h2 id="orgf8dbd95">几个绕不开的概念</h2>
-<div class="outline-text-2" id="text-orgf8dbd95">
+<div id="outline-container-orgd17909a" class="outline-2">
+<h2 id="orgd17909a">几个绕不开的概念</h2>
+<div class="outline-text-2" id="text-orgd17909a">
 <p>
 在写代码之前，有几个名词必须先弄清楚，不然后面的接口参数根本不知道该填什么。<br></p>
 
@@ -121,9 +198,9 @@
 </div>
 
 
-<div id="outline-container-org4805472" class="outline-2">
-<h2 id="org4805472">方案一：纯 WinRT</h2>
-<div class="outline-text-2" id="text-org4805472">
+<div id="outline-container-org3b8350d" class="outline-2">
+<h2 id="org3b8350d">方案一：纯 WinRT</h2>
+<div class="outline-text-2" id="text-org3b8350d">
 <p>
 完整的一条龙方案：C++/WinRT 提供 <code>PackageManager</code> 枚举包， <code>Package::GetAppListEntriesAsync</code> 拿到包里的每个应用， <code>AppListEntry::DisplayInfo</code> 提供名称和图标， <code>AppListEntry::LaunchAsync</code> 负责启动。<br></p>
 
@@ -195,9 +272,9 @@
 </div>
 
 
-<div id="outline-container-org5a915ed" class="outline-2">
-<h2 id="org5a915ed">方案二：ATL + COM</h2>
-<div class="outline-text-2" id="text-org5a915ed">
+<div id="outline-container-orgf57528a" class="outline-2">
+<h2 id="orgf57528a">方案二：ATL + COM</h2>
+<div class="outline-text-2" id="text-orgf57528a">
 <p>
 官方文档 <a href="https://learn.microsoft.com/en-us/windows/uwp/xbox-apps/automate-launching-uwp-apps">Automate launching UWP apps</a> 用的就是这条路线，我一开始也是照着它写的。<br></p>
 
@@ -317,9 +394,9 @@ ATL 在这里承担的是 COM 智能指针的角色： <code>CComPtr</code> 管 
 </div>
 
 
-<div id="outline-container-org962fb5c" class="outline-2">
-<h2 id="org962fb5c">方案二绕不开的一关：ms-resource</h2>
-<div class="outline-text-2" id="text-org962fb5c">
+<div id="outline-container-orgc045725" class="outline-2">
+<h2 id="orgc045725">方案二绕不开的一关：ms-resource</h2>
+<div class="outline-text-2" id="text-orgc045725">
 <p>
 清单读出来之后， <code>displayName</code> 可能是 <code>ms-resource:AppName</code> ， <code>logo</code> 是 <code>Assets\Square44x44Logo.png</code> ，这两个都不是能直接用的东西。这是整个流程里最容易卡住的地方。<br></p>
 
@@ -369,9 +446,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-orgcd26a61" class="outline-2">
-<h2 id="orgcd26a61">方案三：纯 COM，走 Shell 命名空间</h2>
-<div class="outline-text-2" id="text-orgcd26a61">
+<div id="outline-container-org5280986" class="outline-2">
+<h2 id="org5280986">方案三：纯 COM，走 Shell 命名空间</h2>
+<div class="outline-text-2" id="text-org5280986">
 <p>
 这条路线是我最终采用的，完整的实现在LaunchyQt的 <a href="https://github.com/samsonwang/LaunchyQt/blob/master/src/Plugins/UWPApp/UWPApp.cpp">UWPApp</a> 插件里。它既不碰 WinRT，也不碰 ATL，全部是标准的 Shell 和 COM 接口。<br></p>
 
@@ -379,9 +456,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 核心思路是：Windows 有一个虚拟目录 <code>shell:AppsFolder</code> ，里面就是开始菜单里显示的那些应用条目。用 Shell 接口把它枚举出来，每个条目都能给出本地化之后的显示名、AUMID 和各种属性。<br></p>
 </div>
 
-<div id="outline-container-org878f1bb" class="outline-3">
-<h3 id="org878f1bb">枚举：AppsFolder 与 IEnumShellItems</h3>
-<div class="outline-text-3" id="text-org878f1bb">
+<div id="outline-container-org9aa8eb5" class="outline-3">
+<h3 id="org9aa8eb5">枚举：AppsFolder 与 IEnumShellItems</h3>
+<div class="outline-text-3" id="text-org9aa8eb5">
 <p>
 打开虚拟目录用 <code>SHCreateItemFromParsingName</code> ，拿到 <code>IShellItem</code> 之后再 <code>BindToHandler</code> 出枚举器。这里有个坑： <code>BHID_EnumItems</code> 和 <code>BHID_PropertyStore</code> 这两个 GUID 在 SDK 头文件里没有对应的符号，得自己定义。<br></p>
 
@@ -414,9 +491,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-org2d5fe39" class="outline-3">
-<h3 id="org2d5fe39">读属性：IPropertyStore</h3>
-<div class="outline-text-3" id="text-org2d5fe39">
+<div id="outline-container-org67d4353" class="outline-3">
+<h3 id="org67d4353">读属性：IPropertyStore</h3>
+<div class="outline-text-3" id="text-org67d4353">
 <p>
 每个条目通过 <code>BHID_PropertyStore</code> 绑定出 <code>IPropertyStore</code> ，然后用属性名查 <code>PROPERTYKEY</code> 再取值。用到的属性有这些：<br></p>
 
@@ -500,9 +577,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-org5e7f86d" class="outline-3">
-<h3 id="org5e7f86d">定位图标文件</h3>
-<div class="outline-text-3" id="text-org5e7f86d">
+<div id="outline-container-org48293d1" class="outline-3">
+<h3 id="org48293d1">定位图标文件</h3>
+<div class="outline-text-3" id="text-org48293d1">
 <p>
 这是整个方案里最琐碎的部分。Shell 给的 <code>System.Tile.SmallLogoPath</code> 未必每个条目都有（打包的桌面应用和一些系统自带应用就没有），而且给了也是资源引用，不是真实路径。所以流程是“Shell 属性优先，清单兜底，然后自己去包里找文件”。<br></p>
 
@@ -562,9 +639,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-orgd6b1712" class="outline-3">
-<h3 id="orgd6b1712">兜底：让 Shell 自己渲染图标</h3>
-<div class="outline-text-3" id="text-orgd6b1712">
+<div id="outline-container-org2ef462c" class="outline-3">
+<h3 id="org2ef462c">兜底：让 Shell 自己渲染图标</h3>
+<div class="outline-text-3" id="text-org2ef462c">
 <p>
 如果上面四级都没找到（包里根本没有资源目录、清单读不了、图标是系统生成的），还有最后一招：直接让 Shell 把条目的图标渲染出来。<br></p>
 
@@ -600,9 +677,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-orgdefe591" class="outline-3">
-<h3 id="orgdefe591">为什么不用 ATL</h3>
-<div class="outline-text-3" id="text-orgdefe591">
+<div id="outline-container-org21eb232" class="outline-3">
+<h3 id="org21eb232">为什么不用 ATL</h3>
+<div class="outline-text-3" id="text-org21eb232">
 <p>
 这套实现里全是裸指针加手工 <code>Release</code> ，没有用 <code>CComPtr</code> 或者 <code>ComPtr</code> 。原因是 ATL 在 Visual Studio 里是可选组件，构建机上不一定装；而这个插件需要的只是引用计数和 <code>CoTaskMem</code> 字符串，这两样 COM 运行时本身就提供了，不值得为此引入一个依赖。<br></p>
 
@@ -613,9 +690,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-org0c10fda" class="outline-2">
-<h2 id="org0c10fda">启动 UWP 应用</h2>
-<div class="outline-text-2" id="text-org0c10fda">
+<div id="outline-container-org88658ed" class="outline-2">
+<h2 id="org88658ed">启动 UWP 应用</h2>
+<div class="outline-text-2" id="text-org88658ed">
 <p>
 启动是这里面最简单的一步，三条路线最终都落在 <code>IApplicationActivationManager</code> 上，它是纯 COM 接口，传 AUMID 进去即可：<br></p>
 
@@ -653,9 +730,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-orgb8ac513" class="outline-2">
-<h2 id="orgb8ac513">踩过的坑</h2>
-<div class="outline-text-2" id="text-orgb8ac513">
+<div id="outline-container-orge27415c" class="outline-2">
+<h2 id="orge27415c">踩过的坑</h2>
+<div class="outline-text-2" id="text-orge27415c">
 <p>
 最后把过程中踩过的坑汇总一下，按被坑的严重程度排序：<br></p>
 
@@ -692,9 +769,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-org159ddbf" class="outline-2">
-<h2 id="org159ddbf">参考链接</h2>
-<div class="outline-text-2" id="text-org159ddbf">
+<div id="outline-container-org0ac29e8" class="outline-2">
+<h2 id="org0ac29e8">参考链接</h2>
+<div class="outline-text-2" id="text-org0ac29e8">
 <ul class="org-ul">
 <li>
 <a href="https://learn.microsoft.com/en-us/uwp/api/windows.management.deployment.packagemanager">PackageManager Class</a><br>
@@ -752,26 +829,65 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
     <li class="next">
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2026/read-uwp-app-icon/",
-        disqus_title="\u8bfb\u53d6UWP\u8f6f\u4ef6\u7684\u56fe\u6807",
-        disqus_identifier="_cache/posts/2026/read-uwp-app-icon.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2026/read-uwp-app-icon/",
+        title: "\u8bfb\u53d6UWP\u8f6f\u4ef6\u7684\u56fe\u6807",
+        identifier: "_cache/posts/2026/read-uwp-app-icon.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

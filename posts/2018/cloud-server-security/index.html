@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/cloud-server-security/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/c-style-and-cpp-style-file-api/" title="C风格和C++风格的文件操作库函数总结" type="text/html">
@@ -41,7 +116,9 @@
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -75,20 +152,20 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgb90fd3c" class="outline-2">
-<h2 id="orgb90fd3c">使用denyhosts防止暴力破解</h2>
-<div class="outline-text-2" id="text-orgb90fd3c">
+<div id="outline-container-org4dc64ce" class="outline-2">
+<h2 id="org4dc64ce">使用denyhosts防止暴力破解</h2>
+<div class="outline-text-2" id="text-org4dc64ce">
 <p>
 登入服务器主要是使用用户名和密码，而且linux的root用户拥有最高权限。可以使用denyhosts，防止暴力破解用户名和密码。denyhosts的原理是在多次输入错误的用户名和密码时，屏蔽该登录ip，限制密码的尝试次数。<br></p>
 </div>
 
-<div id="outline-container-org0e58b23" class="outline-3">
-<h3 id="org0e58b23">安装denyhosts</h3>
-<div class="outline-text-3" id="text-org0e58b23">
+<div id="outline-container-orgd9eabef" class="outline-3">
+<h3 id="orgd9eabef">安装denyhosts</h3>
+<div class="outline-text-3" id="text-orgd9eabef">
 </div>
-<div id="outline-container-org299e5fa" class="outline-4">
-<h4 id="org299e5fa">使用包管理器安装</h4>
-<div class="outline-text-4" id="text-org299e5fa">
+<div id="outline-container-org0d65f03" class="outline-4">
+<h4 id="org0d65f03">使用包管理器安装</h4>
+<div class="outline-text-4" id="text-org0d65f03">
 <p>
 可以使用自带的包管理器安装denyhost，这样是比较方便的，后续的配置工作也会简单一些。<br></p>
 <div class="highlight"><pre><span></span>yum install denyhosts
@@ -96,9 +173,9 @@
 </div>
 </div>
 
-<div id="outline-container-org5aaa045" class="outline-4">
-<h4 id="org5aaa045">手动安装</h4>
-<div class="outline-text-4" id="text-org5aaa045">
+<div id="outline-container-org920984c" class="outline-4">
+<h4 id="org920984c">手动安装</h4>
+<div class="outline-text-4" id="text-org920984c">
 <p>
 update: 2020-6-5<br>
 在包管理器中没有找到denyhosts，于是按照官方文档进行手动安装，使用的denyhost版本为3.1.2beta。<br></p>
@@ -128,9 +205,9 @@ pip<span class="w"> </span>install<span class="w"> </span>ipaddr
 </div>
 </div>
 
-<div id="outline-container-orga99241e" class="outline-3">
-<h3 id="orga99241e">编辑配置文件</h3>
-<div class="outline-text-3" id="text-orga99241e">
+<div id="outline-container-orge88d79e" class="outline-3">
+<h3 id="orge88d79e">编辑配置文件</h3>
+<div class="outline-text-3" id="text-orge88d79e">
 <p>
 安装好denyhosts之后，它的默认配置文件为 <code>/etc/denyhosts.conf</code> 。该配置文件有很好的注释，对于每个配置项的作用都有很好的说明。可能需要修改的相关配置项有如下几个。<br></p>
 
@@ -148,9 +225,9 @@ DENY_THRESHOLD_ROOT = 5
 </div>
 </div>
 
-<div id="outline-container-org1c4e1d0" class="outline-3">
-<h3 id="org1c4e1d0">启动denyhosts</h3>
-<div class="outline-text-3" id="text-org1c4e1d0">
+<div id="outline-container-orga5130db" class="outline-3">
+<h3 id="orga5130db">启动denyhosts</h3>
+<div class="outline-text-3" id="text-orga5130db">
 <p>
 使用以下命令启动denyhosts，查看denyhosts的运行状态。<br></p>
 <div class="highlight"><pre><span></span>service<span class="w"> </span>denyhosts<span class="w"> </span>start
@@ -178,16 +255,16 @@ ln<span class="w"> </span>-s<span class="w"> </span>/usr/bin/daemon-control-dist
 </div>
 
 
-<div id="outline-container-org4da083b" class="outline-2">
-<h2 id="org4da083b">使用fail2ban防止暴力破解</h2>
-<div class="outline-text-2" id="text-org4da083b">
+<div id="outline-container-orga38c336" class="outline-2">
+<h2 id="orga38c336">使用fail2ban防止暴力破解</h2>
+<div class="outline-text-2" id="text-orga38c336">
 <p>
 由于在默认的软件仓库中经常找不到denyhosts软件，所以我尝试切换到了fail2ban。fail2ban支持的功能更多，命令交互也更加友好。<br></p>
 </div>
 
-<div id="outline-container-org39a196d" class="outline-3">
-<h3 id="org39a196d">安装fail2ban</h3>
-<div class="outline-text-3" id="text-org39a196d">
+<div id="outline-container-orgc7ffb24" class="outline-3">
+<h3 id="orgc7ffb24">安装fail2ban</h3>
+<div class="outline-text-3" id="text-orgc7ffb24">
 <p>
 使用自带的包管理器中安装fail2ban，命令行如下。<br></p>
 <div class="highlight"><pre><span></span>yum install fail2ban
@@ -195,9 +272,9 @@ ln<span class="w"> </span>-s<span class="w"> </span>/usr/bin/daemon-control-dist
 </div>
 </div>
 
-<div id="outline-container-org0a48a81" class="outline-3">
-<h3 id="org0a48a81">编辑配置文件</h3>
-<div class="outline-text-3" id="text-org0a48a81">
+<div id="outline-container-org93b3601" class="outline-3">
+<h3 id="org93b3601">编辑配置文件</h3>
+<div class="outline-text-3" id="text-org93b3601">
 <p>
 安装包中自带的默认配置文件为 <code>/etc/fail2ban/jail.conf</code> ；为了防止由于软件更新导致配置文件被覆盖，推荐将用户配置保存在 <code>/etc/fail2ban/jail.local</code> 中；软件会先加载默认配置，再加载用户配置。<br></p>
 
@@ -218,9 +295,9 @@ ignoreip = 127.0.0.1
 </div>
 </div>
 
-<div id="outline-container-org45dc7e0" class="outline-3">
-<h3 id="org45dc7e0">启动fail2ban</h3>
-<div class="outline-text-3" id="text-org45dc7e0">
+<div id="outline-container-orgd86135c" class="outline-3">
+<h3 id="orgd86135c">启动fail2ban</h3>
+<div class="outline-text-3" id="text-orgd86135c">
 <p>
 使用下面的命令启动fail2ban服务。<br></p>
 <div class="highlight"><pre><span></span>systemctl start fail2ban
@@ -234,9 +311,9 @@ service fail2ban start
 </div>
 </div>
 
-<div id="outline-container-org5d2302c" class="outline-3">
-<h3 id="org5d2302c">查看fail2ban的运行情况</h3>
-<div class="outline-text-3" id="text-org5d2302c">
+<div id="outline-container-org58ffcc0" class="outline-3">
+<h3 id="org58ffcc0">查看fail2ban的运行情况</h3>
+<div class="outline-text-3" id="text-org58ffcc0">
 <p>
 查看系统服务的运行状态，命令如下：<br></p>
 <div class="highlight"><pre><span></span>systemctl status fail2ban
@@ -257,9 +334,9 @@ fail2ban提供了自带的命令工具，用于查看服务端的状态，命令
 </div>
 
 
-<div id="outline-container-orgb281166" class="outline-2">
-<h2 id="orgb281166">加固sshd的配置</h2>
-<div class="outline-text-2" id="text-orgb281166">
+<div id="outline-container-org9ef5883" class="outline-2">
+<h2 id="org9ef5883">加固sshd的配置</h2>
+<div class="outline-text-2" id="text-org9ef5883">
 <p>
 sshd的默认端口号为22，很多暴力破解程序会直接对该端口进行登录尝试，通过修改默认的sshd端口号，可以增加破解难度。<br></p>
 
@@ -270,9 +347,9 @@ sshd的默认端口号为22，很多暴力破解程序会直接对该端口进�
 由于所有Linux系统都必然有root用户，所以在暴力破解时最容易被攻击的就是root用户，可以通过禁用远程root用户登录的方式增加攻击难度。因为如果root用户可用，攻击者只需要对root用户的密码进行暴力破解；而禁用远程root登录后，攻击者需要同时猜测用户名和密码。<br></p>
 </div>
 
-<div id="outline-container-org5c31e50" class="outline-3">
-<h3 id="org5c31e50">编辑配置文件</h3>
-<div class="outline-text-3" id="text-org5c31e50">
+<div id="outline-container-org9dcc37a" class="outline-3">
+<h3 id="org9dcc37a">编辑配置文件</h3>
+<div class="outline-text-3" id="text-org9dcc37a">
 <p>
 sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 
@@ -288,9 +365,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org6e34a6f" class="outline-3">
-<h3 id="org6e34a6f">重启sshd服务</h3>
-<div class="outline-text-3" id="text-org6e34a6f">
+<div id="outline-container-orgb5113e8" class="outline-3">
+<h3 id="orgb5113e8">重启sshd服务</h3>
+<div class="outline-text-3" id="text-orgb5113e8">
 <p>
 更改配置文件后，需要重启服务使配置文件生效。<br></p>
 
@@ -304,9 +381,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 </div>
 
 
-<div id="outline-container-org531ba28" class="outline-2">
-<h2 id="org531ba28">查看系统登录记录</h2>
-<div class="outline-text-2" id="text-org531ba28">
+<div id="outline-container-orga8a9d8d" class="outline-2">
+<h2 id="orga8a9d8d">查看系统登录记录</h2>
+<div class="outline-text-2" id="text-orga8a9d8d">
 <p>
 <code>last</code> 指令能够查看登录成功的记录，记录保存位置为 <code>/var/log/wtmp</code> 。<br></p>
 
@@ -333,9 +410,9 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
 </div>
 
 
-<div id="outline-container-orgaf1cf66" class="outline-2">
-<h2 id="orgaf1cf66">参考资料</h2>
-<div class="outline-text-2" id="text-orgaf1cf66">
+<div id="outline-container-org88eb7e6" class="outline-2">
+<h2 id="org88eb7e6">参考资料</h2>
+<div class="outline-text-2" id="text-org88eb7e6">
 <ul class="org-ul">
 <li>
 <a href="https://github.com/denyhosts/denyhosts">github - denyhosts</a><br>
@@ -384,26 +461,65 @@ sshd的配置文件为 <code>/etc/ssh/sshd_config</code> 。<br></p>
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2018/cloud-server-security/",
-        disqus_title="\u4e91\u670d\u52a1\u5668\u5b89\u5168\u76f8\u5173\u914d\u7f6e",
-        disqus_identifier="_cache/posts/2018/cloud-server-security.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2018/cloud-server-security/",
+        title: "\u4e91\u670d\u52a1\u5668\u5b89\u5168\u76f8\u5173\u914d\u7f6e",
+        identifier: "_cache/posts/2018/cloud-server-security.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

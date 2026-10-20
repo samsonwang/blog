@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-next-permutation/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/algorithm/algorithm-weekly-divide-two-integers/" title="每周算法：两整数相除" type="text/html">
@@ -36,7 +111,9 @@ Implement next permutation, which rearranges numbers into the lexicographically 
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -66,9 +143,9 @@ leetcode算法题第31道，难度为medium。这道题考察题意理解的准�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orga58715d" class="outline-2">
-<h2 id="orga58715d">Description</h2>
-<div class="outline-text-2" id="text-orga58715d">
+<div id="outline-container-orgf324bce" class="outline-2">
+<h2 id="orgf324bce">Description</h2>
+<div class="outline-text-2" id="text-orgf324bce">
 <p>
 Implement <b>next permutation</b>, which rearranges numbers into the lexicographically next greater permutation of numbers.<br></p>
 
@@ -89,13 +166,13 @@ Here are some examples. Inputs are in the left-hand column and its corresponding
 </div>
 </div>
 
-<div id="outline-container-org155dda3" class="outline-2">
-<h2 id="org155dda3">Solution</h2>
-<div class="outline-text-2" id="text-org155dda3">
+<div id="outline-container-orga0b101e" class="outline-2">
+<h2 id="orga0b101e">Solution</h2>
+<div class="outline-text-2" id="text-orga0b101e">
 </div>
-<div id="outline-container-org1270aab" class="outline-3">
-<h3 id="org1270aab">Approach 1</h3>
-<div class="outline-text-3" id="text-org1270aab">
+<div id="outline-container-org195d429" class="outline-3">
+<h3 id="org195d429">Approach 1</h3>
+<div class="outline-text-3" id="text-org195d429">
 <p>
 虽然这个方法是我自己想出来的，不过我不得不承认，在我提交过leetcode之后才发现这道题比我想象中的要难。主要是leetcode给出了 <code>1,3,2</code> 这样的测试用例，这个测试用例提醒我题目中 <code>next greater</code> 的要求。<br>
 下面就是解法代码：<br></p>
@@ -147,9 +224,9 @@ Here are some examples. Inputs are in the left-hand column and its corresponding
 </div>
 </div>
 
-<div id="outline-container-orgdfe3ed9" class="outline-3">
-<h3 id="orgdfe3ed9">Approach 2 Single Pass Approach</h3>
-<div class="outline-text-3" id="text-orgdfe3ed9">
+<div id="outline-container-orgf0e50f1" class="outline-3">
+<h3 id="orgf0e50f1">Approach 2 Single Pass Approach</h3>
+<div class="outline-text-3" id="text-orgf0e50f1">
 <p>
 这个方法是从leetcode的solution讲解中摘出来的。与Approach 1不同，这个方法是用后向前找的，这种寻找方法好像在时间复杂度上更优。<br></p>
 
@@ -197,9 +274,9 @@ Here are some examples. Inputs are in the left-hand column and its corresponding
 </div>
 </div>
 
-<div id="outline-container-org9cccfba" class="outline-2">
-<h2 id="org9cccfba">Reference</h2>
-<div class="outline-text-2" id="text-org9cccfba">
+<div id="outline-container-orgfa78ac5" class="outline-2">
+<h2 id="orgfa78ac5">Reference</h2>
+<div class="outline-text-2" id="text-orgfa78ac5">
 <ul class="org-ul">
 <li>
 <a href="https://leetcode.com/problems/next-permutation/solution/">leetcode - solution</a><br>
@@ -228,26 +305,65 @@ Here are some examples. Inputs are in the left-hand column and its corresponding
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-next-permutation/",
-        disqus_title="\u6bcf\u5468\u7b97\u6cd5\uff1a\u4e0b\u4e00\u4e2a\u7ec4\u5408",
-        disqus_identifier="_cache/posts/algorithm/algorithm-weekly-next-permutation.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/algorithm/algorithm-weekly-next-permutation/",
+        title: "\u6bcf\u5468\u7b97\u6cd5\uff1a\u4e0b\u4e00\u4e2a\u7ec4\u5408",
+        identifier: "_cache/posts/algorithm/algorithm-weekly-next-permutation.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

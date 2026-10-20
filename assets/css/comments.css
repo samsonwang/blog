@@ -1,0 +1,113 @@
+/*
+ * 「点击加载评论」占位块（Disqus 懒加载的前端部分）。
+ *
+ * 结构和交互逻辑见 themes/minima/templates/comments_helper_disqus.tmpl，
+ * 这里只管外观。为什么是手写 CSS 而不是 sass：亮色/暗色两套样式表都是
+ * 编译产物，这一小块是两套主题共用的，和 theme-toggle.css 一个道理。
+ *
+ * 色值直接取自各自皮肤：
+ *   亮色 文字 #333333 / 边框 #b4b4b4~#c2c2c2 / 主色 #04519b
+ *   暗色 文字 #c9d1da / 边框 #3a424f / 主色 #7fb0e8
+ */
+
+/* 没有脚本时按钮点了也没用，先不占位（同 .theme-toggle 的处理） */
+.comment-lazy {
+  display: none;
+  margin-bottom: 30px;
+  padding: 22px 16px;
+  text-align: center;
+  border: 1px dashed #c2c2c2;
+  border-radius: 4px;
+}
+
+html[data-js] .comment-lazy {
+  display: block;
+}
+
+.comment-lazy-hint {
+  margin: 0 0 12px;
+  font-size: .875rem;
+  color: #616161;
+}
+
+.comment-lazy-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-block;
+  padding: 6px 20px;
+  font: inherit;
+  font-size: .9375rem;
+  line-height: 1.7;
+  color: #04519b;
+  background-color: transparent;
+  border: 1px solid #04519b;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color .2s ease, background-color .2s ease, border-color .2s ease;
+}
+
+.comment-lazy-btn:hover {
+  color: #fff;
+  background-color: #04519b;
+}
+
+.comment-lazy-btn:focus-visible {
+  outline: 2px solid #2fa4e7;
+  outline-offset: 2px;
+}
+
+/* 评论已经挂上去了：盒子退成普通容器，别把虚线框套在 Disqus 外面 */
+.comment-lazy.is-loaded {
+  margin-bottom: 0;
+  padding: 0;
+  text-align: left;
+  border: 0;
+}
+
+/* 没开 JS 时的提示，外观和占位块保持一致 */
+.comment-lazy-fallback {
+  margin: 0 0 30px;
+  padding: 22px 16px;
+  text-align: center;
+  font-size: .875rem;
+  color: #616161;
+  border: 1px dashed #c2c2c2;
+  border-radius: 4px;
+}
+
+/* ---------------- 暗色 ---------------- */
+
+html[data-theme="dark"] .comment-lazy,
+html[data-theme="dark"] .comment-lazy-fallback {
+  border-color: #3a424f;
+}
+
+html[data-theme="dark"] .comment-lazy-hint,
+html[data-theme="dark"] .comment-lazy-fallback {
+  color: #8b95a5;
+}
+
+html[data-theme="dark"] .comment-lazy-btn {
+  color: #7fb0e8;
+  border-color: #7fb0e8;
+}
+
+html[data-theme="dark"] .comment-lazy-btn:hover {
+  color: #15181e;
+  background-color: #7fb0e8;
+}
+
+/* ---------------- 其它 ---------------- */
+
+@media print {
+  .comment-lazy,
+  .comment-lazy-fallback {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comment-lazy-btn {
+    transition: none;
+  }
+}

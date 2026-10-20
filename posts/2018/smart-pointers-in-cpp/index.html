@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/smart-pointers-in-cpp/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/launchy/launchy-maintain-303/" title="写在launchy3.0.3发布之后" type="text/html">
@@ -42,7 +117,9 @@ unique_ptr 对象支持移动（move），不支持拷贝（copy）。 unique_pt
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -76,9 +153,9 @@ C++中有很多智能指针如 <code>unique_ptr</code> 和 <code>shared_ptr</cod
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org5aab585" class="outline-2">
-<h2 id="org5aab585"><code>unique_ptr</code></h2>
-<div class="outline-text-2" id="text-org5aab585">
+<div id="outline-container-org3c82387" class="outline-2">
+<h2 id="org3c82387"><code>unique_ptr</code></h2>
+<div class="outline-text-2" id="text-org3c82387">
 <p>
 <code>unique_ptr</code> 用于保证作用域范围内的指针能够被释放，有效避免一些情况下跳出作用域而没有对动态内存进行释放引起的内存泄漏。<br></p>
 
@@ -112,11 +189,11 @@ The object is disposed of using the associated deleter when either of the follow
 </div>
 
 
-<div id="outline-container-orgfa6734a" class="outline-2">
-<h2 id="orgfa6734a">
+<div id="outline-container-orgc2764d8" class="outline-2">
+<h2 id="orgc2764d8">
 <code>shared_ptr</code> 与 <code>auto_ptr</code>
 </h2>
-<div class="outline-text-2" id="text-orgfa6734a">
+<div class="outline-text-2" id="text-orgc2764d8">
 <p>
 <code>auto_ptr</code> 是 <code>shared_ptr</code> 的前身， 在C++11中开始支持 <code>shared_ptr</code> ，并弃用了 <code>auto_ptr</code> ，所以在新开发的项目中应该都使用 <code>shared_ptr</code> 。<br></p>
 
@@ -157,9 +234,9 @@ The object is destroyed and its memory deallocated when either of the following 
 </div>
 
 
-<div id="outline-container-orgf368f46" class="outline-2">
-<h2 id="orgf368f46"><code>weak_ptr</code></h2>
-<div class="outline-text-2" id="text-orgf368f46">
+<div id="outline-container-org9ea9ceb" class="outline-2">
+<h2 id="org9ea9ceb"><code>weak_ptr</code></h2>
+<div class="outline-text-2" id="text-org9ea9ceb">
 <p>
 <code>weak_ptr</code> 是从c++11开始支持的，用于存放已经由 <code>shared_ptr</code> 管理的对象。在 <code>weak_ptr</code> 需要操作其管理的对象时，需要先转化为 <code>shared_ptr</code> 再进行操作。<br></p>
 
@@ -186,9 +263,9 @@ The object is destroyed and its memory deallocated when either of the following 
 </div>
 
 
-<div id="outline-container-orgac701b1" class="outline-2">
-<h2 id="orgac701b1">Reference</h2>
-<div class="outline-text-2" id="text-orgac701b1">
+<div id="outline-container-org613ee69" class="outline-2">
+<h2 id="org613ee69">Reference</h2>
+<div class="outline-text-2" id="text-org613ee69">
 <ul class="org-ul">
 <li>
 <a href="https://en.cppreference.com/book/intro/smart_pointers">cppreference - smart pointers</a><br>
@@ -238,26 +315,65 @@ The object is destroyed and its memory deallocated when either of the following 
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2018/smart-pointers-in-cpp/",
-        disqus_title="C++\u4e2d\u7684\u667a\u80fd\u6307\u9488",
-        disqus_identifier="_cache/posts/2018/smart-pointers-in-cpp.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2018/smart-pointers-in-cpp/",
+        title: "C++\u4e2d\u7684\u667a\u80fd\u6307\u9488",
+        identifier: "_cache/posts/2018/smart-pointers-in-cpp.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">

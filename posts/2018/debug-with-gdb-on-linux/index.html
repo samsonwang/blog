@@ -9,7 +9,82 @@
 <meta name="theme-color" content="#04519b">
 <meta name="generator" content="Nikola (getnikola.com)">
 <link rel="alternate" type="application/rss+xml" title="RSS" href="/blog/rss.xml">
-<link href="/blog/assets/css/minima.min.css" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima.min.css" id="theme-css-light" rel="stylesheet" type="text/css">
+<link href="/blog/assets/css/minima-dark.min.css" id="theme-css-dark" rel="stylesheet" type="text/css" media="not all">
+<link href="/blog/assets/css/theme-toggle.css" rel="stylesheet" type="text/css">
+<script>
+(function () {
+  var KEY = 'minima-color-mode';
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '亮色', dark: '暗色' };
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  var mode = 'auto';
+
+  try {
+    var saved = window.localStorage.getItem(KEY);
+    if (ORDER.indexOf(saved) !== -1) { mode = saved; }
+  } catch (e) {}
+
+  function resolved() {
+    if (mode === 'auto') { return mq.matches ? 'dark' : 'light'; }
+    return mode;
+  }
+
+  function syncButton() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) { return; }
+    var text = '配色：' + LABEL[mode] + '（点击切换）';
+    btn.setAttribute('title', text);
+    btn.setAttribute('aria-label', text);
+  }
+
+  function apply() {
+    var theme = resolved();
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-mode', mode);
+
+    var light = document.getElementById('theme-css-light');
+    var dark = document.getElementById('theme-css-dark');
+    if (light && dark) {
+      if (theme === 'dark') {
+        dark.media = 'all';
+        light.media = 'not all';
+      } else {
+        light.media = 'all';
+        dark.media = 'not all';
+      }
+    }
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#15181e' : '#04519b');
+    }
+
+    syncButton();
+  }
+
+  function cycle() {
+    mode = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    try { window.localStorage.setItem(KEY, mode); } catch (e) {}
+    apply();
+  }
+
+  apply();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('theme-toggle');
+    if (btn) { btn.addEventListener('click', cycle); }
+    syncButton();
+  });
+
+  function onSystemChange() {
+    if (mode === 'auto') { apply(); }
+  }
+  if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+  else if (mq.addListener) { mq.addListener(onSystemChange); }
+})();
+    </script><link href="/blog/assets/css/comments.css" rel="stylesheet" type="text/css">
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2018/debug-with-gdb-on-linux/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2018/blog-open-up/" title="终于，博客开通了" type="text/html">
@@ -51,7 +126,9 @@
 <body>
   <header class="site-header nav-custom"><div class="wrapper">
       <a class="site-title" rel="author" href="/blog/">Hack Note</a>
-      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><label for="nav-trigger">
+      <nav class="site-nav"><input type="checkbox" id="nav-trigger" class="nav-trigger"><button type="button" class="theme-toggle" id="theme-toggle" title="配色：跟随系统（点击切换）" aria-label="配色：跟随系统（点击切换）">
+          <svg class="tt-icon tt-auto" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z"></path></svg><svg class="tt-icon tt-light" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><svg class="tt-icon tt-dark" viewbox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.6 14.3A8.7 8.7 0 0 1 9.7 3.4 8.7 8.7 0 1 0 20.6 14.3Z"></path></svg></button>
+        <label for="nav-trigger">
           <span class="menu-icon">
             <svg viewbox="0 0 18 15" width="18px" height="15px"><use href="/blog/assets/svg/theme.svg#menu-icon"></use></svg></span>
         </label>
@@ -80,17 +157,17 @@
 
     </p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org0115792" class="outline-2">
-<h2 id="org0115792">1 代码编译阶段</h2>
-<div class="outline-text-2" id="text-org0115792">
+    <div id="outline-container-orgae89391" class="outline-2">
+<h2 id="orgae89391">1 代码编译阶段</h2>
+<div class="outline-text-2" id="text-orgae89391">
 <p>
 在调试C/C++代码时，在编译阶段使用 <code>gcc/g++ -g</code> 命令编译，将调试信息生成在目标文件中。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org0e487ca" class="outline-2">
-<h2 id="org0e487ca">2 开启gdb模式</h2>
-<div class="outline-text-2" id="text-org0e487ca">
+<div id="outline-container-org2bf4e00" class="outline-2">
+<h2 id="org2bf4e00">2 开启gdb模式</h2>
+<div class="outline-text-2" id="text-org2bf4e00">
 <ul class="org-ul">
 <li>直接进入gdb模式: <code>gdb</code> <br>
 </li>
@@ -102,9 +179,9 @@
 <!-- TEASER_END -->
 </div>
 
-<div id="outline-container-org9b3a19e" class="outline-3">
-<h3 id="org9b3a19e">2.1 gdb模式中常用命令</h3>
-<div class="outline-text-3" id="text-org9b3a19e">
+<div id="outline-container-org5883432" class="outline-3">
+<h3 id="org5883432">2.1 gdb模式中常用命令</h3>
+<div class="outline-text-3" id="text-org5883432">
 <p>
 以下指令为常用指令以及它们的缩写。<br></p>
 <ul class="org-ul">
@@ -136,9 +213,9 @@
 </div>
 </div>
 
-<div id="outline-container-org3e57f16" class="outline-3">
-<h3 id="org3e57f16">2.2 调试一个正在运行中的进程</h3>
-<div class="outline-text-3" id="text-org3e57f16">
+<div id="outline-container-org612ca9b" class="outline-3">
+<h3 id="org612ca9b">2.2 调试一个正在运行中的进程</h3>
+<div class="outline-text-3" id="text-org612ca9b">
 <p>
 如果一个正在运行中的程序与我们的预想不一样，我们可以使用gdb查看程序的运行状态（debug a running process）<br></p>
 <ul class="org-ul">
@@ -150,9 +227,9 @@
 </div>
 </div>
 
-<div id="outline-container-org1a6cdd2" class="outline-3">
-<h3 id="org1a6cdd2">2.3 设置源文件的目录</h3>
-<div class="outline-text-3" id="text-org1a6cdd2">
+<div id="outline-container-orgf9e51bf" class="outline-3">
+<h3 id="orgf9e51bf">2.3 设置源文件的目录</h3>
+<div class="outline-text-3" id="text-orgf9e51bf">
 <ul class="org-ul">
 <li>
 <code>files</code> 命令<br>
@@ -165,16 +242,16 @@
 </div>
 </div>
 
-<div id="outline-container-org65c0002" class="outline-2">
-<h2 id="org65c0002">3 core 文件相关设置</h2>
-<div class="outline-text-2" id="text-org65c0002">
+<div id="outline-container-orgda45aa9" class="outline-2">
+<h2 id="orgda45aa9">3 core 文件相关设置</h2>
+<div class="outline-text-2" id="text-orgda45aa9">
 <p>
 core文件是程序异常崩溃以后产生的，会将程序异常时的执行状态以快照的形式保存下来。可以通过gdb查看core文件内包含的信息，用于分析程序异常的原因。<br></p>
 </div>
 
-<div id="outline-container-org00977b9" class="outline-3">
-<h3 id="org00977b9">3.1 查看core文件的设置</h3>
-<div class="outline-text-3" id="text-org00977b9">
+<div id="outline-container-org9fd0227" class="outline-3">
+<h3 id="org9fd0227">3.1 查看core文件的设置</h3>
+<div class="outline-text-3" id="text-org9fd0227">
 <ul class="org-ul">
 <li>
 <code>ulimit -c</code><br>
@@ -188,9 +265,9 @@ core文件是程序异常崩溃以后产生的，会将程序异常时的执行�
 </div>
 </div>
 
-<div id="outline-container-org37f7e15" class="outline-3">
-<h3 id="org37f7e15">3.2 更改core文件的设置</h3>
-<div class="outline-text-3" id="text-org37f7e15">
+<div id="outline-container-orge8becc9" class="outline-3">
+<h3 id="orge8becc9">3.2 更改core文件的设置</h3>
+<div class="outline-text-3" id="text-orge8becc9">
 <ul class="org-ul">
 <li>
 <code>ulimit -c unlimited</code> 不限制生成core文件的大小<br>
@@ -248,26 +325,65 @@ core文件的命名规则配置会在操作系统重启后失效，把下面这�
       </a>
     </li>
   </ul>
-<section class="comments hidden-print"><div id="disqus_thread"></div>
-        <script>
-        var disqus_shortname ="samsonwang-blog",
-            disqus_url="https://samsonwang.github.io/blog/posts/2018/debug-with-gdb-on-linux/",
-        disqus_title="Linux\u4e0b\u4f7f\u7528gdb\u7684\u8c03\u8bd5\u6280\u5de7",
-        disqus_identifier="_cache/posts/2018/debug-with-gdb-on-linux.html",
-        disqus_config = function () {
-            this.language = "en";
-        };
-        (function() {
-            var dsq = document.createElement('script'); dsq.async = true;
-            dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script><noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
-</noscript>
-    <a href="https://disqus.com" class="dsq-brlink" rel="nofollow">Comments powered by <span class="logo-disqus">Disqus</span></a>
+<section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
+      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
+    </div>
+    <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
+    <script>
+    (function () {
+      document.documentElement.setAttribute('data-js', '1');
 
+      var CFG = {
+        shortname: "samsonwang-blog",
+        url: "https://samsonwang.github.io/blog/posts/2018/debug-with-gdb-on-linux/",
+        title: "Linux\u4e0b\u4f7f\u7528gdb\u7684\u8c03\u8bd5\u6280\u5de7",
+        identifier: "_cache/posts/2018/debug-with-gdb-on-linux.html",
+        lang: "en"
+      };
 
-  </section><script>var disqus_shortname="samsonwang-blog";(function(){var a=document.createElement("script");a.async=true;a.src="https://"+disqus_shortname+".disqus.com/count.js";(document.getElementsByTagName("head")[0]||document.getElementsByTagName("body")[0]).appendChild(a)}());</script>
+      var host = document.getElementById('comment-lazy');
+      var btn = document.getElementById('comment-lazy-btn');
+      if (!host || !btn) { return; }
+
+      var busy = false;
+
+      function mount() {
+        if (busy) { return; }
+        busy = true;
+
+        var thread = document.createElement('div');
+        thread.id = 'disqus_thread';
+        host.innerHTML = '';
+        host.appendChild(thread);
+        host.className = 'comment-lazy is-loaded';
+
+        window.disqus_shortname = CFG.shortname;
+        window.disqus_url = CFG.url;
+        window.disqus_title = CFG.title;
+        window.disqus_identifier = CFG.identifier;
+        window.disqus_config = function () { this.language = CFG.lang; };
+
+        append_script('embed.js');
+
+        if (document.querySelector('[data-disqus-identifier]')) {
+          append_script('count.js');
+        }
+      }
+
+      function append_script(name) {
+        var s = document.createElement('script');
+        s.src = 'https://' + CFG.shortname + '.disqus.com/' + name;
+        s.async = true;
+        s.setAttribute('data-timestamp', String(Date.now()));
+        (document.head || document.body).appendChild(s);
+      }
+
+      btn.addEventListener('click', mount);
+
+      if (window.location.hash === '#disqus_thread') { mount(); }
+    })();
+    </script></section>
 </div>
   </main><footer class="site-footer h-card"><div class="wrapper">
       <div class="footer-col-wrapper">
