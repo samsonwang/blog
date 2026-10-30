@@ -174,6 +174,87 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Apr 16, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/2018/cpp11-automatic-deduction-and-decltype/">C++11新特性：自动类型推导</a>
+    </h3>
+
+    <div id="outline-container-org0a98091" class="outline-2">
+<h2 id="org0a98091">关键字 <code>auto</code> 用于自动类型推导</h2>
+<div class="outline-text-2" id="text-org0a98091">
+<div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w">     </span><span class="c1">// int</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">c</span><span class="o">=</span><span class="sc">'a'</span><span class="p">;</span><span class="w">   </span><span class="c1">// char</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">d</span><span class="o">=</span><span class="mf">0.5</span><span class="p">;</span><span class="w">   </span><span class="c1">// double</span>
+</pre></div>
+
+<p>
+自动类型推导主要用于声明比较复杂的变量，或者变量是在泛型编程（模板）中自动生成出来的。<br></p>
+<div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vecNumbers</span><span class="p">;</span>
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">const_iterator</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vecNumbers</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vecNumbers</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org9e82a1b" class="outline-2">
+<h2 id="org9e82a1b">
+<code>auto</code> 类型推导并不会指定 <code>const</code> 和 <code>volatile</code> 属性</h2>
+<div class="outline-text-2" id="text-org9e82a1b">
+<p>
+如果需要限定声明的变量为 <code>const</code> 和 <code>volatile</code> 属性，需要额外提供相应的关键字限定。因为编译器并不能推断出声明的变量是否具有常值属性和易失属性。<br></p>
+<div class="highlight"><pre><span></span><span class="k">volatile</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">num</span><span class="o">=</span><span class="mi">5</span><span class="p">;</span><span class="w">           </span><span class="c1">// volatile int</span>
+<span class="k">auto</span><span class="w"> </span><span class="k">volatile</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">var</span><span class="o">=</span><span class="nb">true</span><span class="p">;</span><span class="w">  </span><span class="c1">//const valatile bool</span>
+<span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">ch</span><span class="o">=</span><span class="sc">'a'</span><span class="p">;</span><span class="w">             </span><span class="c1">// const char</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org074d1c2" class="outline-2">
+<h2 id="org074d1c2">关键字 <code>decltype</code> 用于获取一个对量的类型</h2>
+<div class="outline-text-2" id="text-org074d1c2">
+<p>
+使用 <code>decltype</code> 存储一个对象或表达式的类型， <code>decltype</code> 可以看做是 <code>auto</code> 的补充。<br></p>
+<div class="highlight"><pre><span></span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vecNumbers</span><span class="p">;</span>
+<span class="k">typedef</span><span class="w"> </span><span class="k">decltype</span><span class="p">(</span><span class="n">vecNumbers</span><span class="p">.</span><span class="n">begin</span><span class="p">())</span><span class="w"> </span><span class="n">Iterator</span><span class="p">;</span>
+<span class="n">Iterator</span><span class="w"> </span><span class="n">it2</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-org9ed12d1" class="outline-2">
+<h2 id="org9ed12d1">函数返回值类型推导</h2>
+<div class="outline-text-2" id="text-org9ed12d1">
+<p>
+在C++11中可以使用 <code>auto</code> 和 <code>decltype</code> 完成函数返回类型的推导。<br>
+旧的函数声明格式 <code>return_type func_name(param_type param, ...);</code><br>
+新的函数声明格式示例如下，以下函数接收 <code>bool</code> 作为函数的参数，并返回 <code>bool</code> 类型的结果。<br></p>
+<div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">func_name</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">bParam</span><span class="p">)</span><span class="o">-&gt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">bParam</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">bParam</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>
+函数返回值类型推导在模板泛型编程中非常有用，模板函数能够定义一个通用的返回类型，返回值类型会根据 <code>decltype</code> 自动推导。<br>
+新的函数声明格式更易于维护，因为返回值并没有作为硬编码写入源文件中，但这样做可能会牺牲代码的可读性。<br></p>
+<div class="highlight"><pre><span></span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">get_end</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">decltype</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">end</span><span class="p">())</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">end</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vecNumbers</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_end</span><span class="p">(</span><span class="n">vecNumbers</span><span class="p">);</span><span class="w">      </span><span class="c1">// returns iterator</span>
+
+<span class="k">const</span><span class="w"> </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vecNumbers2</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">it2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_enm</span><span class="p">(</span><span class="n">vecNumbers2</span><span class="p">);</span><span class="w">    </span><span class="c1">// returns const_iterator</span>
+</pre></div>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Apr 11, 2018</span>
     <h3>
       <a class="post-link" href="/blog/posts/2018/fifo-pipe-unix-domain-socket/">Linux下的FIFO、pipe、unix domain socket漫谈</a>
@@ -251,41 +332,41 @@ ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
     <p>
 tcpdump常用于网络抓包，能够将抓取的包保存下来，这样就能进一步深入分析。抓包保存的文件可以使用tcpdump进行查看，也可以借助第三方软件（如wireshark）进行辅助分析。<br></p>
 
-<div id="outline-container-org3fd5f4f" class="outline-2">
-<h2 id="org3fd5f4f">1. 抓取指定网络设备上的包</h2>
-<div class="outline-text-2" id="text-org3fd5f4f">
+<div id="outline-container-org2a7c90a" class="outline-2">
+<h2 id="org2a7c90a">1. 抓取指定网络设备上的包</h2>
+<div class="outline-text-2" id="text-org2a7c90a">
 <p>
 抓取网卡eth0上的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orga8ed934" class="outline-2">
-<h2 id="orga8ed934">2. 限制抓包的数量</h2>
-<div class="outline-text-2" id="text-orga8ed934">
+<div id="outline-container-org910581d" class="outline-2">
+<h2 id="org910581d">2. 限制抓包的数量</h2>
+<div class="outline-text-2" id="text-org910581d">
 <p>
 只抓取5个包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -c 5 -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org5796d55" class="outline-2">
-<h2 id="org5796d55">3. 将抓取的包以ASCII的方式打印出来</h2>
-<div class="outline-text-2" id="text-org5796d55">
+<div id="outline-container-orgf4dfa0c" class="outline-2">
+<h2 id="orgf4dfa0c">3. 将抓取的包以ASCII的方式打印出来</h2>
+<div class="outline-text-2" id="text-orgf4dfa0c">
 <div class="highlight"><pre><span></span>tcpdump -A -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org708b4c3" class="outline-2">
-<h2 id="org708b4c3">4. 将抓取的包以十六进制的方式打印出来</h2>
-<div class="outline-text-2" id="text-org708b4c3">
+<div id="outline-container-org5cffcff" class="outline-2">
+<h2 id="org5cffcff">4. 将抓取的包以十六进制的方式打印出来</h2>
+<div class="outline-text-2" id="text-org5cffcff">
 <div class="highlight"><pre><span></span>tcpdump -XX -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org841ce15" class="outline-2">
-<h2 id="org841ce15">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
-<div class="outline-text-2" id="text-org841ce15">
+<div id="outline-container-org6d00e6b" class="outline-2">
+<h2 id="org6d00e6b">5. 对抓取到的包上打出更方便阅读的时间戳</h2>
+<div class="outline-text-2" id="text-org6d00e6b">
 <p>
 增加 <code>-t</code> 参数能够将抓取到的包中的时间以方便阅读的形式打印出来，使用 <code>-tttt</code> 参数能够将包中的时间戳以更详细的方式打印出来。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -t -i eth0
@@ -293,23 +374,23 @@ tcpdump -tttt -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org533ee0f" class="outline-2">
-<h2 id="org533ee0f">6. 将抓取的包写入到文件中</h2>
-<div class="outline-text-2" id="text-org533ee0f">
+<div id="outline-container-orgbaf8744" class="outline-2">
+<h2 id="orgbaf8744">6. 将抓取的包写入到文件中</h2>
+<div class="outline-text-2" id="text-orgbaf8744">
 <div class="highlight"><pre><span></span>tcpdump -w netdump.pcap -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgfe71ab6" class="outline-2">
-<h2 id="orgfe71ab6">7. 读取抓到的包</h2>
-<div class="outline-text-2" id="text-orgfe71ab6">
+<div id="outline-container-org02b1956" class="outline-2">
+<h2 id="org02b1956">7. 读取抓到的包</h2>
+<div class="outline-text-2" id="text-org02b1956">
 <div class="highlight"><pre><span></span>tcpdump -r netdump.pcap
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org0fa9740" class="outline-2">
-<h2 id="org0fa9740">8. 在抓到的包中显示ip地址</h2>
-<div class="outline-text-2" id="text-org0fa9740">
+<div id="outline-container-org57354e8" class="outline-2">
+<h2 id="org57354e8">8. 在抓到的包中显示ip地址</h2>
+<div class="outline-text-2" id="text-org57354e8">
 <p>
 增加 <code>-n</code> 参数不会解析主机名，增加 <code>-nn</code> 参数不会解析主机名和端口名<br></p>
 <div class="highlight"><pre><span></span>tcpdump -n -i eth0
@@ -317,16 +398,16 @@ tcpdump -nn -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org2eeaf3e" class="outline-2">
-<h2 id="org2eeaf3e">9. 以绝对值显示包的ISN号</h2>
-<div class="outline-text-2" id="text-org2eeaf3e">
+<div id="outline-container-orgeaf1450" class="outline-2">
+<h2 id="orgeaf1450">9. 以绝对值显示包的ISN号</h2>
+<div class="outline-text-2" id="text-orgeaf1450">
 <div class="highlight"><pre><span></span>tcpdump -S -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orga245a0b" class="outline-2">
-<h2 id="orga245a0b">10. 对抓取到的包显示更详细的信息</h2>
-<div class="outline-text-2" id="text-orga245a0b">
+<div id="outline-container-org20b2cc6" class="outline-2">
+<h2 id="org20b2cc6">10. 对抓取到的包显示更详细的信息</h2>
+<div class="outline-text-2" id="text-org20b2cc6">
 <p>
 参数 <code>-v</code> 是verbose的缩写，以下命令表示对抓取到的包显示更详细的信息。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -v -i eth0
@@ -335,9 +416,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org29e3515" class="outline-2">
-<h2 id="org29e3515">11. 对抓到的包进行协议类型过滤</h2>
-<div class="outline-text-2" id="text-org29e3515">
+<div id="outline-container-orga453422" class="outline-2">
+<h2 id="orga453422">11. 对抓到的包进行协议类型过滤</h2>
+<div class="outline-text-2" id="text-orga453422">
 <p>
 支持的协议类型有：fddi, tr, wlan, ip, ip6, arp, rarp, decnet, tcp, udp<br>
 以下命令只会抓取网卡eth0上的arp包<br></p>
@@ -345,9 +426,9 @@ tcpdump -vvv -i eth0
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org7abf185" class="outline-2">
-<h2 id="org7abf185">12. 在抓包时对包进行大小过滤</h2>
-<div class="outline-text-2" id="text-org7abf185">
+<div id="outline-container-org68741c8" class="outline-2">
+<h2 id="org68741c8">12. 在抓包时对包进行大小过滤</h2>
+<div class="outline-text-2" id="text-org68741c8">
 <p>
 下面的命令会分别抓取大于1024字节和小于1024字节的包<br></p>
 <div class="highlight"><pre><span></span>tcpdump -i eth0 greater 1024
@@ -355,16 +436,16 @@ tcpdump -i eth0 less 1024
 </pre></div>
 </div>
 </div>
-<div id="outline-container-orgf545191" class="outline-2">
-<h2 id="orgf545191">13. 抓取指定端口上的包</h2>
-<div class="outline-text-2" id="text-orgf545191">
+<div id="outline-container-org37273ce" class="outline-2">
+<h2 id="org37273ce">13. 抓取指定端口上的包</h2>
+<div class="outline-text-2" id="text-org37273ce">
 <div class="highlight"><pre><span></span>tcpdump -i eth0 port 22
 </pre></div>
 </div>
 </div>
-<div id="outline-container-org40713d0" class="outline-2">
-<h2 id="org40713d0">14. 抓取发往指定目的和端口上包</h2>
-<div class="outline-text-2" id="text-org40713d0">
+<div id="outline-container-org2a74372" class="outline-2">
+<h2 id="org2a74372">14. 抓取发往指定目的和端口上包</h2>
+<div class="outline-text-2" id="text-org2a74372">
 <p>
 可以使用 <code>and</code> 和 <code>or</code> 对过滤条件进行组合以实现精确的抓包。<br></p>
 <div class="highlight"><pre><span></span>tcpdump -w net_dump.pcap -i eth0 dst 10.181.140.216 and port 22
@@ -372,9 +453,9 @@ tcpdump -i eth0 less 1024
 </div>
 </div>
 
-<div id="outline-container-org80ddcd9" class="outline-2">
-<h2 id="org80ddcd9">常用tcpdump命令示例</h2>
-<div class="outline-text-2" id="text-org80ddcd9">
+<div id="outline-container-orgabebb54" class="outline-2">
+<h2 id="orgabebb54">常用tcpdump命令示例</h2>
+<div class="outline-text-2" id="text-orgabebb54">
 <div class="highlight"><pre><span></span>tcpdump –i any 'port 8888'
 tcpdump –i any 'tcp port 8888'
 tcpdump –i any 'tcp src port 8888'
@@ -384,9 +465,9 @@ tcpdump -i any 'src host 127.0.0.1 and tcp src port 12345' -XX -nn -vv
 </div>
 </div>
 
-<div id="outline-container-org8820242" class="outline-2">
-<h2 id="org8820242">参考资料</h2>
-<div class="outline-text-2" id="text-org8820242">
+<div id="outline-container-org5334bd1" class="outline-2">
+<h2 id="org5334bd1">参考资料</h2>
+<div class="outline-text-2" id="text-org5334bd1">
 <ul class="org-ul">
 <li>
 <a href="https://danielmiessler.com/study/tcpdump/">danielmiessler.com tcpdump</a><br>
@@ -425,25 +506,25 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 <p>
 下面就给出了几种常见的用法，需要注意的是有些指令需要root权限执行。<br></p>
 
-<div id="outline-container-org1e88ecc" class="outline-2">
-<h2 id="org1e88ecc">1. 查看打开指定文件的进程</h2>
-<div class="outline-text-2" id="text-org1e88ecc">
+<div id="outline-container-orgcf6fd1e" class="outline-2">
+<h2 id="orgcf6fd1e">1. 查看打开指定文件的进程</h2>
+<div class="outline-text-2" id="text-orgcf6fd1e">
 <div class="highlight"><pre><span></span>lsof /var/syslog.log
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgf655fbc" class="outline-2">
-<h2 id="orgf655fbc">2. 查看指定目录下打开的文件</h2>
-<div class="outline-text-2" id="text-orgf655fbc">
+<div id="outline-container-org6ab7431" class="outline-2">
+<h2 id="org6ab7431">2. 查看指定目录下打开的文件</h2>
+<div class="outline-text-2" id="text-org6ab7431">
 <div class="highlight"><pre><span></span>lsof +D /home/
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org1229bd5" class="outline-2">
-<h2 id="org1229bd5">3. 查看以指定进程名所有打开的文件</h2>
-<div class="outline-text-2" id="text-org1229bd5">
+<div id="outline-container-org2e97f06" class="outline-2">
+<h2 id="org2e97f06">3. 查看以指定进程名所有打开的文件</h2>
+<div class="outline-text-2" id="text-org2e97f06">
 <p>
 使用 <code>-c</code> 命令能够查看指定进程名使用的文件，允许在一个命令行指令中使用多个 <code>-c</code> 参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -c procname
@@ -451,9 +532,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orgb0f50ca" class="outline-2">
-<h2 id="orgb0f50ca">4. 查看使用指定挂载点的进程</h2>
-<div class="outline-text-2" id="text-orgb0f50ca">
+<div id="outline-container-org83ff344" class="outline-2">
+<h2 id="org83ff344">4. 查看使用指定挂载点的进程</h2>
+<div class="outline-text-2" id="text-org83ff344">
 <p>
 在停止挂载某个目录时，系统会告诉我们“设备资源繁忙”，所以我们需要找出使用挂载点的程序，终止这些进程，解除目录的占用状态。<br></p>
 <div class="highlight"><pre><span></span>lsof /home
@@ -465,9 +546,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org5d090a5" class="outline-2">
-<h2 id="org5d090a5">5. 查看指定用户打开的文件</h2>
-<div class="outline-text-2" id="text-org5d090a5">
+<div id="outline-container-org7dbe469" class="outline-2">
+<h2 id="org7dbe469">5. 查看指定用户打开的文件</h2>
+<div class="outline-text-2" id="text-org7dbe469">
 <div class="highlight"><pre><span></span>lsof -u username
 </pre></div>
 <p>
@@ -477,17 +558,17 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orgf87400a" class="outline-2">
-<h2 id="orgf87400a">6. 查看指定进程打开的文件</h2>
-<div class="outline-text-2" id="text-orgf87400a">
+<div id="outline-container-orgcac9922" class="outline-2">
+<h2 id="orgcac9922">6. 查看指定进程打开的文件</h2>
+<div class="outline-text-2" id="text-orgcac9922">
 <div class="highlight"><pre><span></span>lsof -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgbef4a44" class="outline-2">
-<h2 id="orgbef4a44">7. 终止属于某个用户的所有进程</h2>
-<div class="outline-text-2" id="text-orgbef4a44">
+<div id="outline-container-org5c25d1e" class="outline-2">
+<h2 id="org5c25d1e">7. 终止属于某个用户的所有进程</h2>
+<div class="outline-text-2" id="text-org5c25d1e">
 <div class="highlight"><pre><span></span>kill `lsof -t -u username`
 </pre></div>
 <p>
@@ -497,9 +578,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orgae6b03a" class="outline-2">
-<h2 id="orgae6b03a">8. 让结果同时满足多个选项</h2>
-<div class="outline-text-2" id="text-orgae6b03a">
+<div id="outline-container-org4029fc9" class="outline-2">
+<h2 id="org4029fc9">8. 让结果同时满足多个选项</h2>
+<div class="outline-text-2" id="text-org4029fc9">
 <p>
 默认情况下，多个参数是以或（or）进行操作的，可以使用 <code>-a</code> 选项让结果同时满足多个参数。<br></p>
 <div class="highlight"><pre><span></span>lsof -a -u username -c procname
@@ -507,9 +588,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-orgda6529f" class="outline-2">
-<h2 id="orgda6529f">9. 让命令重复执行</h2>
-<div class="outline-text-2" id="text-orgda6529f">
+<div id="outline-container-org6548bf2" class="outline-2">
+<h2 id="org6548bf2">9. 让命令重复执行</h2>
+<div class="outline-text-2" id="text-org6548bf2">
 <p>
 可以使用 <code>-r</code> 参数让命令重复执行。以下命令会每隔5s执行一次，每次的执行结果会用 “====” 分割开。<br></p>
 <div class="highlight"><pre><span></span>lsof -u username -c procname -a -r5
@@ -517,9 +598,9 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org609ad87" class="outline-2">
-<h2 id="org609ad87">10. 列出所有的网络连接</h2>
-<div class="outline-text-2" id="text-org609ad87">
+<div id="outline-container-orgfe24c49" class="outline-2">
+<h2 id="orgfe24c49">10. 列出所有的网络连接</h2>
+<div class="outline-text-2" id="text-orgfe24c49">
 <div class="highlight"><pre><span></span>lsof -i
 </pre></div>
 <p>
@@ -533,33 +614,33 @@ lsof是list open files的简称，用于列出系统中所有打开的文件。�
 </div>
 </div>
 
-<div id="outline-container-org7d14ddb" class="outline-2">
-<h2 id="org7d14ddb">11. 列出指定进程使用的网络连接</h2>
-<div class="outline-text-2" id="text-org7d14ddb">
+<div id="outline-container-orgb4083a4" class="outline-2">
+<h2 id="orgb4083a4">11. 列出指定进程使用的网络连接</h2>
+<div class="outline-text-2" id="text-orgb4083a4">
 <div class="highlight"><pre><span></span>lsof -i -a -p pid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orge9eb809" class="outline-2">
-<h2 id="orge9eb809">12. 查看指定端口上的监听</h2>
-<div class="outline-text-2" id="text-orge9eb809">
+<div id="outline-container-orgafbd2ee" class="outline-2">
+<h2 id="orgafbd2ee">12. 查看指定端口上的监听</h2>
+<div class="outline-text-2" id="text-orgafbd2ee">
 <div class="highlight"><pre><span></span>lsof -i :portid
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgcade1da" class="outline-2">
-<h2 id="orgcade1da">13. 列出所有tcp和udp连接</h2>
-<div class="outline-text-2" id="text-orgcade1da">
+<div id="outline-container-org48a8434" class="outline-2">
+<h2 id="org48a8434">13. 列出所有tcp和udp连接</h2>
+<div class="outline-text-2" id="text-org48a8434">
 <div class="highlight"><pre><span></span>lsof -i tcp; lsof -i udp
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgcb54cae" class="outline-2">
-<h2 id="orgcb54cae">14. 列出所有的网络文件系统</h2>
-<div class="outline-text-2" id="text-orgcb54cae">
+<div id="outline-container-orgd657cb1" class="outline-2">
+<h2 id="orgd657cb1">14. 列出所有的网络文件系统</h2>
+<div class="outline-text-2" id="text-orgd657cb1">
 <p>
 网络文件系统（network file system）<br></p>
 <div class="highlight"><pre><span></span>lsof -N -u username
@@ -761,17 +842,17 @@ Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式�
     <p>
 在某些时候，为了绕过网络封锁，在使用git时需要借助代理完成相关网络操作。<br></p>
 
-<div id="outline-container-orga38328b" class="outline-2">
-<h2 id="orga38328b">一个可用的VPN代理是先决条件</h2>
-<div class="outline-text-2" id="text-orga38328b">
+<div id="outline-container-org8b0ff47" class="outline-2">
+<h2 id="org8b0ff47">一个可用的VPN代理是先决条件</h2>
+<div class="outline-text-2" id="text-org8b0ff47">
 <p>
 关于VPN的架设就不在此讨论了。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge17edfe" class="outline-2">
-<h2 id="orge17edfe">将repo的链接由ssh改为为https</h2>
-<div class="outline-text-2" id="text-orge17edfe">
+<div id="outline-container-orgba115d8" class="outline-2">
+<h2 id="orgba115d8">将repo的链接由ssh改为为https</h2>
+<div class="outline-text-2" id="text-orgba115d8">
 <p>
 已经使用https的repo跳过此步骤。<br>
 本教程需要通过https（http）的方式使用代理，所以如果现有的repo是使用ssh方式clone到本地的，需要修改其为https方式。<br>
@@ -782,9 +863,9 @@ Qt5官方推荐的源文件编码格式为UTF-8，QString内部的编码格式�
 </div>
 </div>
 
-<div id="outline-container-org3c889af" class="outline-2">
-<h2 id="org3c889af">设置git使用代理</h2>
-<div class="outline-text-2" id="text-org3c889af">
+<div id="outline-container-org812d208" class="outline-2">
+<h2 id="org812d208">设置git使用代理</h2>
+<div class="outline-text-2" id="text-org812d208">
 <p>
 将git配置为使用socks5代理，以socks5的ip和端口是 <code>127.0.0.1:1080</code> 为例。<br></p>
 <div class="highlight"><pre><span></span>git config --global http.proxy 'socks5://127.0.0.1:1080'
@@ -793,9 +874,9 @@ git config --global https.proxy 'socks5://127.0.0.1:1080'
 </div>
 </div>
 
-<div id="outline-container-org64b7809" class="outline-2">
-<h2 id="org64b7809">将登录信息缓存下来</h2>
-<div class="outline-text-2" id="text-org64b7809">
+<div id="outline-container-org74fac12" class="outline-2">
+<h2 id="org74fac12">将登录信息缓存下来</h2>
+<div class="outline-text-2" id="text-org74fac12">
 <p>
 使用https时，在向远程仓库进行推送（git push）时会要求验证用户名和密码，由于每次都输入验证信息是十分繁琐的，考虑将验证信息缓存下来。<br></p>
 <div class="highlight"><pre><span></span>git config --global credential.helper cache
@@ -807,9 +888,9 @@ git默认会将密码缓存15分钟，在这期间进行的操作是不需要再
 </div>
 </div>
 
-<div id="outline-container-org6afe221" class="outline-2">
-<h2 id="org6afe221">将登陆信息保存下来</h2>
-<div class="outline-text-2" id="text-org6afe221">
+<div id="outline-container-org03c41f9" class="outline-2">
+<h2 id="org03c41f9">将登陆信息保存下来</h2>
+<div class="outline-text-2" id="text-org03c41f9">
 <p>
 也可以考虑将用户名和密码永久保存下来，这样就不需要再次进行密码验证了。<br><b>注意:</b> 使用这种配置会将明文的账户和密码保存在 <code>~/.git-cretidentials</code> 文件中，所以仅推荐在个人电脑中使用这个配置。<br></p>
 <div class="highlight"><pre><span></span>git config --global credential.helper store
@@ -817,9 +898,9 @@ git默认会将密码缓存15分钟，在这期间进行的操作是不需要再
 </div>
 </div>
 
-<div id="outline-container-org8620f9f" class="outline-2">
-<h2 id="org8620f9f">参考资料</h2>
-<div class="outline-text-2" id="text-org8620f9f">
+<div id="outline-container-orga66c355" class="outline-2">
+<h2 id="orga66c355">参考资料</h2>
+<div class="outline-text-2" id="text-orga66c355">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-on-github">stackoverflow question</a><br>
@@ -842,59 +923,31 @@ git默认会将密码缓存15分钟，在这期间进行的操作是不需要再
     <p>
 在开发windows应用程序时，经常会遇到win32、mfc、atl的函数。下面就对三种API（或者说是开发框架）进行了总结。<br></p>
 
-<div id="outline-container-orgc5b0af4" class="outline-2">
-<h2 id="orgc5b0af4">Win32开发框架</h2>
-<div class="outline-text-2" id="text-orgc5b0af4">
+<div id="outline-container-org92f563c" class="outline-2">
+<h2 id="org92f563c">Win32开发框架</h2>
+<div class="outline-text-2" id="text-org92f563c">
 <p>
 win32开发框架是最基础的函数接口，更接近操作系统底层。<br>
 使用Win32接口的优点是程序的依赖最小，生成的可执行文件的体积也最小。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orge1ab242" class="outline-2">
-<h2 id="orge1ab242">MFC开发框架</h2>
-<div class="outline-text-2" id="text-orge1ab242">
+<div id="outline-container-orgf6b5bb0" class="outline-2">
+<h2 id="orgf6b5bb0">MFC开发框架</h2>
+<div class="outline-text-2" id="text-orgf6b5bb0">
 <p>
 MFC是Microsoft Foundation Class的缩写，将win32的相关接口按照OOP的思想封装了起来，目的是提供一个快速开发原生应用的框架。<br>
 使用MFC开发的程序体型略显臃肿，而且MFC也比较陈旧了，并不推荐使用MFC进行开发。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org5e8c8c2" class="outline-2">
-<h2 id="org5e8c8c2">ATL开发框架</h2>
-<div class="outline-text-2" id="text-org5e8c8c2">
+<div id="outline-container-org706ce73" class="outline-2">
+<h2 id="org706ce73">ATL开发框架</h2>
+<div class="outline-text-2" id="text-org706ce73">
 <p>
 ATL是Active Template Library的缩写，是针对COM组件的开发实现的一套开发框架。ATL简化了ActiveX COM组件的开发。<br></p>
 </div>
 </div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Feb 06, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/emacs-search-string-in-directory-recursively/">使用emacs在目录中递归搜索字符串</a>
-    </h3>
-
-    <p>
-对文件中的字符串搜索是开发中经常遇到的情景，下面就对常见的搜索字符串的方式进行了总结。<br></p>
-
-<p>
-<b>对当前buffer进行搜索（单个文件）</b><br><code>C-s</code> 向后搜索<br><code>C-r</code> 向后搜索<br><code>M-s o</code> 使用occur对当前buffer中的指定关键字进行统计<br>
-在安装了helm以后可以使用 <code>helm-occur</code> 完成当前buffer的搜索<br></p>
-
-<p>
-<b>对目录中的指定文件进行搜索（一个目录下的多个文件）</b><br><code>C-x d</code> 进入dired模式，在dired模式中使用 <code>M-x &lt;dired-do-find-regexp&gt;</code> (快捷键 <code>A</code> )对标记的文件进行搜索。<br></p>
-
-<p>
-<b>对目录中的所有文件进行递归搜索（一个目录下的所有文件和所有子目录中的文件）</b><br><code>M-x &lt;rgrep&gt;</code> 能够对一个目录下所有的文件进行正则表达式匹配<br></p>
-
-<p>
-<b>注意事项</b><br>
-在windows平台上使用grep和find指令时，需要借助仿linux环境中的程序完成，如cygwin中的程序。<br>
-需要将程序的路径添加到系统环境变量path中，并且为了覆盖windows系统自带的find命令，需要将该路径放在系统find路径之前。<br>
-tips： 对于安装了 <code>git bash</code> 的同学，直接将其中的 <code>mingw64\bin</code> 的绝对路径加入系统path中即可。<br></p>
 
   </li>
 

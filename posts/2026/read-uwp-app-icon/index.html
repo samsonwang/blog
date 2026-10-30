@@ -193,9 +193,9 @@
 <!-- TEASER_END -->
 
 
-<div id="outline-container-orgc08bed5" class="outline-2">
-<h2 id="orgc08bed5">先说结论</h2>
-<div class="outline-text-2" id="text-orgc08bed5">
+<div id="outline-container-org7986055" class="outline-2">
+<h2 id="org7986055">先说结论</h2>
+<div class="outline-text-2" id="text-org7986055">
 <p>
 先把三条路线的结论列出来，后面再逐个展开：<br></p>
 
@@ -219,9 +219,9 @@
 </div>
 
 
-<div id="outline-container-orgd19a9ff" class="outline-2">
-<h2 id="orgd19a9ff">几个绕不开的概念</h2>
-<div class="outline-text-2" id="text-orgd19a9ff">
+<div id="outline-container-orgb994bc1" class="outline-2">
+<h2 id="orgb994bc1">几个绕不开的概念</h2>
+<div class="outline-text-2" id="text-orgb994bc1">
 <p>
 在写代码之前，有几个名词必须先弄清楚，不然后面的接口参数根本不知道该填什么。<br></p>
 
@@ -246,9 +246,9 @@
 </div>
 
 
-<div id="outline-container-orgd06adcb" class="outline-2">
-<h2 id="orgd06adcb">方案一：纯 WinRT</h2>
-<div class="outline-text-2" id="text-orgd06adcb">
+<div id="outline-container-org0256278" class="outline-2">
+<h2 id="org0256278">方案一：纯 WinRT</h2>
+<div class="outline-text-2" id="text-org0256278">
 <p>
 完整的一条龙方案：C++/WinRT 提供 <code>PackageManager</code> 枚举包， <code>Package::GetAppListEntriesAsync</code> 拿到包里的每个应用， <code>AppListEntry::DisplayInfo</code> 提供名称和图标， <code>AppListEntry::LaunchAsync</code> 负责启动。<br></p>
 
@@ -320,9 +320,9 @@
 </div>
 
 
-<div id="outline-container-org16d536f" class="outline-2">
-<h2 id="org16d536f">方案二：ATL + COM</h2>
-<div class="outline-text-2" id="text-org16d536f">
+<div id="outline-container-org9c76767" class="outline-2">
+<h2 id="org9c76767">方案二：ATL + COM</h2>
+<div class="outline-text-2" id="text-org9c76767">
 <p>
 官方文档 <a href="https://learn.microsoft.com/en-us/windows/uwp/xbox-apps/automate-launching-uwp-apps">Automate launching UWP apps</a> 用的就是这条路线，我一开始也是照着它写的。<br></p>
 
@@ -442,9 +442,9 @@ ATL 在这里承担的是 COM 智能指针的角色： <code>CComPtr</code> 管 
 </div>
 
 
-<div id="outline-container-org5c3de3b" class="outline-2">
-<h2 id="org5c3de3b">方案二绕不开的一关：ms-resource</h2>
-<div class="outline-text-2" id="text-org5c3de3b">
+<div id="outline-container-org20a4322" class="outline-2">
+<h2 id="org20a4322">方案二绕不开的一关：ms-resource</h2>
+<div class="outline-text-2" id="text-org20a4322">
 <p>
 清单读出来之后， <code>displayName</code> 可能是 <code>ms-resource:AppName</code> ， <code>logo</code> 是 <code>Assets\Square44x44Logo.png</code> ，这两个都不是能直接用的东西。这是整个流程里最容易卡住的地方。<br></p>
 
@@ -494,9 +494,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-orga605984" class="outline-2">
-<h2 id="orga605984">方案三：纯 COM，走 Shell 命名空间</h2>
-<div class="outline-text-2" id="text-orga605984">
+<div id="outline-container-org815ff3b" class="outline-2">
+<h2 id="org815ff3b">方案三：纯 COM，走 Shell 命名空间</h2>
+<div class="outline-text-2" id="text-org815ff3b">
 <p>
 这条路线是我最终采用的，完整的实现在LaunchyQt的 <a href="https://github.com/samsonwang/LaunchyQt/blob/master/src/Plugins/UWPApp/UWPApp.cpp">UWPApp</a> 插件里。它既不碰 WinRT，也不碰 ATL，全部是标准的 Shell 和 COM 接口。<br></p>
 
@@ -504,9 +504,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 核心思路是：Windows 有一个虚拟目录 <code>shell:AppsFolder</code> ，里面就是开始菜单里显示的那些应用条目。用 Shell 接口把它枚举出来，每个条目都能给出本地化之后的显示名、AUMID 和各种属性。<br></p>
 </div>
 
-<div id="outline-container-org625ea3f" class="outline-3">
-<h3 id="org625ea3f">枚举：AppsFolder 与 IEnumShellItems</h3>
-<div class="outline-text-3" id="text-org625ea3f">
+<div id="outline-container-org52c25a2" class="outline-3">
+<h3 id="org52c25a2">枚举：AppsFolder 与 IEnumShellItems</h3>
+<div class="outline-text-3" id="text-org52c25a2">
 <p>
 打开虚拟目录用 <code>SHCreateItemFromParsingName</code> ，拿到 <code>IShellItem</code> 之后再 <code>BindToHandler</code> 出枚举器。这里有个坑： <code>BHID_EnumItems</code> 和 <code>BHID_PropertyStore</code> 这两个 GUID 在 SDK 头文件里没有对应的符号，得自己定义。<br></p>
 
@@ -539,9 +539,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-orgc57323c" class="outline-3">
-<h3 id="orgc57323c">读属性：IPropertyStore</h3>
-<div class="outline-text-3" id="text-orgc57323c">
+<div id="outline-container-org9cc9739" class="outline-3">
+<h3 id="org9cc9739">读属性：IPropertyStore</h3>
+<div class="outline-text-3" id="text-org9cc9739">
 <p>
 每个条目通过 <code>BHID_PropertyStore</code> 绑定出 <code>IPropertyStore</code> ，然后用属性名查 <code>PROPERTYKEY</code> 再取值。用到的属性有这些：<br></p>
 
@@ -625,9 +625,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-org87e8a87" class="outline-3">
-<h3 id="org87e8a87">定位图标文件</h3>
-<div class="outline-text-3" id="text-org87e8a87">
+<div id="outline-container-org37156d5" class="outline-3">
+<h3 id="org37156d5">定位图标文件</h3>
+<div class="outline-text-3" id="text-org37156d5">
 <p>
 这是整个方案里最琐碎的部分。Shell 给的 <code>System.Tile.SmallLogoPath</code> 未必每个条目都有（打包的桌面应用和一些系统自带应用就没有），而且给了也是资源引用，不是真实路径。所以流程是“Shell 属性优先，清单兜底，然后自己去包里找文件”。<br></p>
 
@@ -687,9 +687,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-org4565fd9" class="outline-3">
-<h3 id="org4565fd9">兜底：让 Shell 自己渲染图标</h3>
-<div class="outline-text-3" id="text-org4565fd9">
+<div id="outline-container-org6bb471c" class="outline-3">
+<h3 id="org6bb471c">兜底：让 Shell 自己渲染图标</h3>
+<div class="outline-text-3" id="text-org6bb471c">
 <p>
 如果上面四级都没找到（包里根本没有资源目录、清单读不了、图标是系统生成的），还有最后一招：直接让 Shell 把条目的图标渲染出来。<br></p>
 
@@ -725,9 +725,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 </div>
 
-<div id="outline-container-orga933177" class="outline-3">
-<h3 id="orga933177">为什么不用 ATL</h3>
-<div class="outline-text-3" id="text-orga933177">
+<div id="outline-container-orga5b3754" class="outline-3">
+<h3 id="orga5b3754">为什么不用 ATL</h3>
+<div class="outline-text-3" id="text-orga5b3754">
 <p>
 这套实现里全是裸指针加手工 <code>Release</code> ，没有用 <code>CComPtr</code> 或者 <code>ComPtr</code> 。原因是 ATL 在 Visual Studio 里是可选组件，构建机上不一定装；而这个插件需要的只是引用计数和 <code>CoTaskMem</code> 字符串，这两样 COM 运行时本身就提供了，不值得为此引入一个依赖。<br></p>
 
@@ -738,9 +738,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-orgfbcdee4" class="outline-2">
-<h2 id="orgfbcdee4">启动 UWP 应用</h2>
-<div class="outline-text-2" id="text-orgfbcdee4">
+<div id="outline-container-org5b2f7da" class="outline-2">
+<h2 id="org5b2f7da">启动 UWP 应用</h2>
+<div class="outline-text-2" id="text-org5b2f7da">
 <p>
 启动是这里面最简单的一步，三条路线最终都落在 <code>IApplicationActivationManager</code> 上，它是纯 COM 接口，传 AUMID 进去即可：<br></p>
 
@@ -778,9 +778,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-org0cd8348" class="outline-2">
-<h2 id="org0cd8348">踩过的坑</h2>
-<div class="outline-text-2" id="text-org0cd8348">
+<div id="outline-container-org046d5e2" class="outline-2">
+<h2 id="org046d5e2">踩过的坑</h2>
+<div class="outline-text-2" id="text-org046d5e2">
 <p>
 最后把过程中踩过的坑汇总一下，按被坑的严重程度排序：<br></p>
 
@@ -817,9 +817,9 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
 </div>
 
 
-<div id="outline-container-org66ee37c" class="outline-2">
-<h2 id="org66ee37c">参考链接</h2>
-<div class="outline-text-2" id="text-org66ee37c">
+<div id="outline-container-org6c58ce6" class="outline-2">
+<h2 id="org6c58ce6">参考链接</h2>
+<div class="outline-text-2" id="text-org6c58ce6">
 <ul class="org-ul">
 <li>
 <a href="https://learn.microsoft.com/en-us/uwp/api/windows.management.deployment.packagemanager">PackageManager Class</a><br>
@@ -881,7 +881,7 @@ Windows 提供了 <code>SHLoadIndirectString</code> 来做解析，它支持的�
     </li>
   </ul>
 <section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
-      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <p class="comment-lazy-hint">评论由 Disqus 提供</p>
       <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
     </div>
     <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>

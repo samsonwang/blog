@@ -197,9 +197,9 @@ int printf(const char* format, ...">
       
     <time class="dt-published" datetime="2018-01-04T00:45:52+08:00" itemprop="datePublished">Jan 04, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org6b3c3f7" class="outline-2">
-<h2 id="org6b3c3f7">1 引言</h2>
-<div class="outline-text-2" id="text-org6b3c3f7">
+    <div id="outline-container-org54abbd3" class="outline-2">
+<h2 id="org54abbd3">1 引言</h2>
+<div class="outline-text-2" id="text-org54abbd3">
 <p>
 本文主要总结了笔者自己的开发中遇到的不规范的代码写法。这些代码风格可能并不会引起错误，但是会产生隐患或容易引起歧义。<br>
 这些语法缺陷可以通过合理配置编译器的编译选项检查出来，对于编译器的警告配置在前面有文章进行了简单介绍。<br></p>
@@ -208,13 +208,13 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-org32175f6" class="outline-2">
-<h2 id="org32175f6">2 代码缺陷总结</h2>
-<div class="outline-text-2" id="text-org32175f6">
+<div id="outline-container-org65a6051" class="outline-2">
+<h2 id="org65a6051">2 代码缺陷总结</h2>
+<div class="outline-text-2" id="text-org65a6051">
 </div>
-<div id="outline-container-orgac752b3" class="outline-3">
-<h3 id="orgac752b3">2.1 格式化字符串与后续参数不匹配</h3>
-<div class="outline-text-3" id="text-orgac752b3">
+<div id="outline-container-org8532f5d" class="outline-3">
+<h3 id="org8532f5d">2.1 格式化字符串与后续参数不匹配</h3>
+<div class="outline-text-3" id="text-org8532f5d">
 <p>
 函数原型如下<br></p>
 <div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">printf</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">format</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
@@ -222,9 +222,9 @@ int printf(const char* format, ...">
 </pre></div>
 </div>
 
-<div id="outline-container-org8c97615" class="outline-4">
-<h4 id="org8c97615">2.1.1 <code>size_t</code> 类型</h4>
-<div class="outline-text-4" id="text-org8c97615">
+<div id="outline-container-org053f0ec" class="outline-4">
+<h4 id="org053f0ec">2.1.1 <code>size_t</code> 类型</h4>
+<div class="outline-text-4" id="text-org053f0ec">
 <p>
 由于 <code>size_t</code> 在不同平台上会有不同的类型定义，合适的做法是使用 <code>z</code> 对 <code>size_t</code> 进行格式化。<br>
 变量宽度标识符 <code>z</code> 需要编译器支持C++11或C99特性。<br>
@@ -236,9 +236,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-orgb231391" class="outline-4">
-<h4 id="orgb231391">2.1.2 <code>int64_t</code> 及其相关类型</h4>
-<div class="outline-text-4" id="text-orgb231391">
+<div id="outline-container-org59e0bc1" class="outline-4">
+<h4 id="org59e0bc1">2.1.2 <code>int64_t</code> 及其相关类型</h4>
+<div class="outline-text-4" id="text-org59e0bc1">
 <p>
 <code>int64_t</code> 是固定宽度为8字节的整形定义，在文件 <code>&lt;cstdint&gt;</code> 中有定义。<br>
 类似的还有 <code>int8_t</code>, <code>int16_t</code>, <code>int32_t</code> 分对应1，2，4字节的整形定义。<br>
@@ -263,9 +263,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-org7447840" class="outline-4">
-<h4 id="org7447840">2.1.3 <code>%x</code> 对应无符号整数</h4>
-<div class="outline-text-4" id="text-org7447840">
+<div id="outline-container-orgfa63d2a" class="outline-4">
+<h4 id="orgfa63d2a">2.1.3 <code>%x</code> 对应无符号整数</h4>
+<div class="outline-text-4" id="text-orgfa63d2a">
 <p>
 在使用 <code>sscanf</code> 函数对取16进制数据时需要注意传入的需要是无符号类型的地址。<br>
 示例代码如下：<br></p>
@@ -278,9 +278,9 @@ int printf(const char* format, ...">
 </div>
 
 
-<div id="outline-container-orgc7d95f8" class="outline-3">
-<h3 id="orgc7d95f8">2.2 多个逻辑表达式之间在 <code>&amp;&amp;</code> 和 <code>||</code> 之间的运算符优先级</h3>
-<div class="outline-text-3" id="text-orgc7d95f8">
+<div id="outline-container-org49ff158" class="outline-3">
+<h3 id="org49ff158">2.2 多个逻辑表达式之间在 <code>&amp;&amp;</code> 和 <code>||</code> 之间的运算符优先级</h3>
+<div class="outline-text-3" id="text-org49ff158">
 <p>
 先看以下示例代码：<br></p>
 <div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">EXPR1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">EXPR2</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">EXPR3</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">EXPR4</span><span class="p">)</span>
@@ -304,9 +304,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-orgb41e0eb" class="outline-3">
-<h3 id="orgb41e0eb">2.3 有符号整数和无符号整数之间的大小比较</h3>
-<div class="outline-text-3" id="text-orgb41e0eb">
+<div id="outline-container-orgd766265" class="outline-3">
+<h3 id="orgd766265">2.3 有符号整数和无符号整数之间的大小比较</h3>
+<div class="outline-text-3" id="text-orgd766265">
 <p>
 有符号整数和无符号整数在进行大小比较时，有符号数会被转化为无符号数。<br>
 这样会引起一些不必要误解，所以应该避免这种用法。<br>
@@ -331,9 +331,9 @@ int printf(const char* format, ...">
 </div>
 </div>
 
-<div id="outline-container-org9a0ea96" class="outline-3">
-<h3 id="org9a0ea96">2.4 函数的重载和覆盖</h3>
-<div class="outline-text-3" id="text-org9a0ea96">
+<div id="outline-container-org6d87068" class="outline-3">
+<h3 id="org6d87068">2.4 函数的重载和覆盖</h3>
+<div class="outline-text-3" id="text-org6d87068">
 <p>
 在进行虚函数多态实现时，注意检查函数的一致性。<br>
 出现相同函数名称但是积累为非 <code>const</code> 版本，而派生类为 <code>const</code> 时，这时并不会导致多态，而会导致基类函数被隐藏。<br></p>
@@ -362,7 +362,7 @@ int printf(const char* format, ...">
     </li>
   </ul>
 <section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
-      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <p class="comment-lazy-hint">评论由 Disqus 提供</p>
       <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
     </div>
     <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>

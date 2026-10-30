@@ -174,22 +174,193 @@
 <div class="home">
   <ul class="post-list">
 <li>
+    <span class="post-meta">Aug 16, 2018</span>
+    <h3>
+      <a class="post-link" href="/blog/posts/algorithm/algorithm-weekly-zigzag-conversion/">每周算法：字符串锯齿变换</a>
+    </h3>
+
+    <div id="outline-container-orgc255a17" class="outline-2">
+<h2 id="orgc255a17">Description</h2>
+<div class="outline-text-2" id="text-orgc255a17">
+<p>
+The string "PAYPALISHIRING" is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)<br></p>
+
+<div class="highlight"><pre><span></span>P   A   H   N
+A P L S I I G
+Y   I   R
+</pre></div>
+
+<p>
+And then read line by line: "PAHNAPLSIIGYIR"<br>
+Write the code that will take a string and make this conversion given a number of rows:<br>
+string convert(string s, int numRows);<br></p>
+
+<p>
+<b>Example 1:</b><br>
+Input: s = "PAYPALISHIRING", numRows = 3<br>
+Output: "PAHNAPLSIIGYIR"<br></p>
+
+<p>
+<b>Example 2:</b><br>
+Input: s = "PAYPALISHIRING", numRows = 4<br>
+Output: "PINALSIGYAHRPI"<br>
+Explanation:<br></p>
+<div class="highlight"><pre><span></span>P     I    N
+A   L S  I G
+Y A   H R
+P     I
+</pre></div>
+
+<p>
+来源： <a href="https://leetcode.com/problems/zigzag-conversion/description/">LeetCode 06 ZigZag Conversion</a><br></p>
+</div>
+</div>
+
+<div id="outline-container-org3da78a4" class="outline-2">
+<h2 id="org3da78a4">Solution</h2>
+<div class="outline-text-2" id="text-org3da78a4">
+</div>
+<div id="outline-container-org1695580" class="outline-3">
+<h3 id="org1695580">Approach 1 找规律</h3>
+<div class="outline-text-3" id="text-org1695580">
+<p>
+我想到的第一个方法就是找规律，通过寻找每一行的变化规律，编写相应的计算逻辑。<br>
+需要注意:<br></p>
+<ul class="org-ul">
+<li>有符号数和无符号数的比较，这个是非常容易出错的，不要在有符号和无符号数之间进行比较。<br>
+</li>
+<li>特殊情况，也就是只有一行的情况，这个情况不需要进行转换，直接返回原字符串就好。<br>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="n">string</span><span class="w"> </span><span class="nf">convert</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">numRows</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">len</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">length</span><span class="p">();</span>
+<span class="w">    </span><span class="n">assert</span><span class="p">(</span><span class="n">numRows</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="o">*</span><span class="n">numRows</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">base</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// 第一行和最后一行需要进行特殊处理</span>
+
+<span class="w">    </span><span class="c1">// 第一行</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="n">ans</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="p">];</span>
+<span class="w">	</span><span class="o">++</span><span class="n">i</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// 中间行</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">&lt;</span><span class="n">numRows</span><span class="mi">-1</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">	</span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">	    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="mi">0</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		</span><span class="n">ans</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="o">-</span><span class="n">j</span><span class="p">];</span>
+<span class="w">	    </span><span class="p">}</span>
+
+<span class="w">	    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">		</span><span class="n">ans</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="p">];</span><span class="w">                </span>
+<span class="w">	    </span><span class="p">}</span>
+
+<span class="w">	    </span><span class="o">++</span><span class="n">i</span><span class="p">;</span>
+<span class="w">	</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// 最后一行</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">lastStart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numRows</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">lastStart</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="n">ans</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">lastStart</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">base</span><span class="o">*</span><span class="n">i</span><span class="p">];</span>
+<span class="w">	</span><span class="o">++</span><span class="n">i</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+
+<div id="outline-container-orgc3e5b01" class="outline-3">
+<h3 id="orgc3e5b01">Approach 2 Sort by Row</h3>
+<div class="outline-text-3" id="text-orgc3e5b01">
+<p>
+这个方法是leetcode提供的一个方法，主要思路是使用一个二维矩阵将字符串按照顺序存储起来，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(n)</code> 。<br></p>
+
+<div class="highlight"><pre><span></span><span class="n">string</span><span class="w"> </span><span class="nf">convert</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">numRows</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">numRows</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">rows</span><span class="p">(</span><span class="n">min</span><span class="p">(</span><span class="n">numRows</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">())));</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">curRow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">goingDown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="n">rows</span><span class="p">[</span><span class="n">curRow</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">curRow</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">curRow</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">numRows</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	    </span><span class="n">goingDown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="n">goingDown</span><span class="p">;</span>
+<span class="w">	</span><span class="p">}</span>
+
+<span class="w">	</span><span class="n">curRow</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">goingDown</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">rows</span><span class="p">)</span><span class="w"> </span><span class="n">ret</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">row</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+
+<div id="outline-container-orgf774d66" class="outline-3">
+<h3 id="orgf774d66">Approach 3 Visit by Row</h3>
+<div class="outline-text-3" id="text-orgf774d66">
+<p>
+这个方法是leetcode提供的另一个方法，通过计算下标完成字符串的转换，实际上也是对转换的规律进行了总结，时间复杂度为 <code>O(n)</code> ，空间复杂度为 <code>O(1)</code> 。<br>
+对于空间复杂度，实际上需要额外的空间存储结果字符串，如果忽略函数所返回的结果字符串，则空间复杂度为 <code>O(1)</code> 。<br></p>
+<div class="highlight"><pre><span></span><span class="n">string</span><span class="w"> </span><span class="nf">convert</span><span class="p">(</span><span class="n">string</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">numRows</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">numRows</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">string</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cycleLen</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">numRows</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">numRows</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">cycleLen</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	    </span><span class="n">ret</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">];</span>
+<span class="w">	    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">numRows</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cycleLen</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="w">		</span><span class="n">ret</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cycleLen</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">i</span><span class="p">];</span>
+<span class="w">	</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+  </li>
+
+
+  <li>
     <span class="post-meta">Aug 14, 2018</span>
     <h3>
       <a class="post-link" href="/blog/posts/2018/css-flexbox-layout-cheatsheet/">css flexbox 总结</a>
     </h3>
 
-    <div id="outline-container-orge3c917f" class="outline-2">
-<h2 id="orge3c917f">引言</h2>
-<div class="outline-text-2" id="text-orge3c917f">
+    <div id="outline-container-orgbb8242f" class="outline-2">
+<h2 id="orgbb8242f">引言</h2>
+<div class="outline-text-2" id="text-orgbb8242f">
 <p>
 本文主要对css flexbox的关键点了总结，方便以后在以后的查阅。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org257fc97" class="outline-2">
-<h2 id="org257fc97">容器的属性</h2>
-<div class="outline-text-2" id="text-org257fc97">
+<div id="outline-container-orgf035f4e" class="outline-2">
+<h2 id="orgf035f4e">容器的属性</h2>
+<div class="outline-text-2" id="text-orgf035f4e">
 <p>
 对于容器需要指定其显示方式为flexbox<br></p>
 <div class="highlight"><pre><span></span><span class="nt">display</span><span class="o">:</span><span class="w"> </span><span class="nt">flex</span><span class="o">;</span>
@@ -221,9 +392,9 @@
 </div>
 </div>
 
-<div id="outline-container-org4e17cf2" class="outline-2">
-<h2 id="org4e17cf2">条目的属性</h2>
-<div class="outline-text-2" id="text-org4e17cf2">
+<div id="outline-container-org46f0cea" class="outline-2">
+<h2 id="org46f0cea">条目的属性</h2>
+<div class="outline-text-2" id="text-org46f0cea">
 <p>
 用于调整顺序<br></p>
 <div class="highlight"><pre><span></span><span class="nt">order</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nt">integer</span><span class="o">&gt;;</span><span class="w"> </span><span class="c">/* default 0 */</span>
@@ -257,9 +428,9 @@
 </div>
 
 
-<div id="outline-container-org3e95681" class="outline-2">
-<h2 id="org3e95681">参考资料</h2>
-<div class="outline-text-2" id="text-org3e95681">
+<div id="outline-container-org0339225" class="outline-2">
+<h2 id="org0339225">参考资料</h2>
+<div class="outline-text-2" id="text-org0339225">
 <ul class="org-ul">
 <li>
 <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">css-tricks.com</a><br>
@@ -309,9 +480,9 @@
       <a class="post-link" href="/blog/posts/algorithm/algorithm-weekly-longest-palindromic-substring/">每周算法：最长对称子串</a>
     </h3>
 
-    <div id="outline-container-org52b937c" class="outline-2">
-<h2 id="org52b937c">Description</h2>
-<div class="outline-text-2" id="text-org52b937c">
+    <div id="outline-container-orgfdc6e1c" class="outline-2">
+<h2 id="orgfdc6e1c">Description</h2>
+<div class="outline-text-2" id="text-orgfdc6e1c">
 <p>
 Given a string s, find the longest palindromic substring in s. You may assume that the maximum length of s is 1000.<br></p>
 
@@ -331,16 +502,16 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgd2ae66e" class="outline-2">
-<h2 id="orgd2ae66e">Solution</h2>
-<div class="outline-text-2" id="text-orgd2ae66e">
+<div id="outline-container-orgdb58307" class="outline-2">
+<h2 id="orgdb58307">Solution</h2>
+<div class="outline-text-2" id="text-orgdb58307">
 <p>
 我想到了两种方法：暴力解法、从中心展开<br></p>
 </div>
 
-<div id="outline-container-orgd228d77" class="outline-3">
-<h3 id="orgd228d77">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-orgd228d77">
+<div id="outline-container-orgb539f70" class="outline-3">
+<h3 id="orgb539f70">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-orgb539f70">
 <p>
 暴击解法的时间复杂度为 <code>O(n3)</code> , 找出所有子串的时间复杂度为 <code>O(n2)</code> , 判断一个子串的时间复杂度为 <code>O(n)</code> ; 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -395,9 +566,9 @@ Output: "bb"<br></p>
 </div>
 </div>
 
-<div id="outline-container-org635530d" class="outline-3">
-<h3 id="org635530d">Approach 2 从中心展开</h3>
-<div class="outline-text-3" id="text-org635530d">
+<div id="outline-container-orgbbfea6e" class="outline-3">
+<h3 id="orgbbfea6e">Approach 2 从中心展开</h3>
+<div class="outline-text-3" id="text-orgbbfea6e">
 <p>
 从中心展开方法的时间复杂度为 <code>O(n2)</code> , 空间复杂度为 <code>O(1)</code> 。<br></p>
 
@@ -471,9 +642,9 @@ leetcode上还有一个解法，使用java完成的，它的坐标计算也很�
 </div>
 </div>
 
-<div id="outline-container-org185b454" class="outline-3">
-<h3 id="org185b454">Approach 3 动态规划（dynamic programming）</h3>
-<div class="outline-text-3" id="text-org185b454">
+<div id="outline-container-org62b00db" class="outline-3">
+<h3 id="org62b00db">Approach 3 动态规划（dynamic programming）</h3>
+<div class="outline-text-3" id="text-org62b00db">
 <p>
 leetcode上还给给出了使用DP解决这个问题的方法。<br>
 我在leetcode上的discuss上找了个java写的解法。<br></p>
@@ -503,9 +674,9 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
 </div>
 </div>
 
-<div id="outline-container-org2ed3579" class="outline-3">
-<h3 id="org2ed3579">Approach 4 Manacher算法</h3>
-<div class="outline-text-3" id="text-org2ed3579">
+<div id="outline-container-org2472684" class="outline-3">
+<h3 id="org2472684">Approach 4 Manacher算法</h3>
+<div class="outline-text-3" id="text-org2472684">
 <p>
 这个算法思路实在是新奇，感兴趣的同学可以 <a href="https://articles.leetcode.com/longest-palindromic-substring-part-ii/">去看看</a> 。<br></p>
 </div>
@@ -521,9 +692,9 @@ leetcode上还给给出了使用DP解决这个问题的方法。<br>
       <a class="post-link" href="/blog/posts/algorithm/algorithm-weekly-longest-substring-without-repeating-characters/">每周算法：最长不含重复字符的子串</a>
     </h3>
 
-    <div id="outline-container-orgbab244f" class="outline-2">
-<h2 id="orgbab244f">Description</h2>
-<div class="outline-text-2" id="text-orgbab244f">
+    <div id="outline-container-orgcaea08f" class="outline-2">
+<h2 id="orgcaea08f">Description</h2>
+<div class="outline-text-2" id="text-orgcaea08f">
 <p>
 Given a string, find the length of the longest substring without repeating characters.<br></p>
 
@@ -538,16 +709,16 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 </div>
 
-<div id="outline-container-orgf507105" class="outline-2">
-<h2 id="orgf507105">Solution</h2>
-<div class="outline-text-2" id="text-orgf507105">
+<div id="outline-container-org65e07e8" class="outline-2">
+<h2 id="org65e07e8">Solution</h2>
+<div class="outline-text-2" id="text-org65e07e8">
 <p>
 好久没刷算法题了，手有点生，没有什么思路，下面的答案是看过提示之后才写出来的。<br></p>
 </div>
 
-<div id="outline-container-org353db02" class="outline-3">
-<h3 id="org353db02">Approach 1 暴力解法</h3>
-<div class="outline-text-3" id="text-org353db02">
+<div id="outline-container-org4317401" class="outline-3">
+<h3 id="org4317401">Approach 1 暴力解法</h3>
+<div class="outline-text-3" id="text-org4317401">
 <p>
 将所有的子串都穷举出来，并对它们进行判断，就能够得到最长子串的长度。这个算法很显然需要耗费很长时间。<br>
 需要注意的是： C++20中才支持 <code>std::set::contains</code> 这个接口（根据cppreference.com）。<br></p>
@@ -592,9 +763,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-orga0b5b74" class="outline-3">
-<h3 id="orga0b5b74">Approach 2 滑动窗口</h3>
-<div class="outline-text-3" id="text-orga0b5b74">
+<div id="outline-container-org569ebd6" class="outline-3">
+<h3 id="org569ebd6">Approach 2 滑动窗口</h3>
+<div class="outline-text-3" id="text-org569ebd6">
 <p>
 滑动窗口的概念在字符串处理问题中十分常用，保持子串的左端点不动，不断拓展右侧端点，就能穷举出所有满足条件的子串。<br>
 需要注意的是这句话： <code>lengthMax = max(lengthMax, int(j-i+1));</code><br></p>
@@ -637,9 +808,9 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
 </div>
 
 
-<div id="outline-container-org82e9b3b" class="outline-3">
-<h3 id="org82e9b3b">Approach 3 优化的滑动窗口</h3>
-<div class="outline-text-3" id="text-org82e9b3b">
+<div id="outline-container-org3ff3038" class="outline-3">
+<h3 id="org3ff3038">Approach 3 优化的滑动窗口</h3>
+<div class="outline-text-3" id="text-org3ff3038">
 <p>
 使用 <code>map</code> 对字母出现的位置进行记录，这样在出现相同字母时，就能够从上一次出现的位置向后开始寻找。<br>
 需要注意句话 <code>it-&gt;second+1&gt;=i</code> , 需要对位置加1后再比较，这样才能保证 <code>i</code> 的坐标计算正确。<br></p>
@@ -684,8 +855,8 @@ Given "pwwkew", the answer is "wke", with the length of 3. Note that the answer 
       <a class="post-link" href="/blog/posts/2018/navigation-and-selection-effectively-in-emacs/">提高emacs中浏览和选择操作效率的技巧</a>
     </h3>
 
-    <div id="outline-container-org01c7c93" class="outline-2">
-<h2 id="org01c7c93">
+    <div id="outline-container-org4edb033" class="outline-2">
+<h2 id="org4edb033">
 <span class="section-number-2">1</span> 引言</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -700,8 +871,8 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-org29fbef2" class="outline-2">
-<h2 id="org29fbef2">
+<div id="outline-container-org9fb3598" class="outline-2">
+<h2 id="org9fb3598">
 <span class="section-number-2">2</span> <code>point</code> 、 <code>mark</code> 和 <code>region</code> 的概念</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -713,13 +884,13 @@ Gaurab Paul的 <a href="https://lorefnon.tech/2018/07/14/getting-productive-with
 </div>
 
 
-<div id="outline-container-org5e164c1" class="outline-2">
-<h2 id="org5e164c1">
+<div id="outline-container-org1fa2f16" class="outline-2">
+<h2 id="org1fa2f16">
 <span class="section-number-2">3</span> <code>region</code> 操作技巧</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-org604d17e" class="outline-3">
-<h3 id="org604d17e">
+<div id="outline-container-org3f445f2" class="outline-3">
+<h3 id="org3f445f2">
 <span class="section-number-3">3.1</span> 调整 <code>region</code> 的大小</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
@@ -764,8 +935,8 @@ Point and mark interchanged
 </div>
 </div>
 
-<div id="outline-container-orgd076cd0" class="outline-3">
-<h3 id="orgd076cd0">
+<div id="outline-container-org602e16b" class="outline-3">
+<h3 id="org602e16b">
 <span class="section-number-3">3.2</span> 使用 <code>region</code> 进行重复性输入</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
@@ -803,8 +974,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org3075c58" class="outline-3">
-<h3 id="org3075c58">
+<div id="outline-container-org4864fa1" class="outline-3">
+<h3 id="org4864fa1">
 <span class="section-number-3">3.3</span> 框选一个矩形的 <code>region</code>
 </h3>
 <div class="outline-text-3" id="text-3-3">
@@ -818,16 +989,16 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-orgde3a7e6" class="outline-2">
-<h2 id="orgde3a7e6">
+<div id="outline-container-org6f67d79" class="outline-2">
+<h2 id="org6f67d79">
 <span class="section-number-2">4</span> 其他插件支持</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 有些插件拓展能够实现光标的快速定位，如 <a href="https://github.com/ShingoFukuyama/helm-swoop">helm-swoop</a> 和 <a href="https://github.com/abo-abo/avy">avy</a> 。<br></p>
 </div>
 
-<div id="outline-container-org4e3afc9" class="outline-3">
-<h3 id="org4e3afc9">
+<div id="outline-container-orgcb9b447" class="outline-3">
+<h3 id="orgcb9b447">
 <span class="section-number-3">4.1</span> helm swoop</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
@@ -841,8 +1012,8 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org72a1f6c" class="outline-3">
-<h3 id="org72a1f6c">
+<div id="outline-container-orgeca6971" class="outline-3">
+<h3 id="orgeca6971">
 <span class="section-number-3">4.2</span> avy</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
@@ -858,8 +1029,8 @@ interface FooProps {}
 </div>
 
 
-<div id="outline-container-org89fc288" class="outline-2">
-<h2 id="org89fc288">
+<div id="outline-container-org84abaec" class="outline-2">
+<h2 id="org84abaec">
 <span class="section-number-2">5</span> 参考资料</h2>
 <div class="outline-text-2" id="text-5">
 <ul class="org-ul">
@@ -885,17 +1056,17 @@ interface FooProps {}
       <a class="post-link" href="/blog/posts/2018/shell-output-redirections/">shell的输出重定向</a>
     </h3>
 
-    <div id="outline-container-orgd4221c3" class="outline-2">
-<h2 id="orgd4221c3">引言</h2>
-<div class="outline-text-2" id="text-orgd4221c3">
+    <div id="outline-container-org28f9079" class="outline-2">
+<h2 id="org28f9079">引言</h2>
+<div class="outline-text-2" id="text-org28f9079">
 <p>
 在linux中借助shell等命令行工具能够很方便地与操作系统交互，可以在shell中将命令或程序的输入结果重定向到特定地方，很方便地实现一些功能。这个技巧十分实用，使用输出重定向能够极大地简化我们的日常操作。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org4ad58a4" class="outline-2">
-<h2 id="org4ad58a4">使用尖括号完成重定向</h2>
-<div class="outline-text-2" id="text-org4ad58a4">
+<div id="outline-container-org72a7131" class="outline-2">
+<h2 id="org72a7131">使用尖括号完成重定向</h2>
+<div class="outline-text-2" id="text-org72a7131">
 <p>
 示例如下，运行下面的命令能够把 <code>ls</code> 命令的运行结果写入到 <code>ls-output.txt</code> 中。使用 <code>&gt;</code> 会把程序运行时本该输出到 <code>stdout</code> 的内容重定向到指定名称的文件中。<br></p>
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span>&gt;<span class="w"> </span>ls-output.txt
@@ -904,25 +1075,25 @@ interface FooProps {}
 可以在 <code>&gt;</code> 左面写上数字和 <code>&amp;</code> ，用以标识在重定向时的特殊用法。下面会给出一些特殊用法的实例。<br></p>
 </div>
 
-<div id="outline-container-org09e7dd2" class="outline-3">
-<h3 id="org09e7dd2">重定向 <code>stdout</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org09e7dd2">
+<div id="outline-container-orgd63788a" class="outline-3">
+<h3 id="orgd63788a">重定向 <code>stdout</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-orgd63788a">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">1</span>&gt;<span class="w"> </span>ls-output.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-org98c62b7" class="outline-3">
-<h3 id="org98c62b7">重定向 <code>stderr</code> 到指定文件中</h3>
-<div class="outline-text-3" id="text-org98c62b7">
+<div id="outline-container-org7b9499e" class="outline-3">
+<h3 id="org7b9499e">重定向 <code>stderr</code> 到指定文件中</h3>
+<div class="outline-text-3" id="text-org7b9499e">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">2</span>&gt;<span class="w"> </span>ls-error.txt
 </pre></div>
 </div>
 </div>
 
-<div id="outline-container-orgbbfa1cb" class="outline-3">
-<h3 id="orgbbfa1cb">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
-<div class="outline-text-3" id="text-orgbbfa1cb">
+<div id="outline-container-org684e2e9" class="outline-3">
+<h3 id="org684e2e9">将 <code>stdout</code> 和 <code>stdout</code> 合并再重定向到指定文件中</h3>
+<div class="outline-text-3" id="text-org684e2e9">
 <div class="highlight"><pre><span></span>ls<span class="w"> </span>.<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span>ls-output-and-error.txt
 </pre></div>
 <p>
@@ -932,9 +1103,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org446d325" class="outline-3">
-<h3 id="org446d325">将程序的输出丢掉</h3>
-<div class="outline-text-3" id="text-org446d325">
+<div id="outline-container-orgcd19c90" class="outline-3">
+<h3 id="orgcd19c90">将程序的输出丢掉</h3>
+<div class="outline-text-3" id="text-orgcd19c90">
 <p>
 可以将输出重定向到一个特殊的文件 <code>/dev/null</code> ，所有写入到这个文件的内容都会被丢弃掉。<br></p>
 <div class="highlight"><pre><span></span>program<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
@@ -942,9 +1113,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-org1a30454" class="outline-3">
-<h3 id="org1a30454">将输出追加到指定文件尾部</h3>
-<div class="outline-text-3" id="text-org1a30454">
+<div id="outline-container-org509ab90" class="outline-3">
+<h3 id="org509ab90">将输出追加到指定文件尾部</h3>
+<div class="outline-text-3" id="text-org509ab90">
 <p>
 使用一个尖括号（ <code>&gt;</code> ）能够将输出重定向到文件中，在写入文件时会覆盖掉其中的内容。如果想保留文件中的原始内容，则可以用两个尖括号（ <code>&gt;&gt;</code> ），这样就能将输出追加到文件的尾部。示例代码如下：<br></p>
 <div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="nb">test</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>file-output.txt
@@ -953,9 +1124,9 @@ interface FooProps {}
 </div>
 </div>
 
-<div id="outline-container-orgee62497" class="outline-2">
-<h2 id="orgee62497">使用管道完成重定向</h2>
-<div class="outline-text-2" id="text-orgee62497">
+<div id="outline-container-org79e9577" class="outline-2">
+<h2 id="org79e9577">使用管道完成重定向</h2>
+<div class="outline-text-2" id="text-org79e9577">
 <p>
 使用管道符号 <code>|</code> 能够将一个程序的输出重定向到另一个程序的输入中去。下面的命令会将 <code>ls</code> 的输出（ <code>stdout</code> ）重定向到 <code>grep</code> 的输入（ <code>stdin</code> ）中去。管道命令在linux中是最常见的用法。<br></p>
 <div class="highlight"><pre><span></span>ls<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>&lt;pattern&gt;
@@ -972,9 +1143,9 @@ interface FooProps {}
       <a class="post-link" href="/blog/posts/2018/notes-on-libshmcache/">libshmcache源码阅读笔记</a>
     </h3>
 
-    <div id="outline-container-org4eee6d2" class="outline-2">
-<h2 id="org4eee6d2">引言</h2>
-<div class="outline-text-2" id="text-org4eee6d2">
+    <div id="outline-container-orgcd7a5cd" class="outline-2">
+<h2 id="orgcd7a5cd">引言</h2>
+<div class="outline-text-2" id="text-orgcd7a5cd">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -999,9 +1170,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org28ddfc6" class="outline-2">
-<h2 id="org28ddfc6">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-org28ddfc6">
+<div id="outline-container-org0d54bd4" class="outline-2">
+<h2 id="org0d54bd4">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-org0d54bd4">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -1045,9 +1216,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org0bff9e6" class="outline-2">
-<h2 id="org0bff9e6">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-org0bff9e6">
+<div id="outline-container-org616e8a6" class="outline-2">
+<h2 id="org616e8a6">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-org616e8a6">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -1056,18 +1227,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orgeba128e" class="outline-2">
-<h2 id="orgeba128e">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-orgeba128e">
+<div id="outline-container-orgfecb76d" class="outline-2">
+<h2 id="orgfecb76d">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-orgfecb76d">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org3d2207a" class="outline-2">
-<h2 id="org3d2207a">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-org3d2207a">
+<div id="outline-container-org76a2c13" class="outline-2">
+<h2 id="org76a2c13">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org76a2c13">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -1076,9 +1247,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orgfb5bb12" class="outline-2">
-<h2 id="orgfb5bb12">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-orgfb5bb12">
+<div id="outline-container-orgcfea97c" class="outline-2">
+<h2 id="orgcfea97c">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-orgcfea97c">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
@@ -1093,9 +1264,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
       <a class="post-link" href="/blog/posts/2018/cpp-bit-field/">C/C++中的位域</a>
     </h3>
 
-    <div id="outline-container-orgc9ce0f0" class="outline-2">
-<h2 id="orgc9ce0f0">什么是位域</h2>
-<div class="outline-text-2" id="text-orgc9ce0f0">
+    <div id="outline-container-orgab9876e" class="outline-2">
+<h2 id="orgab9876e">什么是位域</h2>
+<div class="outline-text-2" id="text-orgab9876e">
 <p>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">维基百科</a> 给出了以下解释<br></p>
 <blockquote>
@@ -1124,9 +1295,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgd5a402b" class="outline-2">
-<h2 id="orgd5a402b">位域的语法</h2>
-<div class="outline-text-2" id="text-orgd5a402b">
+<div id="outline-container-orgfaa704d" class="outline-2">
+<h2 id="orgfaa704d">位域的语法</h2>
+<div class="outline-text-2" id="text-orgfaa704d">
 <p>
 下面就是位域的语法格式。<br></p>
 <div class="highlight"><pre><span></span><span class="n">identifier</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="n">attr</span><span class="p">(</span><span class="n">optional</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">size</span>
@@ -1173,9 +1344,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgd81d872" class="outline-3">
-<h3 id="orgd81d872">在 <code>size</code> 取0时如何理解</h3>
-<div class="outline-text-3" id="text-orgd81d872">
+<div id="outline-container-orgc401f0d" class="outline-3">
+<h3 id="orgc401f0d">在 <code>size</code> 取0时如何理解</h3>
+<div class="outline-text-3" id="text-orgc401f0d">
 <p>
 对于 <code>size</code> 取0时的各种情况进行了尝试，详细用例如下。思路是使用联合体能比较方便地将内存分布表示出来。<br>
 如下所示，定义了如下几种情况。<br></p>
@@ -1260,10 +1431,10 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgcf6bb7d" class="outline-3">
-<h3 id="orgcf6bb7d">
+<div id="outline-container-orgb3a442a" class="outline-3">
+<h3 id="orgb3a442a">
 <code>struct</code> 与 <code>class</code> 关键字</h3>
-<div class="outline-text-3" id="text-orgcf6bb7d">
+<div class="outline-text-3" id="text-orgb3a442a">
 <p>
 多数例子都是以 <code>struct</code> 作为位域的组织标识，在C++中能否使用 <code>class</code> 作为位域的标识符呢？<br>
 经过测试，是可以使用 <code>class</code> 关键字的，但是需要注意 <code>class</code> 的默认访问控制属性为 <code>private</code> 。<br></p>
@@ -1272,9 +1443,9 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-orgab0062e" class="outline-2">
-<h2 id="orgab0062e">位域的常见应用场景</h2>
-<div class="outline-text-2" id="text-orgab0062e">
+<div id="outline-container-org2316957" class="outline-2">
+<h2 id="org2316957">位域的常见应用场景</h2>
+<div class="outline-text-2" id="text-org2316957">
 <p>
 为什么要使用位域？位域适合那些情况？<br></p>
 
@@ -1287,18 +1458,18 @@ Declares a class data member with explicit size, in bits. Adjacent bit field mem
 </div>
 
 
-<div id="outline-container-org3c095dc" class="outline-2">
-<h2 id="org3c095dc">C++中的位操作接口</h2>
-<div class="outline-text-2" id="text-org3c095dc">
+<div id="outline-container-org859e0ed" class="outline-2">
+<h2 id="org859e0ed">C++中的位操作接口</h2>
+<div class="outline-text-2" id="text-org859e0ed">
 <p>
 C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接口提供了指定比特位数据的操作接口。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org0fb8d3e" class="outline-2">
-<h2 id="org0fb8d3e">参考资料</h2>
-<div class="outline-text-2" id="text-org0fb8d3e">
+<div id="outline-container-org1be22fc" class="outline-2">
+<h2 id="org1be22fc">参考资料</h2>
+<div class="outline-text-2" id="text-org1be22fc">
 <ul class="org-ul">
 <li>
 <a href="https://zh.wikipedia.org/wiki/%E4%BD%8D%E6%AE%B5">wikipedia - bit field</a><br>
@@ -1330,8 +1501,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
       <a class="post-link" href="/blog/posts/2018/gcc-built-in-functions-for-atomic-memory-access/">GCC的内存原子化操作函数接口</a>
     </h3>
 
-    <div id="outline-container-org72c885b" class="outline-2">
-<h2 id="org72c885b">
+    <div id="outline-container-org3004e40" class="outline-2">
+<h2 id="org3004e40">
 <span class="section-number-2">1</span> 原子化操作</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -1361,8 +1532,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
       <a class="post-link" href="/blog/posts/2018/asynchronous-synchronous-and-blocking-unblocking/">同步和异步、阻塞和非阻塞</a>
     </h3>
 
-    <div id="outline-container-org14afeca" class="outline-2">
-<h2 id="org14afeca">
+    <div id="outline-container-orgbfab095" class="outline-2">
+<h2 id="orgbfab095">
 <span class="section-number-2">1</span> 同步和异步</h2>
 <div class="outline-text-2" id="text-1">
 <p>
@@ -1378,8 +1549,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 异步模型常用的函数接口： <code>aio_write</code> , <code>aio_read</code><br></p>
 </div>
 
-<div id="outline-container-org92db8f7" class="outline-3">
-<h3 id="org92db8f7">
+<div id="outline-container-orgd5dde13" class="outline-3">
+<h3 id="orgd5dde13">
 <span class="section-number-3">1.1</span> POSIX AIO</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
@@ -1411,8 +1582,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-orgbc83681" class="outline-3">
-<h3 id="orgbc83681">
+<div id="outline-container-org9a64f30" class="outline-3">
+<h3 id="org9a64f30">
 <span class="section-number-3">1.2</span> Linux AIO</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
@@ -1451,8 +1622,8 @@ C++中也提供了一套位操作的接口 <code>std::bitset</code> ，这套接
 </div>
 </div>
 
-<div id="outline-container-org469b7b2" class="outline-3">
-<h3 id="org469b7b2">
+<div id="outline-container-orga516619" class="outline-3">
+<h3 id="orga516619">
 <span class="section-number-3">1.3</span> POSIX AIO与Linux AIO的区别</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
@@ -1482,8 +1653,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 </div>
 
-<div id="outline-container-orgb18836c" class="outline-2">
-<h2 id="orgb18836c">
+<div id="outline-container-org6ed976a" class="outline-2">
+<h2 id="org6ed976a">
 <span class="section-number-2">2</span> 阻塞和非阻塞</h2>
 <div class="outline-text-2" id="text-2">
 <p>
@@ -1494,8 +1665,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-org7f4aea3" class="outline-2">
-<h2 id="org7f4aea3">
+<div id="outline-container-orgcffda63" class="outline-2">
+<h2 id="orgcffda63">
 <span class="section-number-2">3</span> 如何理解阻塞非阻塞与同步异步的区别</h2>
 <div class="outline-text-2" id="text-3">
 <p>
@@ -1505,8 +1676,8 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </div>
 
 
-<div id="outline-container-orgec622b8" class="outline-2">
-<h2 id="orgec622b8">
+<div id="outline-container-orge3b51a6" class="outline-2">
+<h2 id="orge3b51a6">
 <span class="section-number-2">4</span> 参考资料</h2>
 <div class="outline-text-2" id="text-4">
 <ul class="org-ul">
@@ -1518,137 +1689,6 @@ Linux AIO是内核提供的AIO函数接口，I/O操作请求的队列在内核�
 </li>
 <li>
 <a href="https://www.ibm.com/developerworks/linux/library/l-async/index.html">ibm developerworks</a><br>
-</li>
-</ul>
-</div>
-</div>
-
-  </li>
-
-
-  <li>
-    <span class="post-meta">Jun 20, 2018</span>
-    <h3>
-      <a class="post-link" href="/blog/posts/2018/check-system-information-on-linux/">查看Linux系统的相关信息</a>
-    </h3>
-
-    <p>
-查看Linux系统相关信息有助于排查和解决软件和硬件的兼容性问题。系统信息包括硬件信息和软件信息，硬件信息主要有CPU信息、内存信息、PCI信息、USB信息、硬盘信息等等。软件信息主要有系统版本、分区使用状态等等。本文主要介绍了获取当前Linux系统信息的命令。<br></p>
-
-<div id="outline-container-org3d88f3a" class="outline-2">
-<h2 id="org3d88f3a">查看系统相关信息</h2>
-<div class="outline-text-2" id="text-org3d88f3a">
-<p>
-<code>uname</code> 指令提供了查询系统信息的功能，使用该命令能够快速获取操作系统信息概览。<br></p>
-
-<p>
-查看内核名称<br></p>
-<div class="highlight"><pre><span></span>uname -s
-</pre></div>
-
-<p>
-查看处理器类型<br></p>
-<div class="highlight"><pre><span></span>uname -p
-</pre></div>
-
-<p>
-查看硬件架构<br></p>
-<div class="highlight"><pre><span></span>uname -i
-</pre></div>
-
-<p>
-查看内核版本<br></p>
-<div class="highlight"><pre><span></span>uname -r
-</pre></div>
-
-<p>
-查看所有系统信息<br></p>
-<div class="highlight"><pre><span></span>uname -a
-</pre></div>
-
-<p>
-查看操作系统信息（发行版信息）<br></p>
-<div class="highlight"><pre><span></span>cat /etc/os-release
-cat /proc/version
-lsb_release -a
-hostnamectl
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org9784c08" class="outline-2">
-<h2 id="org9784c08">查看CPU相关信息</h2>
-<div class="outline-text-2" id="text-org9784c08">
-<p>
-<code>lscpu</code> 指令能够查看当前系统中CPU的详细信息，包括型号、主频、构架、大小端等信息。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org7c239c3" class="outline-2">
-<h2 id="org7c239c3">查看硬盘相关信息</h2>
-<div class="outline-text-2" id="text-org7c239c3">
-<p>
-<code>lsblk</code> 指令能够查看块设备（block device）的详细信息，块设备主要指系统中的存储设备如硬盘和闪存。<br></p>
-</div>
-</div>
-
-<div id="outline-container-orgf59dd92" class="outline-2">
-<h2 id="orgf59dd92">查看PCI设备的相关信息</h2>
-<div class="outline-text-2" id="text-orgf59dd92">
-<p>
-<code>lspci</code> 指令能够查看PCI设备的信息，PCI设备包括USB、显卡、串口、网卡等其他外围设备。<br></p>
-
-<p>
-输出树形结果<br></p>
-<div class="highlight"><pre><span></span>lspci -t
-</pre></div>
-
-<p>
-输出详细信息<br></p>
-<div class="highlight"><pre><span></span>lspci -v
-lspci -vv
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org9097627" class="outline-2">
-<h2 id="org9097627">查看USB设备的相关信息</h2>
-<div class="outline-text-2" id="text-org9097627">
-<p>
-<code>lsusb</code> 指令能够查看USBS设备的信息。<br></p>
-</div>
-</div>
-
-<div id="outline-container-org93ef589" class="outline-2">
-<h2 id="org93ef589">查看文件系统相关信息</h2>
-<div class="outline-text-2" id="text-org93ef589">
-<p>
-<code>fdisk</code> 命令能够查看和操作linux系统的分区表。<br></p>
-
-<p>
-查看文件系统信息<br></p>
-<div class="highlight"><pre><span></span>fdisk -l
-</pre></div>
-
-<p>
-<code>df</code> 命令能够查看分区信息和硬盘使用信息<br></p>
-
-<p>
-使输出信息更容易理解<br></p>
-<div class="highlight"><pre><span></span>df -h
-</pre></div>
-</div>
-</div>
-
-<div id="outline-container-org52b3722" class="outline-2">
-<h2 id="org52b3722">参考资料</h2>
-<div class="outline-text-2" id="text-org52b3722">
-<ul class="org-ul">
-<li>
-<a href="https://www.tecmint.com/commands-to-collect-system-and-hardware-information-in-linux/">tecmint.com</a><br>
-</li>
-<li>
-<a href="https://www.binarytides.com/linux-commands-hardware-info/">binarytides.com</a><br>
 </li>
 </ul>
 </div>

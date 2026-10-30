@@ -185,9 +185,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-orgc16b525" class="outline-2">
-<h2 id="orgc16b525">固定阈值二值化</h2>
-<div class="outline-text-2" id="text-orgc16b525">
+<div id="outline-container-orgec0bae5" class="outline-2">
+<h2 id="orgec0bae5">固定阈值二值化</h2>
+<div class="outline-text-2" id="text-orgec0bae5">
 <p>
 二值化过程就是将灰度图像转化为只有黑和白两种像素值图像的过程。<br>
 对图像中的每个像素点使用固定阈值处理，小于等于阈值的像素被赋值为0，大于阈值的像素被赋值为最大值（在8位深度图像的情况下是255）。<br></p>
@@ -249,7 +249,7 @@
 <p>
 上图从左到右、从上到下依次是灰度原图与五种类型的结果。可以看出 TRUNC 和 TOZERO 两个系列并不是真正的「二值」：TRUNC 把亮部压到 127 就停了，TOZERO 保留了亮部的原始灰度。想要纯粹的黑白图，只能用 BINARY 和 BINARY_INV。<br></p>
 
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cv2</span> <span class="k">as</span> <span class="nn">cv</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cv</span>
 
 <span class="n">gray</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="s1">'input.png'</span><span class="p">,</span> <span class="n">cv</span><span class="o">.</span><span class="n">IMREAD_GRAYSCALE</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">gray</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'image is invalid'</span>
@@ -266,9 +266,9 @@
 </div>
 </div>
 
-<div id="outline-container-org328cca8" class="outline-2">
-<h2 id="org328cca8">自适应阈值二值化</h2>
-<div class="outline-text-2" id="text-org328cca8">
+<div id="outline-container-orga0daf81" class="outline-2">
+<h2 id="orga0daf81">自适应阈值二值化</h2>
+<div class="outline-text-2" id="text-orga0daf81">
 <p>
 在图片中的各个区域的光照有变化时，就不能对整个图片使用全局阈值了。每个像素的阈值基于其周围的区域计算出来，每个像素点都有一个局部阈值。<br></p>
 
@@ -304,17 +304,17 @@ dst(x, y) = maxValue  如果 src(x, y) 大于 T(x, y)，否则为 0
 </ol>
 </div>
 
-<div id="outline-container-org84c340f" class="outline-3">
-<h3 id="org84c340f">均值</h3>
-<div class="outline-text-3" id="text-org84c340f">
+<div id="outline-container-orga42fc16" class="outline-3">
+<h3 id="orga42fc16">均值</h3>
+<div class="outline-text-3" id="text-orga42fc16">
 <p>
 均值法就是邻域内的算术平均，实现上是一个 box filter，属于可分离滤波；改成积分图也能做到与 blockSize 无关的常数复杂度。它对邻域内每个像素一视同仁，所以邻域跨越明暗交界的地方，阈值会被另一侧的像素拉偏，边缘处容易留下轻微的块状感。<br></p>
 </div>
 </div>
 
-<div id="outline-container-orgb4b9d8f" class="outline-3">
-<h3 id="orgb4b9d8f">高斯加权</h3>
-<div class="outline-text-3" id="text-orgb4b9d8f">
+<div id="outline-container-orgc6553c8" class="outline-3">
+<h3 id="orgc6553c8">高斯加权</h3>
+<div class="outline-text-3" id="text-orgc6553c8">
 <p>
 高斯加权把权重按到中心的距离衰减，越靠近中心的像素权重越大，远处的像素只提供一点参考。核的 sigma 没有暴露成参数，OpenCV 自己按 0.3 * ((blockSize - 1) * 0.5 - 1) + 0.8 算出来。也就是说 blockSize 越大，权重分布越平缓，效果越接近均值法；blockSize 越小，中心像素的话语权越大，细节保留得多，也更容易把噪声一起留下。<br></p>
 
@@ -346,16 +346,16 @@ dst(x, y) = maxValue  如果 src(x, y) 大于 T(x, y)，否则为 0
 </div>
 </div>
 
-<div id="outline-container-orga266bab" class="outline-2">
-<h2 id="orga266bab">自动确定全局阈值</h2>
-<div class="outline-text-2" id="text-orga266bab">
+<div id="outline-container-org0c3972d" class="outline-2">
+<h2 id="org0c3972d">自动确定全局阈值</h2>
+<div class="outline-text-2" id="text-org0c3972d">
 <p>
 如何确定图像二值化的全局阈值？靠直方图。先统计图片像素值的分布，再看分布的形状决定用哪种算法：双峰的用 Otsu，单峰带长尾的用三角法。<br></p>
 </div>
 
-<div id="outline-container-orgbabf682" class="outline-3">
-<h3 id="orgbabf682">Otsu</h3>
-<div class="outline-text-3" id="text-orgbabf682">
+<div id="outline-container-orgfef3214" class="outline-3">
+<h3 id="orgfef3214">Otsu</h3>
+<div class="outline-text-3" id="text-orgfef3214">
 <p>
 双峰直方图，使用 Otsu 算法确定阈值。直方图上有两个明显的峰，前景和背景各占一个，中间是一段下凹的谷，理想阈值就落在谷底附近。<br></p>
 
@@ -390,9 +390,9 @@ Otsu 的做法是把 0 到 255 每个值都当成候选阈值试一遍：对某�
 </div>
 </div>
 
-<div id="outline-container-org9e6d8ac" class="outline-3">
-<h3 id="org9e6d8ac">三角法</h3>
-<div class="outline-text-3" id="text-org9e6d8ac">
+<div id="outline-container-org06ef127" class="outline-3">
+<h3 id="org06ef127">三角法</h3>
+<div class="outline-text-3" id="text-org06ef127">
 <p>
 单峰直方图，使用三角法阈值。典型场景是背景占了绝大多数像素、前景只是一个小而亮的峰：整个直方图只有一个大峰加一条长长的尾巴，找不到「谷」，Otsu 那套双峰假设就不成立了。<br></p>
 
@@ -418,9 +418,9 @@ Otsu 的做法是把 0 到 255 每个值都当成候选阈值试一遍：对某�
 </div>
 </div>
 
-<div id="outline-container-org0af6cfe" class="outline-2">
-<h2 id="org0af6cfe">踩坑清单</h2>
-<div class="outline-text-2" id="text-org0af6cfe">
+<div id="outline-container-org772c4d6" class="outline-2">
+<h2 id="org772c4d6">踩坑清单</h2>
+<div class="outline-text-2" id="text-org772c4d6">
 <ol class="org-ol">
 <li>通道数。注意 <code>cv.threshold</code> 可以直接吃多通道图，会逐通道处理；但 <code>cv.adaptiveThreshold</code> 只接受 8 位单通道，传彩色图直接抛异常。养成先 <code>cv.cvtColor</code> 转灰度再处理的习惯，能省掉一半的调试时间。<br>
 </li>
@@ -442,9 +442,9 @@ Otsu 的做法是把 0 到 255 每个值都当成候选阈值试一遍：对某�
 </div>
 </div>
 
-<div id="outline-container-org09dd226" class="outline-2">
-<h2 id="org09dd226">参考链接</h2>
-<div class="outline-text-2" id="text-org09dd226">
+<div id="outline-container-org0e79c13" class="outline-2">
+<h2 id="org0e79c13">参考链接</h2>
+<div class="outline-text-2" id="text-org0e79c13">
 <ul class="org-ul">
 <li>
 <a href="https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html">OpenCV: Image Thresholding</a><br>
@@ -479,7 +479,7 @@ Otsu 的做法是把 0 到 255 每个值都当成候选阈值试一遍：对某�
     </li>
   </ul>
 <section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
-      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <p class="comment-lazy-hint">评论由 Disqus 提供</p>
       <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
     </div>
     <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>

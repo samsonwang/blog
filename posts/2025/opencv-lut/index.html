@@ -189,9 +189,9 @@ LUT 快不是「查表比算术快」这么一句空话，而是三件事叠在�
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org6da2b73" class="outline-2">
-<h2 id="org6da2b73">LUT 把什么换成了什么</h2>
-<div class="outline-text-2" id="text-org6da2b73">
+<div id="outline-container-orga354b5a" class="outline-2">
+<h2 id="orga354b5a">LUT 把什么换成了什么</h2>
+<div class="outline-text-2" id="text-orga354b5a">
 <p>
 单通道 8 位输入、8 位输出的核心循环就三行：<br></p>
 
@@ -233,9 +233,9 @@ LUT 快不是「查表比算术快」这么一句空话，而是三件事叠在�
 </div>
 </div>
 
-<div id="outline-container-org00d967a" class="outline-2">
-<h2 id="org00d967a">源码里的四层分派</h2>
-<div class="outline-text-2" id="text-org00d967a">
+<div id="outline-container-orgf57d7c2" class="outline-2">
+<h2 id="orgf57d7c2">源码里的四层分派</h2>
+<div class="outline-text-2" id="text-orgf57d7c2">
 <p>
 cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<br></p>
 
@@ -266,9 +266,9 @@ cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<b
 </div>
 </div>
 
-<div id="outline-container-orgf85c020" class="outline-2">
-<h2 id="orgf85c020">SIMD：x86 上唯一划算的指令</h2>
-<div class="outline-text-2" id="text-orgf85c020">
+<div id="outline-container-orgba0f26b" class="outline-2">
+<h2 id="orgba0f26b">SIMD：x86 上唯一划算的指令</h2>
+<div class="outline-text-2" id="text-orgba0f26b">
 <p>
 这是整个实现里最反直觉的一段。lut.simd.hpp 开头就是一整块注释加宏，直白地写着：x86 上只有 AVX-512 VBMI 的 vpermb 比标量快，AVX2/SSE 的 gather 因为延迟太高，反而更慢。<br></p>
 
@@ -309,9 +309,9 @@ cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<b
 注意边界是 total - nlanes，剩下的几个像素必须单独走标量，否则会越界读。这是所有手写 SIMD 的固定结构，也是「SIMD 版本代码量翻倍」的来源。<br></p>
 </div>
 
-<div id="outline-container-org54405ba" class="outline-3">
-<h3 id="org54405ba">三通道为什么要先把表拆开</h3>
-<div class="outline-text-3" id="text-org54405ba">
+<div id="outline-container-org19c0a69" class="outline-3">
+<h3 id="org19c0a69">三通道为什么要先把表拆开</h3>
+<div class="outline-text-3" id="text-org19c0a69">
 <p>
 三通道最自然的写法是 lut[src[i]*3 + k]，但这样表是交错的，一个 vpermb 只能对一张连续的表做重排。OpenCV 的做法是先花 256 次把交错表拆成三张独立的 256 字节表，主循环就变成「解交织、三次单表查表、再交织」：<br></p>
 
@@ -330,9 +330,9 @@ cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<b
 </div>
 </div>
 
-<div id="outline-container-orga4818db" class="outline-3">
-<h3 id="orga4818db">16 位表拆高低字节</h3>
-<div class="outline-text-3" id="text-orga4818db">
+<div id="outline-container-org78f2d47" class="outline-3">
+<h3 id="org78f2d47">16 位表拆高低字节</h3>
+<div class="outline-text-3" id="text-org78f2d47">
 <p>
 8U 源配 16U 表时，表是 256 个 ushort。OpenCV 没有去找 16 位的查表指令，而是把每个 ushort 拆成低字节表和高字节表，做两次字节查表，再用 zip 拼回去：<br></p>
 
@@ -353,9 +353,9 @@ cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<b
 </div>
 </div>
 
-<div id="outline-container-orgfa0badf" class="outline-2">
-<h2 id="orgfa0badf">缓存：它凭什么对 cache 友好</h2>
-<div class="outline-text-2" id="text-orgfa0badf">
+<div id="outline-container-org186aca6" class="outline-2">
+<h2 id="org186aca6">缓存：它凭什么对 cache 友好</h2>
+<div class="outline-text-2" id="text-org186aca6">
 <p>
 前面讲的是指令，这一层才是「为什么它天然快」的主因。<br></p>
 
@@ -382,9 +382,9 @@ cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<b
 </div>
 </div>
 
-<div id="outline-container-org25ef7ab" class="outline-2">
-<h2 id="org25ef7ab">那手写循环为什么慢</h2>
-<div class="outline-text-2" id="text-org25ef7ab">
+<div id="outline-container-org18429a8" class="outline-2">
+<h2 id="org18429a8">那手写循环为什么慢</h2>
+<div class="outline-text-2" id="text-org18429a8">
 <p>
 说实话：如果手写的是裸指针、连续内存、一行 for、开 -O3，那它和 LUT 的标量路径性能是一样的，差距只在多线程。真正慢的是下面几种写法：<br></p>
 
@@ -422,9 +422,9 @@ cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<b
 </div>
 </div>
 
-<div id="outline-container-org854abfa" class="outline-2">
-<h2 id="org854abfa">自己写代码怎么让缓存友好</h2>
-<div class="outline-text-2" id="text-org854abfa">
+<div id="outline-container-org2bab3b0" class="outline-2">
+<h2 id="org2bab3b0">自己写代码怎么让缓存友好</h2>
+<div class="outline-text-2" id="text-org2bab3b0">
 <p>
 按投入产出排序，前三条的收益比后面所有加起来都大：<br></p>
 
@@ -447,9 +447,9 @@ cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<b
 </div>
 </div>
 
-<div id="outline-container-org4aab2dc" class="outline-2">
-<h2 id="org4aab2dc">什么时候不该用 LUT</h2>
-<div class="outline-text-2" id="text-org4aab2dc">
+<div id="outline-container-org4b63e06" class="outline-2">
+<h2 id="org4b63e06">什么时候不该用 LUT</h2>
+<div class="outline-text-2" id="text-org4b63e06">
 <ul class="org-ul">
 <li>16 位输入的 65536 项表。ushort 表是 128 KB，直接溢出 L1，命中 L2 甚至 L3，一次查表就是 10~40 个周期。原来那几个算术周期反而更便宜，这时候 LUT 是负优化。除非表在循环里有极高复用率，否则别碰。<br>
 </li>
@@ -463,9 +463,9 @@ cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<b
 </div>
 </div>
 
-<div id="outline-container-org1a45fb8" class="outline-2">
-<h2 id="org1a45fb8">踩坑清单</h2>
-<div class="outline-text-2" id="text-org1a45fb8">
+<div id="outline-container-org7ef886e" class="outline-2">
+<h2 id="org7ef886e">踩坑清单</h2>
+<div class="outline-text-2" id="text-org7ef886e">
 <ul class="org-ul">
 <li>表必须连续。从大 Mat 里切出来的 ROI 再 reshape 成 256x1，往往不连续，断言直接抛异常。老老实实 <code>clone()</code> 或者 copyTo 到一个独立的 Mat。<br>
 </li>
@@ -485,9 +485,9 @@ cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<b
 </div>
 </div>
 
-<div id="outline-container-orgfb61bdf" class="outline-2">
-<h2 id="orgfb61bdf">参考链接</h2>
-<div class="outline-text-2" id="text-orgfb61bdf">
+<div id="outline-container-org963f11c" class="outline-2">
+<h2 id="org963f11c">参考链接</h2>
+<div class="outline-text-2" id="text-org963f11c">
 <ul class="org-ul">
 <li>
 <a href="https://github.com/opencv/opencv/blob/4.x/modules/core/src/lut.cpp">modules/core/src/lut.cpp</a>：入口、断言、HAL/OpenCL 分派、多线程<br>
@@ -525,7 +525,7 @@ cv::LUT 的主干按顺序试四条路，任何一层命中就直接 return：<b
     </li>
   </ul>
 <section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
-      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <p class="comment-lazy-hint">评论由 Disqus 提供</p>
       <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
     </div>
     <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>

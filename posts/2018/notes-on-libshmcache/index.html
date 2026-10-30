@@ -184,9 +184,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
       
     <time class="dt-published" datetime="2018-07-23T10:51:59+08:00" itemprop="datePublished">Jul 23, 2018</time></p>
   </header><div class="post-content e-content" itemprop="articleBody text">
-    <div id="outline-container-org4eee6d2" class="outline-2">
-<h2 id="org4eee6d2">引言</h2>
-<div class="outline-text-2" id="text-org4eee6d2">
+    <div id="outline-container-orgcd7a5cd" class="outline-2">
+<h2 id="orgcd7a5cd">引言</h2>
+<div class="outline-text-2" id="text-orgcd7a5cd">
 <p>
 由于在工作中需要开发一套内存缓存服务，使用了共享内存作为多进程间的数据共享。为了提高共享内存缓存服务的性能，我找了一个类似的较为成熟的开源项目 <a href="https://github.com/happyfish100/libshmcache">libshmcache</a> ，通过研究源码学习其中的优点并改进自己的模块。<br></p>
 
@@ -211,9 +211,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org28ddfc6" class="outline-2">
-<h2 id="org28ddfc6">纯C语言开发时的代码风格</h2>
-<div class="outline-text-2" id="text-org28ddfc6">
+<div id="outline-container-org0d54bd4" class="outline-2">
+<h2 id="org0d54bd4">纯C语言开发时的代码风格</h2>
+<div class="outline-text-2" id="text-org0d54bd4">
 <p>
 我在工作中使用比较多的开发语言是C++，对于C语言编写的这样规模的项目，还是第一次仔细深入地研究。C语言使用 <code>struct</code> 作为大多数自定义数据结构的关键字，相对于C++能够使用成员函数能够对类进行功能拓展，C语言比较常用的是将这个对象作为输入参数传到函数中。<br></p>
 
@@ -257,9 +257,9 @@ libshmcache与redis相似的是都使用内存进行数据缓存；与redis不�
 </div>
 
 
-<div id="outline-container-org0bff9e6" class="outline-2">
-<h2 id="org0bff9e6">hash table的原理和实现</h2>
-<div class="outline-text-2" id="text-org0bff9e6">
+<div id="outline-container-org616e8a6" class="outline-2">
+<h2 id="org616e8a6">hash table的原理和实现</h2>
+<div class="outline-text-2" id="text-org616e8a6">
 <p>
 libshmcache内部使用的是hash table做内部缓存的数据结构，这使查找的时间复杂度是O(1)。<br>
 之前看过一些介绍hash table的资料，对hash table的工作原理是有过一个基础的了解的，这次通过阅读源码，能够了解到hash table在代码实现上更加细节的内容。<br>
@@ -268,18 +268,18 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orgeba128e" class="outline-2">
-<h2 id="orgeba128e">gcc原子化操作接口</h2>
-<div class="outline-text-2" id="text-orgeba128e">
+<div id="outline-container-orgfecb76d" class="outline-2">
+<h2 id="orgfecb76d">gcc原子化操作接口</h2>
+<div class="outline-text-2" id="text-orgfecb76d">
 <p>
 使用原子化操作接口能够解决一些并发读写问题，原子化操作相对于互斥锁执行更快。原子化操作也是一种无锁编程的方式。<br></p>
 </div>
 </div>
 
 
-<div id="outline-container-org3d2207a" class="outline-2">
-<h2 id="org3d2207a">有锁写和无锁读的实现</h2>
-<div class="outline-text-2" id="text-org3d2207a">
+<div id="outline-container-org76a2c13" class="outline-2">
+<h2 id="org76a2c13">有锁写和无锁读的实现</h2>
+<div class="outline-text-2" id="text-org76a2c13">
 <p>
 在libshmcache中，写操作通过 <code>pthread_mutex_t</code> 进行同步，而读操作是无锁的。<br>
 对于写操作来说，需要对hash table进行操作，这肯定是需要同步的。<br>
@@ -288,9 +288,9 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
 </div>
 
 
-<div id="outline-container-orgfb5bb12" class="outline-2">
-<h2 id="orgfb5bb12">共享内存的两套函数接口(POSIX和SystemV)</h2>
-<div class="outline-text-2" id="text-orgfb5bb12">
+<div id="outline-container-orgcfea97c" class="outline-2">
+<h2 id="orgcfea97c">共享内存的两套函数接口(POSIX和SystemV)</h2>
+<div class="outline-text-2" id="text-orgcfea97c">
 <p>
 在linux上使用共享内存时有两套接口 <code>mmap</code> 和 <code>shmget</code> 。 <code>mmap</code> 是 <code>POSIX</code> 标准的接口，而 <code>shmget</code> 是 <code>System V</code> 标准的接口，两者都能够实现进程间共享内存，但他们在使用上还是有些区别的。对于 <code>mmap</code> 来说，需要在硬盘上创建一个文件，再将该文件映射到内存中。对于 <code>shmget</code> 来说，需要指定一个key，不同的进程通过相同的key就能映射到同一片内存。<br></p>
 </div>
@@ -320,7 +320,7 @@ libshmcache内部使用的是hash table做内部缓存的数据结构，这使�
     </li>
   </ul>
 <section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
-      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <p class="comment-lazy-hint">评论由 Disqus 提供</p>
       <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
     </div>
     <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>

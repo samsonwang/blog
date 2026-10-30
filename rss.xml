@@ -2,7 +2,11 @@
 <?xml-stylesheet type="text/xsl" href="/blog/assets/xml/rss.xsl" media="all"?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hack Note</title><link>https://samsonwang.github.io/blog/</link><description>Personal handnote on software development</description><atom:link href="https://samsonwang.github.io/blog/rss.xml" rel="self" type="application/rss+xml"></atom:link><language>en</language><copyright>Contents © 2017-2026 &lt;a href="mailto:wangzhilv@gmail.com"&gt;Samson Wang&lt;/a&gt; 
 &lt;a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/"&gt;
 &lt;img alt="cc-by-nc 4.0" style="padding-bottom:2px" src="/images/cc-by-nc.png" /&gt;&lt;/a&gt;
-</copyright><lastBuildDate>Tue, 20 Oct 2026 04:19:21 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>frp使用技巧</title><link>https://samsonwang.github.io/blog/posts/2026/frp-tips/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;p&gt;
+</copyright><lastBuildDate>Fri, 30 Oct 2026 08:01:26 GMT</lastBuildDate><generator>Nikola (getnikola.com)</generator><docs>http://blogs.law.harvard.edu/tech/rss</docs><item><title>记录一次 Qt 屏幕定位排查：为什么隐藏窗口“感受不到”显示器变更</title><link>https://samsonwang.github.io/blog/posts/2026/debug-qt-stale-screen-on-windows/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;p&gt;
+项目 LaunchyQt（Qt 5.12.10 / MSVC2017 / Windows）遇到一个问题：把显示器从 4K 换成 2K 之后唤出主界面，它仍然按 4K 的尺寸居中，落在屏幕偏右下、甚至压到边缘。排查到最后发现，根源不是坐标算错了，而是“隐藏窗口根本没有 HWND，所以收不到 Windows 的屏幕变化消息”。本文记录整个排查过程，并顺带把 Windows 屏幕变化消息的机制梳理清楚。&lt;br&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://samsonwang.github.io/blog/posts/2026/debug-qt-stale-screen-on-windows/"&gt;Read more…&lt;/a&gt; (8 min remaining to read)&lt;/p&gt;&lt;/div&gt;</description><category>debugging</category><category>qt</category><category>windows</category><guid>https://samsonwang.github.io/blog/posts/2026/debug-qt-stale-screen-on-windows/</guid><pubDate>Wed, 28 Oct 2026 01:55:54 GMT</pubDate></item><item><title>frp使用技巧</title><link>https://samsonwang.github.io/blog/posts/2026/frp-tips/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div&gt;&lt;p&gt;
 开发机器在 NAT 后面，想让外面能连进来，最省事的办法是用 frp 打一条隧道出去。这里记一下服务端怎么配才不至于被人当跳板、Windows 客户端怎么做成开机自启的服务，以及中间踩过的一些坑。&lt;br&gt;
 &lt;/p&gt;
 
@@ -50,28 +54,4 @@ LUT 快不是「查表比算术快」这么一句空话，而是三件事叠在�
 这篇按「固定阈值 → 自适应阈值 → 自动阈值」的顺序过一遍，最后汇总参数含义和踩过的坑。&lt;br&gt;
 &lt;/p&gt;
 
-&lt;p&gt;&lt;a href="https://samsonwang.github.io/blog/posts/2025/opencv-image-thresholding/"&gt;Read more…&lt;/a&gt; (3 min remaining to read)&lt;/p&gt;&lt;/div&gt;</description><category>opencv</category><category>thresholding</category><guid>https://samsonwang.github.io/blog/posts/2025/opencv-image-thresholding/</guid><pubDate>Tue, 08 Jul 2025 01:33:13 GMT</pubDate></item><item><title>opencv的中值滤波和双边滤波</title><link>https://samsonwang.github.io/blog/posts/2025/opencv-image-filters/</link><dc:creator>Samson Wang</dc:creator><description>&lt;div id="outline-container-org22f46f0" class="outline-2"&gt;
-&lt;h2 id="org22f46f0"&gt;非线性滤波&lt;/h2&gt;
-&lt;div class="outline-text-2" id="text-org22f46f0"&gt;
-&lt;p&gt;
-中值滤波和双边滤波都是非线性滤波 &lt;code&gt;nonlinear filtering&lt;/code&gt; ，那什么是非线性滤波呢?&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-非线性滤波是一类不遵循线性叠加原理的图像处理方法，其输出结果不能简单低表示为输入像素的加权和。它的核心特点是根据局部像素值的关系动态调整处理方式，因此能更好地保留边缘、纹理等非线性特征，同时有效去除特定类型的噪声。&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;
-特点&lt;br&gt;
-&lt;/p&gt;
-&lt;ol class="org-ol"&gt;
-&lt;li&gt;非加权平均，不依赖固定卷积核（如高斯滤波的固定权重），而是根据像素邻域的实际分布动态计算（如取中值、最大值等）。&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;边缘保留，多数非线性滤波能保护锐利边缘不被模糊（如双边滤波、中值滤波）。&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;适应性， 处理方式随图像局部特征变化（如噪声类型、纹理复杂度）。&lt;br&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;
-常见的线性滤波：均值滤波（mean filter / box filter），高斯滤波（gaussian filter），拉普拉斯滤波（Laplacian filter），Sobel 滤波&lt;br&gt;
-&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://samsonwang.github.io/blog/posts/2025/opencv-image-filters/"&gt;Read more…&lt;/a&gt; (1 min remaining to read)&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</description><category>opencv</category><category>opencv-filter</category><guid>https://samsonwang.github.io/blog/posts/2025/opencv-image-filters/</guid><pubDate>Mon, 07 Jul 2025 01:15:43 GMT</pubDate></item></channel></rss>
+&lt;p&gt;&lt;a href="https://samsonwang.github.io/blog/posts/2025/opencv-image-thresholding/"&gt;Read more…&lt;/a&gt; (3 min remaining to read)&lt;/p&gt;&lt;/div&gt;</description><category>opencv</category><category>thresholding</category><guid>https://samsonwang.github.io/blog/posts/2025/opencv-image-thresholding/</guid><pubDate>Tue, 08 Jul 2025 01:33:13 GMT</pubDate></item></channel></rss>

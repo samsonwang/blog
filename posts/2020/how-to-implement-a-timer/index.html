@@ -195,9 +195,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org3083a26" class="outline-2">
-<h2 id="org3083a26">使用linux信号触发定时任务</h2>
-<div class="outline-text-2" id="text-org3083a26">
+<div id="outline-container-org880d810" class="outline-2">
+<h2 id="org880d810">使用linux信号触发定时任务</h2>
+<div class="outline-text-2" id="text-org880d810">
 <p>
 可以使用操作系统API预订一个 <code>SIGALRM</code> 信号，在指定的时间后程序就能收到信号，在信号的处理函数中就能实现定时任务。具体的系统API如下：<br></p>
 <div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span>
@@ -216,9 +216,9 @@
 </div>
 </div>
 
-<div id="outline-container-org709c201" class="outline-2">
-<h2 id="org709c201">通过timerfd实现定时任务</h2>
-<div class="outline-text-2" id="text-org709c201">
+<div id="outline-container-org9d5a6d2" class="outline-2">
+<h2 id="org9d5a6d2">通过timerfd实现定时任务</h2>
+<div class="outline-text-2" id="text-org9d5a6d2">
 <p>
 timerfd是linux独有的接口，可以在定时器超时后通过一个文件描述符通知程序。<br></p>
 
@@ -235,15 +235,15 @@ timerfd是linux独有的接口，可以在定时器超时后通过一个文件�
 </div>
 </div>
 
-<div id="outline-container-org528af94" class="outline-2">
-<h2 id="org528af94">在网络编程中借助事件的等待间隔执行定时任务</h2>
-<div class="outline-text-2" id="text-org528af94">
+<div id="outline-container-orga138425" class="outline-2">
+<h2 id="orga138425">在网络编程中借助事件的等待间隔执行定时任务</h2>
+<div class="outline-text-2" id="text-orga138425">
 <p>
 在网络编程中，通常都会用到一套IO复用接口，如select/poll/epoll等，它们会帮你同时检查多个socket上是否有读写操作。这些接口都有一个等待时间，在这个指定时间是最大等待时间，即使在没有需要处理的IO操作时也会返回。这个时间是一般是个固定值，如10ms/20ms/50ms，它被称作网络库的基准频率。在这段空余时间中可以检查定时器是否超时，并执行超时定时器的回调函数。<br></p>
 
 <p>
 伪代码示例如下：<br></p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">update_events</span><span class="p">(</span><span class="n">milisec</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+<div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">update_events</span><span class="p">(</span><span class="n">milisec</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">milisec</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">fd</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
 	<span class="n">do</span> <span class="n">something</span> <span class="k">with</span> <span class="n">socket</span> <span class="n">event</span>
@@ -257,7 +257,7 @@ timerfd是linux独有的接口，可以在定时器超时后通过一个文件�
 
 <p>
 在两次select的间隔中可以进行一些定时操作，关键就在 <code>update_timer</code> 中的实现：<br></p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">update_timer</span> <span class="p">(</span><span class="n">current</span><span class="p">):</span>
+<div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">update_timer</span> <span class="p">(</span><span class="n">current</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">timer</span> <span class="ow">in</span> <span class="n">available_timers</span><span class="p">:</span>
 	 <span class="k">while</span> <span class="n">current</span> <span class="o">&gt;=</span> <span class="n">timer</span><span class="o">.</span><span class="n">expires</span><span class="p">:</span>
 	     <span class="n">timer</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
@@ -278,9 +278,9 @@ timerfd是linux独有的接口，可以在定时器超时后通过一个文件�
 </div>
 </div>
 
-<div id="outline-container-org41e5f16" class="outline-2">
-<h2 id="org41e5f16">参考资料</h2>
-<div class="outline-text-2" id="text-org41e5f16">
+<div id="outline-container-org54a8db2" class="outline-2">
+<h2 id="org54a8db2">参考资料</h2>
+<div class="outline-text-2" id="text-org54a8db2">
 <ul class="org-ul">
 <li>
 <a href="https://stackoverflow.com/a/10193120/5080719">stackoverflow - how to implement timer in c</a><br>
@@ -337,7 +337,7 @@ timerfd是linux独有的接口，可以在定时器超时后通过一个文件�
     </li>
   </ul>
 <section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
-      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <p class="comment-lazy-hint">评论由 Disqus 提供</p>
       <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
     </div>
     <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>

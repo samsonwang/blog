@@ -1,0 +1,610 @@
+#+BEGIN_COMMENT
+.. title: 记录一次 Qt 屏幕定位排查：为什么隐藏窗口“感受不到”显示器变更
+.. slug: debug-qt-stale-screen-on-windows
+.. date: 2026-10-28 09:55:54 UTC+08:00
+.. tags: qt, windows, debugging
+.. category: qt
+.. link:
+.. description:
+.. type: text
+/.. status: draft
+#+END_COMMENT
+#+OPTIONS: num:nil ^:{}
+
+#+TITLE: 记录一次 Qt 屏幕定位排查：为什么隐藏窗口“感受不到”显示器变更
+
+项目 LaunchyQt（Qt 5.12.10 / MSVC2017 / Windows）遇到一个问题：把显示器从 4K 换成 2K 之后唤出主界面，它仍然按 4K 的尺寸居中，落在屏幕偏右下、甚至压到边缘。排查到最后发现，根源不是坐标算错了，而是“隐藏窗口根本没有 HWND，所以收不到 Windows 的屏幕变化消息”。本文记录整个排查过程，并顺带把 Windows 屏幕变化消息的机制梳理清楚。
+
+{{{TEASER_END}}}
+
+** 现象
+
+报问题的代码很直接：
+
+#+BEGIN_SRC C++
+QScreen* screen = QGuiApplication::screenAt(QCursor::pos());
+QRect rect = screen->geometry();   // 从 4K 换到 2K 之后，这里还是 3840x2160
+#+END_SRC
+
+第一反应是“screenAt 在混合 DPI 下算错了坐标”。但这个判断太快了，值得先看看它到底做了什么。
+
+** 先读源码：screenAt 只是个矩形包含判断
+
+Qt 5.12.10 =src/gui/kernel/qguiapplication.cpp= 里的实现如下：
+
+#+BEGIN_SRC C++
+QScreen *QGuiApplication::screenAt(const QPoint &point)
+{
+    QVarLengthArray<const QScreen *, 8> visitedScreens;
+    for (const QScreen *screen : QGuiApplication::screens()) {
+        if (visitedScreens.contains(screen))
+            continue;
+
+        // The virtual siblings include the screen itself, so iterate directly
+        for (QScreen *sibling : screen->virtualSiblings()) {
+            if (sibling->geometry().contains(point))
+                return sibling;
+
+            visitedScreens.append(sibling);
+        }
+    }
+
+    return nullptr;
+}
+#+END_SRC
+
+三个关键点：
+
+1. 它不调用任何 Win32 API，不做命中测试；
+2. 它不做 DPI 换算，入参和 QScreen::geometry() 必须已经在同一个坐标空间里；
+3. 它按 screens() 的顺序返回第一个命中的屏幕，不处理矩形重叠。
+
+所以“读到 4K 的尺寸”这件事，只能有两种解释：要么传进去的点算错了（坐标空间问题），要么 QScreen::geometry() 本身就是旧的（数据陈旧问题）。
+
+** Windows 的屏幕变化消息有哪些
+
+在往下追之前，有必要先把 Windows 这套消息机制捋一遍。屏幕相关的变化，Windows 并不是只有一条消息，而是分散在好几条里，各自负责一类事件。这是理解后面“为什么收不到”的前提。
+
+| 消息 | 触发场景 | 传递方式 | 备注 |
+| --- | --- | --- | --- |
+| WM_DISPLAYCHANGE | 分辨率或色深变化 | HWND_BROADCAST 广播到所有顶层窗口 | 只有宽、高、色深三元组变化才发 |
+| WM_DEVICECHANGE | 设备热插拔（显示器接入 / 拔出） | 广播，需 RegisterDeviceNotification 注册 | 显示器对应 GUID_DEVINTERFACE_MONITOR 接口类 |
+| WM_SETTINGCHANGE | 系统参数变化，如任务栏位置导致工作区变化 | 广播到所有顶层窗口 | 常配合 SPI_SETWORKAREA 使用 |
+| WM_DPICHANGED | 显示器的 DPI（缩放）变化 | 发给受影响窗口 | 只有声明 per-monitor DPI aware 的进程能收到 |
+
+几条消息各自独立，边界要分清：
+
+- 改分辨率、改色深，发的是 WM_DISPLAYCHANGE；
+- 插拔显示器（热插拔），发的是 WM_DEVICECHANGE，wParam 是 DBT_DEVICEARRIVAL 或 DBT_DEVICEREMOVECOMPLETE；
+- 只改缩放不改分辨率，连 WM_DISPLAYCHANGE 都不会有，缩放变化走 WM_DPICHANGED；
+- 拖任务栏、改工作区，走 WM_SETTINGCHANGE。
+
+Qt 在 Windows 平台插件里主要监听的是 WM_DISPLAYCHANGE，对应 QWindowsScreenManager::handleDisplayChange()。热插拔这条 WM_DEVICECHANGE 在 Qt 5.x 里也有处理，但刷新链的重心仍然是 WM_DISPLAYCHANGE。
+
+这里要特别强调 WM_DISPLAYCHANGE 的传递方式。Win32 文档对 HWND_BROADCAST 的定义是：
+
+#+BEGIN_QUOTE
+The message is sent to all top-level windows in the system, including disabled or invisible unowned windows, overlapped windows, and pop-up windows.
+#+END_QUOTE
+
+注意是 invisible，不是 nonexistent —— 隐藏可以，不存在不行。这句话是整个 bug 的核心，后面会回到它。
+
+** 澄清一个误解：QGuiApplication 的信号 ≠ 自动收到消息
+
+排查过程中我自己也纠正了一个想当然的误解。screenAdded、screenRemoved、screenChanged 这些信号都挂在 QGuiApplication 上，所以我一度以为“只要 QGuiApplication 创建好了，屏幕变化就能被正常处理”。这个假设是错的。
+
+这些信号只是 Qt 暴露出来的上层接口，它们的触发源头，在 Windows 上依然是平台插件里那句 WM_DISPLAYCHANGE 的分发。信号本身不会凭空产生 —— 它必须等到底层窗口收到广播、走完刷新链之后才会被 emit。
+
+换句话说是三层关系：
+
+#+BEGIN_SRC text
+Windows 广播消息 (WM_DISPLAYCHANGE)
+        │  (必须有顶层 HWND 才能收到)
+        ▼
+Qt 平台插件 (QWindowsScreenManager::handleDisplayChange)
+        │  (重新枚举显示器，写回 QScreen)
+        ▼
+QGuiApplication 信号 (screenAdded / screenRemoved / screenChanged)
+#+END_SRC
+
+中间任何一环断了，最上层的信号就不会响。所以“信号挂在 QGuiApplication 上”跟“程序能处理屏幕变化”之间，还隔着一个“消息到底有没有送达”的问题。而这个问题的答案，取决于进程里有没有能接收广播的顶层窗口。
+
+** QScreen::geometry() 是缓存，刷新入口只有一个
+
+Windows 平台插件里，每块屏的数据存在 QWindowsScreenData 里，由 monitorData()（EnumDisplayMonitors + GetMonitorInfo）填充。整条刷新链是：
+
+- 触发：QWindowsScreenManager::handleDisplayChange()（即 WM_DISPLAYCHANGE）
+- 重新枚举：handleScreenChanges()
+- 写回：QWindowsScreen::handleChanges()
+- 抛给上层：QWindowSystemInterface::handleScreenGeometryChange() → 事件循环 → QScreen::geometry() 更新
+
+注意第一步里藏着一段去重逻辑：
+
+#+BEGIN_SRC C++
+bool QWindowsScreenManager::handleDisplayChange(WPARAM wParam, LPARAM lParam)
+{
+    const int newDepth = int(wParam);
+    const WORD newHorizontalResolution = LOWORD(lParam);
+    const WORD newVerticalResolution = HIWORD(lParam);
+    if (newDepth != m_lastDepth || newHorizontalResolution != m_lastHorizontalResolution
+        || newVerticalResolution != m_lastVerticalResolution) {
+        m_lastDepth = newDepth;
+        m_lastHorizontalResolution = newHorizontalResolution;
+        m_lastVerticalResolution = newVerticalResolution;
+        qCDebug(lcQpaWindows) << __FUNCTION__ << "Depth=" << newDepth
+            << ", resolution " << newHorizontalResolution << 'x' << newVerticalResolution;
+        handleScreenChanges();
+    }
+    return false;
+}
+#+END_SRC
+
+也就是说：只要这次报上来的（色深, 宽, 高）和上次记的一样，Qt 连显示器都不枚举一次，直接 return。这段代码在 Qt 5.15.2 里一模一样，升级并不能解决它。
+
+到这里可以确定：screenAt() 只是查表，表没有更新，它就永远回答旧答案。问题从“函数算错了”变成了“表为什么没更新”。
+
+** 先排除一条岔路：不是高 DPI 坐标错位
+
+screenAt(QCursor::pos()) 在混合 DPI 下翻车是另一个真实存在的问题：
+
+- 如果开 Qt::AA_EnableHighDpiScaling，Qt 会把物理像素换算成 DIP。4K@200% 和 2K@100% 拼在一起时，Qt 5.12 的 QHighDpiScaling 对每块屏各算各的，逻辑矩形可能重叠或留缝；
+- 而 screenAt() 又是“返回第一个命中”，于是坐标恰好落进重叠区时，会稳定返回列表里靠前的那块（往往就是 4K）。
+
+但这个项目的 src 里没有任何地方设置 AA_EnableHighDpiScaling（也没有 QT_SCALE_FACTOR、QT_AUTO_SCREEN_SCALE_FACTOR）。Qt 5.12 的 Windows 插件默认把进程声明为 per-monitor DPI aware，缩放因子是 1，所以 QScreen::geometry() 和 QCursor::pos() 都是物理像素，两边一致。坐标错位这条假设在这个项目里不成立 —— 这条岔路先划掉。
+
+> 顺带记一笔：如果哪天为了 4K 显示效果把 AA_EnableHighDpiScaling 打开，上面那个 DIP 重叠问题会立刻复活，届时 screenAt 必须换成原生命中测试。
+
+** 关键转折：窗口是隐藏的，它到底有没有 HWND
+
+排查到这里，剩下的可能性是“刷新链根本没被触发”。于是问题变成了：WM_DISPLAYCHANGE 到不了 Qt 吗？
+
+回到上一节那句 HWND_BROADCAST 的定义 —— 广播只发给“已存在的顶层窗口”，包括不可见的，但不包括不存在的。Qt 自己的事件循环窗口是 HWND_MESSAGE（message-only window），明确不在广播范围内。所以一个进程如果没有普通顶层窗口，就真的收不到这条广播。
+
+那么 Launchy 启动之后、第一次唤出之前，有没有顶层窗口？看启动路径：
+
+#+BEGIN_SRC C++
+// main.cpp
+launchy::createLaunchyWidget(command);   // 只构造，不 show
+#+END_SRC
+
+#+BEGIN_SRC C++
+// LaunchyWidgetWin.cpp
+void createLaunchyWidget(CommandFlags command) {
+    if (!LaunchyWidget::instance()) {
+        new LaunchyWidgetWin(command);
+    }
+}
+#+END_SRC
+
+构造函数里也全是初始化：设置窗口标志、加载皮肤、注册热键、装托盘图标……没有一次 show()。末尾的 executeStartupCommand(command) 在默认命令下什么都不做（ShowLaunchy 位没置）。
+
+而 Qt 的顶层 QWidget 是懒创建的：HWND 在第一次 show()（或 winId()）时才真正建出来。也就是说：
+
+> 从 Launchy.exe 启动，到用户第一次按下热键唤出主界面之前，这个进程里一个顶层 HWND 都没有。
+
+这段时间里用户换了显示器，广播发出去，没有任何窗口接收，QWindowsScreenManager 一次都不会被调用，QScreen 保持启动时枚举出来的 3840×2160。等用户终于唤出界面，loadPosition() 拿到的 availableGeometry() 还是那块 4K —— 现象完全吻合。
+
+这也解释了一个容易被忽略的细节：只要在此之前唤出过一次，问题就不出现（HWND 已经在了）。所以它是一个“开机自启 + 首次使用前换屏”才会撞上的时序问题，测试时很容易漏掉。
+
+** 修复：把原生窗口建出来
+
+不需要 show()，只要把原生窗口建出来即可 —— 广播能送到不可见的顶层窗口。
+
+#+BEGIN_SRC C++
+// src/Launchy/Windows/LaunchyWidgetWin.cpp
+void createLaunchyWidget(CommandFlags command) {
+    if (!LaunchyWidget::instance()) {
+        LaunchyWidgetWin* widget = new LaunchyWidgetWin(command);
+
+        // Create the native window now, while it is still hidden.
+        //
+        // Windows broadcasts WM_DISPLAYCHANGE to existing top-level windows
+        // only, and the Qt windows plugin re-enumerates the monitors only on
+        // that message (QWindowsScreenManager::handleDisplayChange ->
+        // handleScreenChanges). QWidget creates its HWND lazily on the first
+        // show(), so a launcher that stays hidden until the first hotkey has
+        // no window at all when the user swaps monitors: Qt never refreshes
+        // QScreen and keeps the geometry captured at startup.
+        //
+        // Showing the window is not required for this. HWND_BROADCAST reaches
+        // invisible top-level windows as well, so creating the handle is enough
+        // to keep the screen list in sync for the whole process lifetime.
+        widget->winId();
+    }
+}
+#+END_SRC
+
+winId() 只创建句柄，不设置 WS_VISIBLE：窗口依然不可见、不进任务栏、不进 Alt+Tab，Qt::Tool 的语义不变。
+
+> 这段代码放在 Windows/LaunchyWidgetWin.cpp 里，而这个文件在 src/CMakeLists.txt 中只在 if (WIN32) 分支参与编译（Linux 走 LaunchyWidgetLinux.cpp），所以不需要再套一层 #if defined(Q_OS_WIN)。
+
+提交：=4c21adc fix: manually create winId to receive Windows display change message=
+
+** 附：一个 PySide2 的屏幕切换检测脚本
+
+排查过程中写了一个独立的诊断脚本，用来在 Windows 上实时验证 Qt 到底有没有正确感知到屏幕切换。以后如果再遇到这类问题，可以直接拿它来分析。
+
+它覆盖三类场景：外接显示器热插拔（screenAdded / screenRemoved）、在系统显示设置里切换主屏（primaryScreenChanged）、把窗口拖到另一块屏（QWindow.screenChanged）。
+
+设计上用了“双通道”来抓问题：
+
+- 信号通道：监听所有 Qt 屏幕相关信号并实时打印；
+- 轮询兜底：每 2 秒对 screens() 打一次快照，和上一次比对，专门抓“信号没触发但列表已经变了”的情况。
+
+这个双通道设计正好对应本文排查里那个核心判断 —— “没收到”和“收到了没处理”是两类不同的失败，前者要补消息通路，后者要绕开处理逻辑。信号没响、列表却变了，就是典型的信号通路断了；信号响了但值没更新，则是处理逻辑的问题。
+
+脚本完整代码如下：
+
+#+BEGIN_SRC python
+# -*- coding: utf-8 -*-
+"""
+test_screen_switch.py - Qt screen-switch detection diagnostic (standalone tool).
+
+Purpose: verify whether Qt correctly recognizes when the computer switches screens.
+This PySide2 tool monitors screen changes in real time across three scenarios:
+  1. Hot-plugging an external monitor (screenAdded / screenRemoved)
+  2. Switching the primary display in the OS display settings (primaryScreenChanged)
+  3. Dragging the window across screens (QWindow.screenChanged)
+
+Dual-channel detection:
+  - Signal channel: listens to all Qt screen-related signals and logs them live.
+  - Polling fallback: snapshots screens() every 2s and diffs against the last snapshot,
+    to catch the case "no signal fired but the list changed".
+
+Runtime: system Python 3.6.8 (bundles PySide2 5.12.6). Do NOT use 3.13.
+  Run directly: "C:/Program Files/Python36/python.exe" tools/test_screen_switch.py
+"""
+
+import sys
+import datetime
+
+from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2.QtCore import QTimer
+from PySide2.QtGui import QCursor
+from PySide2.QtWidgets import (
+    QApplication, QWidget, QTableWidget, QTableWidgetItem, QLabel,
+    QPushButton, QPlainTextEdit, QVBoxLayout, QHBoxLayout,
+    QFrame,
+)
+
+
+POLL_INTERVAL_MS = 2000      # screen-list polling interval
+CURSOR_INTERVAL_MS = 500     # cursor / current-window-screen refresh interval
+
+
+def now_ts():
+    """Return a millisecond-precision timestamp string."""
+    return datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
+
+
+class ScreenSwitchTester(QWidget):
+    """Main window for the screen-switch detection diagnostic."""
+
+    def __init__(self):
+        super(ScreenSwitchTester, self).__init__()
+        self.setWindowTitle("Qt Screen-Switch Detection (PySide2)")
+        self.resize(900, 600)
+
+        self._screen_sig_pairs = []   # [(screen, signal_name)] connected per-screen signals
+        self._signal_fired_since_poll = False
+        self._last_snapshot = None
+
+        self._build_ui()
+        self._connect_app_signals()
+        self._refresh_screens()
+        self._bind_window_screen_signal()
+
+        # Polling fallback: detect "no signal but list changed".
+        self._poll_timer = QTimer(self)
+        self._poll_timer.setInterval(POLL_INTERVAL_MS)
+        self._poll_timer.timeout.connect(self._poll_screens)
+        self._poll_timer.start()
+
+        # High-frequency refresh of cursor and current-window screen.
+        self._cursor_timer = QTimer(self)
+        self._cursor_timer.setInterval(CURSOR_INTERVAL_MS)
+        self._cursor_timer.timeout.connect(self._update_live_labels)
+        self._cursor_timer.start()
+
+        self.log("Screen-switch monitor started. Current screen count: %d"
+                 % len(QApplication.screens()))
+
+    # ------------------------------------------------------------------ UI
+    def _build_ui(self):
+        root = QVBoxLayout(self)
+
+        # 1) Screen list
+        self._table = QTableWidget(0, 8)
+        self._table.setHorizontalHeaderLabels(
+            ["Idx", "Name", "Vendor", "Model", "Geom(x,y,w,h)",
+             "AvailGeom(x,y,w,h)", "DPR", "Primary"])
+        self._table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self._table.horizontalHeader().setStretchLastSection(True)
+        root.addWidget(self._table, 2)
+
+        # 2) Current window screen + cursor mapping
+        self._live_label = QLabel(
+            "This window's screen: -    Cursor: -    Cursor screen: -")
+        self._live_label.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+        root.addWidget(self._live_label)
+
+        # 3) Button row
+        btn_row = QHBoxLayout()
+        self._btn_refresh = QPushButton("Refresh Screen List")
+        self._btn_refresh.clicked.connect(self._refresh_screens)
+        self._btn_clear = QPushButton("Clear Log")
+        self._btn_clear.clicked.connect(lambda: self._log_box.clear())
+        btn_row.addWidget(self._btn_refresh)
+        btn_row.addWidget(self._btn_clear)
+        btn_row.addStretch(1)
+        root.addLayout(btn_row)
+
+        # 4) Signal log
+        self._log_box = QPlainTextEdit()
+        self._log_box.setReadOnly(True)
+        root.addWidget(self._log_box, 3)
+
+        # 5) Status bar
+        self._status = QLabel("Status: initializing...")
+        self._status.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+        root.addWidget(self._status)
+
+    # ----------------------------------------------------------- signal wiring
+    def _connect_app_signals(self):
+        app = QApplication.instance()
+        app.screenAdded.connect(self._on_screen_added)
+        app.screenRemoved.connect(self._on_screen_removed)
+        app.primaryScreenChanged.connect(self._on_primary_changed)
+
+    def _bind_window_screen_signal(self):
+        """Bind this window's QWindow.screenChanged (verifies cross-screen drag)."""
+        wh = self.windowHandle()
+        if wh is None:
+            self.winId()  # force creation of the native window
+            wh = self.windowHandle()
+        if wh is not None:
+            wh.screenChanged.connect(self._on_window_screen_changed)
+            self.log("Listening to this window's screenChanged signal.")
+
+    def _connect_screen_geometry(self, screen):
+        try:
+            screen.geometryChanged.connect(self._on_screen_geometry_changed)
+            screen.availableGeometryChanged.connect(self._on_screen_avail_changed)
+            self._screen_sig_pairs.append((screen, "geometryChanged"))
+            self._screen_sig_pairs.append((screen, "availableGeometryChanged"))
+        except Exception as ex:  # noqa: BLE001
+            self.log("Failed to connect per-screen geometry signals: %s" % ex)
+
+    def _disconnect_old_screen_signals(self):
+        for screen, sig in self._screen_sig_pairs:
+            try:
+                getattr(screen, sig).disconnect()
+            except Exception:  # noqa: BLE001
+                pass
+        self._screen_sig_pairs = []
+
+    # --------------------------------------------------------- signal handlers
+    def _on_screen_added(self, screen):
+        self._signal_fired_since_poll = True
+        name = screen.name() if screen is not None else "?"
+        self.log("[SIGNAL] screenAdded: %s" % name)
+        self._refresh_screens()
+
+    def _on_screen_removed(self, screen):
+        self._signal_fired_since_poll = True
+        name = screen.name() if screen is not None else "?"
+        self.log("[SIGNAL] screenRemoved: %s" % name)
+        self._refresh_screens()
+
+    def _on_primary_changed(self, screen):
+        self._signal_fired_since_poll = True
+        name = screen.name() if screen is not None else "?"
+        self.log("[SIGNAL] primaryScreenChanged -> %s" % name)
+
+    def _on_window_screen_changed(self, screen):
+        self._signal_fired_since_poll = True
+        name = screen.name() if screen is not None else "?"
+        self.log("[SIGNAL] this window screenChanged -> %s" % name)
+        self._update_live_labels()
+
+    def _on_screen_geometry_changed(self, rect):
+        self._signal_fired_since_poll = True
+        self.log("[SIGNAL] a screen geometryChanged -> %s" % (rect.getRect(),))
+
+    def _on_screen_avail_changed(self, rect):
+        self._signal_fired_since_poll = True
+        self.log("[SIGNAL] a screen availableGeometryChanged -> %s" % (rect.getRect(),))
+
+    # ------------------------------------------------------- refresh & polling
+    def _refresh_screens(self):
+        self._disconnect_old_screen_signals()
+        screens = QApplication.screens()
+        primary = QtGui.QGuiApplication.primaryScreen()
+        self._table.setRowCount(len(screens))
+        for i, s in enumerate(screens):
+            g = s.geometry()
+            ag = s.availableGeometry()
+            is_primary = (s is primary)
+            row = [
+                str(i),
+                s.name(),
+                s.manufacturer(),
+                s.model(),
+                "%d,%d,%d,%d" % (g.x(), g.y(), g.width(), g.height()),
+                "%d,%d,%d,%d" % (ag.x(), ag.y(), ag.width(), ag.height()),
+                "%.2f" % s.devicePixelRatio(),
+                "Yes" if is_primary else "",
+            ]
+            for c, val in enumerate(row):
+                self._table.setItem(i, c, QTableWidgetItem(val))
+            self._connect_screen_geometry(s)
+        self.log("Refreshed screen list: %d screen(s)." % len(screens))
+        self._take_snapshot(initial=not self._signal_fired_since_poll)
+
+    def _take_snapshot(self, initial=False):
+        screens = QApplication.screens()
+        primary = QtGui.QGuiApplication.primaryScreen()
+        snap = {
+            "count": len(screens),
+            "primary": primary.name() if primary is not None else None,
+            "screens": [
+                (s.name(),
+                 s.geometry().getRect(),
+                 s.availableGeometry().getRect(),
+                 round(s.devicePixelRatio(), 3))
+                for s in screens
+            ],
+        }
+        if initial:
+            self._last_snapshot = snap
+        return snap
+
+    def _poll_screens(self):
+        cur = self._take_snapshot()
+        prev = self._last_snapshot
+        self._last_snapshot = cur
+        if prev is None:
+            return
+        signal_fired = self._signal_fired_since_poll
+        self._signal_fired_since_poll = False
+
+        changed = (cur != prev)
+        if not changed:
+            self._set_status("Poll snapshot: screens() unchanged" +
+                             ("; signal fired" if signal_fired else "; no signal fired"))
+            return
+
+        # The list did change.
+        if not signal_fired:
+            self.log("[POLL] screen list changed but Qt emitted no screen signal "
+                     "(signal path suspected broken) -> " + self._describe_diff(prev, cur))
+            self._set_status("WARN: no signal but list changed (signal path suspected broken)")
+        else:
+            self.log("[POLL] screen list change matches signals -> "
+                     + self._describe_diff(prev, cur))
+            self._set_status("Screen list change matches signals")
+
+    def _describe_diff(self, prev, cur):
+        msgs = []
+        if prev["count"] != cur["count"]:
+            msgs.append("count %d->%d" % (prev["count"], cur["count"]))
+        if prev["primary"] != cur["primary"]:
+            msgs.append("primary %s->%s" % (prev["primary"], cur["primary"]))
+        # Per-screen geometry / DPR changes.
+        pmap = {n: (g, a, d) for (n, g, a, d) in prev["screens"]}
+        for (n, g, a, d) in cur["screens"]:
+            if n in pmap and (g, a, d) != pmap[n]:
+                msgs.append("%s geometry/DPR changed" % n)
+        return "; ".join(msgs) if msgs else "minor change"
+
+    # ----------------------------------------------------- live label refresh
+    def _update_live_labels(self):
+        wh = self.windowHandle()
+        ws = wh.screen() if wh is not None else None
+        ws_name = ws.name() if ws is not None else "?"
+        ws_geo = ws.geometry().getRect() if ws is not None else "-"
+        cp = QCursor.pos()
+        cs = QtGui.QGuiApplication.screenAt(cp)
+        cs_name = cs.name() if cs is not None else "(no screen covers point)"
+        self._live_label.setText(
+            "This window's screen: %s %s  |  Cursor: (%d,%d)  on screen: %s"
+            % (ws_name, ws_geo, cp.x(), cp.y(), cs_name))
+
+    # ----------------------------------------------------------- logging
+    def log(self, msg):
+        line = "[%s] %s" % (now_ts(), msg)
+        self._log_box.appendPlainText(line)
+        self._log_box.verticalScrollBar().setValue(
+            self._log_box.verticalScrollBar().maximum())
+
+    def _set_status(self, text):
+        self._status.setText("Status: " + text)
+
+
+def main():
+    app = QApplication(sys.argv)
+    # Do not enable AA_EnableHighDpiScaling so each screen's raw devicePixelRatio()
+    # is reflected faithfully.
+    tester = ScreenSwitchTester()
+    tester.show()
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()
+#+END_SRC
+
+注意脚本里的 _bind_window_screen_signal() 也做了同样的 winId() 兜底：如果 windowHandle() 还是空，先强制创建原生窗口，再连 screenChanged。这和本文的修复是同一件事 —— 没有 HWND，连窗口自身的 screenChanged 都不会触发。
+
+** 怎么确认它真的好了
+
+1. 看 Qt 自己的平台日志，这是最直接的判据：
+
+#+BEGIN_SRC bat
+set QT_LOGGING_RULES=qt.qpa.windows=true
+Launchy.exe
+#+END_SRC
+
+换屏的瞬间应该出现（打这行说明 handleDisplayChange 真的进了 handleScreenChanges()）：
+
+#+BEGIN_SRC text
+handleDisplayChange Depth=32, resolution 2560x1440
+#+END_SRC
+
+修复前这行是不存在的。
+
+2. 看应用自己的定位日志。loadPosition() 里本来就有输出，唤出时应该看到 =QRect(0,0 2560x1440)=，而不是 =QRect(0,0 3840x2160)=。
+
+3. 反向验证“隐藏即收不到”。修复前的等价复现：把选项对话框（同进程的可见顶层窗口）开着去切分辨率，再唤出 Launchy。如果这样就能读到正确的尺寸，就说明差异确实在“有没有窗口”，而不在别处。
+
+** 还没解决的部分
+
+winId() 修的是“消息根本没到”。但前面那段（色深, 宽, 高）去重还在，下面几类变化仍可能被吞掉：
+
+| 场景 | 是否触发重新枚举 |
+| --- | --- |
+| 主屏分辨率变化 | 会（三元组变了） |
+| 只改缩放、不改分辨率 | 不会（压根没有 WM_DISPLAYCHANGE） |
+| 换副屏但三元组与上次相同 | 可能不会（被去重拦下） |
+| 三个以上屏幕重新排列 | 视 lParam 而定，不可靠 |
+
+真撞上时的兜底方案：绕开 Qt 这份缓存，用原生 API 直接判定。
+
+#+BEGIN_SRC C++
+static QScreen* screenUnderCursor(QRect* nativeRect) {
+    POINT pt = { 0, 0 };
+    if (!GetCursorPos(&pt))
+        return nullptr;
+
+    // MONITOR_DEFAULTTONEAREST: 点落在屏幕之间的缝隙里也不会返回 null
+    HMONITOR hmon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+    MONITORINFOEXW mi = { sizeof(MONITORINFOEXW) };
+    if (!GetMonitorInfoW(hmon, &mi))
+        return nullptr;
+
+    *nativeRect = QRect(QPoint(mi.rcMonitor.left, mi.rcMonitor.top),
+                        QSize(mi.rcMonitor.right - mi.rcMonitor.left,
+                              mi.rcMonitor.bottom - mi.rcMonitor.top));
+
+    // QScreen::name() 就是 "\\.\DISPLAYn"，比几何更稳定，不受缓存陈旧影响
+    const QString device = QString::fromWCharArray(mi.szDevice);
+    for (QScreen* s : QGuiApplication::screens()) {
+        if (s->name().compare(device, Qt::CaseInsensitive) == 0)
+            return s;
+    }
+    return nullptr;
+}
+#+END_SRC
+
+因为本项目 Qt 缩放因子为 1，rcMonitor 和 QScreen::geometry() 等价，可以原地替换 loadPosition() 里的 availableGeometry()（工作区则用 rcWork）。
+
+** 这次排查的方法论
+
+1. 别相信函数名。screenAt() 听起来像“查询鼠标在哪块屏”，实际是“遍历一张表，返回第一个矩形包含该点的屏”。读完实现，问题的方向就换了一半。
+2. 把框架当代码读，而不是当黑盒。handleDisplayChange 里那几行去重是整个 bug 的核心，但它不在任何文档里。
+3. 区分“没收到”和“收到了没处理”。这两类失败的修法完全不同：前者要补消息通路，后者要绕开 / 修正处理逻辑。QT_LOGGING_RULES=qt.qpa.windows=true 一行就能分辨。
+4. 二分复现条件。这次的分水岭是“唤出过一次没有”—— 它指向 HWND 是否存在，而不是指向坐标计算。
+5. 先证伪自己最想相信的假设。一开始很想认定是混合 DPI 坐标错位（听起来高级、也确实是个真问题），但项目根本没开 AA_EnableHighDpiScaling，前提不成立。
+6. 对“隐藏”要问一句：对象还在吗？广播类消息的边界是“存在”，不是“可见”。这条在启动器、托盘程序、后台服务里很容易踩。
+
+（全文完）

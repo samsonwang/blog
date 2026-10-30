@@ -136,6 +136,7 @@
 <link rel="canonical" href="https://samsonwang.github.io/blog/posts/2026/frp-tips/">
 <link rel="icon" href="/blog/favicon.ico" sizes="64x64">
 <link rel="prev" href="/blog/posts/2026/read-uwp-app-icon/" title="读取UWP软件的图标" type="text/html">
+<link rel="next" href="/blog/posts/2026/debug-qt-stale-screen-on-windows/" title="记录一次 Qt 屏幕定位排查：为什么隐藏窗口“感受不到”显示器变更" type="text/html">
 <meta name="author" content="Samson Wang">
 <meta property="og:site_name" content="Hack Note">
 <meta property="og:title" content="frp使用技巧">
@@ -182,9 +183,9 @@
 
 <!-- TEASER_END -->
 
-<div id="outline-container-org08064ef" class="outline-2">
-<h2 id="org08064ef">frp的功能</h2>
-<div class="outline-text-2" id="text-org08064ef">
+<div id="outline-container-orge2adf86" class="outline-2">
+<h2 id="orge2adf86">frp的功能</h2>
+<div class="outline-text-2" id="text-orge2adf86">
 <p>
 frp 是一个反向代理工具，由两个程序组成：跑在公网服务器上的 =frps=，和跑在内网机器上的 =frpc=。<br></p>
 
@@ -213,16 +214,16 @@ frp 是一个反向代理工具，由两个程序组成：跑在公网服务器�
 我的用法是只用 stcp，VPS 上只留一个控制端口对公网开放，理由在下面两节展开。<br></p>
 
 <p>
-有人会问为什么不直接用 WireGuard 或者 Tailscale 组网，这里说下我的取舍。frp 是按端口转发，不是把两台机器塞进同一个网段，粒度更细，客户端也不用装虚拟网卡；代价是每加一个服务都要改配置，而且必须有一台自己的公网服务器。<br></p>
+有人会问为什么不直接用 WireGuard 组网，这里说下我的取舍。frp 是按端口转发，不是把两台机器塞进同一个网段，粒度更细，客户端也不用装虚拟网卡；代价是每加一个服务都要改配置，而且必须有一台自己的公网服务器。<br></p>
 
 <p>
 WireGuard 只跑 UDP，不少便宜的 VPS（NAT 型、超售严重的尤其明显）会限速甚至直接封 UDP，部分移动网络也经常丢 UDP，只放行 TCP 443 这类端口。遇到这种情况，WireGuard 的握手根本完不成，现象是「配置全对但一直连不上」，而且日志里没什么有用的信息。frp 的控制连接默认走 TCP，只靠 TCP 就能把隧道建起来；它也支持 QUIC 之类的 UDP 传输方式，但那是可选项，不是前提。<br></p>
 </div>
 </div>
 
-<div id="outline-container-org054faef" class="outline-2">
-<h2 id="org054faef">frps在Linux端的配置</h2>
-<div class="outline-text-2" id="text-org054faef">
+<div id="outline-container-org8ebaef0" class="outline-2">
+<h2 id="org8ebaef0">frps在Linux端的配置</h2>
+<div class="outline-text-2" id="text-org8ebaef0">
 <p>
 默认配置能跑起来，但默认配置基本等于把内网拱手让人：控制端口对着全网开放、token 是空的、Dashboard 绑在 0.0.0.0、客户端可以申请任意端口。下面这份配置是逐条收紧之后的结果。<br></p>
 
@@ -287,9 +288,9 @@ log.maxDays = 7
 </div>
 </div>
 
-<div id="outline-container-orgc01bb29" class="outline-2">
-<h2 id="orgc01bb29">防火墙只开需要的端口</h2>
-<div class="outline-text-2" id="text-orgc01bb29">
+<div id="outline-container-org49133b4" class="outline-2">
+<h2 id="org49133b4">防火墙只开需要的端口</h2>
+<div class="outline-text-2" id="text-org49133b4">
 <div class="highlight"><pre><span></span>ufw allow 17380/tcp          # 控制端口，客户端要连
 ufw allow 61000:61010/tcp    # allowPorts 区间，配了 tcp 代理才需要
 ufw enable
@@ -300,9 +301,9 @@ ufw enable
 </div>
 </div>
 
-<div id="outline-container-org36f0199" class="outline-2">
-<h2 id="org36f0199">看Dashboard用SSH转发</h2>
-<div class="outline-text-2" id="text-org36f0199">
+<div id="outline-container-org5c9ff5d" class="outline-2">
+<h2 id="org5c9ff5d">看Dashboard用SSH转发</h2>
+<div class="outline-text-2" id="text-org5c9ff5d">
 <p>
 Dashboard 只绑了本机，从公网访问不到。需要看的时候开一条 SSH 本地转发：<br></p>
 
@@ -314,9 +315,9 @@ Dashboard 只绑了本机，从公网访问不到。需要看的时候开一条 
 </div>
 </div>
 
-<div id="outline-container-org570c3ba" class="outline-2">
-<h2 id="org570c3ba">常见作死配置（别碰）</h2>
-<div class="outline-text-2" id="text-org570c3ba">
+<div id="outline-container-orgd9b13e0" class="outline-2">
+<h2 id="orgd9b13e0">常见作死配置（别碰）</h2>
+<div class="outline-text-2" id="text-orgd9b13e0">
 <ul class="org-ul">
 <li>
 <code>webServer.addr</code> 设成 0.0.0.0 —— Dashboard 直接暴露在公网上，7500 端口是测绘平台的常客，扫描器一抓一个准。<br>
@@ -335,9 +336,9 @@ Dashboard 只绑了本机，从公网访问不到。需要看的时候开一条 
 </div>
 </div>
 
-<div id="outline-container-org5edb1c6" class="outline-2">
-<h2 id="org5edb1c6">frpc在Windows端的配置</h2>
-<div class="outline-text-2" id="text-org5edb1c6">
+<div id="outline-container-org3b76911" class="outline-2">
+<h2 id="org3b76911">frpc在Windows端的配置</h2>
+<div class="outline-text-2" id="text-org3b76911">
 <p>
 客户端这边我只需要一条 stcp 隧道，把本机的 3389 送出去。配置文件同样用 TOML：<br></p>
 
@@ -389,9 +390,9 @@ localPort = 3389
 </div>
 </div>
 
-<div id="outline-container-orgd5c9fbe" class="outline-2">
-<h2 id="orgd5c9fbe">访问端怎么连</h2>
-<div class="outline-text-2" id="text-orgd5c9fbe">
+<div id="outline-container-orgac5a989" class="outline-2">
+<h2 id="orgac5a989">访问端怎么连</h2>
+<div class="outline-text-2" id="text-orgac5a989">
 <p>
 任何一台能连上 frps 的机器都能当访问端，配一段 visitor 就行：<br></p>
 
@@ -421,9 +422,9 @@ bindPort = 13389
 </div>
 </div>
 
-<div id="outline-container-org8a148e7" class="outline-2">
-<h2 id="org8a148e7">把frpc做成Windows服务</h2>
-<div class="outline-text-2" id="text-org8a148e7">
+<div id="outline-container-org9174b5b" class="outline-2">
+<h2 id="org9174b5b">把frpc做成Windows服务</h2>
+<div class="outline-text-2" id="text-org9174b5b">
 <p>
 frpc 自己不注册服务，需要一个 wrapper。我用的是 WinSW，下面那个 XML 就是它的配置。<br></p>
 
@@ -494,9 +495,9 @@ XML 里有几个地方值得说明：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org98a765f" class="outline-2">
-<h2 id="org98a765f">踩坑清单</h2>
-<div class="outline-text-2" id="text-org98a765f">
+<div id="outline-container-orgd0bb144" class="outline-2">
+<h2 id="orgd0bb144">踩坑清单</h2>
+<div class="outline-text-2" id="text-orgd0bb144">
 <ul class="org-ul">
 <li>照着老教程写 ini 配置，新版 frps/frpc 直接报解析错误。v0.52 之后官方主推 TOML/YAML/JSON，老教程里的 <code>[common]</code> 那一套已经不能用了。<br>
 </li>
@@ -516,9 +517,9 @@ XML 里有几个地方值得说明：<br></p>
 </div>
 </div>
 
-<div id="outline-container-org11fc318" class="outline-2">
-<h2 id="org11fc318">参考链接</h2>
-<div class="outline-text-2" id="text-org11fc318">
+<div id="outline-container-orgb3e2af0" class="outline-2">
+<h2 id="orgb3e2af0">参考链接</h2>
+<div class="outline-text-2" id="text-orgb3e2af0">
 <ul class="org-ul">
 <li>
 <a href="https://github.com/fatedier/frp">frp 官方仓库</a><br>
@@ -527,7 +528,7 @@ XML 里有几个地方值得说明：<br></p>
 <a href="https://gofrp.org/zh-cn/docs/">frp 官方文档</a><br>
 </li>
 <li>
-<a href="https://github.com/winsw/winsw">WinSW</a><br>
+<a href="https://github.com/winsw/winsw">WinSW 官方仓库</a><br>
 </li>
 <li>
 <a href="https://github.com/winsw/winsw/blob/v2/docs/xml-config-file.md">WinSW XML 配置文档</a><br>
@@ -556,10 +557,13 @@ XML 里有几个地方值得说明：<br></p>
       </a>
     </li>
     <li class="next">
+      <a href="/blog/posts/2026/debug-qt-stale-screen-on-windows/" rel="next">Next post
+        <br><span>记录一次 Qt 屏幕定位排查：为什么隐藏窗口“感受不到”显示器变更</span>
+      </a>
     </li>
   </ul>
 <section class="comments hidden-print"><div class="comment-lazy" id="comment-lazy">
-      <p class="comment-lazy-hint">评论由 Disqus 提供，点击后才加载。</p>
+      <p class="comment-lazy-hint">评论由 Disqus 提供</p>
       <button type="button" class="comment-lazy-btn" id="comment-lazy-btn">加载评论</button>
     </div>
     <noscript><p class="comment-lazy-fallback">需要启用 JavaScript 才能加载评论。</p></noscript>
